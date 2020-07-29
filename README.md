@@ -17,7 +17,7 @@ BOM:<br>
 -6 pin female header<br>
 -Optionally 7 x 1KOhm resistors<br>
 <br>Current web interface<br>
-![image](spacontrol.jpg)<br>
+<img src="./spacontrol.jpg"><br>
 <br>My device<br>
-![image](device.jpg)<br>
+<img src="./device.jpg"><br>
 ### To be updated...
