@@ -18,7 +18,7 @@ BOM:<br>
 -6 pin female header<br>
 -Optionally 7 x 1KOhm resistors<br><br>
 
-If you like this project, please consider a donation: <a href="PayPal.me/TLandahl">PayPal.me/TLandahl</a><br>
+If you like this project, please consider a donation: <a href="Http://PayPal.me/TLandahl">PayPal.me/TLandahl</a><br>
 <br>Current web interface<br>
 <img src="./spacontrol.jpg"><br>
 <br>My device<br>
