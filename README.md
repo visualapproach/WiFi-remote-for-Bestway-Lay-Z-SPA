@@ -6,7 +6,8 @@
 Features:<br>
 -Watch the temperature and status from your browser.<br>
 -Custom text on the SPA pump display.<br>
--Basic logging to SPIFFS (on the ESP8266)<br>
+-Custom sound instead of just beeping. Plays a melody when starting etc.<br>
+-Basic logging to SPIFFS (on the ESP8266). See accumulated heating time etc.<br>
 -Update firmware over the air<br>
 -Simple to build. No hardware changes needed on the SPA pump. Just remove the display, disconnect the 6-pin ribbon cable and plug it into this device.<br>
 <br>
