@@ -16,7 +16,8 @@ BOM:<br>
 -8 channel bidirectional level converter<br>
 -6 pin male header (0.1 in spacing)<br>
 -6 pin female header<br>
--Optionally 7 x 1KOhm resistors<br>
+-Optionally 7 x 1KOhm resistors<br><br>
+
 If you like this project, please consider a donation: <a href="PayPal.me/TLandahl">PayPal.me/TLandahl</a><br>
 <br>Current web interface<br>
 <img src="./spacontrol.jpg"><br>
