@@ -1,0 +1,11 @@
+{
+ "name": "SPA Control",
+ "icons": [
+  {
+   "src": "\/favicon128.png",
+   "sizes": "128x128",
+   "type": "image\/png",
+   "density": "3.0"
+  }
+ ]
+}

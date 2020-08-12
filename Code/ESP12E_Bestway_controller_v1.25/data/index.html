@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SPA Control</title>
+    <link href='main.css' rel='stylesheet' type='text/css'>
+    <link rel="icon" type="image/png" sizes="128x128"  href="/favicon128.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0066BF">
+    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport'>
+    <script src="WebSocket.js" type="text/javascript"></script>
+</head>
+
+<body>
+    <center>
+        <header>
+            <h1>SPA Control</h1>
+        </header>
+        <div>
+            <table>
+                <tr>
+                    <td style="width:14.4px; text-align: right">Actual temperature: </td>
+                    <td colspan="2"><input class="disabled" id="temp" type="range" min="20" max="40" step="1" value="0" disabled="true"></td>
+					<td id="actuallabel">0</td>
+                </tr>
+                <tr>
+                    <td style="width:14.4px; text-align: right">Target temperature: </td>
+                    <td colspan="2"><input class="enabled" id="target" type="range" min="20" max="40" step="1" oninput="sendCommand();" value="38"></td>
+					<td id="targetlabel">38</td>
+                </tr>
+                <tr>
+                    <td align="right"><button id="locked" class="button" style="background-color:#999" onclick="lck()">Lock</button></td>
+                    <td><button id="power" class="button" style="background-color:#999" onclick="pwr()">Power</button></td>
+                    <td><button id="up" class="button" style="background-color:#999" onclick="up()">Up</button></td>
+                </tr>
+                <tr>
+                    <td align="right"><button id="timer" class="button" style="background-color:#999" onclick="tmr()">Timer</button></td>
+ 					<td></td>
+                   <td><button id="down" class="button" style="background-color:#999" onclick="down()">Down</button></td>
+                </tr>
+                <tr>
+                    <td align="right"><button id="air" class="button" style="background-color:#999" onclick="air()">Air</button></td>
+					<td></td>
+                    <td><button id="filter" class="button" style="background-color:#999" onclick="flt()">Filter</button></td>
+                </tr>
+                <tr>
+                    <td align="right"><button id="unit" class="button" style="background-color:#999" onclick="unit()">Unit</button></td>
+					<td></td>
+                    <td><button id="heater" class="button" style="background-color:#999" onclick="htr()">Heater</button></td>
+                </tr>
+                <tr>
+                    <td align="right"><button id="ClTimer" class="button" style="background-color:#999" onclick="clTimer()">Reset timer</button></td>
+					<td align="right" id="cltimer">-1</td>
+                    <td align="right">days since reset</td>
+                </tr>
+            </table>
+        </div>
+		<div id="time">utc</div>
+    </center>
+</body>
+</html>
