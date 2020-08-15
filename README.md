@@ -22,7 +22,7 @@ BOM:<br>
 
 If you like this project, please consider a donation: <a href="Http://PayPal.me/TLandahl">PayPal.me/TLandahl</a><br>
 <br>Current web interface<br>
-<img src="./spacontrol.jpg"><br>
+<img src="./spacontrol2.jpg"><br>
 <br>My device<br>
 <img src="./device.jpg"><br>
 <br>My pump<br>
