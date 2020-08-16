@@ -27,4 +27,7 @@ If you like this project, please consider a donation: <a href="Http://PayPal.me/
 <img src="./device.jpg"><br>
 <br>My pump<br>
 <img src="./pump.jpg"><br>
+<br>My schematics<br>
+<img src="./schematic.png"><br>
+
 
