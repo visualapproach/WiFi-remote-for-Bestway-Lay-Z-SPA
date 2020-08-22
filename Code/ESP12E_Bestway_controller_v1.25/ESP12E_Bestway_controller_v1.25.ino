@@ -1,3 +1,23 @@
+/*
+ * https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA
+ * 
+ * To remove the log file, go to webadress IP/remove.html
+ * To look at the log file, go to webadress IP/eventlog.csv
+ * To upload a file to the filesystem, go to webadress IP/upload.html
+ * "IP" is the local IP of the ESP.
+ * 
+ * The main web page "SPA control" should be easy to understand since it mimics the pump display panel. Sort of.
+ * The slider to set target temperature is not implemented yet, so it's basically just a monitor.
+ * Use the UP/DOWN buttons to change the temp.
+ * 
+ * The "reset timer" is meant to be pressed when new chlorine is added. That way you know when it's time to do it again.
+ * 
+ * To force AP-mode, press "C/F" and then POWER on the pump. I thought this key combination would be unusual enough to
+ * not trigger AP mode accidentally. Not that it hurts anything, but it might be annoying, and leaves an open wifi for a short time.
+ */
+
+
+
 #include "pitches.h"
 #include "a_globals.h"
 
@@ -26,7 +46,7 @@ void loop() {
 }
 
 
-
+//store UNIX time in a SPIFFS file so we can calculate how many days since we added CL to the water
 void setClTimer() {
   clTime = DateTime.now();
   //save to spiffs
@@ -38,6 +58,7 @@ void setClTimer() {
   clFile.close();
 }
 
+//Keep track of heating time
 uint32_t getHeatingTime() {
   uint32_t t = 0;
   if (heater_red_sts) {
@@ -47,12 +68,14 @@ uint32_t getHeatingTime() {
 }
 
 
-
+//This function handles most of the high level logic
+//regarding status variables updates, and button presses
+//and scheduled events.
 void handleData() {
 
   if (DSP_BRT_IN == 0) return; //indication of connection
-  updateDSP(DSP_BRT_IN);
-  yield();            //calm the wifi gods
+  updateDSP(DSP_BRT_IN);      //CIO decides brightness
+  yield();                    //calm the wifi gods
   realBTN = getBTN();
   yield();
   releaseVirtualButtons();
@@ -209,6 +232,7 @@ void releaseVirtualButtons() {
   }
 }
 
+
 void updateDSPOUT() {
   bool changed = false;
   for (int i = 0; i < 11; i++) {
@@ -258,6 +282,7 @@ void turnOnFilter() {
     prevHour = h;
   }
 }
+
 
 void filterButtons() {
   //real buttons overrides virtual buttons
@@ -434,7 +459,7 @@ void updateDSP(uint8_t brightness) {
   digitalWrite(CS_DSP_PIN, HIGH);
   delayMicroseconds(50);
   digitalWrite(CS_DSP_PIN, LOW);
-  sendByteToDSP(brightness, 8); //CIO decides brightness
+  sendByteToDSP(brightness, 8); 
   digitalWrite(CS_DSP_PIN, HIGH);
   delayMicroseconds(50);
 }

@@ -96,7 +96,10 @@ void enterAPmode() {
   Serial.println("connected...yeey :)");
 }
 
-
+//when web client is sending commands we simulate corresponding key press
+//and toggle the wanted state for that function.
+//When the wanted state equals the actual state, the simulator can stop mimic a key press.
+//Handled in releaseVirtualButtons()
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
   // When a WebSocket message is received
   switch (type) {
@@ -179,6 +182,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
   }
 }
 
+//send status data to web client in JSON format (because it is easy to decode on the other side)
 void sendWSmessage() {
   //calculate days since clTimestamp
   uint32_t daysSinceClReset = 0;

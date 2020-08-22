@@ -12,14 +12,20 @@
 
 ESP8266WebServer server(80);       // Create a webserver object that listens for HTTP request on port 80
 WebSocketsServer webSocket(81);    // create a websocket server on port 81
-
+bool portalRunning = false;
 File fsUploadFile;                 // a File variable to temporarily store the received file
 
-const char *OTAName = "BW-1.24";           // A name and a password for the OTA service
-const char *OTAPassword = "esp8266";             // Not used!
-const char* mdnsName = "spa";                    // Domain name for the mDNS responder
+//********USER PARAMETERS*************
+const char *OTAName = "BW-1.25";           // A name and a password for the OTA service
+const char *OTAPassword = "esp8266";       // Not used!
+const char* mdnsName = "spa";              // Not used! Domain name for the mDNS responder
+int filterOffHour = 3;                     //hardcoded for the moment. Stops the pump at 03:00
+int filterOnHour = 9;
+int TZ = 2;                                //timezone (UTC + TZ = your local time) DST seems to not be implemented in the ESPDateTime.h library
+bool forbiddenHeaterHours[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; //Not fully used. Not tested. 
 
-bool portalRunning = false;
+
+
 
 //Pins
 const int CS_DSP_PIN = D3;
@@ -62,10 +68,10 @@ volatile bool CIO_deselect = false;
 
 //DSP variables
 uint8_t DSP_OUT[11] = {0x03, 0xDF, 0xFF, 0xDB, 0xFF, 0xB3, 0xFF, B10010001, 0xFF, 0x80, 0xFF};
-uint8_t brightness = 1;
+uint8_t brightness = 1; //Not fully used. We obey the CIO now, instead of changing LED brightness by our own.
 
 
-//Display button codes
+//Display button codes (This is the values reported by DSP when asked)
 const uint16_t LCK = 0x4000;
 const uint16_t TMR = 0x8000;
 const uint16_t AIR = 0xC000;
@@ -94,11 +100,15 @@ bool filter_sts;
 bool filter_cmd;
 bool celsius_sts;
 bool celsius_cmd;
-int fetchTargetTemp = 0;
+//there is no values to be read so we need to scan the display after UP/DOWN has been pressed.
+//this is a counter to figure out exactly when to scan.
+int fetchTargetTemp = 0; 
+//When the pump (filter) starts after autoshutdown, should we also start the heater?
+//It updates every time you change state of the heater.
 bool savedHeaterState = 0;
 
 
-//CIO data adresses
+//CIO data adresses (see documentation in excel file on github)
 const byte DGT1_IDX = 1;
 const byte DGT2_IDX = 3;
 const byte DGT3_IDX = 5;
@@ -135,15 +145,11 @@ const uint8_t CHARS[] = {
   'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z'
 };
 
-bool forbiddenHeaterHours[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 uint32_t heatingSeconds, heaterStart;
 uint32_t clTime;
 int prevHour = 0;
-int filterOffHour = 3;  //hardcoded for the moment. Stops the pump at 03:00
-int filterOnHour = 9;
 
-int TZ = 2; //timezone
-
+//direct port manipulation memory adresses.
 /*
   PROVIDE(PIN_OUT = 0x60000300);
   PROVIDE(PIN_OUT_SET = 0x60000304);

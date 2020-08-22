@@ -1,3 +1,14 @@
+/*
+ * Interrupt service routines
+ * Basically bitbanging data to and from the CIO
+ * 
+ * Direct port manipulation is used, not for speed, but because
+ * everything must be stored in iRAM. A digitalRead() would crash the device since it is not stored in RAM.
+ * 
+ * 
+ */
+
+
 //CIO comm
 //end of packet
 void ICACHE_RAM_ATTR slaveDeselected() {

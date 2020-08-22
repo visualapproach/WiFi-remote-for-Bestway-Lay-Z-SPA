@@ -34,12 +34,12 @@ void startup() {
 }
 
 void setpins() {
-  //setup CIO bit bang
+  //setup CIO bit bang pins
   pinMode(CS_CIO_PIN, INPUT);
   pinMode(CLK_CIO_PIN, INPUT);
   pinMode(DATA_CIO_PIN, INPUT);//high impedance until output needed 
 
-  //setup DSP bit bang
+  //setup DSP bit bang pins
   pinMode(CS_DSP_PIN, OUTPUT);
   digitalWrite(CS_DSP_PIN, HIGH); //Active LOW
   pinMode(CLK_DSP_PIN, OUTPUT);
