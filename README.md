@@ -44,8 +44,7 @@ Usage:
  * 
  * The "reset timer" is meant to be pressed when new chlorine is added. That way you know when it's time to do it again.
  * 
- * To force AP-mode, press "C/F" and then POWER on the pump. I thought this key combination would be unusual enough to
- * not trigger AP mode accidentally. Not that it hurts anything, but it might be annoying, and leaves an open wifi for a short time.
+ * To force AP-mode, press "C/F" and then POWER on the pump. I thought this key combination would be unusual enough to not trigger AP mode accidentally. Not that it hurts anything, but it might be annoying, and leaves an open wifi for a short time.
  <br>
  You may want to edit some values in "a_globals.h":<br>
  //********USER PARAMETERS*************<br>
