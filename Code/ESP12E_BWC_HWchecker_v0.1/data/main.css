@@ -1,0 +1,95 @@
+center {
+    width: 420px;
+    max-width: 100%;
+    margin: 0px auto;
+    font-family: 'Roboto', sans-serif;
+    color: #444;
+}
+
+header {
+    background-color: #00878F;
+    color: white;
+    padding: 6px;
+    font-family: 'Roboto', sans-serif;
+    box-shadow: 1px 1px 5px #555555;
+    position: relative;
+}
+
+h1 {
+    margin: 0px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 32;
+}
+
+center>div {
+    padding: 24px 10px 10px 10px;
+    box-shadow: 1px 1px 5px #555555;
+}
+
+table {
+    margin: 0px 24px 0px 12px;
+}
+
+td {
+    color: #555;
+    width: 100%;
+}
+
+tr {
+    width: 100%;
+}
+
+.button {
+    text-decoration: none;
+    border: none;
+    color: white;
+    background-color: #00878F;
+    padding: 6px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 1px 1px 6px #555;
+    outline: none;
+    margin: 12px auto 0px auto;
+    display: inline-block;
+}
+
+.button:hover {
+    box-shadow: 1px 1px 3px #444;
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    outline: none;
+    width: 100%;
+    margin: 6px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    border: 0px;
+    height: 20px;
+    width: 15px;
+    margin-top: -6px;
+    border-radius: 5px;
+}
+
+input.disabled[type=range]::-webkit-slider-thumb {
+    background: #999;
+}
+
+input.enabled[type=range]::-webkit-slider-thumb {
+    background: #FF878F;
+    cursor: pointer;
+    box-shadow: 1px 1px 2px #777, 0px 0px 1px #777;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    width: inherit;
+    height: 10px;
+    background: #ccc;
+    border-radius: 10px;
+}
+
+input.enabled[type=range]::-webkit-slider-runnable-track {
+    cursor: pointer;
+}
