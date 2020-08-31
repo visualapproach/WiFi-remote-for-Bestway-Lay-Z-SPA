@@ -11,7 +11,7 @@ connection.onopen = function () {
 connection.onerror = function (error) {
     console.log('WebSocket Error ', error);
 };
-connection.onmessage = function (e) {  
+connection.onmessage = function (e) {
 	var msgobj = JSON.parse(e.data);
 	console.log(e.data);
     console.log('Temp: ', msgobj.temp);
@@ -22,7 +22,7 @@ connection.onmessage = function (e) {
 	document.getElementById('locked').style = "background-color:#"+msgobj.locked*9+"00";
 	document.getElementById('air').style = "background-color:#0"+msgobj.air*9+"0";
 	if(msgobj.celsius == 1) document.getElementById('unit').innerHTML = "Celsius"
-	else document.getElementById('unit').innerHTML = "Frankenstein";
+	else document.getElementById('unit').innerHTML = "Fahrenheit";
 	document.getElementById('heater').style = "background-color:#"+msgobj.heating*9+""+msgobj.heater*9+"0";
 	document.getElementById('filter').style = "background-color:#0"+msgobj.filter*9+"0";
 	document.getElementById('power').style = "background-color:#0"+msgobj.power*9+"0";
