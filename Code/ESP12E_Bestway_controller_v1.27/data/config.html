@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SPA Config</title>
+    <link href='main.css' rel='stylesheet' type='text/css'>
+    <link rel="icon" type="image/png" sizes="128x128"  href="favicon128.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0066BF">
+    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport'>
+    <!--<script src="WebSocketConfig.js" type="text/javascript"></script>-->
+</head>
+
+<body onload="loadconfig()">
+    <center>
+        <header>
+            <h1>SPA Config</h1>
+        </header>
+        <div>
+			<p>Filter ON hour</p>
+			<input class="enabled" id="filterON" type="range" min="0" max="23" step="1" value="3">
+			<span id="fonval"></span>
+			<p>Filter OFF hour</p>
+			<input class="enabled" id="filterOFF" type="range" min="0" max="23" step="1" value="9">
+			<span id="foffval"></span>
+        </div>
+		<div>
+			<p>Allowed heating hours</p>
+			<table>
+				<tr>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h0" style="background-color:#999" checked="true">
+					<label for="h0">0</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h1" style="background-color:#999">
+					<label for="h1">1</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h2" style="background-color:#999">
+					<label for="h2">2</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h3" style="background-color:#999">
+					<label for="h3">3</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h4" style="background-color:#999">
+					<label for="h4">4</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h5" style="background-color:#999">
+					<label for="h5">5</label></td>
+				</tr>
+				<tr>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h6" style="background-color:#999">
+					<label for="h6">6</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h7" style="background-color:#999">
+					<label for="h7">7</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h8" style="background-color:#999">
+					<label for="h8">8</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h9" style="background-color:#999">
+					<label for="h9">9</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h10" style="background-color:#999">
+					<label for="h10">10</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h11" style="background-color:#999">
+					<label for="h11">11</label></td>
+				</tr>
+				<tr>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h12" style="background-color:#999">
+					<label for="h12">12</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h13" style="background-color:#999">
+					<label for="h13">13</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h14" style="background-color:#999">
+					<label for="h14">14</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h15" style="background-color:#999">
+					<label for="h15">15</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h16" style="background-color:#999">
+					<label for="h16">16</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h17" style="background-color:#999">
+					<label for="h17">17</label></td>
+				</tr>
+				<tr>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h18" style="background-color:#999">
+					<label for="h18">18</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h19" style="background-color:#999">
+					<label for="h19">19</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h20" style="background-color:#999">
+					<label for="h20">20</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h21" style="background-color:#999">
+					<label for="h21">21</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h22" style="background-color:#999">
+					<label for="h22">22</label></td>
+					<td style="width: 10%; text-align: left"><input type="checkbox" id="h23" style="background-color:#999">
+					<label for="h23">23</label></td>
+				</tr>
+			</table>
+		</div>
+		<div>
+			<label for="timezone">Timezone</label>
+			<input type="text" id="timezone" value="2">
+		</div>
+		<div>
+			<label for="price">Price per kWh</label>
+			<input type="text" id="price" value="1.50">
+		</div>
+		<div>
+			<label for="audio">Audio</label>
+			<input type="checkbox" id="audio" style="background-color:#999">
+		</div>
+		<div id="time">utc</div>
+ 		<div><button id="save" class="button" style="background-color:#DDD" onclick="saveconfig()">Save config</button></div>
+	</center>
+
+	
+<script>
+var slider1 = document.getElementById("filterON");
+var output1 = document.getElementById("fonval");
+var slider2 = document.getElementById("filterOFF");
+var output2 = document.getElementById("foffval");
+output1.innerHTML = slider1.value;
+output2.innerHTML = slider2.value;
+
+slider1.oninput = function() {
+  output1.innerHTML = this.value;
+}
+slider2.oninput = function() {
+  output2.innerHTML = this.value;
+}
+
+
+function loadconfig(){
+	const Http = new XMLHttpRequest();
+	const url='/getconfig/';
+	Http.open("POST", url);
+	Http.send();
+
+	Http.onreadystatechange = function(){
+		if(this.readyState==4 && this.status==200){
+		  console.log(Http.responseText);
+		  var msgobj = JSON.parse(Http.responseText);
+		  document.getElementById("filterON").value = msgobj.filteronhour.toString();
+		  document.getElementById("fonval").innerHTML = msgobj.filteronhour;
+		  document.getElementById("filterOFF").value = msgobj.filteroffhour.toString();
+		  document.getElementById("foffval").innerHTML = msgobj.filteroffhour;
+		  document.getElementById("timezone").value = msgobj.timezone.toString();
+		  document.getElementById("price").value = msgobj.price.toString();
+		  document.getElementById("audio").checked = msgobj.audio;
+		  for(var i = 0; i<24; i++){
+			document.getElementById("h"+i.toString()).checked = msgobj.heaterhours[i];
+		  }
+		}
+	}
+}
+
+function saveconfig(){
+	const Http = new XMLHttpRequest();
+	const url='/setconfig/';
+	Http.open("POST", url);
+
+	var msgobj = {
+		"filteronhour":parseInt(document.getElementById("filterON").value),
+		"filteroffhour":parseInt(document.getElementById("filterOFF").value),
+		"timezone":parseInt(document.getElementById("timezone").value),
+		"price":parseFloat(document.getElementById("price").value),
+		"audio":document.getElementById("audio").checked,
+		"heaterhours":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]
+	};
+	for(var i = 0; i<24; i++){
+		msgobj.heaterhours[i] = document.getElementById("h"+i.toString()).checked;}
+	Http.send(JSON.stringify(msgobj));
+	console.log(msgobj);
+}
+</script>	
+</body>
+</html>
