@@ -20,7 +20,7 @@ BOM:<br>
 -6 pin female header (JST-SM Housing Connector)<br>
 -Optionally 7 x 500 to 820 Ohm resistors (lower than 500 would not protect against over current which may or may not occur if both sides drives the line in opposite directions. That is not suppose to happen but just in case. So, if you only have say 430 Ohms resistors you may as well skip them. Higher than 820 Ohms can make it not work.)<br><br>
 
-If you like this project, please consider a donation: <a href="Http://PayPal.me/TLandahl">PayPal.me/TLandahl</a><br>
+## If you like this project, please consider a donation: <a href="Http://PayPal.me/TLandahl">PayPal.me/TLandahl</a><br>
 <br>Current web interface<br>
 <img src="./idx.png" width="300"><br>
 <img src="./cfg127.png" width="300"><br>
