@@ -7,11 +7,11 @@ Features:<br>
 -Watch the temperature and status from your browser.<br>
 -Custom text on the SPA pump display.<br>
 -Custom sound instead of just beeping. Plays a melody when starting etc.<br>
--Basic logging to SPIFFS (on the ESP8266). See accumulated heating time etc.<br>
+-Basic logging to LittleFS (on the ESP8266). See accumulated heating time etc.<br>
 -Update firmware over the air<br>
 -Simple to build. No hardware changes needed on the SPA pump. Just remove the display, disconnect the 6-pin ribbon cable and plug it into this device.<br>
 -Timer for clorine<br>
--Heater on % of time<br>
+-Electricity cost estimation and more<br>
 <br>
 BOM:<br>
 -ESP8266 NodeMCU 1.0 (This version is NOT for ESP32)<br>
@@ -20,7 +20,7 @@ BOM:<br>
 -6 pin female header (JST-SM Housing Connector)<br>
 -Optionally 7 x 500 to 820 Ohm resistors (lower than 500 would not protect against over current which may or may not occur if both sides drives the line in opposite directions. That is not suppose to happen but just in case. So, if you only have say 430 Ohms resistors you may as well skip them. Higher than 820 Ohms can make it not work.)<br><br>
 
-## If you like this project, please consider a donation: <a href="Http://PayPal.me/TLandahl">PayPal.me/TLandahl</a><br>
+### If you like this project, please consider a donation: <a href="Http://PayPal.me/TLandahl">PayPal.me/TLandahl</a><br>
 <br>Current web interface<br>
 <img src="./idx.png" width="300"><br>
 <img src="./cfg127.png" width="300"><br>
