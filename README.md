@@ -42,13 +42,12 @@ Usage:
    "IP" is the local IP of the ESP.
 
    The main web page "SPA control" should be easy to understand since it mimics the pump display panel. Sort of.
-   The slider to set target temperature is not implemented yet, so it's basically just a monitor.
    Use the UP/DOWN buttons to change the temp.
 
    The "reset timer" is meant to be pressed when new chlorine is added. That way you know when it's time to do it again. It will turn red after a week.
 
-   To force AP-mode, press "C/F" and then POWER on the pump. I thought this key combination would be unusual enough to
-   not trigger AP mode accidentally. Not that it hurts anything, but it might be annoying, and leaves an open wifi for a short time.
+   To force Access Point-mode, where you enter your Wi-Fi credentials, press "C/F" and then POWER on the pump. I thought this key combination would be unusual enough to
+   not trigger AP mode accidentally. Not that it hurts anything, but it might be annoying, and leaves an open wifi for a short time. This should not be necessary though since the device goes into automatic AP mode if no WiFi connection exists.
 
  * v1.27
  * Reworked code
