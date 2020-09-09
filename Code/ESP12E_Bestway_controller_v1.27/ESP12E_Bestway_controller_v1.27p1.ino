@@ -28,7 +28,6 @@ void setup() {
   startup();
 }
 
-
 void loop() {
   handleData();               // talk to display and controller
   yield();
@@ -71,9 +70,9 @@ void handleData() {
 
   if (DSP_BRT_IN == 0) return; //indication of connection
   updateDSP(DSP_BRT_IN);      //CIO decides brightness
-  yield();                    //calm the wifi gods
+                    //calm the wifi gods
   realBTN = getBTN();
-  yield();
+
   releaseVirtualButtons();
 
   //fetch target temperature
@@ -177,13 +176,14 @@ void handleData() {
     appdata.filtertime += DateTime.now() - filterStart;
   }
 
-  yield();
+
 
   checkTargetTempNeeded();
 
   if (realchange) {
     sendWSmessage(); //to webclients
     savelog();       //to LittleFS
+    saveappdata();  
   }
 }
 
@@ -257,7 +257,7 @@ void turnOffFilter() {
     filterOffFlag = false; //mission accomplished, don't trigger this again
     savedHeaterState = heater_red_sts | heater_green_sts;
     heaterEnableFlag = true; //if heater was on, turn it on again
-    Serial.println(F("auto filter off"));
+    //Serial.println(F("auto filter off"));
     textOut("off");
   }
 }
@@ -267,8 +267,8 @@ void turnOnFilter() {
     virtualBTN = FLT;
     filter_cmd = 1;
     filterOnFlag = false; //mission accomplished, don't trigger this again
-    Serial.println(F("auto filter off"));
-    textOut("off");
+    //Serial.println(F("auto filter on"));
+    textOut("on");
   }
 }
 
@@ -358,6 +358,7 @@ uint16_t getBTN() {
   result = receiveBitsFromDSP();
   digitalWrite(CS_DSP_PIN, HIGH); //end of packet
   delayMicroseconds(30);
+
   return result;
 }
 
@@ -371,6 +372,7 @@ void sendBitsToDSP(uint32_t outBits, int bitsToSend) {
     digitalWrite(CLK_DSP_PIN, HIGH);
     delayMicroseconds(20);
   }
+
 }
 
 uint16_t receiveBitsFromDSP() {
@@ -385,6 +387,7 @@ uint16_t receiveBitsFromDSP() {
     delayMicroseconds(20);
     result |= digitalRead(DATA_DSP_PIN) << (15 - i);
   }
+
   return result;
 }
 
@@ -401,7 +404,6 @@ void updateDSP(uint8_t brightness) {
 
   delayMicroseconds(50);
   digitalWrite(CS_DSP_PIN, LOW);//start of packet
-  yield();
   for (int i = 0; i < 11; i++)
     sendBitsToDSP(DSP_OUT[i], 8);
   digitalWrite(CS_DSP_PIN, HIGH);//end of packet
@@ -411,6 +413,7 @@ void updateDSP(uint8_t brightness) {
   sendBitsToDSP(brightness, 8);
   digitalWrite(CS_DSP_PIN, HIGH);//end of packet
   delayMicroseconds(50);
+
 }
 
 //match 7 segment pattern to a real digit
@@ -487,7 +490,7 @@ void textOut(String txt) {
       DSP_OUT[DGT2_IDX] = getCode(txt.charAt(i + 1));
       DSP_OUT[DGT3_IDX] = getCode(txt.charAt(i + 2));
       updateDSP(0xF1);
-      delay(333);
+      delay(230);
     }
   }
   else if (len == 2) {

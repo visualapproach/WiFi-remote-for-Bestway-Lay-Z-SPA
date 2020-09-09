@@ -47,12 +47,14 @@ void schedule() {
     saveAppdataFlag = false;
     saveappdata();
   }
+
 }
 
 
 //executed daily
 void dayTimer() {
   saveAppdataFlag = true; //Flash memory only lasts for so many writes (~100 000?)
+  //event and appdata is saved every time something changed (check handleData())
 }
 
 

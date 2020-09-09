@@ -12,7 +12,7 @@ void loadConfiguration() {
 
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, file);
-  if (error){
+  if (error) {
     Serial.println(F("Failed to read config file, using default configuration"));
     file.close();
     return;
@@ -33,6 +33,7 @@ void loadConfiguration() {
   //          sizeof(myConfig.hostname));         // <- destination's capacity
 
   file.close();
+
   Serial.println(F("loaded config"));
 }
 
@@ -66,6 +67,7 @@ void saveConfiguration() {
   }
   file.close();
 
+
   DateTime.setTimeZone(myConfig.timezone);
   DateTime.begin();
 }
@@ -79,6 +81,8 @@ void saveappdata() {
   }
   file.write((uint8_t *)&appdata, sizeof(appdata));
   file.close();
+
+
 }
 
 void loadappdata() {
@@ -92,6 +96,7 @@ void loadappdata() {
   file.read((uint8_t *)&appdata, sizeof(appdata));
   //}
   file.close();
+
 }
 
 void savelog() {
@@ -114,6 +119,7 @@ void savelog() {
   logfile.print(",");
   logfile.print(String(set_tmp_val));
   logfile.print(",");
+
   logfile.print(locked_sts);
   logfile.print(",");
   logfile.print(power_sts);
@@ -134,5 +140,7 @@ void savelog() {
   logfile.println(heatingRatio);
 
   logfile.close();
-  Serial.println(F("saved log")); //debug*************
+
+
+  //Serial.println(F("saved log")); //debug*************
 }

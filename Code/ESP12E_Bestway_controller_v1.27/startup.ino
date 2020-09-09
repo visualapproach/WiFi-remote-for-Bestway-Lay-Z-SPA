@@ -27,8 +27,10 @@ void startup() {
   uptimestamp = DateTime.getBootTime();
   //DEBUG***********************VVV
         File file = LittleFS.open("tmp.txt", "a");
-        file.print("REBOOT ");
+        file.print("\nREBOOT ");
         file.println(DateTime.format(DateFormatter::SIMPLE));
+        file.print("Reason: ");
+        file.println(ESP.getResetReason());
         file.close();
   startTimers();
   attachInterrupt(digitalPinToInterrupt(CS_CIO_PIN), ISR_slaveSelect, CHANGE);

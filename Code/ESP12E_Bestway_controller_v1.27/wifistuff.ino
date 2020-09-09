@@ -34,11 +34,13 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
   Serial.println(String("\tFile Not Found: ") + path);   // If the file doesn't exist, return false
   return false;
 }
+
 void handleNotFound() { // if the requested file or page doesn't exist, return a 404 not found error
   if (!handleFileRead(server.uri())) {        // check if the file exists in the flash memory (LittleFS), if so, send it
     server.send(404, "text/plain", "404: File Not Found");
   }
 }
+
 void handleFileUpload() { // upload a new file to the LittleFS
   HTTPUpload& upload = server.upload();
   String path;
@@ -128,9 +130,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
             break;
           case 0x1:
             myConfig.automode = true;
+            saveappdata();
             break;
           case 0x2:
             myConfig.automode = false;
+            saveappdata();
             break;
           case 0x5:
             //power
@@ -194,6 +198,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
       //sendWSmessage();
       break;
   }
+
 }
 
 //send status data to web client in JSON format (because it is easy to decode on the other side)
@@ -222,6 +227,7 @@ void sendWSmessage() {
   } else {
     webSocket.broadcastTXT(jsonmsg);
   }
+
 }
 
 void handleGetConfig() { // reply with json document
