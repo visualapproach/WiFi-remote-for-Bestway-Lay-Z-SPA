@@ -151,8 +151,12 @@ void setupDateTime() {
   //   DateTime.begin(15 * 1000);
   DateTime.setTimeZone(myConfig.timezone);
   DateTime.begin();
-  if (!DateTime.isTimeValid()) {
-    Serial.println(F("Failed to get time from server."));
+  delay(1000);
+  int c = 0;
+  while (!DateTime.isTimeValid()) {
+    Serial.println(F("Failed to get time from server. Trying again."));
+    delay(1000);
+    if(c++ > 5) break;
   }
 }
 

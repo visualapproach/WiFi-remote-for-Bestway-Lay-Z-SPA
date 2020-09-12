@@ -70,10 +70,8 @@ void handleData() {
 
   if (DSP_BRT_IN == 0) return; //indication of connection
   updateDSP(DSP_BRT_IN);      //CIO decides brightness
-                    //calm the wifi gods
   realBTN = getBTN();
 
-  releaseVirtualButtons();
 
   //fetch target temperature
   if (fetchTargetTemp == 1 && cur_tmp_str == "   ") fetchTargetTemp = 2;
@@ -82,8 +80,8 @@ void handleData() {
     fetchTargetTemp = 0;
   }
 
-  filterButtons();
-  schedule();
+  schedule(); //check automated tasks
+  validateButtons();
 
   bool prevlocked = locked_sts;
   bool prevpwr = power_sts;
@@ -137,6 +135,7 @@ void handleData() {
   cur_tmp_str = String(c1) + String(c2) + String(c3);
   cur_tmp_val = cur_tmp_str.toInt();
 
+  //convert bits in the transmitted array to easy to understand variables
   locked_sts = DSP_OUT[LCK_IDX] & (1 << LCK_BIT);
   power_sts = DSP_OUT[PWR_IDX] & (1 << PWR_BIT);
   air_sts = DSP_OUT[AIR_IDX] & (1 << AIR_BIT);
@@ -145,25 +144,24 @@ void handleData() {
   filter_sts = DSP_OUT[FLT_IDX] & (1 << FLT_BIT);
   celsius_sts = DSP_OUT[C_IDX] & (1 << C_BIT);
 
-
   //feedback to user - play notes on change
-  if (prevlocked < locked_sts) playOff();
-  if (prevpwr < power_sts) playOn();
-  if (prevair < air_sts){
+  if (prevlocked < locked_sts) playOff(); //locking
+  if (prevpwr < power_sts) playOn();      //powering up
+  if (prevair < air_sts) {                //air bubbles turned on
     playOn();
     airStart = DateTime.now();
   }
-  if (prevheater < heater_red_sts) {
+  if (prevheater < heater_red_sts) {      //heating element turning on
     playOn();
     heaterStart = DateTime.now();
   }
-  if (prevfilter < filter_sts){
+  if (prevfilter < filter_sts) {          //filter pump turning on
     playOn();
     filterStart = DateTime.now();
   }
   if (prevlocked > locked_sts) playOn();
   if (prevpwr > power_sts) playOff();
-  if (prevair > air_sts){
+  if (prevair > air_sts) {
     playOff();
     appdata.airtime += DateTime.now() - airStart;
   }
@@ -182,8 +180,8 @@ void handleData() {
 
   if (realchange) {
     sendWSmessage(); //to webclients
-    savelog();       //to LittleFS
-    saveappdata();  
+    savelog();       //saves status variables to LittleFS
+    saveappdata();   //saves uptime, heating time etc to LittleFS
   }
 }
 
@@ -210,6 +208,7 @@ void releaseVirtualButtons() {
       case HTR:
         if (((heater_green_sts || heater_red_sts) == heater_cmd) || power_sts == false || locked_sts == true) {
           virtualBTN = NOBTN;
+          savedHeaterState = heater_cmd;
         }
         break;
       case FLT:
@@ -238,6 +237,23 @@ void releaseVirtualButtons() {
         break;
     }
   }
+
+  if (autoBTN != NOBTN) {
+    switch (autoBTN) {
+      case HTR:
+        if (((heater_green_sts || heater_red_sts) == heater_cmd) || power_sts == false || locked_sts == true) {
+          autoBTN = NOBTN;
+          heaterDisableFlag = false;
+          heaterEnableFlag = false;
+        }
+        break;
+      case FLT:
+        if (filter_sts == filter_cmd || power_sts == false || locked_sts == true) {
+          autoBTN = NOBTN;
+        }
+        break;
+    }
+  }
 }
 
 
@@ -252,19 +268,16 @@ void updateDSPOUT() {
 
 void turnOffFilter() {
   if (unlockDevice()) {
-    virtualBTN = FLT;
+    autoBTN = FLT;
     filter_cmd = 0;
     filterOffFlag = false; //mission accomplished, don't trigger this again
-    savedHeaterState = heater_red_sts | heater_green_sts;
-    heaterEnableFlag = true; //if heater was on, turn it on again
-    //Serial.println(F("auto filter off"));
     textOut("off");
   }
 }
 
 void turnOnFilter() {
   if (unlockDevice()) {
-    virtualBTN = FLT;
+    autoBTN = FLT;
     filter_cmd = 1;
     filterOnFlag = false; //mission accomplished, don't trigger this again
     //Serial.println(F("auto filter on"));
@@ -273,39 +286,49 @@ void turnOnFilter() {
 }
 
 
-void filterButtons() {
-  //real buttons overrides virtual buttons
+void validateButtons() {
+  //realBTN overrides virtualBTN
+  //autoBTN overrides realBTN
   //realBTN is what is physically pressed on the display.
   //virtualBTN is coming from a web client
-  //BTN_OUT is what the CIO (pump computer) sees (ISR_funcs tab)
-  uint16_t tmpButton; //we need to filter forbidden buttons before setting BTN_OUT
-  if (realBTN == NOBTN) {
-    tmpButton = virtualBTN;
-  } else {
-    tmpButton = realBTN;
-    if (realBTN == PWR && prevBTN == UNT) { //UNIT-POWER = special combo to activate config (AP portal) mode
-      textOut(F("cfg"));
-      enterAPmode();
-    }
-    if (realBTN == UP || realBTN == DWN) fetchTargetTemp = 1;
-    prevBTN = realBTN;
-  }
+  //BTN_OUT is what the CIO (pump computer) sees (from ISR_funcs tab)
+  //we need to discard forbidden buttons before setting BTN_OUT
+  uint16_t tmpButton;
 
-  if (!heaterEnabled) {
-    if (tmpButton == HTR && !(heater_red_sts || heater_green_sts)) {
-      tmpButton = NOBTN; //discard button if not allowed
-      virtualBTN = NOBTN;
-      textOut("  nono");
+  tmpButton = virtualBTN;
+  if (realBTN != NOBTN) tmpButton = realBTN;
+
+  //discard forbidden actions
+  if (!isheaterhours) {
+    if (tmpButton == HTR) {
+      if (!(heater_red_sts || heater_green_sts)) {
+        tmpButton = NOBTN;        //discard button if not allowed
+        virtualBTN = NOBTN;
+        textOut("  nono");        //spank the user
+      }
     }
   }
+  if (autoBTN != NOBTN) tmpButton = autoBTN;
 
-  BTN_OUT = tmpButton;  //BTN_OUT will be sent to CIO at any time it is requested (via ISR)
+  //check special combo UNIT-POWER to force AP mode
+  if (realBTN == PWR && prevBTN == UNT) {
+    textOut(F("cfg"));
+    enterAPmode();
+  }
+  prevBTN = realBTN;
+
+  if (realBTN == UP || realBTN == DWN) fetchTargetTemp = 1;
+
+  releaseVirtualButtons(); //release them before setting BTN_OUT in case we're already good
+
+  //BTN_OUT will be sent to CIO at any time it is requested (via ISR)
+  BTN_OUT = tmpButton;
 
 }
 
 void setHeater(bool state) {
   if (unlockDevice()) {
-    virtualBTN = HTR;
+    autoBTN = HTR;
     heater_cmd = state;
   }
 }
@@ -437,7 +460,7 @@ char getCode(char value) {
 }
 
 void playIntro() {
-  if(myConfig.audio == 0) return;
+  if (myConfig.audio == 0) return;
   int longnote = 125;
   int shortnote = 63;
 
@@ -461,7 +484,7 @@ void playIntro() {
 }
 
 void playOn() {
-  if(myConfig.audio == 0) return;
+  if (myConfig.audio == 0) return;
   int longnote = 125;
   int shortnote = 63;
   tone(AUDIO_OUT_PIN, NOTE_C6, shortnote);
@@ -472,7 +495,7 @@ void playOn() {
 }
 
 void playOff() {
-  if(myConfig.audio == 0) return;
+  if (myConfig.audio == 0) return;
   int longnote = 125;
   int shortnote = 63;
   tone(AUDIO_OUT_PIN, NOTE_C6, shortnote);

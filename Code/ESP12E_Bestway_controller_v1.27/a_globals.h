@@ -74,6 +74,7 @@ volatile uint16_t BTN_OUT = 0xD8D8; //no button
 uint16_t virtualBTN = 0x1090; //init to up button to get set temp
 uint16_t realBTN = 0xD8D8; //no button (pressed on display)
 uint16_t prevBTN = 0xD8D8;
+uint16_t autoBTN = 0xD8D8;
 bool virtual_onoff = 0;
 unsigned long BTN_timeout;
 unsigned long target_timeout;
