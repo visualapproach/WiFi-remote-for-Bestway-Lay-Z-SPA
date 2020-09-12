@@ -80,8 +80,6 @@ void handleData() {
     fetchTargetTemp = 0;
   }
 
-  schedule(); //check automated tasks
-  validateButtons();
 
   bool prevlocked = locked_sts;
   bool prevpwr = power_sts;
@@ -174,6 +172,8 @@ void handleData() {
     appdata.filtertime += DateTime.now() - filterStart;
   }
 
+  schedule(); //check automated tasks
+  validateButtons();
 
 
   checkTargetTempNeeded();
@@ -185,7 +185,7 @@ void handleData() {
   }
 }
 
-void releaseVirtualButtons() {
+void releaseButtons() {
   //If power is on and display is unlocked,
   //release BTN_OUT after change has occured
   if (virtualBTN != NOBTN) {
@@ -299,7 +299,7 @@ void validateButtons() {
   if (realBTN != NOBTN) tmpButton = realBTN;
 
   //discard forbidden actions
-  if (!isheaterhours) {
+  if (myConfig.automode && !isheaterhours()) {
     if (tmpButton == HTR) {
       if (!(heater_red_sts || heater_green_sts)) {
         tmpButton = NOBTN;        //discard button if not allowed
@@ -319,7 +319,7 @@ void validateButtons() {
 
   if (realBTN == UP || realBTN == DWN) fetchTargetTemp = 1;
 
-  releaseVirtualButtons(); //release them before setting BTN_OUT in case we're already good
+  releaseButtons(); //release them before setting BTN_OUT in case we're already good
 
   //BTN_OUT will be sent to CIO at any time it is requested (via ISR)
   BTN_OUT = tmpButton;
@@ -350,8 +350,7 @@ bool unlockDevice() {
 //turn off heater but keep filter pump running if wanted
 bool isheaterhours() {
   DateTimeParts p = DateTime.getParts();
-  if (myConfig.heaterhours[p.getHours()]) return true;
-  return false;
+  return myConfig.heaterhours[p.getHours()];
 }
 
 void checkTargetTempNeeded() {
