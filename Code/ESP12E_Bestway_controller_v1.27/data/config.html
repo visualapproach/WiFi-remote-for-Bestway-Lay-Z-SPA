@@ -96,7 +96,7 @@
 			<label for="audio">Audio</label>
 			<input type="checkbox" id="audio" style="background-color:#999">
 		</div>
-		<div id="time">utc</div>
+		<div id="time">last boot: </div>
  		<div><button id="save" class="button" style="background-color:#DDD" onclick="saveconfig()">Save config</button></div>
 	</center>
 
@@ -137,6 +137,7 @@ function loadconfig(){
 		  for(var i = 0; i<24; i++){
 			document.getElementById("h"+i.toString()).checked = msgobj.heaterhours[i];
 		  }
+		  document.getElementById("time").innerHTML = "last boot: " + msgobj.rb;
 		}
 	}
 }
@@ -158,6 +159,7 @@ function saveconfig(){
 		msgobj.heaterhours[i] = document.getElementById("h"+i.toString()).checked;}
 	Http.send(JSON.stringify(msgobj));
 	console.log(msgobj);
+	window.location.replace("/");
 }
 </script>	
 </body>
