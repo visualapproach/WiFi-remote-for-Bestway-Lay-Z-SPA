@@ -19,7 +19,6 @@ bool filterOnFlag = false;
 bool filterOffFlag = false;
 bool heaterEnableFlag = false;
 bool heaterDisableFlag = false;
-bool heaterEnabled = true;
 bool saveAppdataFlag = false;
 
 ESP8266WebServer server(80);       // Create a webserver object that listens for HTTP request on port 80

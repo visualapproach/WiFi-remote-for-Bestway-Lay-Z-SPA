@@ -138,14 +138,15 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
             break;
           case 0x3:
             heaterStart = DateTime.now();
-            filterStart = DateTime.now();
-            airStart = DateTime.now();
+            filterStart = heaterStart;
+            airStart = heaterStart;
+            uptimestamp = heaterStart;
             appdata.heattime = 0;
             appdata.uptime = 0;
             appdata.airtime = 0;
             appdata.filtertime = 0;
             appdata.cost = 0;
-            saveappdata();
+            saveAppdataFlag = true;
             break;
           case 0x5:
             //power
@@ -227,7 +228,7 @@ void sendWSmessage() {
   doc["time"] = (DateTime.format(DateFormatter::SIMPLE));
   doc["clts"] = (DateTime.now() - appdata.clts);
   doc["heattime"] = getHeatingTime();
-  doc["uptime"] = appdata.uptime+DateTime.now()-uptimestamp;
+  doc["uptime"] = appdata.uptime;
   doc["airtime"] = getAirTime();
   doc["filtertime"] = getFilterTime();
   doc["cost"] = appdata.cost; //updates every second -ish

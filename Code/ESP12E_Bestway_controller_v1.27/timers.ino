@@ -51,8 +51,6 @@ void minuteTimer() {
     Serial.println(F("Failed to get time from server, retry."));
     DateTime.begin();
   }
-  uint32_t t = DateTime.now();
-  appdata.uptime = t - uptimestamp;
 
   DateTimeParts p = DateTime.getParts();
   int h = p.getHours();
@@ -82,5 +80,8 @@ void secondTimer() {
   appdata.cost = getHeatingTime() * 1900 + getFilterTime() * 40 + getAirTime() * 800 + appdata.uptime * 2; //wattSeconds
   appdata.cost /= 3600000.0; //kWh
   appdata.cost *= myConfig.price; //money
+  uint32_t t = DateTime.now();
+  appdata.uptime = t - uptimestamp;
+
   sendWSmessage();
 }
