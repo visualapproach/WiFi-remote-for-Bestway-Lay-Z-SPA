@@ -62,15 +62,15 @@ connection.onmessage = function (e) {
 	document.getElementById('cltimer').innerHTML = d.toFixed(2);
 	document.getElementById('cltimerbtn').style = mycolor;
 	
-	document.getElementById('heatingtime').innerHTML = 'Heating time: '+s2dhms(msgobj.heattime);	
+	document.getElementById('heatingtime').innerHTML = 'Acc. Heating time: '+s2dhms(msgobj.heattime);	
 	
-	document.getElementById('uptime').innerHTML = 'Up time: '+s2dhms(msgobj.uptime);
+	document.getElementById('uptime').innerHTML = 'Acc. Up time: '+s2dhms(msgobj.uptime);
 	
-	document.getElementById('airtime').innerHTML = 'Air time: '+s2dhms(msgobj.airtime);
+	document.getElementById('airtime').innerHTML = 'Acc. Air time: '+s2dhms(msgobj.airtime);
 	
-	document.getElementById('filtertime').innerHTML = 'Filter time: '+s2dhms(msgobj.filtertime);
+	document.getElementById('filtertime').innerHTML = 'Acc. Filter time: '+s2dhms(msgobj.filtertime);
 	
-	document.getElementById('cost').innerHTML = 'Cost: '+(msgobj.cost).toFixed(2);
+	document.getElementById('cost').innerHTML = 'Est. acc. cost: '+(msgobj.cost).toFixed(2);
 	
 	document.getElementById('auto').checked = msgobj.auto;
 };
@@ -135,4 +135,8 @@ function automode() {
 
 function reboot() {
 	connection.send('0');
+}
+
+function zero() {
+	connection.send('3');
 }

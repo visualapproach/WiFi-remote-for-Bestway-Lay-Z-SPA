@@ -54,13 +54,16 @@
 			<input type="checkbox" id="auto" onclick="automode()">
 		</div>		
 		<div id="time">utc</div>
-		<div id="heatingtime">Heating time</div>
-		<div id="uptime">Up time</div>
-		<div id="airtime">Air time</div>
+		<div id="uptime">Acc. Up time</div>
 		<div id="filtertime">Filter time</div>
-		<div id="cost">Electricity cost:</div>
+		<div id="heatingtime">Heating time</div>
+		<div id="airtime">Air time</div>
+		<div id="cost">Est. cost:</div>
 		<div><a href="config.html">Go to config page</a></div>
-		<div><button id="reboot" class="button" style="background-color:#DDD" onclick="reboot()">Reboot ESP module</button></div>
+		<div>
+			<button id="reset" class="button" style="background-color:#999" onclick="zero()">Zero timers</button>
+			<button id="reboot" class="button" style="background-color:#911" onclick="reboot()">Reboot ESP</button>
+		</div>
     </center>
 </body>
 </html>
