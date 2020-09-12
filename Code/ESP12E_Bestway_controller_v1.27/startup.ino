@@ -11,12 +11,10 @@ void startup() {
 
   Serial.print("timezone:");
   Serial.println(myConfig.timezone);
-  
+
   startWiFi();                 // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
   startOTA();                  // Start the OTA service
   startLittleFS();               // Start the LittleFS and list all contents
-  startWebSocket();            // Start a WebSocket server
-  startServer();               // Start a HTTP server with a file read handler and an upload handler
   loadConfiguration();
   loadappdata();
   setupDateTime();             //NTP
@@ -24,14 +22,20 @@ void startup() {
 
   DateTimeParts p = DateTime.getParts();
   prevHour = p.getHours();
-  uptimestamp = DateTime.getBootTime();
+  uptimestamp = DateTime.now();
   //DEBUG***********************VVV
-        File file = LittleFS.open("tmp.txt", "a");
-        file.print("\nREBOOT ");
-        file.println(DateTime.format(DateFormatter::SIMPLE));
-        file.print("Reason: ");
-        file.println(ESP.getResetReason());
-        file.close();
+  File file = LittleFS.open("tmp.txt", "a");
+  file.print("\nREBOOT ");
+  file.println(DateTime.format(DateFormatter::SIMPLE));
+  file.print("Reason: ");
+  file.println(ESP.getResetReason());
+  file.close();
+  filterStart = DateTime.now();
+  airStart = filterStart;
+  heaterStart = filterStart;
+
+  startWebSocket();            // Start a WebSocket server
+  startServer();               // Start a HTTP server with a file read handler and an upload handler
   startTimers();
   attachInterrupt(digitalPinToInterrupt(CS_CIO_PIN), ISR_slaveSelect, CHANGE);
   attachInterrupt(digitalPinToInterrupt(CLK_CIO_PIN), ISR_CLK_CIO_PIN_byte, CHANGE); //Write on falling edge and read on rising edge
@@ -156,7 +160,10 @@ void setupDateTime() {
   while (!DateTime.isTimeValid()) {
     Serial.println(F("Failed to get time from server. Trying again."));
     delay(1000);
-    if(c++ > 5) break;
+    DateTime.setServer("time.cloudflare.com");
+    DateTime.setTimeZone(myConfig.timezone);
+    DateTime.begin();
+    if (c++ > 5) break;
   }
 }
 

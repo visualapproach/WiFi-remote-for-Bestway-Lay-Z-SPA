@@ -52,8 +52,7 @@ void minuteTimer() {
     DateTime.begin();
   }
   uint32_t t = DateTime.now();
-  appdata.uptime += t - uptimestamp;
-  uptimestamp = t;
+  appdata.uptime = t - uptimestamp;
 
   DateTimeParts p = DateTime.getParts();
   int h = p.getHours();

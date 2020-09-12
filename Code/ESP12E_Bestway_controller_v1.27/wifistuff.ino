@@ -259,6 +259,7 @@ void handleGetConfig() { // reply with json document
     }
     doc["audio"] = myConfig.audio;
     doc["price"] = myConfig.price;
+    doc["rb"] = DateFormatter::format(DateFormatter::SIMPLE, (time_t) DateTime.getBootTime(), myConfig.timezone);
 
     // Serialize JSON to string
     String jsonmsg;
