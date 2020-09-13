@@ -7,7 +7,7 @@ void schedule() {
   if (myConfig.automode) {
     //timers are setting flags to request filter on off, or heater on off
     if (filterOnFlag) {
-      setFilter(1);//Flag will be reset when mission accomplished in this function
+      setFilter(1);//Flag will be reset when mission accomplished in this function 
     }
 
     if (filterOffFlag) {

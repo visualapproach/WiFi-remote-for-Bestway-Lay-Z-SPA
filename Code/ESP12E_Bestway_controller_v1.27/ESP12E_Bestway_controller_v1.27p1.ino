@@ -223,10 +223,6 @@ void releaseButtons() {
           heaterDisableFlag = false;
           heaterEnableFlag = false;
           autoBTN = NOBTN;
-          File file = LittleFS.open("tmp.txt", "a");
-          file.print("autoBTN HTR cmd state: ");
-          file.println(heater_cmd);
-          file.close();
         }
         break;
       case FLT:
@@ -240,6 +236,16 @@ void releaseButtons() {
             textOut("on");
           else
             textOut("off");
+          autoBTN = NOBTN;
+        }
+        break;
+      case LCK:
+        if (locked_sts == locked_cmd || power_sts == false) {
+          autoBTN = NOBTN;
+        }
+        break;
+      case PWR:
+        if (power_sts == power_cmd) {
           autoBTN = NOBTN;
         }
         break;
@@ -273,12 +279,12 @@ void setFilter(bool state) {
 
 bool unlockDevice() {
   if (!power_sts) {
-    virtualBTN = PWR;
+    autoBTN = PWR;
     power_cmd = 1;
     return false;
   }
   else if (locked_sts) {
-    virtualBTN = LCK;
+    autoBTN = LCK;
     locked_cmd = 0;
     return false;
   }
