@@ -74,6 +74,15 @@ void saveConfiguration() {
 
 void saveappdata() {
   //store data struct to flash (LittleFS)
+  appdata.heattime = getHeatingTime();
+  heaterStart = DateTime.now();
+  appdata.uptime = getUpTime();
+  uptimestamp = DateTime.now();
+  appdata.airtime = getAirTime();
+  airStart = DateTime.now();
+  appdata.filtertime = getFilterTime();
+  filterStart = DateTime.now();
+  
   File file = LittleFS.open(appdataFileName, "w");
   if (!file) {
     Serial.println(F("Failed to write appdata file"));

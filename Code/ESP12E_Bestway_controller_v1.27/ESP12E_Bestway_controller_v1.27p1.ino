@@ -38,31 +38,6 @@ void loop() {
   ArduinoOTA.handle();        // listen for OTA events
 }
 
-
-//Keep track of heating time
-uint32_t getHeatingTime() {
-  uint32_t t = 0;
-  if (heater_red_sts) {
-    t = DateTime.now() - heaterStart;
-  }
-  return appdata.heattime + t;
-}
-uint32_t getFilterTime() {
-  uint32_t t = 0;
-  if (filter_sts) {
-    t = DateTime.now() - filterStart;
-  }
-  return appdata.filtertime + t;
-}
-uint32_t getAirTime() {
-  uint32_t t = 0;
-  if (air_sts) {
-    t = DateTime.now() - airStart;
-  }
-  return appdata.airtime + t;
-}
-
-
 //This function handles most of the high level logic
 //regarding status variables updates, and button presses
 //and scheduled events.
@@ -241,14 +216,30 @@ void releaseButtons() {
   if (autoBTN != NOBTN) {
     switch (autoBTN) {
       case HTR:
-        if (((heater_green_sts || heater_red_sts) == heater_cmd) || power_sts == false || locked_sts == true) {
+        if (power_sts == false || locked_sts == true) {
           autoBTN = NOBTN;
+        }
+        if ((heater_green_sts || heater_red_sts) == heater_cmd) {
           heaterDisableFlag = false;
           heaterEnableFlag = false;
+          autoBTN = NOBTN;
+          File file = LittleFS.open("tmp.txt", "a");
+          file.print("autoBTN HTR cmd state: ");
+          file.println(heater_cmd);
+          file.close();
         }
         break;
       case FLT:
-        if (filter_sts == filter_cmd || power_sts == false || locked_sts == true) {
+        if (power_sts == false || locked_sts == true) {
+          autoBTN = NOBTN;
+        }
+        if (filter_sts == filter_cmd) {
+          filterOffFlag = false; //mission accomplished, don't trigger this again
+          filterOnFlag = false; //mission accomplished, don't trigger this again
+          if (filter_cmd)
+            textOut("on");
+          else
+            textOut("off");
           autoBTN = NOBTN;
         }
         break;
@@ -264,27 +255,35 @@ void updateDSPOUT() {
   }
 }
 
-
-
-void turnOffFilter() {
-  if (unlockDevice()) {
-    autoBTN = FLT;
-    filter_cmd = 0;
-    filterOffFlag = false; //mission accomplished, don't trigger this again
-    textOut("off");
+void setHeater(bool state) {
+  if (state != (heater_red_sts || heater_green_sts)) {
+    if (unlockDevice()) {
+      autoBTN = HTR;
+      heater_cmd = state;
+    }
   }
 }
 
-void turnOnFilter() {
+void setFilter(bool state) {
   if (unlockDevice()) {
     autoBTN = FLT;
-    filter_cmd = 1;
-    filterOnFlag = false; //mission accomplished, don't trigger this again
-    //Serial.println(F("auto filter on"));
-    textOut("on");
+    filter_cmd = state;
   }
 }
 
+bool unlockDevice() {
+  if (!power_sts) {
+    virtualBTN = PWR;
+    power_cmd = 1;
+    return false;
+  }
+  else if (locked_sts) {
+    virtualBTN = LCK;
+    locked_cmd = 0;
+    return false;
+  }
+  else return true;
+}
 
 void validateButtons() {
   //realBTN overrides virtualBTN
@@ -326,26 +325,7 @@ void validateButtons() {
 
 }
 
-void setHeater(bool state) {
-  if (unlockDevice()) {
-    autoBTN = HTR;
-    heater_cmd = state;
-  }
-}
 
-bool unlockDevice() {
-  if (!power_sts) {
-    virtualBTN = PWR;
-    power_cmd = 1;
-    return false;
-  }
-  else if (locked_sts) {
-    virtualBTN = LCK;
-    locked_cmd = 0;
-    return false;
-  }
-  else return true;
-}
 
 //turn off heater but keep filter pump running if wanted
 bool isheaterhours() {
@@ -527,4 +507,32 @@ void textOut(String txt) {
     DSP_OUT[DGT3_IDX] = getCode(txt.charAt(0));
     updateDSP(0xF1);
   }
+}
+
+//Keep track of heating time
+uint32_t getHeatingTime() {
+  uint32_t t = 0;
+  if (heater_red_sts) {
+    t = DateTime.now() - heaterStart;
+  }
+  return appdata.heattime + t;
+}
+uint32_t getFilterTime() {
+  uint32_t t = 0;
+  if (filter_sts) {
+    t = DateTime.now() - filterStart;
+  }
+  return appdata.filtertime + t;
+}
+uint32_t getAirTime() {
+  uint32_t t = 0;
+  if (air_sts) {
+    t = DateTime.now() - airStart;
+  }
+  return appdata.airtime + t;
+}
+uint32_t getUpTime() {
+  uint32_t t = 0;
+  t = DateTime.now() - uptimestamp;
+  return appdata.uptime + t;
 }

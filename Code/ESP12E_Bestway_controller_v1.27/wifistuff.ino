@@ -72,8 +72,8 @@ void handleFileUpload() { // upload a new file to the LittleFS
 
 void handleLogRemove() {
   if (LittleFS.exists("/eventlog.csv")) LittleFS.remove("/eventlog.csv");
+  if (LittleFS.exists("/tmp.txt")) LittleFS.remove("/tmp.txt");
   server.send(200, "text/plain", "OK");
-
   Serial.println(F("removed"));
 }
 
@@ -145,7 +145,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
             appdata.uptime = 0;
             appdata.airtime = 0;
             appdata.filtertime = 0;
-            appdata.cost = 0;
+            
             saveAppdataFlag = true;
             break;
           case 0x5:
@@ -228,7 +228,7 @@ void sendWSmessage() {
   doc["time"] = (DateTime.format(DateFormatter::SIMPLE));
   doc["clts"] = (DateTime.now() - appdata.clts);
   doc["heattime"] = getHeatingTime();
-  doc["uptime"] = appdata.uptime;
+  doc["uptime"] = getUpTime();
   doc["airtime"] = getAirTime();
   doc["filtertime"] = getFilterTime();
   doc["cost"] = appdata.cost; //updates every second -ish

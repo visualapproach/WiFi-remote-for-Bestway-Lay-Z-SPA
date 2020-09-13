@@ -135,7 +135,7 @@ bool celsius_cmd;
 int fetchTargetTemp = 0;
 //When the pump (filter) starts after autoshutdown, should we also start the heater?
 //It updates every time you change state of the heater.
-bool savedHeaterState = 0;
+bool savedHeaterState = 1;
 
 
 //CIO data adresses (see documentation in excel file on github)

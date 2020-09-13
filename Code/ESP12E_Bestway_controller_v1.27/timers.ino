@@ -7,11 +7,11 @@ void schedule() {
   if (myConfig.automode) {
     //timers are setting flags to request filter on off, or heater on off
     if (filterOnFlag) {
-      turnOnFilter();//Flag will be reset when mission accomplished in this function
+      setFilter(1);//Flag will be reset when mission accomplished in this function
     }
 
     if (filterOffFlag) {
-      turnOffFilter();//Flag will be reset when mission accomplished in this function
+      setFilter(0);//Flag will be reset when mission accomplished in this function
     }
 
     //flags are reset in releaseButtons after misson accomplished
@@ -80,8 +80,6 @@ void secondTimer() {
   appdata.cost = getHeatingTime() * 1900 + getFilterTime() * 40 + getAirTime() * 800 + appdata.uptime * 2; //wattSeconds
   appdata.cost /= 3600000.0; //kWh
   appdata.cost *= myConfig.price; //money
-  uint32_t t = DateTime.now();
-  appdata.uptime = t - uptimestamp;
 
   sendWSmessage();
 }
