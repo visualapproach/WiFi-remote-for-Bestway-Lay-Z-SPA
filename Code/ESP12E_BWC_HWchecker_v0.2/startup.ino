@@ -81,10 +81,10 @@ void startOTA() { // Start the OTA service
 }
 
 void startSPIFFS() { // Start the SPIFFS and list all contents
-  SPIFFS.begin();                             // Start the SPI Flash File System (SPIFFS)
+  LittleFS.begin();                             // Start the SPI Flash File System (SPIFFS)
   Serial.println(F("SPIFFS started. Contents:"));
   {
-    Dir dir = SPIFFS.openDir("/");
+    Dir dir = LittleFS.openDir("/");
     while (dir.next()) {                      // List the file system contents
       String fileName = dir.fileName();
       size_t fileSize = dir.fileSize();
