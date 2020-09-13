@@ -33,7 +33,7 @@ void saveData() {
   File logfile;
   String fname = "/rawdata.csv";
 
-  logfile = SPIFFS.open(fname, "a");
+  logfile = LittleFS.open(fname, "a");
   if (logfile) {
     for(int i = 0; i < 11; i++){
       logfile.print(DSP_IN[i], HEX);
