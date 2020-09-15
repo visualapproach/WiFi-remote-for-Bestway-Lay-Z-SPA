@@ -1,4 +1,9 @@
 /*
+ * 
+ * patch 2
+ * 
+ * smashed a bug - autofilter on didn't work in some occasions. It does now.
+ * 
  * v1.27
  * Reworked code
  * Switched to LittleFS since SPIFFS is deprecated
