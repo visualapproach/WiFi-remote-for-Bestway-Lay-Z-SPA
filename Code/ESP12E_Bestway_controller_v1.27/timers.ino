@@ -81,5 +81,10 @@ void secondTimer() {
   appdata.cost /= 3600000.0; //kWh
   appdata.cost *= myConfig.price; //money
 
+    if (!MQTTclient.connected())
+    {
+      MQTT_Connect();
+    }
+
   sendMessage();
 }
