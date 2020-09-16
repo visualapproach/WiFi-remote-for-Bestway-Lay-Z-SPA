@@ -140,3 +140,11 @@ function reboot() {
 function zero() {
 	connection.send('3');
 }
+
+function mqtt() {
+	if(document.getElementById("auto").checked) {
+		connection.send('20');
+	} else {
+		connection.send('21');
+	}
+}

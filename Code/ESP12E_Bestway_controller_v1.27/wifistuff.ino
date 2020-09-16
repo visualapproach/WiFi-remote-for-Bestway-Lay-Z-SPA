@@ -111,110 +111,114 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
     case WStype_CONNECTED: {              // if a new websocket connection is established
         IPAddress ip = webSocket.remoteIP(num);
         Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-        sendWSmessage();
+        sendMessage();
       }
       break;
     case WStype_TEXT:                     // if new text data is received
       Serial.printf("[%u] get Text: %s\n", num, payload);
       uint32_t cmd = strtol((const char *) &payload[0], NULL, 16);
-      if (cmd > 0x13) {
-        //target temperature received
-        //Not implemented.
-      } else {
-        //a button is received
-        switch (cmd) {
-          case 0x0:
-            //reboot
-            saveappdata();
-            ESP.restart();
-            break;
-          case 0x1:
-            appdata.automode = true;
-            saveappdata();
-            break;
-          case 0x2:
-            appdata.automode = false;
-            saveappdata();
-            break;
-          case 0x3:
-            heaterStart = DateTime.now();
-            filterStart = heaterStart;
-            airStart = heaterStart;
-            uptimestamp = heaterStart;
-            appdata.heattime = 0;
-            appdata.uptime = 0;
-            appdata.airtime = 0;
-            appdata.filtertime = 0;
-            
-            saveAppdataFlag = true;
-            break;
-          case 0x5:
-            //power
-            virtualBTN = PWR;
-            power_cmd = !power_sts;
-            break;
-          case 0x6:
-            //up
-            virtualBTN = UP;
-            BTN_timeout = millis() + 500;
-            break;
-          case 0x7:
-            //down
-            virtualBTN = DWN;
-            BTN_timeout = millis() + 500;
-            break;
-          case 0x8:
-            //filter
-            virtualBTN = FLT;
-            filter_cmd = !filter_sts;
-            break;
-          case 0xA:
-            //heater
-            virtualBTN = HTR;
-            heater_cmd = !(heater_red_sts | heater_green_sts);
-            break;
-          case 0xB:
-            //unit
-            virtualBTN = UNT;
-            celsius_cmd = !celsius_sts;
-            break;
-          case 0xC:
-            //air
-            virtualBTN = AIR;
-            air_cmd = !air_sts;
-            break;
-          case 0xD:
-            //timer
-            virtualBTN = TMR;
-            break;
-          case 0xE:
-            //lock
-            virtualBTN = LCK;
-            locked_cmd = !locked_sts;
-            break;
-          case 0xF:
-            //no button
-            virtualBTN = NOBTN;
-            break;
-          case 0x10:
-            //reset chlorine timer
-            {
-              appdata.clts = DateTime.now();
-              saveappdata();
-              break;
-            }
-          default:
-            break;
-        }
-      }
-      //sendWSmessage();
+      commandAction(cmd);
       break;
   }
+}
 
+void commandAction(int cmd) {
+  switch (cmd) {
+    case 0x0:
+      //reboot
+      saveappdata();
+      ESP.restart();
+      break;
+    case 0x1:
+      appdata.automode = true;
+      saveappdata();
+      break;
+    case 0x2:
+      appdata.automode = false;
+      saveappdata();
+      break;
+    case 0x3:
+      heaterStart = DateTime.now();
+      filterStart = heaterStart;
+      airStart = heaterStart;
+      uptimestamp = heaterStart;
+      appdata.heattime = 0;
+      appdata.uptime = 0;
+      appdata.airtime = 0;
+      appdata.filtertime = 0;
+
+      saveAppdataFlag = true;
+      break;
+    case 0x5:
+      //power
+      virtualBTN = PWR;
+      power_cmd = !power_sts;
+      break;
+    case 0x6:
+      //up
+      virtualBTN = UP;
+      BTN_timeout = millis() + 500;
+      break;
+    case 0x7:
+      //down
+      virtualBTN = DWN;
+      BTN_timeout = millis() + 500;
+      break;
+    case 0x8:
+      //filter
+      virtualBTN = FLT;
+      filter_cmd = !filter_sts;
+      break;
+    case 0xA:
+      //heater
+      virtualBTN = HTR;
+      heater_cmd = !(heater_red_sts | heater_green_sts);
+      break;
+    case 0xB:
+      //unit
+      virtualBTN = UNT;
+      celsius_cmd = !celsius_sts;
+      break;
+    case 0xC:
+      //air
+      virtualBTN = AIR;
+      air_cmd = !air_sts;
+      break;
+    case 0xD:
+      //timer
+      virtualBTN = TMR;
+      break;
+    case 0xE:
+      //lock
+      virtualBTN = LCK;
+      locked_cmd = !locked_sts;
+      break;
+    case 0xF:
+      //no button
+      virtualBTN = NOBTN;
+      break;
+    case 0x10:
+      //reset chlorine timer
+      {
+        appdata.clts = DateTime.now();
+        saveappdata();
+        break;
+      }
+    case 0x20:
+      appdata.usemqtt = true;
+      saveappdata();
+      break;
+    case 0x21:
+      appdata.usemqtt = false;
+      saveappdata();
+      break;
+    default:
+      break;
+  }
 }
 
 //send status data to web client in JSON format (because it is easy to decode on the other side)
-void sendWSmessage() {
+void sendMessage() {
   StaticJsonDocument<1200> doc; //I hope this is enough
   doc["temp"] = (cur_tmp_val);
   doc["target"] = (set_tmp_val);
@@ -238,8 +242,18 @@ void sendWSmessage() {
     Serial.println(F("Failed to serialize ws message"));
   } else {
     webSocket.broadcastTXT(jsonmsg);
+    //Send to MQTT - 877dev
+    if (appdata.usemqtt) {
+      if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
+      {
+        Serial.println(F("MQTT published"));
+      }
+      else
+      {
+        Serial.println(F("MQTT not published"));
+      }
+    }
   }
-
 }
 
 void handleGetConfig() { // reply with json document
@@ -283,7 +297,7 @@ void handleSetConfig() {
     StaticJsonDocument<1024> doc;
     // Deserialize the JSON document
     DeserializationError error = deserializeJson(doc, message);
-    if (error){
+    if (error) {
       Serial.println(F("Failed to set config"));
       server.send(500, "plain/text", "Failed to set config");
       return;
@@ -301,5 +315,76 @@ void handleSetConfig() {
 
     server.send(200, "plain/text", "");
     saveCfgFlag = true;
+  }
+}
+
+void handleGetMqtt() { // reply with json document
+  if (server.method() != HTTP_POST) {
+    server.send(405, "text/plain", "Method Not Allowed");
+  } else {
+    // Allocate a temporary JsonDocument
+    // Don't forget to change the capacity to match your requirements.
+    // Use arduinojson.org/assistant to compute the capacity.
+    StaticJsonDocument<1024> doc;
+
+    // Set the values in the document
+    doc["mqtt_server_ip"][0] = mqtt_server_ip[0];
+    doc["mqtt_server_ip"][1] = mqtt_server_ip[1];
+    doc["mqtt_server_ip"][2] = mqtt_server_ip[2];
+    doc["mqtt_server_ip"][3] = mqtt_server_ip[3];
+    doc["mqtt_port"] = mqtt_port;
+    doc["mqtt_username"] = mqtt_username;
+    doc["mqtt_password"] = mqtt_password;
+    doc["mqtt_client_id"] = mqtt_client_id;
+    doc["base_mqtt_topic"] = base_mqtt_topic;
+
+    // Serialize JSON to string
+    String jsonmsg;
+    if (serializeJson(doc, jsonmsg) == 0) {
+      Serial.println(F("Failed to serialize message"));
+      server.send(500, "text/plain", "error serializing object");
+    } else {
+      server.send(200, "text/plain", jsonmsg);
+    }
+  }
+}
+
+void handleSetMqtt() {
+  if (server.method() != HTTP_POST) {
+    server.send(405, "text/plain", "Method Not Allowed");
+  } else {
+    String message;
+    message = server.arg(0);
+    //Serial.println(message);
+    StaticJsonDocument<1024> doc;
+    // Deserialize the JSON document
+    DeserializationError error = deserializeJson(doc, message);
+    if (error) {
+      Serial.println(F("Failed to set config"));
+      server.send(500, "plain/text", "Failed to set config");
+      return;
+    }
+
+    // Copy values from the JsonDocument to the Config
+    mqtt_server_ip[0] = doc["mqtt_server_ip"][0];
+    mqtt_server_ip[1] = doc["mqtt_server_ip"][1];
+    mqtt_server_ip[2] = doc["mqtt_server_ip"][2];
+    mqtt_server_ip[3] = doc["mqtt_server_ip"][3];
+    mqtt_port = doc["mqtt_port"];
+    strlcpy(mqtt_username,                  // <- destination
+            doc["mqtt_username"],           // <- source
+            sizeof(mqtt_username));         // <- destination's capacity
+    strlcpy(mqtt_password,                  // <- destination
+            doc["mqtt_password"],           // <- source
+            sizeof(mqtt_password));         // <- destination's capacity
+    strlcpy(mqtt_client_id,                 // <- destination
+            doc["mqtt_client_id"],          // <- source
+            sizeof(mqtt_client_id));        // <- destination's capacity
+    strlcpy(base_mqtt_topic,                // <- destination
+            doc["base_mqtt_topic"],         // <- source
+            sizeof(base_mqtt_topic));       // <- destination's capacity
+    server.send(200, "plain/text", "");
+    appdata.usemqtt = true;
+    saveappdata();
   }
 }

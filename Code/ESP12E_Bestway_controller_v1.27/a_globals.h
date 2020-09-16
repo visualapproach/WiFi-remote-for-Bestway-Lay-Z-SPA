@@ -11,6 +11,7 @@
 #include <DNSServer.h>
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 #include <Ticker.h>
+#include <PubSubClient.h>         //** Requires library 2.8.0 or higher ** https://github.com/knolleary/pubsubclient
 
 Ticker tickerMinute;
 Ticker tickerSecond;
@@ -46,13 +47,30 @@ struct Appdata {
   uint32_t filtertime;
   float cost;
   bool  automode = true;   //use scheduled events
+  bool usemqtt = false;
 };
 Appdata appdata;
 const char *appdataFileName = "/save.txt";
 
 //********USER PARAMETERS*************
 const char *OTAName = "BW-1.27";           // A name and a password for the OTA service
-const char *OTAPassword = "esp8266";       // Not used!
+const char *OTAPassword = "esp8266";       // Enter your own password here if you want
+
+//MQTT stuff******************************************************************************************************************************************************************
+// MQTT Server Setting variables... Managed from web interface
+IPAddress mqtt_server_ip;        // IP Address for your MQTT Server...
+int mqtt_port;                   // Port for the MQTT Server...
+char mqtt_username[16];          // MQTT Server username...
+char mqtt_password[16];          // MQTT Server password...
+char mqtt_client_id[16];         // Used for unique MQTT Client ID
+char base_mqtt_topic[16];        // Start of the MQTT Topic name used by this device
+int mqtt_connect_count;          // Count of how may times we've connected to the MQTT server since booting (should always be 1 or more)
+//
+WiFiClient My_WiFi_Client;
+PubSubClient MQTTclient(My_WiFi_Client);
+const char *mqttcredentialsfilename = "mqtt.txt";
+
+//******************************************************************************************************************************************************************************
 
 
 //Pins

@@ -81,5 +81,5 @@ void secondTimer() {
   appdata.cost /= 3600000.0; //kWh
   appdata.cost *= myConfig.price; //money
 
-  sendWSmessage();
+  sendMessage();
 }

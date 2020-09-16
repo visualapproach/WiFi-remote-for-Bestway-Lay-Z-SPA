@@ -37,6 +37,7 @@ void startup() {
   startWebSocket();            // Start a WebSocket server
   startServer();               // Start a HTTP server with a file read handler and an upload handler
   startTimers();
+  startMQTT();                // Start the MQTT server - 877dev
   attachInterrupt(digitalPinToInterrupt(CS_CIO_PIN), ISR_slaveSelect, CHANGE);
   attachInterrupt(digitalPinToInterrupt(CLK_CIO_PIN), ISR_CLK_CIO_PIN_byte, CHANGE); //Write on falling edge and read on rising edge
   //unfortunately, the CIO is inconsistent and switches state on data line both during HIGH and LOW clock, so occasionally there will be misreadings.
@@ -86,7 +87,7 @@ void startWiFi() { // Start a Wi-Fi access point, and try to connect to some giv
 
 void startOTA() { // Start the OTA service
   ArduinoOTA.setHostname(OTAName);
-  //ArduinoOTA.setPassword(OTAPassword);
+  ArduinoOTA.setPassword(OTAPassword);
 
   ArduinoOTA.onStart([]() {
     Serial.println(F("OTA Start"));
@@ -137,6 +138,8 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
 
   server.on(F("/getconfig/"), handleGetConfig);
   server.on(F("/setconfig/"), handleSetConfig);
+  server.on(F("/getmqtt/"), handleGetMqtt);
+  server.on(F("/setmqtt/"), handleSetMqtt);
 
   server.on(F("/remove.html"), handleLogRemove);                      // go to 'handleFileUpload'
 
@@ -171,4 +174,16 @@ void startTimers() {
   tickerSecond.attach(1.4, secondTimer);
   tickerMinute.attach(60, minuteTimer);
   tickerDay.attach(24 * 3600, dayTimer); //save data every day
+}
+
+void startMQTT() { //MQTT setup and connect - 877dev
+  if (loadmqtt()) {
+    MQTTclient.setServer(mqtt_server_ip, mqtt_port); //setup MQTT broker information as defined earlier
+    if (MQTTclient.setBufferSize (2048))      //set buffer for larger messages, new to library 2.8.0
+    {
+      Serial.println(F("MQTT buffer size successfully increased"));
+    }
+    MQTTclient.setCallback(MQTTcallback);          // set callback details - this function is called automatically whenever a message arrives on a subscribed topic.
+    MQTT_Connect();                                //Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
+  }
 }

@@ -1,7 +1,8 @@
-/*
+/* * v1.27 (p2) MQTT branch
+ * 877dev, thanks for your inputs and code
+ * Pubsub library must be 2.8.0 or higher to allow larger messages.
  * 
  * patch 2
- * 
  * smashed a bug - autofilter on didn't work in some occasions. It does now.
  * 
  * v1.27
