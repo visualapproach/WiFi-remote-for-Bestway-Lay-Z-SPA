@@ -237,6 +237,7 @@ void sendMessage() {
   doc["filtertime"] = getFilterTime();
   doc["cost"] = appdata.cost; //updates every second -ish
   doc["auto"] = appdata.automode; //updates every second -ish
+  doc["dsp"] = cur_tmp_str;
   String jsonmsg;
   if (serializeJson(doc, jsonmsg) == 0) {
     Serial.println(F("Failed to serialize ws message"));

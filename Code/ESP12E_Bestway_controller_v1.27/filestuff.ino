@@ -193,12 +193,10 @@ bool loadmqtt() {
           sizeof(base_mqtt_topic));        // <- destination's capacity
 
   file.close();
-  appdata.usemqtt = true;
   return true;
 }
 
 void savemqtt() {
-  appdata.usemqtt = false;
   File file = LittleFS.open(mqttcredentialsfilename, "w");
   if (!file) {
     Serial.println(F("Failed to create mqtt file"));
@@ -225,8 +223,6 @@ void savemqtt() {
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
     Serial.println(F("Failed to write json to mqtt file"));
-  } else {
-    appdata.usemqtt = true;
   }
   file.close();
 }

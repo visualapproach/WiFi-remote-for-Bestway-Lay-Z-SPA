@@ -95,6 +95,7 @@ uint16_t autoBTN = 0xD8D8;
 bool virtual_onoff = 0;
 unsigned long BTN_timeout;
 unsigned long target_timeout;
+unsigned long tempvalid;
 bool runOnce = false;
 
 uint8_t DSP_BRT_IN = 0x01;//debug
