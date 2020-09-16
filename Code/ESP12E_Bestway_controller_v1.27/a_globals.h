@@ -21,6 +21,7 @@ bool filterOffFlag = false;
 bool heaterEnableFlag = false;
 bool heaterDisableFlag = false;
 bool saveAppdataFlag = false;
+bool checkMqttConnection = false;
 
 ESP8266WebServer server(80);       // Create a webserver object that listens for HTTP request on port 80
 WebSocketsServer webSocket(81);    // create a websocket server on port 81

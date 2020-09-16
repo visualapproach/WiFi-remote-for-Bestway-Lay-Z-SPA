@@ -80,11 +80,6 @@ void secondTimer() {
   appdata.cost = getHeatingTime() * 1900 + getFilterTime() * 40 + getAirTime() * 800 + appdata.uptime * 2; //wattSeconds
   appdata.cost /= 3600000.0; //kWh
   appdata.cost *= myConfig.price; //money
-
-    if (!MQTTclient.connected())
-    {
-      MQTT_Connect();
-    }
-
+  checkMqttConnection = true;
   sendMessage();
 }

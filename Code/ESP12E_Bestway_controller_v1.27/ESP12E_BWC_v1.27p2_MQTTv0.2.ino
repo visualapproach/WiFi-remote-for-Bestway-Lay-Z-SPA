@@ -35,15 +35,20 @@ void loop() {
   yield();
   server.handleClient();      // run the server
   yield();
-  ArduinoOTA.handle();        // listen for OTA
-events
+  ArduinoOTA.handle();        // listen for OTA events
   //MQTT processing
   //Note that MQTTclient.connected() will still return 'true' until the
   //MQTT keepalive timeout has expired (around 35 seconds for my setup /877dev)
   if (appdata.usemqtt) {
-
-    MQTTclient.loop();
+    if (checkMqttConnection) {
+      checkMqttConnection = false;
+      if (!MQTTclient.connected())
+      {
+        MQTT_Connect();
+      }
+    }
   }
+  MQTTclient.loop();
 }
 
 //This function handles most of the high level logic
@@ -114,9 +119,9 @@ void handleData() {
   c2 = getChar(DSP_OUT[DGT2_IDX]);
   c3 = getChar(DSP_OUT[DGT3_IDX]);
   cur_tmp_str = String(c1) + String(c2) + String(c3);
-  if(millis() > tempvalid) cur_tmp_val = cur_tmp_str.toInt();
+  if (millis() > tempvalid) cur_tmp_val = cur_tmp_str.toInt();
   //cur_tmp_val = cur_tmp_str.toInt();
-  
+
   //convert bits in the transmitted array to easy to understand variables
   locked_sts = DSP_OUT[LCK_IDX] & (1 << LCK_BIT);
   power_sts = DSP_OUT[PWR_IDX] & (1 << PWR_BIT);
