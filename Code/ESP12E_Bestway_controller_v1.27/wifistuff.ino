@@ -385,6 +385,7 @@ void handleSetMqtt() {
             sizeof(base_mqtt_topic));       // <- destination's capacity
     server.send(200, "plain/text", "");
     appdata.usemqtt = true;
+    savemqtt();
     saveappdata();
   }
 }
