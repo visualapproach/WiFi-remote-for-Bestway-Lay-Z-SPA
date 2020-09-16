@@ -169,19 +169,16 @@ void releaseButtons() {
       case LCK:
         if (locked_sts == locked_cmd || power_sts == false) {
           virtualBTN = NOBTN;
-          webSocket.broadcastTXT("vB LCK");
         }
         break;
       case PWR:
         if (power_sts == power_cmd) {
           virtualBTN = NOBTN;
-          webSocket.broadcastTXT("vB PWR");
         }
         break;
       case AIR:
         if (air_sts == air_cmd || power_sts == false || locked_sts == true) {
           virtualBTN = NOBTN;
-          webSocket.broadcastTXT("vB air");
         }
         break;
       case HTR:
