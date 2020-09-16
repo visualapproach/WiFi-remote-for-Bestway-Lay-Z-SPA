@@ -33,7 +33,6 @@ struct Config {
   bool  heaterhours[24] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
   int   audio = 1;  //on = 1/off=0 may be added to in the future
   float price = 1.0; //in whatever currency
-  bool  automode = true;   //use scheduled events
 };
 Config myConfig;
 const char *cfgFileName = "/config.txt";
@@ -46,6 +45,7 @@ struct Appdata {
   uint32_t airtime;
   uint32_t filtertime;
   float cost;
+  bool  automode = true;   //use scheduled events
 };
 Appdata appdata;
 const char *appdataFileName = "/save.txt";

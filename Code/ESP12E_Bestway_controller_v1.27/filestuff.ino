@@ -27,7 +27,6 @@ void loadConfiguration() {
   }
   myConfig.audio = doc["audio"];
   myConfig.price = doc["price"];
-  myConfig.automode = doc["automode"];
   //  strlcpy(myConfig.hostname,                  // <- destination
   //          doc["hostname"] | "example.com",  // <- source
   //          sizeof(myConfig.hostname));         // <- destination's capacity
@@ -59,7 +58,6 @@ void saveConfiguration() {
   }
   doc["audio"] = myConfig.audio;
   doc["price"] = myConfig.price;
-  doc["automode"] = myConfig.automode;
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {

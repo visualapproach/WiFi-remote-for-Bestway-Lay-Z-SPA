@@ -129,11 +129,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
             ESP.restart();
             break;
           case 0x1:
-            myConfig.automode = true;
+            appdata.automode = true;
             saveappdata();
             break;
           case 0x2:
-            myConfig.automode = false;
+            appdata.automode = false;
             saveappdata();
             break;
           case 0x3:
@@ -232,7 +232,7 @@ void sendWSmessage() {
   doc["airtime"] = getAirTime();
   doc["filtertime"] = getFilterTime();
   doc["cost"] = appdata.cost; //updates every second -ish
-  doc["auto"] = myConfig.automode; //updates every second -ish
+  doc["auto"] = appdata.automode; //updates every second -ish
   String jsonmsg;
   if (serializeJson(doc, jsonmsg) == 0) {
     Serial.println(F("Failed to serialize ws message"));

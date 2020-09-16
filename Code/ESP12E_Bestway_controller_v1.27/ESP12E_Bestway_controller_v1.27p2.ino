@@ -306,7 +306,7 @@ void validateButtons() {
   if (realBTN != NOBTN) tmpButton = realBTN;
 
   //discard forbidden actions
-  if (myConfig.automode && !isheaterhours()) {
+  if (appdata.automode && !isheaterhours()) {
     if (tmpButton == HTR) {
       if (!(heater_red_sts || heater_green_sts)) {
         tmpButton = NOBTN;        //discard button if not allowed

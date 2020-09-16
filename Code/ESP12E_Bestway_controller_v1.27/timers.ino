@@ -4,7 +4,7 @@
 //Restore heater (once) when entering an allowed hour.
 void schedule() {
 
-  if (myConfig.automode) {
+  if (appdata.automode) {
     //timers are setting flags to request filter on off, or heater on off
     if (filterOnFlag) {
       setFilter(1);//Flag will be reset when mission accomplished in this function
