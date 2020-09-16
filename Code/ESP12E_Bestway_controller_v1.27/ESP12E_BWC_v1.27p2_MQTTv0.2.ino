@@ -35,17 +35,7 @@ void loop() {
   yield();
   server.handleClient();      // run the server
   yield();
-  ArduinoOTA.handle();        // listen for OTA events
-  //MQTT processing
-  //Note that MQTTclient.connected() will still return 'true' until the
-  //MQTT keepalive timeout has expired (around 35 seconds for my setup /877dev)
-  if (appdata.usemqtt) {
-    if (!MQTTclient.connected())
-    {
-      MQTT_Connect();
-    }
-    MQTTclient.loop();
-  }
+  ArduinoOTA.handle();        // listen for OTA
 }
 
 //This function handles most of the high level logic
