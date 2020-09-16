@@ -142,7 +142,7 @@ function zero() {
 }
 
 function mqtt() {
-	if(document.getElementById("auto").checked) {
+	if(document.getElementById("mqtt").checked) {
 		connection.send('20');
 	} else {
 		connection.send('21');
