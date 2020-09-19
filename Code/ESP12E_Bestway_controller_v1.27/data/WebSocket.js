@@ -73,6 +73,9 @@ connection.onmessage = function (e) {
 	document.getElementById('cost').innerHTML = 'Est. acc. cost: '+(msgobj.cost).toFixed(2);
 	
 	document.getElementById('auto').checked = msgobj.auto;
+	
+	document.getElementById('dsp').innerHTML = "Display: " + msgobj.dsp;
+	document.getElementById('mqtt').checked = msgobj.mqtt;
 };
 connection.onclose = function(){
     console.log('WebSocket connection closed');
