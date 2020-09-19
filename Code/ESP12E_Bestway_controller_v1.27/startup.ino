@@ -179,7 +179,7 @@ void startTimers() {
 void startMQTT() { //MQTT setup and connect - 877dev
   if (loadmqtt()) {
     MQTTclient.setServer(mqtt_server_ip, mqtt_port); //setup MQTT broker information as defined earlier
-    if (MQTTclient.setBufferSize (2048))      //set buffer for larger messages, new to library 2.8.0
+    if (MQTTclient.setBufferSize (1024))      //set buffer for larger messages, new to library 2.8.0
     {
       Serial.println(F("MQTT buffer size successfully increased"));
     }

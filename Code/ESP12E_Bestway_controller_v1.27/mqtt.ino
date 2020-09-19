@@ -1,6 +1,6 @@
 void MQTTcallback(char* topic, byte* payload, unsigned int length) {  //877dev
 
-  Serial.print("Message arrived [");
+  Serial.print(F("Message arrived ["));
   Serial.print(topic);
   Serial.print("] ");
   for (int i = 0; i < length; i++) {
@@ -56,7 +56,7 @@ void MQTT_Connect()
   else
   {
     // We get here if the connection failed...
-    Serial.print("MQTT Connection FAILED, Return Code = ");
+    Serial.print(F("MQTT Connection FAILED, Return Code = "));
     Serial.println(MQTTclient.state());
     Serial.println();
     /*

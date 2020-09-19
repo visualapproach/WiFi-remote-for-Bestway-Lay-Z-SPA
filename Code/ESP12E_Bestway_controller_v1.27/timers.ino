@@ -73,6 +73,7 @@ void minuteTimer() {
   if (!isheaterhours() && (heater_red_sts || heater_green_sts)) {
     heaterDisableFlag = true;
   }
+  checkMqttConnection = true;
 }
 
 //you get it by now. Except this is executed every 1.4 secs...
@@ -80,6 +81,5 @@ void secondTimer() {
   appdata.cost = getHeatingTime() * 1900 + getFilterTime() * 40 + getAirTime() * 800 + appdata.uptime * 2; //wattSeconds
   appdata.cost /= 3600000.0; //kWh
   appdata.cost *= myConfig.price; //money
-  checkMqttConnection = true;
   sendMessage();
 }

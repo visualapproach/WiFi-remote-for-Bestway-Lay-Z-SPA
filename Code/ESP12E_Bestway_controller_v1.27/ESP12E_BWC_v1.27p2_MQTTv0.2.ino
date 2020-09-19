@@ -30,11 +30,8 @@ void setup() {
 
 void loop() {
   handleData();               // talk to display and controller
-  yield();
   webSocket.loop();           // constantly check for websocket events
-  yield();
   server.handleClient();      // run the server
-  yield();
   ArduinoOTA.handle();        // listen for OTA events
   //MQTT processing
   //Note that MQTTclient.connected() will still return 'true' until the
@@ -49,6 +46,7 @@ void loop() {
     }
   }
   MQTTclient.loop();
+
 }
 
 //This function handles most of the high level logic
