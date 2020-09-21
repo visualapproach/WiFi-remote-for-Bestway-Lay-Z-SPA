@@ -17,8 +17,8 @@
 //pages will still load but no SPA data will be sent TO the page (save bandwidth)         
 #define USE_WEBINTERFACE
 
-//change MQTT credentials via web page. You will still be able to load/save the page but it is ignored.
+//change MQTT credentials via web page. You will still be able to load/save the page if commented, but it is ignored.
 #define USE_MQTT_WEBINTERFACE
 
 //store history in "eventlog.csv", and reboot time and reason in "tmp.txt"
-//#define USE_LOGS
+#define USE_LOGS
