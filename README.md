@@ -12,6 +12,7 @@ Features:<br>
 -Simple to build. No hardware changes needed on the SPA pump. Just remove the display, disconnect the 6-pin ribbon cable and plug it into this device.<br>
 -Timer for clorine<br>
 -Electricity cost estimation and more<br>
+-MQTT: check out v1.28 in the MQTT BRANCH.
 <br>
 BOM:<br>
 -ESP8266 NodeMCU 1.0 (This version is NOT for ESP32)<br>
