@@ -1,4 +1,4 @@
-From Arduino IDE, upload the sketch via serial and then SPIFFS data. 
+From Arduino IDE, upload the sketch via serial and then LittleFS data. 
 How this is done is beyond the scope of this readme.
 Settings:
 Board: nodemcu esp12e v1.0
