@@ -3,7 +3,7 @@
 ### Disclaimer: As mentioned, this is a hack. If anything breaks it breaks and it's your fault.<br>
 ### Caution - unplug mains power to the pump before trying to replicate this hack, or you can die! <br>
 <br>
-Features:<br>
+### Features:<br>
 -Watch the temperature and status from your browser.<br>
 -Custom text on the SPA pump display.<br>
 -Custom sound instead of just beeping. Plays a melody when starting etc.<br>
@@ -13,8 +13,8 @@ Features:<br>
 -Timer for clorine<br>
 -Electricity cost estimation and more<br>
 -MQTT: check out v1.28 in the MQTT BRANCH.
-<br>
-BOM:<br>
+<br><br>
+### BOM:<br>
 -ESP8266 NodeMCU 1.0 (This version is NOT for ESP32)<br>
 -8 channel bidirectional level converter<br>
 -6 pin male header (0.1 in spacing) or better: JST-SM Housing Connector<br>
