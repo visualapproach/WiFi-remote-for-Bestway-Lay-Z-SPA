@@ -3,6 +3,7 @@
 ### Disclaimer: As mentioned, this is a hack. If anything breaks it breaks and it's your fault.<br>
 ### Caution - unplug mains power to the pump before trying to replicate this hack, or you can die! <br>
 <br>
+
 ### Features:<br>
 -Watch the temperature and status from your browser.<br>
 -Custom text on the SPA pump display.<br>
@@ -14,6 +15,7 @@
 -Electricity cost estimation and more<br>
 -MQTT: check out v1.28 in the MQTT BRANCH.
 <br><br>
+
 ### BOM:<br>
 -ESP8266 NodeMCU 1.0 (This version is NOT for ESP32)<br>
 -8 channel bidirectional level converter<br>
