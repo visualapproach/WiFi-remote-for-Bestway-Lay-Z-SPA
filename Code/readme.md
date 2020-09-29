@@ -1,3 +1,5 @@
+BWC_1.28 is the latest version. MQTT and configurable settings in one tab "USER_PARAMS"
+
 From Arduino IDE, upload the sketch via serial and then LittleFS data. 
 How this is done is beyond the scope of this readme.
 Settings:
