@@ -13,7 +13,7 @@
 -Simple to build. No hardware changes needed on the SPA pump. Just remove the display, disconnect the 6-pin ribbon cable and plug it into this device.<br>
 -Timer for clorine<br>
 -Electricity cost estimation and more<br>
--MQTT: check out v1.28 in the MQTT BRANCH.
+-MQTT: check out v1.28. I have it installed and working with a Raspberry Pi 4 B with Docker/Mosquitto/grafana/influxdb. Thanks to faboaic and 877dev for MQTT support.
 <br><br>
 
 ### BOM:<br>
