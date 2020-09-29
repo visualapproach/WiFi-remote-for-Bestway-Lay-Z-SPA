@@ -75,8 +75,8 @@ connection.onmessage = function (e) {
 	document.getElementById('auto').checked = msgobj.auto;
 	
 	document.getElementById('dsp').innerHTML = "Display: " + msgobj.dsp;
-	document.getElementById('mqtt').checked = msgobj.mqtt;
 };
+
 connection.onclose = function(){
     console.log('WebSocket connection closed');
 };
@@ -144,10 +144,3 @@ function zero() {
 	connection.send('3');
 }
 
-function mqtt() {
-	if(document.getElementById("mqtt").checked) {
-		connection.send('20');
-	} else {
-		connection.send('21');
-	}
-}

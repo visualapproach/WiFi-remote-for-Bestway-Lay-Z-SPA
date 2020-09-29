@@ -1,4 +1,13 @@
-/* * v1.27 (p2) MQTT branch
+/* * 
+ * v1.28 
+ * MQTT version
+ * Will pull to MASTER branch after feedback from you
+ * Enter credentials in TAB "User_parameters.h"
+ * Also comment or uncomment the defines you want there.
+ * Removed "use mqtt" checkbox from main web page since you decide whether or not to use it from "user_parameters"
+ * 
+ *  
+ * v1.27 (p2) MQTT branch
  * 877dev, thanks for your inputs and code
  * Pubsub library must be 2.8.0 or higher to allow larger messages.
  * 

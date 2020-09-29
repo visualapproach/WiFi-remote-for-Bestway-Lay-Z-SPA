@@ -204,14 +204,6 @@ void commandAction(int cmd) {
         saveappdata();
         break;
       }
-    case 0x20:
-      appdata.usemqtt = true;
-      saveappdata();
-      break;
-    case 0x21:
-      appdata.usemqtt = false;
-      saveappdata();
-      break;
     default:
       break;
   }
@@ -238,14 +230,17 @@ void sendMessage() {
   doc["cost"] = appdata.cost; //updates every second -ish
   doc["auto"] = appdata.automode; //updates every second -ish
   doc["dsp"] = cur_tmp_str;
-  doc["mqtt"] = appdata.usemqtt;
+  //doc["mqtt"] = appdata.usemqtt;
   String jsonmsg;
   if (serializeJson(doc, jsonmsg) == 0) {
     Serial.println(F("Failed to serialize ws message"));
   } else {
+#ifdef USE_WEBINTERFACE
     webSocket.broadcastTXT(jsonmsg);
+#endif
+#ifdef USE_MQTT
     //Send to MQTT - 877dev
-    if (appdata.usemqtt) {
+    //if (appdata.usemqtt) {
       if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
       {
         Serial.println(F("MQTT published"));
@@ -254,7 +249,8 @@ void sendMessage() {
       {
         Serial.println(F("MQTT not published"));
       }
-    }
+    //}
+#endif
   }
 }
 
@@ -324,6 +320,7 @@ void handleGetMqtt() { // reply with json document
   if (server.method() != HTTP_POST) {
     server.send(405, "text/plain", "Method Not Allowed");
   } else {
+#ifdef USE_MQTT
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
@@ -348,6 +345,9 @@ void handleGetMqtt() { // reply with json document
     } else {
       server.send(200, "text/plain", jsonmsg);
     }
+#else
+    server.send(200, "text/plain", "");
+#endif
   }
 }
 
@@ -355,6 +355,7 @@ void handleSetMqtt() {
   if (server.method() != HTTP_POST) {
     server.send(405, "text/plain", "Method Not Allowed");
   } else {
+#ifdef USE_MQTT_WEBINTERFACE
     String message;
     message = server.arg(0);
     //Serial.println(message);
@@ -385,9 +386,11 @@ void handleSetMqtt() {
     strlcpy(base_mqtt_topic,                // <- destination
             doc["base_mqtt_topic"],         // <- source
             sizeof(base_mqtt_topic));       // <- destination's capacity
-    server.send(200, "plain/text", "");
+
     //appdata.usemqtt = true;
     savemqtt();
     //saveappdata();
+#endif
+    server.send(200, "plain/text", "");
   }
 }

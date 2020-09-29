@@ -30,13 +30,23 @@ void setup() {
 
 void loop() {
   handleData();               // talk to display and controller
-  yield();
   webSocket.loop();           // constantly check for websocket events
-  yield();
   server.handleClient();      // run the server
-  yield();
   ArduinoOTA.handle();        // listen for OTA events
-  delay(50);
+  //MQTT processing
+  //Note that MQTTclient.connected() will still return 'true' until the
+  //MQTT keepalive timeout has expired (around 35 seconds for my setup /877dev)
+  if (appdata.usemqtt) {
+    if (checkMqttConnection) {
+      checkMqttConnection = false;
+      if (!MQTTclient.connected())
+      {
+        MQTT_Connect();
+      }
+    }
+  }
+  MQTTclient.loop();
+
 }
 
 //This function handles most of the high level logic
@@ -52,7 +62,7 @@ void handleData() {
   //fetch target temperature
   if (fetchTargetTemp == 1 && cur_tmp_str == "   ") fetchTargetTemp = 2;
   if (fetchTargetTemp == 2 && (cur_tmp_str != "   ")) {
-    set_tmp_val = cur_tmp_val;
+    set_tmp_val = cur_tmp_str.toInt();
     fetchTargetTemp = 0;
   }
 
@@ -107,7 +117,8 @@ void handleData() {
   c2 = getChar(DSP_OUT[DGT2_IDX]);
   c3 = getChar(DSP_OUT[DGT3_IDX]);
   cur_tmp_str = String(c1) + String(c2) + String(c3);
-  cur_tmp_val = cur_tmp_str.toInt();
+  if (millis() > tempvalid) cur_tmp_val = cur_tmp_str.toInt();
+  //cur_tmp_val = cur_tmp_str.toInt();
 
   //convert bits in the transmitted array to easy to understand variables
   locked_sts = DSP_OUT[LCK_IDX] & (1 << LCK_BIT);
@@ -155,7 +166,7 @@ void handleData() {
   checkTargetTempNeeded();
 
   if (realchange) {
-    sendWSmessage(); //to webclients
+    sendMessage(); //to webclients
     savelog();       //saves status variables to LittleFS
     saveappdata();   //saves uptime, heating time etc to LittleFS
   }
@@ -185,7 +196,7 @@ void releaseButtons() {
         if (((heater_green_sts || heater_red_sts) == heater_cmd) || power_sts == false || locked_sts == true) {
           virtualBTN = NOBTN;
           savedHeaterState = heater_cmd;
-         }
+        }
         break;
       case FLT:
         if (filter_sts == filter_cmd || power_sts == false || locked_sts == true) {
@@ -202,6 +213,7 @@ void releaseButtons() {
         if (millis() > BTN_timeout) {
           virtualBTN = NOBTN;
           fetchTargetTemp = 1;
+          tempvalid = millis() + 10000;
         }
         break;
       case DWN:
@@ -209,6 +221,7 @@ void releaseButtons() {
         if (millis() > BTN_timeout) {
           virtualBTN = NOBTN;
           fetchTargetTemp = 1;
+          tempvalid = millis() + 10000;
         }
         break;
     }

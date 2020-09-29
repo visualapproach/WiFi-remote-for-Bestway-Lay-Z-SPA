@@ -73,7 +73,9 @@ void minuteTimer() {
   if (!isheaterhours() && (heater_red_sts || heater_green_sts)) {
     heaterDisableFlag = true;
   }
+  #ifdef USE_MQTT
   checkMqttConnection = true;
+  #endif
 }
 
 //you get it by now. Except this is executed every 1.4 secs...

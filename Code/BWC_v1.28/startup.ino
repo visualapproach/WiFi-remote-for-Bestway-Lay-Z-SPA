@@ -23,6 +23,7 @@ void startup() {
   DateTimeParts p = DateTime.getParts();
   prevHour = p.getHours();
   uptimestamp = DateTime.now();
+#ifdef USE_LOGS
   //DEBUG***********************VVV
   File file = LittleFS.open("tmp.txt", "a");
   file.print("\nREBOOT ");
@@ -30,6 +31,7 @@ void startup() {
   file.print("Reason: ");
   file.println(ESP.getResetReason());
   file.close();
+#endif
   filterStart = DateTime.now();
   airStart = filterStart;
   heaterStart = filterStart;
@@ -177,8 +179,14 @@ void startTimers() {
 }
 
 void startMQTT() { //MQTT setup and connect - 877dev
+#ifdef USE_MQTT
+
   if (loadmqtt()) {
+#ifdef myMqttName
+    MQTTclient.setServer(mqtt_server_name, mqtt_port); //setup MQTT broker information as defined earlier
+#else
     MQTTclient.setServer(mqtt_server_ip, mqtt_port); //setup MQTT broker information as defined earlier
+#endif
     if (MQTTclient.setBufferSize (1024))      //set buffer for larger messages, new to library 2.8.0
     {
       Serial.println(F("MQTT buffer size successfully increased"));
@@ -186,4 +194,6 @@ void startMQTT() { //MQTT setup and connect - 877dev
     MQTTclient.setCallback(MQTTcallback);          // set callback details - this function is called automatically whenever a message arrives on a subscribed topic.
     MQTT_Connect();                                //Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
   }
+
+#endif
 }

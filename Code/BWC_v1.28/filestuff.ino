@@ -107,6 +107,7 @@ void loadappdata() {
 }
 
 void savelog() {
+  #ifdef USE_LOGS
   //Don't start logging until time is set
   if (!DateTime.isTimeValid()) return;
   File logfile;
@@ -148,15 +149,19 @@ void savelog() {
 
   logfile.close();
 
-
-  //Serial.println(F("saved log")); //debug*************
+#endif
 }
 
 bool loadmqtt() {
+#ifdef USE_MQTT
+  //don't load anything if web interface is not wanted
+#ifndef USE_MQTT_WEBINTERFACE
+  return true;
+#endif
   File file = LittleFS.open(mqttcredentialsfilename, "r");
   if (!file) {
     Serial.println(F("Failed to open mqtt file (load)"));
-    appdata.usemqtt = false;
+    //appdata.usemqtt = false;
     return false;
   }
 
@@ -194,9 +199,11 @@ bool loadmqtt() {
 
   file.close();
   return true;
+#endif
 }
 
 void savemqtt() {
+#ifdef USE_MQTT
   File file = LittleFS.open(mqttcredentialsfilename, "w");
   if (!file) {
     Serial.println(F("Failed to create mqtt file"));
@@ -225,4 +232,5 @@ void savemqtt() {
     Serial.println(F("Failed to write json to mqtt file"));
   }
   file.close();
+#endif
 }

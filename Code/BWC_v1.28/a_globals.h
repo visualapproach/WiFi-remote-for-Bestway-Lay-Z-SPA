@@ -1,5 +1,13 @@
-#include <ArduinoJson.h>
 
+#define MY_VERSION "BW_1.28"
+
+#if defined(ESP8266)
+#warning "Great, you have the right board!"
+#else
+#error "This program supports 8266 only"
+#endif
+
+#include <ArduinoJson.h>
 #include "ESPDateTime.h"
 #include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
@@ -11,7 +19,11 @@
 #include <DNSServer.h>
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 #include <Ticker.h>
+
+#ifdef USE_MQTT
 #include <PubSubClient.h>         //** Requires library 2.8.0 or higher ** https://github.com/knolleary/pubsubclient
+bool checkMqttConnection = false;
+#endif
 
 Ticker tickerMinute;
 Ticker tickerSecond;
@@ -21,7 +33,6 @@ bool filterOffFlag = false;
 bool heaterEnableFlag = false;
 bool heaterDisableFlag = false;
 bool saveAppdataFlag = false;
-bool checkMqttConnection = false;
 
 ESP8266WebServer server(80);       // Create a webserver object that listens for HTTP request on port 80
 WebSocketsServer webSocket(81);    // create a websocket server on port 81
@@ -32,7 +43,7 @@ struct Config {
   int   filteroffhour = 3;
   int   filteronhour = 9;
   int   timezone = 0;     //timezone (UTC + TZ = your local time) DST seems to not be implemented in the ESPDateTime.h library
-  bool  heaterhours[24] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+  bool  heaterhours[24] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
   int   audio = 1;  //on = 1/off=0 may be added to in the future
   float price = 1.0; //in whatever currency
 };
@@ -48,31 +59,33 @@ struct Appdata {
   uint32_t filtertime;
   float cost;
   bool  automode = true;   //use scheduled events
-  bool usemqtt = false;
+  //bool usemqtt = false;
 };
 Appdata appdata;
 const char *appdataFileName = "/save.txt";
 
-//********USER PARAMETERS*************
-const char *OTAName = "BW-1.27";           // A name and a password for the OTA service
-const char *OTAPassword = "esp8266";       // Enter your own password here if you want
+const char *OTAName = MY_VERSION;           // A name and a password for the OTA service
+const char *OTAPassword = myOTApassword;       // Enter your own password here if you want
 
+#if defined(USE_MQTT)
 //MQTT stuff******************************************************************************************************************************************************************
-// MQTT Server Setting variables... Managed from web interface
-IPAddress mqtt_server_ip;        // IP Address for your MQTT Server...
-int mqtt_port;                   // Port for the MQTT Server...
-char mqtt_username[16];          // MQTT Server username...
-char mqtt_password[16];          // MQTT Server password...
-char mqtt_client_id[16];         // Used for unique MQTT Client ID
-char base_mqtt_topic[16];        // Start of the MQTT Topic name used by this device
-int mqtt_connect_count;          // Count of how may times we've connected to the MQTT server since booting (should always be 1 or more)
+// MQTT Server Setting variables... 
+IPAddress mqtt_server_ip  myMqttIP;       // IP Address for your MQTT Server...
+#ifdef myMqttName
+const char *mqtt_server_name = myMqttName;
+#endif
+int mqtt_port = myMqttPort;                // Port for the MQTT Server...
+char mqtt_username[16] = myMqttUser;       // MQTT Server username...
+char mqtt_password[16] = myMqttPassword;   // MQTT Server password...
+char mqtt_client_id[16] = MY_VERSION;       // Used for unique MQTT Client ID
+char base_mqtt_topic[16] = MY_VERSION;        // Start of the MQTT Topic name used by this device
+int mqtt_connect_count;                    // Count of how may times we've connected to the MQTT server since booting (should always be 1 or more)
 //
 WiFiClient My_WiFi_Client;
 PubSubClient MQTTclient(My_WiFi_Client);
 const char *mqttcredentialsfilename = "mqtt.txt";
-
 //******************************************************************************************************************************************************************************
-
+#endif
 
 //Pins
 const int CS_DSP_PIN = D3;
