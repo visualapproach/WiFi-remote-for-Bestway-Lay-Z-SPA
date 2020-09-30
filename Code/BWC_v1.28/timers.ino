@@ -78,10 +78,16 @@ void minuteTimer() {
   #endif
 }
 
-//you get it by now. Except this is executed every 1.4 secs...
-void secondTimer() {
+void MQTT_Timer() {
   appdata.cost = getHeatingTime() * 1900 + getFilterTime() * 40 + getAirTime() * 800 + appdata.uptime * 2; //wattSeconds
   appdata.cost /= 3600000.0; //kWh
   appdata.cost *= myConfig.price; //money
-  sendMessage();
+  sendMessage(0);
+}
+
+void WS_Timer() {
+  appdata.cost = getHeatingTime() * 1900 + getFilterTime() * 40 + getAirTime() * 800 + appdata.uptime * 2; //wattSeconds
+  appdata.cost /= 3600000.0; //kWh
+  appdata.cost *= myConfig.price; //money
+  sendMessage(1);
 }

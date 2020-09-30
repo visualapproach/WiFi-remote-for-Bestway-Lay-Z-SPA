@@ -1,6 +1,7 @@
 /* * 
  * v1.28 
  * MQTT version
+ * Will pull to MASTER branch after feedback from you
  * Enter credentials in TAB "User_parameters.h"
  * Also comment or uncomment the defines you want there.
  * Removed "use mqtt" checkbox from main web page since you decide whether or not to use it from "user_parameters"

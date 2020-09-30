@@ -26,7 +26,8 @@ bool checkMqttConnection = false;
 #endif
 
 Ticker tickerMinute;
-Ticker tickerSecond;
+Ticker tickerWS;
+Ticker tickerMQTT;
 Ticker tickerDay;
 bool filterOnFlag = false;
 bool filterOffFlag = false;

@@ -173,7 +173,12 @@ void setupDateTime() {
 }
 
 void startTimers() {
-  tickerSecond.attach(1.4, secondTimer);
+#ifdef USE_WEBINTERFACE
+  tickerWS.attach(WS_INTERVAL, WS_Timer);
+#endif
+#ifdef USE_MQTT
+  tickerMQTT.attach(MQTT_INTERVAL, MQTT_Timer);
+#endif
   tickerMinute.attach(60, minuteTimer);
   tickerDay.attach(24 * 3600, dayTimer); //save data every day
 }

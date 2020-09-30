@@ -111,7 +111,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
     case WStype_CONNECTED: {              // if a new websocket connection is established
         IPAddress ip = webSocket.remoteIP(num);
         Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-        sendMessage();
+        sendMessage(1);
       }
       break;
     case WStype_TEXT:                     // if new text data is received
@@ -210,7 +210,7 @@ void commandAction(int cmd) {
 }
 
 //send status data to web client in JSON format (because it is easy to decode on the other side)
-void sendMessage() {
+void sendMessage(int msgtype) {
   StaticJsonDocument<1200> doc; //I hope this is enough
   doc["temp"] = (cur_tmp_val);
   doc["target"] = (set_tmp_val);
@@ -234,24 +234,26 @@ void sendMessage() {
   String jsonmsg;
   if (serializeJson(doc, jsonmsg) == 0) {
     Serial.println(F("Failed to serialize ws message"));
-  } else {
-#ifdef USE_WEBINTERFACE
-    webSocket.broadcastTXT(jsonmsg);
-#endif
-#ifdef USE_MQTT
-    //Send to MQTT - 877dev
-    //if (appdata.usemqtt) {
-      if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
-      {
-        Serial.println(F("MQTT published"));
-      }
-      else
-      {
-        Serial.println(F("MQTT not published"));
-      }
-    //}
-#endif
+    return;
   }
+
+  //send to web sockets
+  if (msgtype == 1) {
+    webSocket.broadcastTXT(jsonmsg);
+  }
+  
+  //Send to MQTT - 877dev
+  if (msgtype == 0) {
+    if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
+    {
+      //Serial.println(F("MQTT published"));
+    }
+    else
+    {
+      //Serial.println(F("MQTT not published"));
+    }
+  }
+
 }
 
 void handleGetConfig() { // reply with json document

@@ -38,13 +38,13 @@ void loop() {
   //MQTT processing
   //Note that MQTTclient.connected() will still return 'true' until the
   //MQTT keepalive timeout has expired (around 35 seconds for my setup /877dev)
-    if (checkMqttConnection) {
-      checkMqttConnection = false;
-      if (!MQTTclient.connected())
-      {
-        MQTT_Connect();
-      }
+  if (checkMqttConnection) {
+    checkMqttConnection = false;
+    if (!MQTTclient.connected())
+    {
+      MQTT_Connect();
     }
+  }
   MQTTclient.loop();
 #endif
 }
@@ -163,7 +163,12 @@ void handleData() {
   checkTargetTempNeeded();
 
   if (realchange) {
-    sendMessage();   //to webclients
+#ifdef USE_MQTT
+    sendMessage(0);   //to mqtt broker
+#endif
+#ifdef USE_WEBINTERFACE
+    sendMessage(1);   //to webclients
+#endif
     savelog();       //saves status variables to LittleFS
     saveappdata();   //saves uptime, heating time etc to LittleFS
   }
