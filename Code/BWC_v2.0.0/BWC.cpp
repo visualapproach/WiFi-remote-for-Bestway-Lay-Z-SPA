@@ -514,7 +514,7 @@ String BWC::getJSONStates() {
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
-    StaticJsonDocument<1024> doc;
+    DynamicJsonDocument doc(1024);
 
     // Set the values in the document
 	doc["CONTENT"] = "STATES";
@@ -543,7 +543,7 @@ String BWC::getJSONTimes() {
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
-    StaticJsonDocument<1024> doc;
+    DynamicJsonDocument doc(1024);
 
     // Set the values in the document
     doc["CONTENT"] = "TIMES";
@@ -567,7 +567,7 @@ String BWC::getJSONSettings(){
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
-    StaticJsonDocument<1024> doc;
+    DynamicJsonDocument doc(1024);
 
     // Set the values in the document
     doc["CONTENT"] = "SETTINGS";
@@ -589,7 +589,7 @@ void BWC::setJSONSettings(String message){
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/v6/assistant to compute the capacity.
-  StaticJsonDocument<1024> doc;
+  DynamicJsonDocument doc(1024);
 
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, message);
@@ -609,7 +609,7 @@ String BWC::getJSONCommandQueue(){
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
-  StaticJsonDocument<1024> doc;
+  DynamicJsonDocument doc(1024);
   // Set the values in the document
   doc["LEN"] = _qCommandLen;
   for(int i = 0; i < _qCommandLen; i++){
@@ -666,7 +666,7 @@ void BWC::_loadSettings(){
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/v6/assistant to compute the capacity.
-  StaticJsonDocument<1024> doc;
+  DynamicJsonDocument doc(1024);
 
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, file);
@@ -698,7 +698,7 @@ void BWC::saveSettings(){
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
-  StaticJsonDocument<256> doc;
+  DynamicJsonDocument doc(1024);
 
   // Set the values in the document
   doc["CLTIME"] = _cltime;
@@ -730,7 +730,7 @@ void BWC::_loadCommandQueue(){
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
-  StaticJsonDocument<1024> doc;
+  DynamicJsonDocument doc(1024);
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, file);
   if (error) {
@@ -761,7 +761,7 @@ void BWC::_saveCommandQueue(){
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
-  StaticJsonDocument<1024> doc;
+  DynamicJsonDocument doc(1024);
 
   // Set the values in the document
   doc["LEN"] = _qCommandLen;
@@ -789,7 +789,7 @@ void BWC::saveEventlog(){
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
-  StaticJsonDocument<512> doc;
+  DynamicJsonDocument doc(1024);
 
   // Set the values in the document
   for(int i = 0; i < sizeof(_cio.states); i++){
@@ -814,7 +814,7 @@ void BWC::_saveRebootInfo(){
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
-  StaticJsonDocument<512> doc;
+  DynamicJsonDocument doc(1024);
 
   // Set the values in the document
   doc["BOOTINFO"] = ESP.getResetReason() + " " + DateTime.now() + "\n";

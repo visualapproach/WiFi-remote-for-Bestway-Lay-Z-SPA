@@ -96,8 +96,8 @@ enum Commands: byte
 	//play song
 };
 
-const int MAXCOMMANDS = 21;
-const int MAXBUTTONS = 63;
+const int MAXCOMMANDS = 11;
+const int MAXBUTTONS = 33;
 
 
 //direct port manipulation memory adresses.

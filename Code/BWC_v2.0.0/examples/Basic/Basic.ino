@@ -301,7 +301,7 @@ void handleAddCommand() {
   if (server.method() != HTTP_POST) {
     server.send(405, "text/plain", "Method Not Allowed");
   } else {
-    StaticJsonDocument<128> doc;
+    DynamicJsonDocument doc(256);
     String message = server.arg(0);
     DeserializationError error = deserializeJson(doc, message);
     if (error) {
@@ -331,7 +331,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
       break;
     case WStype_TEXT:                     // if new text data is received
       Serial.printf("[%u] get Text: %s\n", num, payload);
-      StaticJsonDocument<128> doc;
+      DynamicJsonDocument doc(256);
       DeserializationError error = deserializeJson(doc, payload);
       if (error) {
         Serial.println(F("JSON command failed"));
