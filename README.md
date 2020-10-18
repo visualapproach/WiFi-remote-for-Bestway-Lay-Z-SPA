@@ -15,6 +15,7 @@
 -Electricity cost estimation and more<br>
 -MQTT: check out v1.28. I have it installed and working with a Raspberry Pi 4 B with Docker/Mosquitto/grafana/influxdb. Thanks to faboaic and 877dev for MQTT support.
 <br><br>
+Tip: Check out v2 beta branch
 
 ### BOM:<br>
 -ESP8266 NodeMCU 1.0 (This version is NOT for ESP32)<br>
