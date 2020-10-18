@@ -1,3 +1,6 @@
+Code/BWC_v2.0.0 is a LIBRARY. Copy the whole folder "BWC_v2.0.0" to ...arduino/Libraries/ Then open IDE and pick FILE/EXAMPLES/BWC_v2.0.0/...ino
+Follow instructions in the code
+
 # WiFi-remote-for-Bestway-Lay-Z-SPA
 ## Hack - ESP8266 as WiFi remote control for Bestway Lay-Z spa Helsinki<br>
 ### Disclaimer: As mentioned, this is a hack. If anything breaks it breaks and it's your fault.<br>
