@@ -4,7 +4,7 @@
 ### Caution - unplug mains power to the pump before trying to replicate this hack, or you can die! <br>
 <br>
 
-Code/BWC_v2.0.0 is a LIBRARY. Copy the whole folder "BWC_v2.0.0" to ...arduino/Libraries/ Then open IDE and pick FILE/EXAMPLES/BWC_v2.0.0/...ino
+Code/BWC_v2.0.0 is a *LIBRARY*. Copy the whole folder "BWC_v2.0.0" to ...arduino/Libraries/ Then open IDE and pick FILE/EXAMPLES/BWC_v2.0.0/...ino
 Follow instructions in the code. <br>
 
 ### Features:<br>
@@ -16,9 +16,9 @@ Follow instructions in the code. <br>
 -Simple to build. No hardware changes needed on the SPA pump. Just remove the display, disconnect the 6-pin ribbon cable and plug it into this device.<br>
 -Timer for chlorine. Hit the button on the webpage when adding cl and it will count the days for you.<br>
 -Electricity cost estimation and more<br>
--MQTT support! I have it installed and working with a Raspberry Pi 4 B with Docker/Mosquitto/grafana/influxdb. Thanks to faboaic and 877dev for MQTT support.
--Schedule events like heater on/off at specific dates, with repeat functionality.
--Listen to input signal on one pin and trigger a signal on another pin on desired events.
+-MQTT support! I have it installed and working with a Raspberry Pi 4 B with Docker/Mosquitto/grafana/influxdb. Thanks to faboaic and 877dev for MQTT support.<br>
+-Schedule events like heater on/off at specific dates, with repeat functionality.<br>
+-Listen to input signal on one pin and trigger a signal on another pin on desired events.<br>
 
 <br><br>
 
