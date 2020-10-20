@@ -149,7 +149,7 @@ function addcommand(){
 		"INTERVAL":parseInt(document.getElementById("interval").value)
 		}
 	Http.send(JSON.stringify(msgobj));
-	setTimeout(loadcmd(),1000);
+	setTimeout(loadcmd(),2000);
 	console.log(msgobj);
 	
 }

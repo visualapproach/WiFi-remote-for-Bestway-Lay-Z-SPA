@@ -1,5 +1,26 @@
 //
-var connection = new WebSocket('ws://'+location.hostname+':81/', ['arduino']);
+var connection;
+connect();
+
+function connect(){
+	connection = new WebSocket('ws://'+location.hostname+':81/', ['arduino']);
+	connection.onopen = function () { 
+		document.getElementById('header').style = "background-color: #00508F";
+	};
+	connection.onerror = function (error) {
+		console.log('WebSocket Error ', error);
+		document.getElementById('header').style = "background-color: #FF0000";
+		connection.close();
+	};
+	connection.onclose = function(){
+		console.log('WebSocket connection closed, reconnecting in 5 s');
+		document.getElementById('header').style = "background-color: #FF0000";
+		setTimeout(function() {
+			connect();}, 5000);
+	};	
+	connection.onmessage = function(e){
+		handlemsg(e);}
+} 
 
 
 String.prototype.pad = function(String, len) { 
@@ -9,20 +30,7 @@ String.prototype.pad = function(String, len) {
                 return str; 
             }
 
-connection.onopen = function () {
-    
-	 document.getElementById('header').style = "background-color: #00508F";
-};
-connection.onerror = function (error) {
-    console.log('WebSocket Error ', error);
-	 document.getElementById('header').style = "background-color: #FF0000";
-};
-connection.onclose = function(){
-    console.log('WebSocket connection closed');
-	 document.getElementById('header').style = "background-color: #FF0000";
-};
-
-connection.onmessage = function (e) {  
+function handlemsg(e) {  
 	var msgobj = JSON.parse(e.data);
 	var mycolor;
 	console.log(msgobj);
@@ -44,8 +52,9 @@ connection.onmessage = function (e) {
 	if(msgobj.CONTENT == "STATES"){
 		document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
 		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
-		document.getElementById('temp').value = msgobj.TGT;
-		document.getElementById('sliderlabel').innerHTML = msgobj.TGT.toString();
+		var element = document.getElementById('temp');
+		if (element.value == 0) element.value = msgobj.TGT;
+		document.getElementById('sliderlabel').innerHTML = element.value.toString();
 		document.getElementById('AIR').checked = msgobj.AIR;
 		document.getElementById('UNT').checked = msgobj.UNT;
 		if(msgobj.RED) {

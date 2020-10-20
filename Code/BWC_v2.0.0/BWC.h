@@ -95,6 +95,7 @@ class BWC {
 	uint8_t getState(int state);
 	Ticker saveSettingsTimer;
 	void saveSettings();
+	bool maxeffort = false;
 
   private:
     CIO _cio;
@@ -118,6 +119,10 @@ class BWC {
 	float _price;
 	uint32_t _audio;
 	float _cost;
+	bool _saveSettingsNeeded = false;
+	bool _saveEventlogNeeded = false;
+	bool _saveCmdqNeeded = false;
+	int _latestTarget;
 
 	void _qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration);
 	void _handleCommandQ(void);

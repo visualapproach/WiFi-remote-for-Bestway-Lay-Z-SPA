@@ -38,7 +38,6 @@ void CIO::loop(void) {
 	if(newData) {
 		static int capturePhase = 0;
 		static uint32_t buttonReleaseTime;
-		static uint32_t buttonPressTime;
 		static uint16_t prevButton = ButtonCodes[NOBTN];
 		//determine if anything changed, so we can update webclients
 		for(int i = 0; i < 11; i++){
@@ -76,7 +75,7 @@ void CIO::loop(void) {
 		//capture only if showing plausible values (not blank screen while blinking)
 		if( (capturePhase == 1) && (tmpTemp > 19) ) states[TARGET] = tmpTemp;
 		//wait 4 seconds after UP/DOWN is released to be sure that actual temp is shown
-		if( (capturePhase == 0) && (millis()-buttonReleaseTime > 4000)) states[TEMPERATURE] = tmpTemp;		
+		if( (capturePhase == 0) && (millis()-buttonReleaseTime > 10000)) states[TEMPERATURE] = tmpTemp;		
 		prevButton = button;
 	}
 }
@@ -337,7 +336,7 @@ void BWC::begin(void){
 	_loadSettings();
 	_loadCommandQueue();
 	_saveRebootInfo();
-	qCommand(GETTARGET, (uint32_t)' ', DateTime.now()+30, 0);
+	qCommand(GETTARGET, (uint32_t)' ', DateTime.now()+60, 0);
 	saveSettingsTimer.attach(7200.0, tick);
 }
 
@@ -348,18 +347,22 @@ void BWC::loop(){
     } 
 	_timestamp = DateTime.now();
   
-  //update cio public payload
-  _cio.loop();
   //update DSP payload (memcpy(dest*, source*, len))
   //memcpy(&_dsp.payload[0], &_cio.payload[0], 11);
   for(int i = 0; i < 11; i++){
 	  _dsp.payload[i] = _cio.payload[i];
   }
   _dsp.updateDSP(_cio.brightness);
+  _updateTimes();
+  //update cio public payload
+  _cio.loop();
   //manage command queue
   _handleCommandQ();
   _handleButtonQ();//queue overrides real buttons
-  _updateTimes();
+  if(_saveEventlogNeeded) saveEventlog();
+  if(_saveCmdqNeeded) _saveCommandQueue();
+  if(_saveSettingsNeeded) saveSettings();
+  if((_cio.states[TARGET] != _latestTarget) && (_qButtonLen == 0)) qCommand(SETTARGET, _latestTarget, 0, 0);
 }
 
 /* int BWC::_CodeToButton(uint16_t val){
@@ -384,7 +387,7 @@ void BWC::_handleButtonQ(void) {
 	if(_qButtonLen > 0){
 		//check if state is as desired, or duration is up. If so - remove row. Else set BTNCODE
 		if( (_cio.states[_buttonQ[0][1]] == _buttonQ[0][2]) || (millis() > _buttonQ[0][3]) ){
-		//if( (_cio.states[_buttonQ[0][1]] == _buttonQ[0][2])){
+			if(_buttonQ[0][0] == UP || _buttonQ[0][0] == DOWN) maxeffort = false;
 			//remove row
 			for(int i = 0; i < _qButtonLen-1; i++){
 				_buttonQ[i][0] = _buttonQ[i+1][0];
@@ -395,6 +398,7 @@ void BWC::_handleButtonQ(void) {
 			_qButtonLen--;	
 			_cio.button = ButtonCodes[NOBTN];			
 		} else {
+			if(_buttonQ[0][0] == UP || _buttonQ[0][0] == DOWN) maxeffort = true;
 			//set buttoncode
 			_cio.button = ButtonCodes[_buttonQ[0][0]];
 		}
@@ -438,7 +442,7 @@ bool BWC::qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval
 	_commandQ[row][2] = xtime;
 	_commandQ[row][3] = interval;
 	_qCommandLen++;
-	
+	delay(0);
 	_saveCommandQueue();
 	return true;
 }
@@ -453,8 +457,15 @@ void BWC::_handleCommandQ(void) {
 			_qButton(LOCK, LOCKEDSTATE, 0, 5000); //press LOCK button until states[LOCKEDSTATE] is 0
 			switch (_commandQ[0][0]) {
 				case SETTARGET:
-					if(_commandQ[0][1] > _cio.states[TARGET]){_qButton(UP, TARGET, _commandQ[0][1], 10000);}
-					else {_qButton(DOWN, TARGET, _commandQ[0][1], 10000);}
+					_latestTarget = _commandQ[0][1];
+					//choose which direction to go (up or down)
+					if(_cio.states[TARGET] == 0 )
+					{
+						_qButton(UP, TARGET, _commandQ[0][1], 10000);
+						_qButton(DOWN, TARGET, _commandQ[0][1], 10000);
+					}
+					if(_cio.states[TARGET] > _commandQ[0][1]) _qButton(DOWN, TARGET, _commandQ[0][1], 10000);
+					if(_cio.states[TARGET] < _commandQ[0][1]) _qButton(UP, TARGET, _commandQ[0][1], 10000);
 					break;
 				case SETUNIT:
 					_qButton(UNIT, UNITSTATE, _commandQ[0][1], 5000);
@@ -494,10 +505,10 @@ void BWC::_handleCommandQ(void) {
 			if(_commandQ[0][3] > 0) qCommand(_commandQ[0][0],_commandQ[0][1],_commandQ[0][2]+_commandQ[0][3],_commandQ[0][3]);
 			//remove from commandQ and decrease qCommandLen
 			for(int i = 0; i < _qCommandLen-1; i++){
-				_commandQ[i][0] = _commandQ[i+1][0];
-				_commandQ[i][1] = _commandQ[i+1][1];
-				_commandQ[i][2] = _commandQ[i+1][2];
-				_commandQ[i][3] = _commandQ[i+1][3];
+			_commandQ[i][0] = _commandQ[i+1][0];
+			_commandQ[i][1] = _commandQ[i+1][1];
+			_commandQ[i][2] = _commandQ[i+1][2];
+			_commandQ[i][3] = _commandQ[i+1][3];
 			}
 			_qCommandLen--;
 			if(restartESP) {
@@ -631,7 +642,7 @@ bool BWC::newData(){
 	bool result = _cio.dataAvailable;
 	_cio.dataAvailable = false;
 	if (result && _audio) _dsp.beep();
-	return result;
+	if(maxeffort) return false; else return result;
 }
 	
 void BWC::_startNTP() {
@@ -689,6 +700,11 @@ void BWC::_loadSettings(){
 }
 
 void BWC::saveSettings(){
+  if(maxeffort) {
+	  _saveSettingsNeeded = true;
+	  return;
+  }
+  _saveSettingsNeeded = false;
   File file = LittleFS.open("settings.txt", "w");
   if (!file) {
     Serial.println(F("Failed to save settings.txt"));
@@ -752,6 +768,11 @@ void BWC::_loadCommandQueue(){
 }
 
 void BWC::_saveCommandQueue(){
+  if(maxeffort) {
+	  _saveCmdqNeeded = true;
+	  return;
+  }
+  _saveCmdqNeeded = false;
   File file = LittleFS.open("cmdq.txt", "w");
   if (!file) {
     Serial.println(F("Failed to save cmdq.txt"));
@@ -780,6 +801,11 @@ void BWC::_saveCommandQueue(){
 }
 
 void BWC::saveEventlog(){
+  if(maxeffort) {
+	  _saveEventlogNeeded = true;
+	  return;
+  }
+  _saveEventlogNeeded = false;
   File file = LittleFS.open("eventlog.txt", "a");
   if (!file) {
     Serial.println(F("Failed to save eventlog.txt"));
@@ -795,7 +821,7 @@ void BWC::saveEventlog(){
   for(int i = 0; i < sizeof(_cio.states); i++){
 	doc[i] = _cio.states[i];
   }
-  doc["timestamp"] = _timestamp;
+  doc["timestamp"] = DateTime.format(DateFormatter::SIMPLE);
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
@@ -817,12 +843,13 @@ void BWC::_saveRebootInfo(){
   DynamicJsonDocument doc(1024);
 
   // Set the values in the document
-  doc["BOOTINFO"] = ESP.getResetReason() + " " + DateTime.now() + "\n";
+  doc["BOOTINFO"] = ESP.getResetReason() + " " + DateTime.getBootTime();
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
     Serial.println(F("Failed to write bootlog.txt"));
   }
+  file.println();
   file.close();	
 }
 
