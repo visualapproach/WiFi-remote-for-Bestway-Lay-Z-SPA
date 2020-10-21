@@ -511,9 +511,9 @@ void BWC::_handleCommandQ(void) {
 			_commandQ[i][3] = _commandQ[i+1][3];
 			}
 			_qCommandLen--;
+			_saveCommandQueue();
 			if(restartESP) {
-				saveSettings();
-				_saveCommandQueue();
+				saveSettings();			
 				ESP.restart();
 			}
 		}
