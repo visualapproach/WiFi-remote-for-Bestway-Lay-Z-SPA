@@ -32,11 +32,10 @@ Follow instructions in the code. <br>
 
 ### If you like this project, please consider a donation: <a href="Http://PayPal.me/TLandahl">PayPal.me/TLandahl</a><br>
 <br>Current web interface<br>
-<img src="./pics/spacontrol.png" width="300"><br>
+<img src="./pics/spacontrol.png" width="300"> 
 <img src="./pics/spaconfig.png" width="300"><br>
-<br>My device<br>
-<img src="./pics/device.jpg" width="300"><br>
-<br>My pump<br>
+<br>My device and pump<br>
+<img src="./pics/device.jpg" width="300">
 <img src="./pics/pump.jpg" width="300"><br>
 <br>My schematics<br>
 <img src="./pics/schematic2.png"><br>
