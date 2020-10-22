@@ -341,6 +341,8 @@ void BWC::begin(void){
 }
 
 void BWC::loop(){
+  //feed the dog
+  ESP.wdtFeed();
 	if (!DateTime.isTimeValid()) {
       //Serial.println("Failed to get time from server, retry.");
       DateTime.begin();
@@ -354,6 +356,8 @@ void BWC::loop(){
   }
   _dsp.updateDSP(_cio.brightness);
   _updateTimes();
+  //feed the dog
+  ESP.wdtFeed();
   //update cio public payload
   _cio.loop();
   //manage command queue
@@ -525,6 +529,8 @@ String BWC::getJSONStates() {
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
+  //feed the dog
+  ESP.wdtFeed();
     DynamicJsonDocument doc(1024);
 
     // Set the values in the document
@@ -554,6 +560,8 @@ String BWC::getJSONTimes() {
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
+  //feed the dog
+  ESP.wdtFeed();
     DynamicJsonDocument doc(1024);
 
     // Set the values in the document
@@ -578,6 +586,8 @@ String BWC::getJSONSettings(){
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
+  //feed the dog
+  ESP.wdtFeed();
     DynamicJsonDocument doc(1024);
 
     // Set the values in the document
@@ -600,6 +610,8 @@ void BWC::setJSONSettings(String message){
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/v6/assistant to compute the capacity.
+  //feed the dog
+  ESP.wdtFeed();
   DynamicJsonDocument doc(1024);
 
   // Deserialize the JSON document
@@ -620,6 +632,8 @@ String BWC::getJSONCommandQueue(){
   // Allocate a temporary JsonDocument
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
+  //feed the dog
+  ESP.wdtFeed();
   DynamicJsonDocument doc(1024);
   // Set the values in the document
   doc["LEN"] = _qCommandLen;
@@ -704,6 +718,8 @@ void BWC::saveSettings(){
 	  _saveSettingsNeeded = true;
 	  return;
   }
+  //kill the dog
+  ESP.wdtDisable();
   _saveSettingsNeeded = false;
   File file = LittleFS.open("settings.txt", "w");
   if (!file) {
@@ -734,6 +750,9 @@ void BWC::saveSettings(){
   //update clock
   DateTime.setTimeZone(_timezone);
   DateTime.begin();	
+  //revive the dog
+  ESP.wdtEnable(0);
+
 }
 
 void BWC::_loadCommandQueue(){
@@ -772,6 +791,9 @@ void BWC::_saveCommandQueue(){
 	  _saveCmdqNeeded = true;
 	  return;
   }
+  //kill the dog
+  ESP.wdtDisable();
+  
   _saveCmdqNeeded = false;
   File file = LittleFS.open("cmdq.txt", "w");
   if (!file) {
@@ -798,6 +820,9 @@ void BWC::_saveCommandQueue(){
     Serial.println(F("Failed to write cmdq.txt"));
   }
   file.close();	
+  //revive the dog
+  ESP.wdtEnable(0);
+
 }
 
 void BWC::saveEventlog(){
@@ -806,6 +831,8 @@ void BWC::saveEventlog(){
 	  return;
   }
   _saveEventlogNeeded = false;
+  //kill the dog
+  ESP.wdtDisable();
   File file = LittleFS.open("eventlog.txt", "a");
   if (!file) {
     Serial.println(F("Failed to save eventlog.txt"));
@@ -828,6 +855,9 @@ void BWC::saveEventlog(){
     Serial.println(F("Failed to write eventlog.txt"));
   }
   file.close();		
+  //revive the dog
+  ESP.wdtEnable(0);
+
 }
 
 void BWC::_saveRebootInfo(){
