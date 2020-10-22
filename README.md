@@ -21,7 +21,7 @@ Follow instructions in the code. <br>
 -Listen to input signal on one pin and trigger a signal on another pin on desired events.<br>
 
 <br><br>
-Tip: Check out v2 beta branch
+
 
 ### BOM:<br>
 -ESP8266 NodeMCU 1.0 (This version is NOT for ESP32)<br>
