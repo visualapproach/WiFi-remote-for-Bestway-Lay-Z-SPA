@@ -178,6 +178,8 @@ void sendmqtt() {
 
 void sendws(){
   sendMessage(1);
+  String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.connected()) + String("}");
+  webSocket.broadcastTXT(mqttJSONstatus);
 }
 
 //send status data to web client in JSON format (because it is easy to decode on the other side)

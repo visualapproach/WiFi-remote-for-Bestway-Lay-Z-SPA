@@ -179,6 +179,8 @@ void sendmqtt() {
 // This function is called by the websockets timer.
 void sendws(){
   sendMessage(1); //1 = ws
+  String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.connected()) + String("}");
+  webSocket.broadcastTXT(mqttJSONstatus);
 }
 
 // Send status data to web client in JSON format (because it is easy to decode on the other side)

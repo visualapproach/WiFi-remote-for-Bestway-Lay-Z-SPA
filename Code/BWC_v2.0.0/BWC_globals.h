@@ -4,41 +4,45 @@
 #ifndef BWC_globals_H
 #define BWC_globals_H
 
-const uint8_t DSP_RQ = 0x42;
-const uint8_t DSP_STS1 = 0x80;
-const uint8_t DSP_STS2 = 0x02;
+//LSB
+const uint8_t DSP_CMD2_DATAREAD = 0x42;
+const uint8_t DSP_CMD1_MODE6_11_7 = 0x01; //real CIO is sending 0x01 which is illegal according to datasheet
+const uint8_t DSP_CMD2_DATAWRITE = 0x40;
+const uint8_t DSP_DIM_BASE = 0x80;
+const uint8_t DSP_DIM_ON = 0x8;
 
 //Payload byte index and bit numbers  (see documentation in excel file on github)
+//inverted to LSB
 const byte DGT1_IDX = 1;
 const byte DGT2_IDX = 3;
 const byte DGT3_IDX = 5;
 const byte TMR2_IDX = 7;
-const byte TMR2_BIT = 6;
+const byte TMR2_BIT = 1;
 const byte TMR1_IDX = 7;
-const byte TMR1_BIT = 5;
+const byte TMR1_BIT = 2;
 const byte LCK_IDX = 7;
-const byte LCK_BIT = 4;
+const byte LCK_BIT = 3;
 const byte TMRBTNLED_IDX = 7;
-const byte TMRBTNLED_BIT = 3;
+const byte TMRBTNLED_BIT = 4;
 const byte REDHTR_IDX = 7;
-const byte REDHTR_BIT = 2;
+const byte REDHTR_BIT = 5;
 const byte GRNHTR_IDX = 7;
-const byte GRNHTR_BIT = 1;
+const byte GRNHTR_BIT = 6;
 const byte AIR_IDX = 7;
-const byte AIR_BIT = 0;
+const byte AIR_BIT = 7;
 const byte FLT_IDX = 9;
-const byte FLT_BIT = 6;
+const byte FLT_BIT = 1;
 const byte C_IDX = 9;
-const byte C_BIT = 5;
+const byte C_BIT = 2;
 const byte F_IDX = 9;
-const byte F_BIT = 4;
+const byte F_BIT = 3;
 const byte PWR_IDX = 9;
-const byte PWR_BIT = 3;
+const byte PWR_BIT = 4;
 
 //7-segment codes. MSB always 1
 const uint8_t CHARCODES[] = {
-  0xFE, 0xB0, 0xED, 0xF9, 0xB3, 0xDB, 0xDF, 0xF0, 0xFF, 0xFB, 0x80, 0x81, 0xF7, 0x9F, 0xCE, 0xBD, 0xCF, 0xC7,
-  0xDF, 0x97, 0x86, 0xB8, 0x87, 0x8E, 0x80, 0x95, 0x9D, 0xE7, 0xF3, 0x85, 0xDB, 0x8F, 0x9C, 0xBE, 0x80, 0xBB, 0xED
+  0x7F, 0x0D, 0xB7, 0x9F, 0xCD, 0xDB, 0xFB, 0x0F, 0xFF, 0xDF, 0x01, 0x81, 0xEF, 0xF9, 0x73, 0xBD, 0xF3, 0xE3,
+  0xFB, 0xE9, 0x61, 0x1D, 0xE1, 0x71, 0x01, 0xA9, 0xB9, 0xE7, 0xCF, 0xA1, 0xDB, 0xF1, 0x39, 0x7D, 0x01, 0xDD, 0xB7
 };
 const uint8_t CHARS[] = {
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '-', 'a', 'b', 'c', 'd', 'e', 'f',
@@ -78,7 +82,7 @@ enum States: byte
 
 const uint16_t ButtonCodes[] = 
 {
-	0xD8D8, 0x4000, 0x8000, 0xC000, 0x0848, 0x4848, 0x8848, 0xC848, 0x1090, 0x0000
+	0x1B1B, 0x0200, 0x0100, 0x0300, 0x1012, 0x1212, 0x1112, 0x1312, 0x0809, 0x0000
 };
 
 enum Commands: byte

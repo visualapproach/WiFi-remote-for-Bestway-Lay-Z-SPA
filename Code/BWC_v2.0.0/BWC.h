@@ -26,7 +26,7 @@ class CIO {
 
     volatile bool newData = false;
 	bool dataAvailable = false;
-    volatile uint16_t button = 0xD8D8; //no button
+    volatile uint16_t button = 0x1B1B; //no button
     uint8_t payload[11];
 	uint8_t states[13];
 	uint8_t brightness;
@@ -40,8 +40,8 @@ class CIO {
     volatile byte _receivedByte;
     volatile int _CIO_cmd_matches = 0;
     volatile bool _packet = false;
-    volatile int _sendBit = 16;
-    volatile uint8_t _brightness; //0% B00000001, 25% B00010001, 50% B00110001, 75% B01110001, 100% B1110001
+    volatile int _sendBit = 8;
+    volatile uint8_t _brightness;
     volatile uint8_t _payload[11];
     const int _CS_PIN = D1;
     const int _CLK_PIN = D2;
@@ -54,7 +54,7 @@ class CIO {
 class DSP {
 
   public:
-    uint8_t payload[11] = {0x03, 0xDF, 0xFF, 0xDB, 0xFF, 0xB3, 0xFF, B10010001, 0xFF, 0x80, 0xFF};
+    uint8_t payload[11] = {0xC0, 0xFB, 0xFF, 0xDB, 0xFF, 0xCD, 0xFF, B10001001, 0xFF, 0x01, 0xFF};
 
     void begin(void);
 	uint16_t getButton(void);

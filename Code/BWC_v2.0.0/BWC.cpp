@@ -30,7 +30,7 @@ char CIO::_getChar(uint8_t value) {
       return CHARS[index];
     }
   }
-  return '?';
+  return ' ';
 }
 
 void CIO::loop(void) {
@@ -50,7 +50,7 @@ void CIO::loop(void) {
 		for(int i = 0; i < 11; i++){
 			payload[i] = _payload[i];
 		}
-		brightness = _brightness;
+		brightness = _brightness & 7; //extract only the brightness bits (0-7)
 		//extract information from payload to a better format
 		states[LOCKEDSTATE] = (payload[LCK_IDX] & (1 << LCK_BIT)) > 0;
 		states[POWERSTATE] = (payload[PWR_IDX] & (1 << PWR_BIT)) > 0;
@@ -90,14 +90,14 @@ void ICACHE_RAM_ATTR CIO::eopHandler(void) {
   uint8_t msg = _receivedByte;
 
   switch (msg) {
-    case DSP_STS1:
+    case DSP_CMD1_MODE6_11_7:
       _CIO_cmd_matches = 1;
       break;
-    case DSP_STS2:
+    case DSP_CMD2_DATAWRITE:
       if (_CIO_cmd_matches == 1) {
         _CIO_cmd_matches = 2;
       } else {
-        _CIO_cmd_matches = 0; //reset - DSP_STS1 must be followed by DSP_STS2 to activate command
+        _CIO_cmd_matches = 0; //reset - DSP_CMD1_MODE6_11_7 must be followed by DSP_CMD2_DATAWRITE to activate command
       }
       break;
     default:
@@ -140,7 +140,6 @@ void ICACHE_RAM_ATTR CIO::clkHandler(void) {
   //shift out bits on low clock (falling edge)
   if (!clockstate & _dataIsOutput) {
     //send BTN_OUT
-    _sendBit--;
     if (button & (1 << _sendBit)) {
       //digitalWrite(_DATA_PIN, HIGH);
       WRITE_PERI_REG( PIN_OUT_SET, 1 << _DATA_PIN);
@@ -149,13 +148,17 @@ void ICACHE_RAM_ATTR CIO::clkHandler(void) {
       //digitalWrite(_DATA_PIN, LOW);
       WRITE_PERI_REG( PIN_OUT_CLEAR, 1 << _DATA_PIN);
     }
+    _sendBit++;
+	if(_sendBit > 15) _sendBit = 0;
   }
 
   //read bits on high clock (rising edge)
   if (clockstate & !_dataIsOutput) {
     //read data pin to a byte
     //_receivedByte = (_receivedByte << 1) | digitalRead(_DATA_PIN);
-    _receivedByte = (_receivedByte << 1) | ( ( (READ_PERI_REG(PIN_IN) & (1 << _DATA_PIN)) ) > 0);
+    //_receivedByte = (_receivedByte << 1) | ( ( (READ_PERI_REG(PIN_IN) & (1 << _DATA_PIN)) ) > 0);
+    //_receivedByte = (_receivedByte >> 1) | digitalRead(_DATA_PIN) << 7;
+    _receivedByte = (_receivedByte >> 1) | ( ( (READ_PERI_REG(PIN_IN) & (1 << _DATA_PIN)) ) > 0) << 7;
     _bitCount++;
     if (_bitCount == 8) {
       _bitCount = 0;
@@ -163,8 +166,8 @@ void ICACHE_RAM_ATTR CIO::clkHandler(void) {
         _payload[_byteCount] = _receivedByte;
         _byteCount++;
       }
-      else if (_receivedByte == DSP_RQ) {
-        _sendBit = 16;
+      else if (_receivedByte == DSP_CMD2_DATAREAD) {
+        _sendBit = 8;
         _dataIsOutput = true;
         //pinMode(_DATA_PIN, OUTPUT);
         WRITE_PERI_REG( PIN_DIR_OUTPUT, 1 << _DATA_PIN);
@@ -181,7 +184,7 @@ uint16_t DSP::getButton(void) {
 	  //pinMode(_DATA_PIN, OUTPUT);
 	  digitalWrite(_CS_PIN, LOW); //start of packet
 	  delayMicroseconds(50);
-	  _sendBitsToDSP(DSP_RQ, 8); //request button presses
+	  _sendBitsToDSP(DSP_CMD2_DATAREAD, 8); //request button presses
 	  newButton = _receiveBitsFromDSP();
 	  digitalWrite(_CS_PIN, HIGH); //end of packet
 	  delayMicroseconds(30);
@@ -190,12 +193,14 @@ uint16_t DSP::getButton(void) {
   } else return (_oldButton);
 }
 
+
+//bitsToSend can only be 8 with this solution of LSB first
 void DSP::_sendBitsToDSP(uint32_t outBits, int bitsToSend) {
   pinMode(_DATA_PIN, OUTPUT);
   delayMicroseconds(20);
-  for (int i = 1; i <= bitsToSend; i++) {
+  for (int i = 0; i < bitsToSend; i++) {
     digitalWrite(_CLK_PIN, LOW);
-    digitalWrite(_DATA_PIN, outBits & (1 << (bitsToSend - i)));
+    digitalWrite(_DATA_PIN, outBits & (1 << i));
     delayMicroseconds(20);
     digitalWrite(_CLK_PIN, HIGH);
     delayMicroseconds(20);
@@ -212,7 +217,8 @@ uint16_t DSP::_receiveBitsFromDSP() {
     delayMicroseconds(20);
     digitalWrite(_CLK_PIN, HIGH); //clock trailing edge
     delayMicroseconds(20);
-    result |= digitalRead(_DATA_PIN) << (15 - i);
+	int j = (i+8)%16;  //bit 8-16 then 0-7
+    result |= digitalRead(_DATA_PIN) << j;
   }
   return result;
 }
@@ -232,12 +238,12 @@ void DSP::updateDSP(uint8_t brightness) {
 		_dspLastRefreshTime = millis();
 		  delayMicroseconds(30);
 		  digitalWrite(_CS_PIN, LOW); //start of packet
-		  _sendBitsToDSP(DSP_STS1, 8);
+		  _sendBitsToDSP(DSP_CMD1_MODE6_11_7, 8);
 		  digitalWrite(_CS_PIN, HIGH); //end of packet
 
 		  delayMicroseconds(50);
 		  digitalWrite(_CS_PIN, LOW);//start of packet
-		  _sendBitsToDSP(DSP_STS2, 8);
+		  _sendBitsToDSP(DSP_CMD2_DATAWRITE, 8);
 		  digitalWrite(_CS_PIN, HIGH);//end of packet
 
 		  //payload
@@ -249,7 +255,7 @@ void DSP::updateDSP(uint8_t brightness) {
 
 		  delayMicroseconds(50);
 		  digitalWrite(_CS_PIN, LOW);//start of packet
-		  _sendBitsToDSP(brightness, 8);
+		  _sendBitsToDSP(DSP_DIM_BASE+DSP_DIM_ON+brightness, 8);
 		  digitalWrite(_CS_PIN, HIGH);//end of packet
 		  delayMicroseconds(50);
 	}
@@ -262,7 +268,7 @@ void DSP::textOut(String txt) {
       payload[DGT1_IDX] = _getCode(txt.charAt(i));
       payload[DGT2_IDX] = _getCode(txt.charAt(i + 1));
       payload[DGT3_IDX] = _getCode(txt.charAt(i + 2));
-      updateDSP(0xF1);
+      updateDSP(7);
       delay(230);
     }
   }
@@ -270,13 +276,13 @@ void DSP::textOut(String txt) {
     payload[DGT1_IDX] = _getCode(' ');
     payload[DGT2_IDX] = _getCode(txt.charAt(0));
     payload[DGT3_IDX] = _getCode(txt.charAt(1));
-    updateDSP(0xF1);
+    updateDSP(7);
   }
   else if (len == 1) {
     payload[DGT1_IDX] = _getCode(' ');
     payload[DGT2_IDX] = _getCode(' ');
     payload[DGT3_IDX] = _getCode(txt.charAt(0));
-    updateDSP(0xF1);
+    updateDSP(7);
   }
 }
 
@@ -336,13 +342,14 @@ void BWC::begin(void){
 	_loadSettings();
 	_loadCommandQueue();
 	_saveRebootInfo();
-	qCommand(GETTARGET, (uint32_t)' ', DateTime.now()+60, 0);
 	saveSettingsTimer.attach(7200.0, tick);
 }
 
 void BWC::loop(){
   //feed the dog
   ESP.wdtFeed();
+  ESP.wdtDisable();
+  
 	if (!DateTime.isTimeValid()) {
       //Serial.println("Failed to get time from server, retry.");
       DateTime.begin();
@@ -354,10 +361,10 @@ void BWC::loop(){
   for(int i = 0; i < 11; i++){
 	  _dsp.payload[i] = _cio.payload[i];
   }
-  _dsp.updateDSP(_cio.brightness);
+  _dsp.updateDSP(7); //_cio.brightness);
   _updateTimes();
   //feed the dog
-  ESP.wdtFeed();
+  //ESP.wdtFeed();
   //update cio public payload
   _cio.loop();
   //manage command queue
@@ -366,7 +373,12 @@ void BWC::loop(){
   if(_saveEventlogNeeded) saveEventlog();
   if(_saveCmdqNeeded) _saveCommandQueue();
   if(_saveSettingsNeeded) saveSettings();
-  if((_cio.states[TARGET] != _latestTarget) && (_qButtonLen == 0)) qCommand(SETTARGET, _latestTarget, 0, 0);
+  //if set target command overshot we need to correct that
+  if( (_cio.states[TARGET] != _latestTarget) && (_qButtonLen == 0) && (_latestTarget != 0) ) qCommand(SETTARGET, _latestTarget, 0, 0);
+  //if target temp is unknown, find out.
+  if( (_cio.states[TARGET] == 0) && (_qButtonLen == 0) ) qCommand(GETTARGET, (uint32_t)' ', 0, 0);
+
+  ESP.wdtEnable(0);
 }
 
 /* int BWC::_CodeToButton(uint16_t val){
@@ -731,13 +743,20 @@ void BWC::saveSettings(){
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
   DynamicJsonDocument doc(1024);
-
+	_heatingtime += _heatingtime_ms/1000;
+	_pumptime += _pumptime_ms/1000;
+	_airtime += _airtime_ms/1000;
+	_uptime += _uptime_ms/1000;
+	_heatingtime_ms = 0;
+	_pumptime_ms = 0;
+	_airtime_ms = 0;
+	_uptime_ms = 0;
   // Set the values in the document
   doc["CLTIME"] = _cltime;
-  doc["UPTIME"] = _uptime + _uptime_ms/1000;
-  doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;
-  doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
-  doc["AIRTIME"] = _airtime + _airtime_ms/1000;
+  doc["UPTIME"] = _uptime;
+  doc["PUMPTIME"] = _pumptime;
+  doc["HEATINGTIME"] = _heatingtime;
+  doc["AIRTIME"] = _airtime;
   doc["TIMEZONE"] = _timezone;
   doc["PRICE"] = _price;
   doc["AUDIO"] = _audio;
@@ -873,7 +892,7 @@ void BWC::_saveRebootInfo(){
   DynamicJsonDocument doc(1024);
 
   // Set the values in the document
-  doc["BOOTINFO"] = ESP.getResetReason() + " " + DateTime.getBootTime();
+  doc["BOOTINFO"] = ESP.getResetReason() + " " + DateTime.format(DateFormatter::SIMPLE);
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
@@ -900,7 +919,7 @@ void BWC::_updateTimes(){
 	}
 	_uptime_ms += elapsedtime;
 	
-	if(_uptime_ms > 4000000000){
+	if(_uptime_ms > 1000000000){
 		_heatingtime += _heatingtime_ms/1000;
 		_pumptime += _pumptime_ms/1000;
 		_airtime += _airtime_ms/1000;
