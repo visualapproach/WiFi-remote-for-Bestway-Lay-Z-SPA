@@ -48,7 +48,11 @@ function handlemsg(e) {
     doc["CH1"] = _cio.states[CHAR1];
     doc["CH2"] = _cio.states[CHAR2];
     doc["CH3"] = _cio.states[CHAR3]; */
-	
+	if(msgobj.CONTENT == "OTHER"){
+		//if(msgobj.MQTT){
+			document.getElementById('mqtt').innerHTML = "MQTT:" + msgobj.MQTT.toString();
+		//}
+	}
 	if(msgobj.CONTENT == "STATES"){
 		document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
 		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
