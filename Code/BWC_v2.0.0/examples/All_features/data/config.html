@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" sizes="128x128"  href="favicon128.png">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0066BF">
-    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport'>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
 </head>
 
 <body onload="loadconfig()">
@@ -84,8 +84,9 @@ function loadconfig(){
 		  document.getElementById('reboot').innerHTML = "Last boot: " + date.toLocaleString() + " " + msgobj.REBOOTINFO;
 		}
 	}
-	loadcmd();
-	 var now = new Date();
+	setInterval(loadcmd,4000);
+
+	var now = new Date();
     var offset = now.getTimezoneOffset() * 60000;
     var adjustedDate = new Date(now.getTime() - offset);
     var formattedDate = adjustedDate.toISOString().substring(0,16); // For minute precision
@@ -149,7 +150,6 @@ function addcommand(){
 		"INTERVAL":parseInt(document.getElementById("interval").value)
 		}
 	Http.send(JSON.stringify(msgobj));
-	setTimeout(loadcmd(),2000);
 	console.log(msgobj);
 	
 }
