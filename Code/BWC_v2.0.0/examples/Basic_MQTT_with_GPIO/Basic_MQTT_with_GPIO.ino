@@ -132,7 +132,7 @@ void loop() {
   webSocket.loop();             // constantly check for websocket events
   server.handleClient();        // run the server
   ArduinoOTA.handle();          // listen for OTA events
-  MQTTclient.loop();            // Do MQTT magic
+  if(!MQTTclient.loop()) MQTT_Connect();            // Do MQTT magic
   bwc.loop();                   // Fiddle with the pump computer
   if (bwc.newData()) {
     sendMessage(1);//ws
@@ -168,18 +168,13 @@ void loop() {
 // Default frequency of once every 10 min shouldn't be a problem though.
 // This function is called by the mqtt timer
 void sendmqtt() {
-  if (!MQTTclient.connected())
-  {
-    Serial.println("reconnecting");
-    MQTT_Connect();
-  }
   sendMessage(0);//0 = mqtt
 }
 
 // This function is called by the websockets timer.
 void sendws(){
   sendMessage(1); //1 = ws
-  String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.connected()) + String("}");
+  String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + String("}");
   webSocket.broadcastTXT(mqttJSONstatus);
 }
 
@@ -196,11 +191,11 @@ void sendMessage(int msgtype) {
   if (msgtype == 0) {
     if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
     {
-      Serial.println(F("MQTT published"));
+      //Serial.println(F("MQTT published"));
     }
     else
     {
-      Serial.println(F("MQTT not published"));
+      //Serial.println(F("MQTT not published"));
     }
   }
 
@@ -456,10 +451,12 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
 void startMQTT() { //MQTT setup and connect - 877dev
   //MQTTclient.setServer(mqtt_server_name, mqtt_port); //setup MQTT broker information as defined earlier
   MQTTclient.setServer(myMqttIP, myMqttPort); //setup MQTT broker information as defined earlier
-  if (MQTTclient.setBufferSize (2048))      //set buffer for larger messages, new to library 2.8.0
+  if (MQTTclient.setBufferSize (1024))      //set buffer for larger messages, new to library 2.8.0
   {
     Serial.println(F("MQTT buffer size successfully increased"));
   }
+  MQTTclient.setKeepAlive(60);
+  MQTTclient.setSocketTimeout(30);
   MQTTclient.setCallback(MQTTcallback);          // set callback details - this function is called automatically whenever a message arrives on a subscribed topic.
   MQTT_Connect();                                //Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
 }
