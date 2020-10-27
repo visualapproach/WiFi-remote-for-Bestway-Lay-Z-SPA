@@ -117,6 +117,7 @@ void setup() {
   pinMode(solarpin, INPUT_PULLUP);
   pinMode(myoutputpin, OUTPUT);
   digitalWrite(myoutputpin, LOW);
+
   Serial.begin(115200);
   startWiFi();
   startOTA();
@@ -125,7 +126,7 @@ void setup() {
   bwc.begin();
   startMQTT();
   updateMqttTimer.attach(600, sendmqtt); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
-  updateWSTimer.attach(2.0, sendws);
+  updateWSTimer.attach(2.0, sendws);     //update webpage every 2 secs plus state changes
 }
 
 void loop() {
@@ -133,27 +134,28 @@ void loop() {
   webSocket.loop();           // constantly check for websocket events
   server.handleClient();      // run the server
   ArduinoOTA.handle();        // listen for OTA events
-  MQTTclient.loop();
-  bwc.loop();
+  if(!MQTTclient.loop()) MQTT_Connect();            // Do MQTT magic
+  bwc.loop();                   // Fiddle with the pump computer
+
   if (bwc.newData()) {
     sendMessage(1);//ws
-    if (!MQTTclient.connected())
-    {
-      Serial.println("reconnecting");
-      MQTT_Connect();
-    }
     sendMessage(0);//mqtt
+
     bwc.saveEventlog();
   }
 
   //Usage example. Solar panels are giving a (3.3V) signal to start dumping electricity into the pool heater.
   //Rapid changes on this pin will fill up the command queue and stop you from adding other commands
   //It will also cause the heater to turn on and off as fast as it can
+
   if (digitalRead(solarpin) == HIGH && runonce == true) {
+
+
     bwc.qCommand(SETHEATER, 1, 0, 0);
     runonce = false;
   }
   if (digitalRead(solarpin) == LOW && runonce == false) {
+
     bwc.qCommand(SETPUMP, 0, 0, 0);
     runonce = true;
   }
@@ -165,39 +167,42 @@ void loop() {
   } else {
     digitalWrite(myoutputpin, LOW);
   }
+
+
 }
 
+
+
+
 void sendmqtt() {
-  if (!MQTTclient.connected())
-  {
-    Serial.println("reconnecting");
-    MQTT_Connect();
-  }
   sendMessage(0);//mqtt
 }
 
+
 void sendws(){
   sendMessage(1);
-  String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.connected()) + String("}");
+  String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + String("}");
   webSocket.broadcastTXT(mqttJSONstatus);
 }
 
 //send status data to web client in JSON format (because it is easy to decode on the other side)
 void sendMessage(int msgtype) {
   String jsonmsg = bwc.getJSONStates();
+
   //send to web sockets
   if (msgtype == 1) {
     webSocket.broadcastTXT(jsonmsg);
   }
+
   //Send to MQTT - 877dev
   if (msgtype == 0) {
     if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
     {
-      Serial.println(F("MQTT published"));
+      //Serial.println(F("MQTT published"));
     }
     else
     {
-      Serial.println(F("MQTT not published"));
+      //Serial.println(F("MQTT not published"));
     }
   }
 
@@ -220,6 +225,7 @@ void sendMessage(int msgtype) {
 }
 
 /*
+
  * File handlers
  */
 
@@ -304,7 +310,7 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
   server.on(F("/setconfig/"), handleSetConfig);
   server.on(F("/getcommands/"), handleGetCommandQueue);
   server.on(F("/addcommand/"), handleAddCommand);
-  //  server.on(F("/remove.html"), handleLogRemove);                      // go to 'handleFileUpload'
+  //  server.on(F("/remove.html"), handleLogRemove);   //not implemented
 
   server.onNotFound(handleNotFound);          // if someone requests any other file or page, go to function 'handleNotFound'
   // and check if the file exists
@@ -453,10 +459,12 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
 void startMQTT() { //MQTT setup and connect - 877dev
   //MQTTclient.setServer(mqtt_server_name, mqtt_port); //setup MQTT broker information as defined earlier
   MQTTclient.setServer(myMqttIP, myMqttPort); //setup MQTT broker information as defined earlier
-  if (MQTTclient.setBufferSize (2048))      //set buffer for larger messages, new to library 2.8.0
+  if (MQTTclient.setBufferSize (1024))      //set buffer for larger messages, new to library 2.8.0
   {
     Serial.println(F("MQTT buffer size successfully increased"));
   }
+
+
   MQTTclient.setCallback(MQTTcallback);          // set callback details - this function is called automatically whenever a message arrives on a subscribed topic.
   MQTT_Connect();                                //Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
 }
