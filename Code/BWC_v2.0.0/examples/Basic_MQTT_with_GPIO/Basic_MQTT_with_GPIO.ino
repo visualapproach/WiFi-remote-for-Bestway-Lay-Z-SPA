@@ -114,9 +114,11 @@ bool runonce = true;
 
 void setup() {
   // put your setup code here, to run once:
+  /* comment out these lines if not connecting anything to these pins */
   pinMode(solarpin, INPUT_PULLUP);
   pinMode(myoutputpin, OUTPUT);
   digitalWrite(myoutputpin, LOW);
+  /* to here */
   Serial.begin(115200);		//As if you connected serial to your pump...
   startWiFi();
   startOTA();
@@ -144,6 +146,8 @@ void loop() {
   //Rapid changes on this pin will fill up the command queue and stop you from adding other commands
   //It will also cause the heater to turn on and off as fast as it can
   //I have not tested this feature, but what can go wrong ;-)
+	
+  /* comment out these lines if not connecting anything to these pins */	
   if (digitalRead(solarpin) == HIGH && runonce == true) {
     bwc.qCommand(SETHEATER, 1, 0, 0);       // cmd:set heater, to ON (1), immidiately, no repeat
     runonce = false;                        // to stop queing commands every loop. We only want to trigger once
@@ -160,7 +164,7 @@ void loop() {
   } else {
     digitalWrite(myoutputpin, LOW);
   }
-  
+  /* to here */
   //You can add own code here, but don't stall! If CPU is choking you can try to run @ 160 MHz, but that's cheating!
 }
 
