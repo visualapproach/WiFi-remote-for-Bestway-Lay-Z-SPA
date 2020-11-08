@@ -18,7 +18,7 @@ Follow instructions in the code. <br>
 -Electricity cost estimation and more<br>
 -MQTT support! I have it installed and working with a Raspberry Pi 4 B with Docker/Mosquitto/grafana/influxdb. Thanks to faboaic and 877dev for MQTT support.<br>
 -Schedule events like heater on/off at specific dates, with repeat functionality.<br>
--Listen to input signal on one pin and trigger a signal on another pin on desired events.<br>
+-Listen to input signal on one pin and trigger a signal on another pin on desired events. For instance let solar panels turn on/off heater.<br>
 
 <br><br>
 
