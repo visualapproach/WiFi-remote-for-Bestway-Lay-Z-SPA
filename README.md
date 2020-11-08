@@ -42,7 +42,7 @@ Follow instructions in the code. <br>
 <img src="./pics/schematic2.png"><br>
 Link to Eric's PCB: https://easyeda.com/Naesstrom/lay-z-spa_remote <br>
 
-Technical details in https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/blob/master/github-bestwayhackdocs_.xlsx
+Technical details in https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/blob/master/bwc_docs.xlsx
 
 Link to LittleFS upload tool: https://github.com/esp8266/arduino-esp8266fs-plugin/releases/
 <br>Usage: 
