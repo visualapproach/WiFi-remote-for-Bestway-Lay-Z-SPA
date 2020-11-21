@@ -3,49 +3,49 @@
   Bestway Spa Controller Library by Thomas Landahl (Visualapproach)
 
   https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA
-   
+
   Installation and first run:
-  
+
   Copy files to documents/Arduino/Libraries/
   Start Arduino IDE and open File/examples/BWC_v2.0.0/[choose one]
   Select the right board, and set "FS 2MB/OTA 1MB", speed 80 MHz.
 
-  Compile and upload sketch. 
-  **Upload LittleFS files.** 
-    
+  Compile and upload sketch.
+  **Upload LittleFS files.**
+
   An Access Point is created called "Auto portal". Log in and enter wifi credentials.
 
   Visit IP/ and click "Go to config page"
   Enter your settings, click SAVE.
-   
-  This version is using a command queue with repeatable commands. 
-  11 commands can be queued, of which 10 should be used by the user. 
+
+  This version is using a command queue with repeatable commands.
+  11 commands can be queued, of which 10 should be used by the user.
   Please leave 1 for internal use.
   The library will unlock the device automatically if necessary.
   Just send what you want to happen when, and the library will take care of it.
   You can even directly set desired target temperature!!
-  
- LittleFS files saved from this program:
- 
- settings.txt   - stores JSON formatted running times and configurations. Updates every 2 hrs.
- cmdq.txt       - stores JSON formatted command queue.
- eventlog.txt   - stores JSON formatted states and a timestamp (Mostly for debugging. Not human friendly as is)
- bootlog.txt    - stores JSON formatted boot times and reasons.
 
- These files can be read by visiting the address "IP/filename.txt"
- You can if you want edit the file and upload it by visiting "IP/upload.html"
- 
- To remove the files you need to re-upload LittleFS from Arduino IDE. Or write a function to do so :-)
+  LittleFS files saved from this program:
 
-  
--------------------Info to coders below--------------------  
+  settings.txt   - stores JSON formatted running times and configurations. Updates every 2 hrs.
+  cmdq.txt       - stores JSON formatted command queue.
+  eventlog.txt   - stores JSON formatted states and a timestamp (Mostly for debugging. Not human friendly as is)
+  bootlog.txt    - stores JSON formatted boot times and reasons.
+
+  These files can be read by visiting the address "IP/filename.txt"
+  You can if you want edit the file and upload it by visiting "IP/upload.html"
+
+  To remove the files you need to re-upload LittleFS from Arduino IDE. Or write a function to do so :-)
+
+
+  -------------------Info to coders below--------------------
 
   Public functions in BWC class:
 
   void begin(void);       //Must be run once in setup.
   void loop(void);        //As always, don't use blocking code. This needs to be run fairly frequently.
   void print(String txt); //Send text to display. Not all characters can be shown on a 7 segment display and will be replaced by spaces.
-  bool qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval);  
+  bool qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval);
 
 
   bool newData();                         //true when a state has changed
@@ -56,7 +56,7 @@
   void setJSONSettings(String message);   //save settings to flash. Must be formatted correctly. (internal use)
   String getJSONCommandQueue();           //get a JSON formatted string to send to clients
 
-States index constants, for use in bwc.getState(int state):
+  States index constants, for use in bwc.getState(int state):
   0  LOCKEDSTATE
   1  POWERSTATE
   2  UNITSTATE
@@ -72,7 +72,7 @@ States index constants, for use in bwc.getState(int state):
   12 CHAR3
 
   These are defined in the library so you can call bwc.getState(TEMPERATURE) for instance.
- 
+
   Commands index constants, for use in bwc.qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval)
   (Sending commands from web pages or MQTT)
   cmd:
@@ -87,38 +87,37 @@ States index constants, for use in bwc.getState(int state):
   8 RESETTIMES
   9 RESETCLTIMER
     ...may be extended
-	
+
   val:
     1 = ON/Fahrenheit, 0 = OFF/Celsius, or any value for SETTARGET temperature
   xtime: eXecute at timestamp (unix timestamp in seconds)
   interval: repeat every INTERVAL seconds. 0 = no repeat.
 
- These are defined in the library so you can call bwc.qCommand(SETPUMP, 1, 1603321200, 3600) to
- turn on filter pump at 10/21/2020 @ 11:00pm, repeating every hour (3600s)
-    
- The library is running an NTP and LittleFS so no need to include those here
+  These are defined in the library so you can call bwc.qCommand(SETPUMP, 1, 1603321200, 3600) to
+  turn on filter pump at 10/21/2020 @ 11:00pm, repeating every hour (3600s)
+
+  The library is running an NTP and LittleFS so no need to include those here
 
 */
 
 
-#include "BWC.h"
+#include "BWC_8266.h"
 #include "globals.h"
 
 Ticker updateMqttTimer;
 Ticker updateWSTimer;
 BWC bwc;
-
-const int solarpin = D0;    //no interrupt or PWM
-const int myoutputpin = D8; //pulled to GND. Boot fails if pulled HIGH.
-bool runonce = true;
+bool sendWSFlag = false;
+bool sendMQTTFlag = false;
+//const int solarpin = D0;    //no interrupt or PWM
+//const int myoutputpin = D8; //pulled to GND. Boot fails if pulled HIGH.
+//bool runonce = true;
 
 void setup() {
   // put your setup code here, to run once:
-  /* comment out these lines if not connecting anything to these pins */
-  pinMode(solarpin, INPUT_PULLUP);
-  pinMode(myoutputpin, OUTPUT);
-  digitalWrite(myoutputpin, LOW);
-  /* to here */
+//  pinMode(solarpin, INPUT_PULLUP);
+//  pinMode(myoutputpin, OUTPUT);
+//  digitalWrite(myoutputpin, LOW);
   Serial.begin(115200);		//As if you connected serial to your pump...
   startWiFi();
   startOTA();
@@ -126,71 +125,73 @@ void setup() {
   startWebSocket();
   bwc.begin();
   startMQTT();
-  updateMqttTimer.attach(600, sendmqtt); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
-  updateWSTimer.attach(2.0, sendws);     //update webpage every 2 secs plus state changes
+  updateMqttTimer.attach(600, sendMQTTsetFlag); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
+  updateWSTimer.attach(2.0, sendWSsetFlag);     //update webpage every 2 secs plus state changes
 }
 
 void loop() {
   webSocket.loop();             // constantly check for websocket events
   server.handleClient();        // run the server
   ArduinoOTA.handle();          // listen for OTA events
-  if(!MQTTclient.loop()) MQTT_Connect();            // Do MQTT magic
+  if (!MQTTclient.loop()) MQTT_Connect();           // Do MQTT magic
   bwc.loop();                   // Fiddle with the pump computer
   if (bwc.newData()) {
     sendMessage(1);//ws
     sendMessage(0);//mqtt
     //bwc.saveEventlog();       //will only fill up and wear flash memory eventually
   }
+  if (sendWSFlag) {
+    sendWSFlag = false;
+    sendMessage(1);//ws
+  }
+  if (sendMQTTFlag) {
+    sendMQTTFlag = false;
+    sendMessage(0);//MQTT
+  }
+  //  //Usage example. Solar panels are giving a (3.3V) signal to start dumping electricity into the pool heater.
+  //  //Rapid changes on this pin will fill up the command queue and stop you from adding other commands
+  //  //It will also cause the heater to turn on and off as fast as it can
+  //  //I have not tested this feature, but what can go wrong ;-)
+  //  if (digitalRead(solarpin) == HIGH && runonce == true) {
+  //    bwc.qCommand(SETHEATER, 1, 0, 0);       // cmd:set heater, to ON (1), immidiately, no repeat
+  //    runonce = false;                        // to stop queing commands every loop. We only want to trigger once
+  //  }
+  //  if (digitalRead(solarpin) == LOW && runonce == false) {
+  //    bwc.qCommand(SETPUMP, 0, 0, 0);         // change to SETHEATER if you want the pump to continue filtering
+  //    runonce = true;
+  //  }
+  //
+  //  //Switch the output pin when temperature is below or above 30
+  //  //Don't load the pin above specs (a few mA)
+  //  if (bwc.getState(TEMPERATURE) < 30){
+  //    digitalWrite(myoutputpin, HIGH);
+  //  } else {
+  //    digitalWrite(myoutputpin, LOW);
+  //  }
 
-  //Usage example. Solar panels are giving a (3.3V) signal to start dumping electricity into the pool heater.
-  //Rapid changes on this pin will fill up the command queue and stop you from adding other commands
-  //It will also cause the heater to turn on and off as fast as it can
-  //I have not tested this feature, but what can go wrong ;-)
-	
-  /* comment out these lines if not connecting anything to these pins */	
-  if (digitalRead(solarpin) == HIGH && runonce == true) {
-    bwc.qCommand(SETHEATER, 1, 0, 0);       // cmd:set heater, to ON (1), immidiately, no repeat
-    runonce = false;                        // to stop queing commands every loop. We only want to trigger once
-  }
-  if (digitalRead(solarpin) == LOW && runonce == false) {
-    bwc.qCommand(SETPUMP, 0, 0, 0);         // change to SETHEATER if you want the pump to continue filtering
-    runonce = true;
-  }
-
-  //Switch the output pin when temperature is below or above 30
-  //Don't load the pin above specs (a few mA)
-  if (bwc.getState(TEMPERATURE) < 30){
-    digitalWrite(myoutputpin, HIGH);
-  } else {
-    digitalWrite(myoutputpin, LOW);
-  }
-  /* to here */
   //You can add own code here, but don't stall! If CPU is choking you can try to run @ 160 MHz, but that's cheating!
 }
 
 // If failing to connect at all, this will stall the loop = Erratic behavior may occur if called to often.
 // Default frequency of once every 10 min shouldn't be a problem though.
 // This function is called by the mqtt timer
-void sendmqtt() {
-  sendMessage(0);//0 = mqtt
+void sendMQTTsetFlag() {
+  sendMQTTFlag = true;
 }
 
-// This function is called by the websockets timer.
-void sendws(){
-  sendMessage(1); //1 = ws
-  String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + String("}");
-  webSocket.broadcastTXT(mqttJSONstatus);
+void sendWSsetFlag() {
+  sendWSFlag = true;
 }
 
 // Send status data to web client in JSON format (because it is easy to decode on the other side)
 void sendMessage(int msgtype) {
   String jsonmsg = bwc.getJSONStates();
-  
+
   //send states to web sockets
   if (msgtype == 1) {
     webSocket.broadcastTXT(jsonmsg);
   }
-  
+
   //Send to MQTT - 877dev
   if (msgtype == 0) {
     if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
@@ -204,26 +205,27 @@ void sendMessage(int msgtype) {
   }
 
   jsonmsg = bwc.getJSONTimes();
-  
+
   if (msgtype == 1) {
     webSocket.broadcastTXT(jsonmsg);
   }
-//  if you want up-times etc sent to mqtt:
-//  if (msgtype == 0) {
-//    if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
-//    {
-//      Serial.println(F("MQTT published"));
-//    }
-//    else
-//    {
-//      Serial.println(F("MQTT not published"));
-//    }
-  
+  //  if you want up-times etc sent to mqtt:
+  //  if (msgtype == 0) {
+  //    if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
+  //    {
+  //      Serial.println(F("MQTT published"));
+  //    }
+  //    else
+  //    {
+  //      Serial.println(F("MQTT not published"));
+  //    }
+  String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + String("}");
+  webSocket.broadcastTXT(mqttJSONstatus);
 }
 
 /*
- * File handlers below. Most users can stop reading here.
- */
+   File handlers below. Most users can stop reading here.
+*/
 
 String getContentType(String filename) { // determine the filetype of a given filename, based on the extension
   if (filename.endsWith(".html")) return "text/html";
@@ -288,8 +290,8 @@ void handleFileUpload() { // upload a new file to the LittleFS
 }
 
 /*
- * Starters - bon apetit
- */
+   Starters - bon apetit
+*/
 
 void startWebSocket() { // Start a WebSocket server
   webSocket.begin();                          // start the websocket server
@@ -360,8 +362,8 @@ void startWiFi() { // Start a Wi-Fi access point, and try to connect to some giv
 }
 
 /*
- * Web server functions to exchange data between server and web client
- */
+   Web server functions to exchange data between server and web client
+*/
 
 //response to /getconfig/
 void handleGetConfig() { // reply with json document
@@ -449,8 +451,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
 }
 
 /*
- * MQTT functions
- */
+   MQTT functions
+*/
 
 void startMQTT() { //MQTT setup and connect - 877dev
   //MQTTclient.setServer(mqtt_server_name, mqtt_port); //setup MQTT broker information as defined earlier
