@@ -101,7 +101,7 @@ States index constants, for use in bwc.getState(int state):
 */
 
 
-#include "BWC.h"
+#include "BWC_8266.h"
 #include "globals.h"
 
 Ticker updateMqttTimer;
