@@ -123,7 +123,18 @@ void setup() {
   startOTA();
   startServer();
   startWebSocket();
-  bwc.begin();
+  bwc.begin(); //no params = default pins
+  //Default pins:
+  // bwc.begin(			
+			// int cio_cs_pin 		= D1, 
+			// int cio_data_pin 	= D7, 
+			// int cio_clk_pin 		= D2, 
+			// int dsp_cs_pin 		= D3, 
+			// int dsp_data_pin 	= D5, 
+			// int dsp_clk_pin 		= D4, 
+			// int dsp_audio_pin 	= D6 
+			// );
+	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
   startMQTT();
   updateMqttTimer.attach(600, sendMQTTsetFlag); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
   updateWSTimer.attach(2.0, sendWSsetFlag);     //update webpage every 2 secs plus state changes
