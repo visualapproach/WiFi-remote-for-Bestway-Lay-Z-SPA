@@ -15,11 +15,14 @@ static void ICACHE_RAM_ATTR clockpin(void) {
   pointerToClass->clkHandler();
 }
 
-void CIO::begin(void) {
+void CIO::begin(int cio_cs_pin, int cio_data_pin, int cio_clk_pin) {
   pointerToClass = this;
-  pinMode(_CLK_PIN, INPUT);
+  _CS_PIN = cio_cs_pin;
+  _DATA_PIN = cio_data_pin;
+  _CLK_PIN = cio_clk_pin;  
   pinMode(_CS_PIN, INPUT);
   pinMode(_DATA_PIN, INPUT);
+  pinMode(_CLK_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(_CS_PIN), chipselectpin, CHANGE);
   attachInterrupt(digitalPinToInterrupt(_CLK_PIN), clockpin, CHANGE); //Write on falling edge and read on rising edge
 }
@@ -287,10 +290,15 @@ void DSP::textOut(String txt) {
   }
 }
 
-void DSP::begin(void) {
-	pinMode(_CLK_PIN, OUTPUT);
+void DSP::begin(int dsp_cs_pin, int dsp_data_pin, int dsp_clk_pin, int dsp_audio_pin) {
+	_CS_PIN = dsp_cs_pin;
+	_DATA_PIN = dsp_data_pin;
+	_CLK_PIN = dsp_clk_pin;
+	_AUDIO_PIN = dsp_audio_pin;
+	
 	pinMode(_CS_PIN, OUTPUT);
 	pinMode(_DATA_PIN, INPUT);
+	pinMode(_CLK_PIN, OUTPUT);
 	pinMode(_AUDIO_PIN, OUTPUT);
 	digitalWrite(_CS_PIN, HIGH); 	//Active LOW
 	digitalWrite(_CLK_PIN, HIGH); 	//shift on falling, latch on rising
@@ -330,11 +338,32 @@ void DSP::beep() {
   noTone(_AUDIO_PIN);
 }
 
+BWC::BWC(){}
+
 void BWC::begin(void){
+	_cio.begin(D1, D7, D2);
+	_dsp.begin(D3, D5, D4, D6);	
+	begin2();
+}
+
+void BWC::begin(
+			int cio_cs_pin, 
+			int cio_data_pin, 
+			int cio_clk_pin, 
+			int dsp_cs_pin, 
+			int dsp_data_pin, 
+			int dsp_clk_pin, 
+			int dsp_audio_pin 
+			)
+			{
 	//pointerToBWC = this;
 	//start CIO and DSP modules
-	_cio.begin();
-	_dsp.begin();
+	_cio.begin(cio_cs_pin, cio_data_pin, cio_clk_pin);
+	_dsp.begin(dsp_cs_pin, dsp_data_pin, dsp_clk_pin, dsp_audio_pin);
+	begin2();
+}
+
+void BWC::begin2(){
 	//other stuff like intro music
 	_dsp.textOut(F("   hello   "));
 	if(_audio) _dsp.playIntro();
@@ -343,7 +372,7 @@ void BWC::begin(void){
 	_loadSettings();
 	_loadCommandQueue();
 	_saveRebootInfo();
-	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
+	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));	
 }
 
 void BWC::loop(){

@@ -20,7 +20,7 @@
 class CIO {
 
   public:
-    void begin(void);
+    void begin(int cio_cs_pin, int cio_data_pin, int cio_clk_pin);
 	void loop(void);
     void eopHandler(void);
     void packetHandler(void);
@@ -45,9 +45,9 @@ class CIO {
     volatile int _sendBit = 8;
     volatile uint8_t _brightness;
     volatile uint8_t _payload[11];
-    const int _CS_PIN = D1;
-    const int _CLK_PIN = D2;
-    const int _DATA_PIN = D7;
+    int _CS_PIN;
+    int _CLK_PIN;
+    int _DATA_PIN;
 	uint8_t _prevPayload[11];
 	
 	char _getChar(uint8_t value);
@@ -58,7 +58,7 @@ class DSP {
   public:
     uint8_t payload[11] = {0xC0, 0xFB, 0xFF, 0xDB, 0xFF, 0xCD, 0xFF, B10001001, 0xFF, 0x01, 0xFF};
 
-    void begin(void);
+    void begin(int dsp_cs_pin, int dsp_data_pin, int dsp_clk_pin, int dsp_audio_pin);
 	uint16_t getButton(void);
     void updateDSP(uint8_t brightness);
     void textOut(String txt);
@@ -74,16 +74,19 @@ class DSP {
 	unsigned long _dspLastGetButton = 0;
 	uint16_t _oldButton = ButtonCodes[NOBTN];
 	//Pins
-	const int _CS_PIN = D3;
-	const int _CLK_PIN = D4;
-	const int _DATA_PIN = D5;
-	const int _AUDIO_PIN = D6;
+	int _CS_PIN;
+	int _CLK_PIN;
+	int _DATA_PIN;
+	int _AUDIO_PIN;
 };
 
 class BWC {
 
   public:
-    void begin(void);
+	BWC();
+	void begin(void); 
+	void begin2();
+    void begin(int, int, int, int, int, int, int);
     void loop();
 	bool qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval);
 	bool newData();
