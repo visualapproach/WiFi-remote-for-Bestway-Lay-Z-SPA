@@ -113,6 +113,7 @@ class BWC {
 	uint32_t _timestamp;
 	bool _newData = false;
 	uint32_t _cltime;
+	uint32_t _ftime;
 	uint32_t _uptime;
 	uint32_t _pumptime;
 	uint32_t _heatingtime;
@@ -123,6 +124,10 @@ class BWC {
 	uint32_t _airtime_ms;
 	int32_t _timezone;
 	float _price;
+	uint32_t _finterval;
+	uint32_t _clinterval;
+	uint32_t _fint;
+	uint32_t _clint;
 	uint32_t _audio;
 	float _cost;
 	bool _saveSettingsNeeded = false;
