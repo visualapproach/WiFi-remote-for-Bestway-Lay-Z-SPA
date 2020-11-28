@@ -83,15 +83,15 @@ function loadconfig(){
 		  var msgobj = JSON.parse(Http.responseText);
 		  document.getElementById("timezone").value = msgobj.TIMEZONE.toString();
 		  document.getElementById("price").value = msgobj.PRICE.toString();
-		  document.getElementById("finterval").value = msgobj.FINTERVAL.toString();
-		  document.getElementById("clinterval").value = msgobj.CLINTERVAL.toString();
+		  document.getElementById("finterval").value = msgobj.FINT.toString();
+		  document.getElementById("clinterval").value = msgobj.CLINT.toString();
 		  document.getElementById("audio").checked = msgobj.AUDIO;
 		  var date = new Date(msgobj.REBOOTTIME * 1000);
 		  document.getElementById('reboot').innerHTML = "Last boot: " + date.toLocaleString() + " " + msgobj.REBOOTINFO;
 		}
 	}
-	loadcmd();
-	 var now = new Date();
+	setInterval(loadcmd,4000);
+	var now = new Date();
     var offset = now.getTimezoneOffset() * 60000;
     var adjustedDate = new Date(now.getTime() - offset);
     var formattedDate = adjustedDate.toISOString().substring(0,16); // For minute precision
@@ -130,8 +130,8 @@ function saveconfig(){
 	var msgobj = {
 		"TIMEZONE":parseInt(document.getElementById("timezone").value),
 		"PRICE":parseFloat(document.getElementById("price").value),
-		"FINTERVAL":parseInt(document.getElementById("finterval").value),
-		"CLINTERVAL":parseInt(document.getElementById("clinterval").value),
+		"FINT":parseInt(document.getElementById("finterval").value),
+		"CLINT":parseInt(document.getElementById("clinterval").value),
 		"AUDIO":document.getElementById("audio").checked
 		}
 	Http.send(JSON.stringify(msgobj));
@@ -157,7 +157,6 @@ function addcommand(){
 		"INTERVAL":parseInt(document.getElementById("interval").value)
 		}
 	Http.send(JSON.stringify(msgobj));
-	setTimeout(loadcmd(),2000);
 	console.log(msgobj);
 	
 }
