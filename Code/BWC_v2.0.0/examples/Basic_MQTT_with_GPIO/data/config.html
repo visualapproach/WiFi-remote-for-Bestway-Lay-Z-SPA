@@ -19,6 +19,10 @@
 			<label for="timezone">Timezone (adj. manually for DST/Summertime)</label><br>
 			<input type="text" id="price" value="1.50" maxlength="4" size="4">
 			<label for="price">Price per kWh</label><br>
+<input type="text" id="clinterval" value="7" maxlength="3" size="3">
+			<label for="clinterval">Chlorine add Interval</label><br>
+<input type="text" id="finterval" value="30" maxlength="3" size="3">
+			<label for="finterval">Filterchange Interval</label><br>
 			<input type="checkbox" id="audio" style="background-color:#999">
 			<label for="audio">Audio</label><br>
 			<button id="save" class="button" style="background-color:#DDD" onclick="saveconfig()">Save config</button>
@@ -79,12 +83,15 @@ function loadconfig(){
 		  var msgobj = JSON.parse(Http.responseText);
 		  document.getElementById("timezone").value = msgobj.TIMEZONE.toString();
 		  document.getElementById("price").value = msgobj.PRICE.toString();
+		  document.getElementById("finterval").value = msgobj.FINT.toString();
+		  document.getElementById("clinterval").value = msgobj.CLINT.toString();
 		  document.getElementById("audio").checked = msgobj.AUDIO;
 		  var date = new Date(msgobj.REBOOTTIME * 1000);
 		  document.getElementById('reboot').innerHTML = "Last boot: " + date.toLocaleString() + " " + msgobj.REBOOTINFO;
 		}
 	}
 	setInterval(loadcmd,4000);
+
 
 	var now = new Date();
     var offset = now.getTimezoneOffset() * 60000;
@@ -125,6 +132,8 @@ function saveconfig(){
 	var msgobj = {
 		"TIMEZONE":parseInt(document.getElementById("timezone").value),
 		"PRICE":parseFloat(document.getElementById("price").value),
+		"FINT":parseInt(document.getElementById("finterval").value),
+		"CLINT":parseInt(document.getElementById("clinterval").value),
 		"AUDIO":document.getElementById("audio").checked
 		}
 	Http.send(JSON.stringify(msgobj));
@@ -150,6 +159,7 @@ function addcommand(){
 		"INTERVAL":parseInt(document.getElementById("interval").value)
 		}
 	Http.send(JSON.stringify(msgobj));
+
 	console.log(msgobj);
 	
 }

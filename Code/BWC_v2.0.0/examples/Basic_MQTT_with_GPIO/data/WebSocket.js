@@ -93,6 +93,15 @@ function handlemsg(e) {
 		}
 		document.getElementById('cltimer').innerHTML = d.toFixed(2);
 		document.getElementById('cltimerbtn').style = mycolor;
+
+		var df = (Date.now()/1000-msgobj.FTIME)/(24*3600.0);
+		if(df > msgobj.FINT) {
+			mycolor = "background-color:#"+"900";
+		} else {
+			mycolor = "background-color:#"+"999";
+		}
+		document.getElementById('ftimer').innerHTML = df.toFixed(2);
+		document.getElementById('ftimerbtn').style = mycolor;
 		
 		document.getElementById('heatingtime').innerHTML = s2dhms(msgobj.HEATINGTIME);			
 		document.getElementById('uptime').innerHTML = s2dhms(msgobj.UPTIME);		
@@ -129,6 +138,7 @@ const rebootesp = 6;
 const gettarget = 7;
 const resettimes = 8;
 const resetcltimer = 9;
+const resetftimer = 10;
 
 
 function air() {
@@ -192,6 +202,15 @@ function clTimer() {
 	console.log(JSON.stringify(sendobj));
 }
 
+function fTimer() {
+	var sendobj = {};
+	sendobj["CMD"] = resetftimer;
+	sendobj["VALUE"] = 0;
+	sendobj["XTIME"] = 0;
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
 function reboot() {
 	var sendobj = {};
 	sendobj["CMD"] = rebootesp;
