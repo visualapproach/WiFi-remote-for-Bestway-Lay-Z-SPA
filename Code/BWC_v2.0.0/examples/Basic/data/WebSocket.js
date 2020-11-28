@@ -36,7 +36,7 @@ function handlemsg(e) {
 	console.log(msgobj);
 	
 /*     
-	doc["LCK"] = _cio.states[LOCKEDSTATE];
+    doc["LCK"] = _cio.states[LOCKEDSTATE];
     doc["PWR"] = _cio.states[POWERSTATE];
     doc["UNT"] = _cio.states[UNITSTATE];
     doc["AIR"] = _cio.states[BUBBLESSTATE];
@@ -82,19 +82,28 @@ function handlemsg(e) {
 		document.getElementById('time').innerHTML = date.toLocaleString();
 		
 		var d = (Date.now()/1000-msgobj.CLTIME)/(24*3600.0);
-		if(d > 7.0) {
+		if(d > msgobj.CLINT) {
 			mycolor = "background-color:#"+"900";
 		} else {
 			mycolor = "background-color:#"+"999";
 		}
 		document.getElementById('cltimer').innerHTML = d.toFixed(2);
 		document.getElementById('cltimerbtn').style = mycolor;
+
+		var df = (Date.now()/1000-msgobj.FTIME)/(24*3600.0);
+		if(df > msgobj.FINT) {
+			mycolor = "background-color:#"+"900";
+		} else {
+			mycolor = "background-color:#"+"999";
+		}
+		document.getElementById('ftimer').innerHTML = df.toFixed(2);
+		document.getElementById('ftimerbtn').style = mycolor;
 		
 		document.getElementById('heatingtime').innerHTML = s2dhms(msgobj.HEATINGTIME);			
 		document.getElementById('uptime').innerHTML = s2dhms(msgobj.UPTIME);		
 		document.getElementById('airtime').innerHTML = s2dhms(msgobj.AIRTIME);		
 		document.getElementById('filtertime').innerHTML = s2dhms(msgobj.PUMPTIME);		
-		document.getElementById('cost').innerHTML = (msgobj.COST).toFixed(2);		
+		document.getElementById('cost').innerHTML = (msgobj.COST).toFixed(2);	
 	}
 	
 };
@@ -125,6 +134,7 @@ const rebootesp = 6;
 const gettarget = 7;
 const resettimes = 8;
 const resetcltimer = 9;
+const resetftimer = 10;
 
 
 function air() {
@@ -181,6 +191,16 @@ function sliderchange(){
 function clTimer() {
 	var sendobj = {};
 	sendobj["CMD"] = resetcltimer;
+	sendobj["VALUE"] = 0;
+	sendobj["XTIME"] = 0;
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
+
+function fTimer() {
+	var sendobj = {};
+	sendobj["CMD"] = resetftimer;
 	sendobj["VALUE"] = 0;
 	sendobj["XTIME"] = 0;
 	sendobj["INTERVAL"] = 0;

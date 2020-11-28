@@ -96,7 +96,8 @@ enum Commands: byte
 	REBOOTESP,
 	GETTARGET,
 	RESETTIMES,
-	RESETCLTIMER
+	RESETCLTIMER,
+	RESETFTIMER
 	//play song
 };
 

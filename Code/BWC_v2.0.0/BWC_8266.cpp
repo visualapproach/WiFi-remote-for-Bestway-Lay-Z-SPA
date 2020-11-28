@@ -547,6 +547,10 @@ void BWC::_handleCommandQ(void) {
 					_cltime = _timestamp;
 					_saveSettingsNeeded = true;
 					break;
+				case RESETFTIMER:
+					_ftime = _timestamp;
+					_saveSettingsNeeded = true;
+					break;
 			}
 			//If interval > 0 then append to commandQ with updated xtime.
 			if(_commandQ[0][3] > 0) qCommand(_commandQ[0][0],_commandQ[0][1],_commandQ[0][2]+_commandQ[0][3],_commandQ[0][3]);
@@ -577,7 +581,7 @@ String BWC::getJSONStates() {
     DynamicJsonDocument doc(1024);
 
     // Set the values in the document
-	doc["CONTENT"] = "STATES";
+    doc["CONTENT"] = "STATES";
     doc["LCK"] = _cio.states[LOCKEDSTATE];
     doc["PWR"] = _cio.states[POWERSTATE];
     doc["UNT"] = _cio.states[UNITSTATE];
@@ -611,11 +615,14 @@ String BWC::getJSONTimes() {
     doc["CONTENT"] = "TIMES";
     doc["TIME"] = _timestamp;
     doc["CLTIME"] = _cltime;
+    doc["FTIME"] = _ftime;
     doc["UPTIME"] = _uptime + _uptime_ms/1000;
     doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;
     doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
     doc["AIRTIME"] = _airtime + _airtime_ms/1000;
     doc["COST"] = _cost;
+    doc["FINT"] = _fint;
+    doc["CLINT"] = _clint;
 
     // Serialize JSON to string
     String jsonmsg;
@@ -637,9 +644,11 @@ String BWC::getJSONSettings(){
     doc["CONTENT"] = "SETTINGS";
     doc["TIMEZONE"] = _timezone;
     doc["PRICE"] = _price;
+    doc["FINTERVAL"] = _finterval;
+    doc["CLINTERVAL"] = _clinterval;
     doc["AUDIO"] = _audio;
     doc["REBOOTINFO"] = ESP.getResetReason();
-	doc["REBOOTTIME"] = DateTime.getBootTime();
+    doc["REBOOTTIME"] = DateTime.getBootTime();
 	
     // Serialize JSON to string
     String jsonmsg;
@@ -667,6 +676,8 @@ void BWC::setJSONSettings(String message){
   // Copy values from the JsonDocument to the variables
   _timezone = doc["TIMEZONE"];
   _price = doc["PRICE"];
+  _finterval = doc["FINTERVAL"];
+  _clinterval = doc["CLINTERVAL"];
   _audio = doc["AUDIO"];
   saveSettings();	
 }
@@ -746,12 +757,15 @@ void BWC::_loadSettings(){
 
   // Copy values from the JsonDocument to the variables
   _cltime = doc["CLTIME"];
+  _ftime = doc["FTIME"];
   _uptime = doc["UPTIME"];
   _pumptime = doc["PUMPTIME"];
   _heatingtime = doc["HEATINGTIME"];
   _airtime = doc["AIRTIME"];
   _timezone = doc["TIMEZONE"];
   _price = doc["PRICE"];
+  _finterval = doc["FINTERVAL"];
+  _clinterval = doc["CLINTERVAL"];
   _audio = doc["AUDIO"];
   file.close();
 }
@@ -792,12 +806,15 @@ void BWC::saveSettings(){
 	_uptime_ms = 0;
   // Set the values in the document
   doc["CLTIME"] = _cltime;
+  doc["FTIME"] = _ftime;
   doc["UPTIME"] = _uptime;
   doc["PUMPTIME"] = _pumptime;
   doc["HEATINGTIME"] = _heatingtime;
   doc["AIRTIME"] = _airtime;
   doc["TIMEZONE"] = _timezone;
   doc["PRICE"] = _price;
+  doc["FINTERVAL"] = _finterval;
+  doc["CLINTERVAL"] = _clinterval;
   doc["AUDIO"] = _audio;
   doc["SAVETIME"] = DateTime.format(DateFormatter::SIMPLE);
 
@@ -971,6 +988,8 @@ void BWC::_updateTimes(){
 	}
 	
 	_cost = _price*((_heatingtime+_heatingtime_ms/1000)*1900+(_pumptime+_pumptime_ms/1000)*40+(_airtime+_airtime_ms/1000)*800+(_uptime+_uptime_ms/1000)*2)/3600000.0;
+	_clint = _clinterval;
+	_fint = _finterval;
 }
 
 void BWC::print(String txt){
