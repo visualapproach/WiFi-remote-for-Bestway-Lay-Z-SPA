@@ -621,8 +621,8 @@ String BWC::getJSONTimes() {
     doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
     doc["AIRTIME"] = _airtime + _airtime_ms/1000;
     doc["COST"] = _cost;
-    doc["FINT"] = _fint;
-    doc["CLINT"] = _clint;
+    doc["FINT"] = _finterval;
+    doc["CLINT"] = _clinterval;
 
     // Serialize JSON to string
     String jsonmsg;
@@ -644,8 +644,8 @@ String BWC::getJSONSettings(){
     doc["CONTENT"] = "SETTINGS";
     doc["TIMEZONE"] = _timezone;
     doc["PRICE"] = _price;
-    doc["FINTERVAL"] = _finterval;
-    doc["CLINTERVAL"] = _clinterval;
+    doc["FINT"] = _finterval;
+    doc["CLINT"] = _clinterval;
     doc["AUDIO"] = _audio;
     doc["REBOOTINFO"] = ESP.getResetReason();
     doc["REBOOTTIME"] = DateTime.getBootTime();
@@ -676,8 +676,8 @@ void BWC::setJSONSettings(String message){
   // Copy values from the JsonDocument to the variables
   _timezone = doc["TIMEZONE"];
   _price = doc["PRICE"];
-  _finterval = doc["FINTERVAL"];
-  _clinterval = doc["CLINTERVAL"];
+  _finterval = doc["FINT"];
+  _clinterval = doc["CLINT"];
   _audio = doc["AUDIO"];
   saveSettings();	
 }
@@ -764,8 +764,8 @@ void BWC::_loadSettings(){
   _airtime = doc["AIRTIME"];
   _timezone = doc["TIMEZONE"];
   _price = doc["PRICE"];
-  _finterval = doc["FINTERVAL"];
-  _clinterval = doc["CLINTERVAL"];
+  _finterval = doc["FINT"];
+  _clinterval = doc["CLINT"];
   _audio = doc["AUDIO"];
   file.close();
 }
@@ -813,8 +813,8 @@ void BWC::saveSettings(){
   doc["AIRTIME"] = _airtime;
   doc["TIMEZONE"] = _timezone;
   doc["PRICE"] = _price;
-  doc["FINTERVAL"] = _finterval;
-  doc["CLINTERVAL"] = _clinterval;
+  doc["FINT"] = _finterval;
+  doc["CLINT"] = _clinterval;
   doc["AUDIO"] = _audio;
   doc["SAVETIME"] = DateTime.format(DateFormatter::SIMPLE);
 
@@ -988,8 +988,6 @@ void BWC::_updateTimes(){
 	}
 	
 	_cost = _price*((_heatingtime+_heatingtime_ms/1000)*1900+(_pumptime+_pumptime_ms/1000)*40+(_airtime+_airtime_ms/1000)*800+(_uptime+_uptime_ms/1000)*2)/3600000.0;
-	_clint = _clinterval;
-	_fint = _finterval;
 }
 
 void BWC::print(String txt){
