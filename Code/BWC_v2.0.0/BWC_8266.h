@@ -126,8 +126,6 @@ class BWC {
 	float _price;
 	uint32_t _finterval;
 	uint32_t _clinterval;
-	uint32_t _fint;
-	uint32_t _clint;
 	uint32_t _audio;
 	float _cost;
 	bool _saveSettingsNeeded = false;
