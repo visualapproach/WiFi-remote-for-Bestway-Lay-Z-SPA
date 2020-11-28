@@ -86,7 +86,7 @@ function handlemsg(e) {
 		document.getElementById('time').innerHTML = date.toLocaleString();
 		
 		var d = (Date.now()/1000-msgobj.CLTIME)/(24*3600.0);
-		if(d > 7.0) {
+		if(d > msgobj.CLINT) {
 			mycolor = "background-color:#"+"900";
 		} else {
 			mycolor = "background-color:#"+"999";
