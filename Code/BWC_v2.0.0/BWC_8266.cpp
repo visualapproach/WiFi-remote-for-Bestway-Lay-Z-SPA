@@ -77,7 +77,9 @@ void CIO::loop(void) {
 		String tempstring = String((char)states[CHAR1])+String((char)states[CHAR2])+String((char)states[CHAR3]);
 		uint8_t tmpTemp = tempstring.toInt();
 		//capture only if showing plausible values (not blank screen while blinking)
-		if( (capturePhase == 1) && (tmpTemp > 19) ) states[TARGET] = tmpTemp;
+		if( (capturePhase == 1) && (tmpTemp > 19) ) {
+			states[TARGET] = tmpTemp;
+		}
 		//wait 4 seconds after UP/DOWN is released to be sure that actual temp is shown
 		if( (capturePhase == 0) && (millis()-buttonReleaseTime > 10000)) states[TEMPERATURE] = tmpTemp;		
 		prevButton = button;
@@ -404,7 +406,7 @@ void BWC::loop(){
   if(_saveCmdqNeeded) _saveCommandQueue();
   if(_saveSettingsNeeded) saveSettings();
   //if set target command overshot we need to correct that
-  if( (_cio.states[TARGET] != _latestTarget) && (_qButtonLen == 0) && (_latestTarget != 0) ) qCommand(SETTARGET, _latestTarget, 0, 0);
+  if( (_cio.states[TARGET] != _latestTarget) && (_qButtonLen == 0) && (_latestTarget != 0) && (_sliderPrio) ) qCommand(SETTARGET, _latestTarget, 0, 0);
   //if target temp is unknown, find out.
   if( (_cio.states[TARGET] == 0) && (_qButtonLen == 0) ) qCommand(GETTARGET, (uint32_t)' ', 0, 0);
 
@@ -450,7 +452,10 @@ void BWC::_handleButtonQ(void) {
 		}
 	} else {
 		//no queue so let dsp value through
-		_cio.button = _dsp.getButton();
+		uint16_t pressedButton = _dsp.getButton();
+		_cio.button = pressedButton;
+		//prioritize manual temp setting by not competing with the set target command
+		if (pressedButton == ButtonCodes[UP] || pressedButton == ButtonCodes[DOWN]) _sliderPrio = false;
 	}
 	
 }
@@ -504,6 +509,8 @@ void BWC::_handleCommandQ(void) {
 			switch (_commandQ[0][0]) {
 				case SETTARGET:
 					_latestTarget = _commandQ[0][1];
+					//Fiddling with the hardware buttons is ignored while this command executes.
+					_sliderPrio = true;
 					//choose which direction to go (up or down)
 					if(_cio.states[TARGET] == 0 )
 					{
