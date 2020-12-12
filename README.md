@@ -60,6 +60,12 @@ https://arduino-esp8266.readthedocs.io/en/latest/filesystem.html#uploading-files
 Link to LittleFS upload tool: https://github.com/esp8266/arduino-esp8266fs-plugin/releases/<br>
 
 Open File/examples/BWC2.0.0 from the arduino IDE. 
+
+Select the right board, and set "FS 2MB/OTA 1MB", speed 80 MHz.
 Upload LittleFS files.
 Upload sketch.
+An Access Point is created called "Auto portal". Log in and enter wifi credentials.
+Visit IP/ and click "Go to config page"
+Enter your settings, click SAVE.
+
 Problems? Read FAQ in discussions and current issues
