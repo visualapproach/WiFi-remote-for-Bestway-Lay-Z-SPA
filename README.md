@@ -47,16 +47,23 @@ Technical details in https://github.com/visualapproach/WiFi-remote-for-Bestway-L
 
 ### Installation:<br>
 Using Arduino IDE<br>
-Libraries needed<br>
+Copy BWC_2.0.0 to arduino libraries/ folder<br>
+
+Download and install these Libraries<br>
 Basic sketch:<br>
 ArduinoJSON (Benoit Blanchon)<br>
-ESPDateTime https://github.com/mcxiaoke/ESPDateTime
-WebSockets https://github.com/Links2004/arduinoWebSockets
-WiFiManager https://github.com/tzapu/WiFiManager
+ESPDateTime https://github.com/mcxiaoke/ESPDateTime<br>
+WebSockets https://github.com/Links2004/arduinoWebSockets<br>
+WiFiManager https://github.com/tzapu/WiFiManager<br>
 <br>
 MQTT sketch (in addition to basic):<br>
 PubSubClient https://github.com/knolleary/pubsubclient
 <br>
 LittleFS install:<br>
-https://arduino-esp8266.readthedocs.io/en/latest/filesystem.html#uploading-files-to-file-system
+https://arduino-esp8266.readthedocs.io/en/latest/filesystem.html#uploading-files-to-file-system<br>
 Link to LittleFS upload tool: https://github.com/esp8266/arduino-esp8266fs-plugin/releases/<br>
+
+Open File/examples/BWC2.0.0 from the arduino IDE. 
+Upload LittleFS files.
+Upload sketch.
+Problems? Read FAQ in discussions
