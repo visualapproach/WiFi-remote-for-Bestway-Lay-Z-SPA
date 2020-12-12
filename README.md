@@ -20,17 +20,13 @@ Follow instructions in the code. <br>
 -MQTT support! I have it installed and working with a Raspberry Pi 4 B with Docker/Mosquitto/grafana/influxdb. Thanks to faboaic and 877dev for MQTT support.<br>
 -Schedule events like heater on/off at specific dates, with repeat functionality.<br>
 -Listen to input signal on one pin and trigger a signal on another pin on desired events. For instance let solar panels turn on/off heater.<br>
-
-<br><br>
-
-
+<br>
 ### BOM:<br>
 -ESP8266 NodeMCU 1.0 (This version is NOT for ESP32)<br>
 -8 channel bidirectional level converter<br>
 -6 pin male header (0.1 in spacing) or better: JST-SM Housing Connector<br>
 -6 pin female header (JST-SM Housing Connector)<br>
 -Optionally 7 x 500 to 820 Ohm resistors (lower than 500 would not protect against over current which may or may not occur if both sides drives the line in opposite directions. That is not suppose to happen but just in case. So, if you only have say 430 Ohms resistors you may as well skip them. Higher than 820 Ohms can make it not work.)<br>
-
 
 ### If you like this project, please consider a donation: <a href="Http://PayPal.me/TLandahl">PayPal.me/TLandahl</a><br>
 <br>Current web interface<br>
@@ -66,4 +62,4 @@ Link to LittleFS upload tool: https://github.com/esp8266/arduino-esp8266fs-plugi
 Open File/examples/BWC2.0.0 from the arduino IDE. 
 Upload LittleFS files.
 Upload sketch.
-Problems? Read FAQ in discussions
+Problems? Read FAQ in discussions and current issues
