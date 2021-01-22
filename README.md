@@ -3,7 +3,8 @@
 ### Disclaimer: As mentioned, this is a hack. If anything breaks it breaks and it's your fault.<br>
 ### Caution - unplug mains power to the pump before trying to replicate this hack, or you can die! <br>
 <br>
-
+### News: A four wire version uploaded! Only tested with the pump inside the house. No pool or water connected yet. More info in the CODE/BW4W folder.
+<br><br>
 Code/BWC_v2.0.0 is a *LIBRARY*. Copy the whole folder "BWC_v2.0.0" to ...arduino/Libraries/ Then open IDE and pick FILE/EXAMPLES/BWC_v2.0.0/...ino
 Follow instructions in the code. <br>
 
