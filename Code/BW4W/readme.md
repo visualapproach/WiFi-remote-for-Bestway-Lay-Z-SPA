@@ -29,3 +29,6 @@ can potentially be risky. It appears the pump has some safety features, but I ca
 safety, but I am not responsible for what happens if you use this.
 If the CIO send error messages the ESP stops acting like a controller and passes control to the display. No guarantee though since it can hang or break otherwise.
 Don't leave the device unsupervised until you are confident that everything works. And even then, DO NOT BLAME ME!
+
+Arduino users: Sorry, but I wrote this in platformIO on Visual Studio Code. If you desperately needs an arduino IDE version it should be relatively easy to convert.
+MQTT is commented out in the code. To enable you need to uncomment and set your credentials in 4_wire.h
