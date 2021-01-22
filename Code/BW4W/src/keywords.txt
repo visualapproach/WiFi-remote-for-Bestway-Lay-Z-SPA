@@ -1,0 +1,51 @@
+#######################################
+# Syntax Coloring Map For BWC
+#######################################
+
+#######################################
+# Class (KEYWORD1)
+#######################################
+
+BWC	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin	        KEYWORD2
+loop	        KEYWORD2
+qCommand	KEYWORD2
+newData	        KEYWORD2
+saveEventlog	KEYWORD2
+getJSONStates	KEYWORD2
+getJSONTimes	KEYWORD2
+getJSONSettings	KEYWORD2
+setJSONSettings	KEYWORD2
+getJSONCommandQueue	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+ LOCKEDSTATE	LITERAL1
+ POWERSTATE	LITERAL1
+ UNITSTATE	LITERAL1
+ BUBBLESSTATE	LITERAL1
+ HEATGRNSTATE	LITERAL1
+ HEATREDSTATE	LITERAL1
+ HEATSTATE	LITERAL1
+ PUMPSTATE	LITERAL1
+ TARGET	        LITERAL1
+ TEMPERATURE	LITERAL1
+ CHAR1	        LITERAL1
+ CHAR2	        LITERAL1
+ CHAR3	        LITERAL1
+ SETTARGET	LITERAL1
+ SETUNIT	LITERAL1
+ SETBUBBLES	LITERAL1
+ SETHEATER	LITERAL1
+ SETPUMP	LITERAL1
+ RESETQ	        LITERAL1
+ REBOOTESP	LITERAL1
+ GETTARGET	LITERAL1
+ RESETTIMES	LITERAL1
+ RESETCLTIMER	LITERAL1
+ RESETFTIMER    LITERAL1

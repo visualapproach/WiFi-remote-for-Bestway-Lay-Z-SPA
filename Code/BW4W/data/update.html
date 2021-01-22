@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firmware updater</title>
+    <link href='main.css' rel='stylesheet' type='text/css'>
+     <link rel="icon" type="image/png" sizes="128x128" href="/favicon128.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#00878f">
+    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport'>
+</head>
+<body>
+	<center>
+        <header>
+            <h1>Firmware updater</h1>
+        </header>
+        <div>
+            <p style="text-align: left">Use this page to upload new firmware to the ESP8266.<br/></p>
+            <form method="post" enctype="multipart/form-data" style="margin: 0px auto 8px auto" >
+                <input type="file" name="Choose file" accept=".bin">
+                <input class="button" type="submit" value="Update Firmware" name="submit">
+            </form>            
+        </div>
+	</center>
+</body>
+</html>
