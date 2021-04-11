@@ -2,7 +2,8 @@
 ## Hack - ESP8266 as WiFi remote control for Bestway Lay-Z spa Helsinki<br>
 ### Disclaimer: As mentioned, this is a hack. If anything breaks it breaks and it's your fault.<br>
 ### Caution - unplug mains power to the pump before trying to replicate this hack, or you can die! <br><br>
-### News: To enable 2021 support, you just need to comment out one line in the file BWC_8266_globals.h. It is (in addition to hardcode in globals.h) possible to set/change MQTT credentials via web interface.<br><br>
+### News: To enable 2021 support, you just need to comment out one line in the file BWC_8266_globals.h. It is (in addition to hardcode in globals.h) possible to set/change MQTT credentials via web interface.
+The ESPDateTime library is updated which broke timezones in my code. I decided to omit that config. So device is using UTC only. Web pages will most likely translate to local time. It should only affect MQTT. I think.<br><br>
 
 4-wire version: Only tested with the pump inside the house. No pool or water connected yet. More info in the CODE/BW4W folder.
 <br><br>
