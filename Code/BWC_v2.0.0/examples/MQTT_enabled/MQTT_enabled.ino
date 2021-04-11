@@ -135,8 +135,8 @@ void setup() {
 			// int dsp_audio_pin 	= D6 
 			// );
 	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
-  //startMQTT();
-  //updateMqttTimer.attach(600, sendMQTTsetFlag); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
+  startMQTT();
+  updateMqttTimer.attach(600, sendMQTTsetFlag); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
   updateWSTimer.attach(2.0, sendWSsetFlag);     //update webpage every 2 secs plus state changes
 }
 
@@ -144,7 +144,7 @@ void loop() {
   webSocket.loop();             // constantly check for websocket events
   server.handleClient();        // run the server
   ArduinoOTA.handle();          // listen for OTA events
-  //if (!MQTTclient.loop()) MQTT_Connect();           // Do MQTT magic
+  if (!MQTTclient.loop()) MQTT_Connect();           // Do MQTT magic
   bwc.loop();                   // Fiddle with the pump computer
   if (bwc.newData()) {
     sendMessage(1);//ws
@@ -155,10 +155,10 @@ void loop() {
     sendWSFlag = false;
     sendMessage(1);//ws
   }
-  //if (sendMQTTFlag) {
-  //  sendMQTTFlag = false;
-  //  sendMessage(0);//MQTT
-  //}
+  if (sendMQTTFlag) {
+    sendMQTTFlag = false;
+    sendMessage(0);//MQTT
+  }
   //  //Usage example. Solar panels are giving a (3.3V) signal to start dumping electricity into the pool heater.
   //  //Rapid changes on this pin will fill up the command queue and stop you from adding other commands
   //  //It will also cause the heater to turn on and off as fast as it can

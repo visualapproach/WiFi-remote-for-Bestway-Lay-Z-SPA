@@ -4,6 +4,10 @@
 #ifndef BWC_8266_globals_H
 #define BWC_8266_globals_H
 
+//if you have a 2021(+) year model, comment the line below
+#define PRE2021
+
+
 //LSB
 const uint8_t DSP_CMD2_DATAREAD = 0x42;
 const uint8_t DSP_CMD1_MODE6_11_7 = 0x01; //real CIO is sending 0x01 which is illegal according to datasheet
@@ -63,6 +67,19 @@ enum Buttons: byte
 	POWER
 };
 
+#ifdef PRE2021
+const uint16_t ButtonCodes[] = 
+{
+	0x1B1B, 0x0200, 0x0100, 0x0300, 0x1012, 0x1212, 0x1112, 0x1312, 0x0809, 0x0000
+};
+#else
+const uint16_t ButtonCodes[] = 
+{
+	0x1B1B, 0x0100, 0x0300, 0x1212, 0x0809, 0x1012, 0x1112, 0x1312, 0x0200, 0x0000
+};
+	
+#endif
+
 enum States: byte
 {
 	LOCKEDSTATE,
@@ -80,10 +97,7 @@ enum States: byte
 	CHAR3
 };
 
-const uint16_t ButtonCodes[] = 
-{
-	0x1B1B, 0x0200, 0x0100, 0x0300, 0x1012, 0x1212, 0x1112, 0x1312, 0x0809, 0x0000
-};
+
 
 enum Commands: byte
 {

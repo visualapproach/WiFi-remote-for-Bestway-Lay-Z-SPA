@@ -84,6 +84,8 @@ void CIO::loop(void) {
 		if( (capturePhase == 0) && (millis()-buttonReleaseTime > 10000)) states[TEMPERATURE] = tmpTemp;		
 		prevButton = button;
 	}
+	//store buttoncodes in global variable, to send to webinterface for debugging
+	//if(button != ButtonCodes[NOBTN]) lastPressedButton = button;
 }
 
 //end of packet
@@ -724,7 +726,7 @@ void BWC::_startNTP() {
   // setup this after wifi connected
   // you can use custom timezone,server and timeout
   // DateTime.setTimeZone(-4);
-  DateTime.setTimeZone(_timezone);
+  //DateTime.setTimeZone(_timezone);
   DateTime.setServer("pool.ntp.org");
   //   DateTime.begin(15 * 1000);
   DateTime.begin();
@@ -831,7 +833,7 @@ void BWC::saveSettings(){
   }
   file.close();
   //update clock
-  DateTime.setTimeZone(_timezone);
+  //DateTime.setTimeZone(_timezone);
   DateTime.begin();	
   //revive the dog
   ESP.wdtEnable(0);
@@ -1003,4 +1005,16 @@ void BWC::print(String txt){
 
 uint8_t BWC::getState(int state){
 	return _cio.states[state];
+}
+
+String BWC::getPressedButton(){
+	uint16_t btn = _dsp.getButton();
+	uint8_t hib, lob;
+	String s;
+	hib = (uint8_t)(btn>>8);
+	lob = (uint8_t)(btn & 0xFF);
+	s = hib < 16 ? "0" + String(hib, HEX) : String(hib, HEX);
+	s += lob < 16 ? "0" + String(lob, HEX) : String(lob, HEX);
+	s += "(v3)";
+	return  s;
 }

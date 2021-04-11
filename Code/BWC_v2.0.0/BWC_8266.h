@@ -17,6 +17,8 @@
 #include <Ticker.h>
 #include "pitches.h"
 
+
+
 class CIO {
 
   public:
@@ -33,6 +35,8 @@ class CIO {
 	uint8_t states[13];
 	uint8_t brightness;
 	bool targetIsDisplayed = false;
+	//uint16_t lastPressedButton;
+
 
   private:
     //add anti glitch method
@@ -102,6 +106,7 @@ class BWC {
 	void saveSettingsFlag();
 	void saveSettings();
 	bool maxeffort = false;
+	String getPressedButton();
 
   private:
     CIO _cio;
