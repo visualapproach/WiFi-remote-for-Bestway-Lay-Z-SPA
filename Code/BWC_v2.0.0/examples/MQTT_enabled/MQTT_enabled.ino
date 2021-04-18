@@ -453,19 +453,23 @@ void handleSetMQTT() {
     myMqttIP[2] = doc["mqtt_server_ip"][2];
     myMqttIP[3] = doc["mqtt_server_ip"][3];
     myMqttPort = doc["mqtt_port"];
-    strlcpy(const_cast<char*>(myMqttUser.c_str()),                  // <- destination
+/*     strlcpy(const_cast<char*>(myMqttUser),                  // <- destination
             doc["mqtt_username"],           // <- source
             sizeof(myMqttUser));         // <- destination's capacity
-    strlcpy(const_cast<char*>(myMqttPassword.c_str()),                  // <- destination
+    strlcpy(const_cast<char*>(myMqttPassword),                  // <- destination
             doc["mqtt_password"],           // <- source
             sizeof(myMqttPassword));         // <- destination's capacity
-    strlcpy(const_cast<char*>(mqtt_client_id.c_str()),                 // <- destination
+    strlcpy(const_cast<char*>(mqtt_client_id),                 // <- destination
             doc["mqtt_client_id"],          // <- source
             sizeof(mqtt_client_id));        // <- destination's capacity
-    strlcpy(const_cast<char*>(base_mqtt_topic.c_str()),                 // <- destination
+    strlcpy(const_cast<char*>(base_mqtt_topic),                 // <- destination
             doc["base_mqtt_topic"],          // <- source
-            sizeof(base_mqtt_topic));        // <- destination's capacity
-
+            sizeof(base_mqtt_topic));        // <- destination's capacity */
+	myMqttUser = doc["mqtt_username"].as<String>();
+	myMqttPassword = doc["mqtt_password"].as<String>();
+	mqtt_client_id = doc["mqtt_client_id"].as<String>();
+	base_mqtt_topic = doc["base_mqtt_topic"].as<String>();
+	
     server.send(200, "plain/text", "");
     saveMQTT();
   }
@@ -525,18 +529,22 @@ void loadMQTT() {
   myMqttIP[2] = doc["mqtt_server_ip"][2];
   myMqttIP[3] = doc["mqtt_server_ip"][3];
   myMqttPort = doc["mqtt_port"];
-  strlcpy(const_cast<char*>(myMqttUser.c_str()),                  // <- destination
+/*   strlcpy(const_cast<char*>(myMqttUser),                  // <- destination
           doc["mqtt_username"],           // <- source
           sizeof(myMqttUser));         // <- destination's capacity
-  strlcpy(const_cast<char*>(myMqttPassword.c_str()),                  // <- destination
+  strlcpy(const_cast<char*>(myMqttPassword),                  // <- destination
           doc["mqtt_password"],           // <- source
           sizeof(myMqttPassword));         // <- destination's capacity
-  strlcpy(const_cast<char*>(mqtt_client_id.c_str()),                 // <- destination
+  strlcpy(const_cast<char*>(mqtt_client_id.),                 // <- destination
           doc["mqtt_client_id"],          // <- source
           sizeof(mqtt_client_id));        // <- destination's capacity
-  strlcpy(const_cast<char*>(base_mqtt_topic.c_str()),                 // <- destination
+  strlcpy(const_cast<char*>(base_mqtt_topic),                 // <- destination
           doc["base_mqtt_topic"],          // <- source
-          sizeof(base_mqtt_topic));        // <- destination's capacity
+          sizeof(base_mqtt_topic));        // <- destination's capacity */
+	myMqttUser = doc["mqtt_username"].as<String>();
+	myMqttPassword = doc["mqtt_password"].as<String>();
+	mqtt_client_id = doc["mqtt_client_id"].as<String>();
+	base_mqtt_topic = doc["base_mqtt_topic"].as<String>();
 }
 
 //response to /getcommands/
