@@ -41,34 +41,12 @@ Follow instructions in the code. <br>
 <br>My schematics<br>
 <img src="./pics/schematic2.png"><br>
 
-Link to Eric's PCB: https://easyeda.com/Naesstrom/lay-z-spa_remote 
-Technical details in https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/blob/master/bwc_docs.xlsx
 
 ### Installation:<br>
-Using Arduino IDE<br>
-Copy BWC_2.0.0 to arduino libraries/ folder<br>
 
-Download and install these Libraries<br>
-Basic sketch:<br>
-ArduinoJSON (Benoit Blanchon)<br>
-ESPDateTime https://github.com/mcxiaoke/ESPDateTime<br>
-WebSockets https://github.com/Links2004/arduinoWebSockets<br>
-WiFiManager https://github.com/tzapu/WiFiManager<br>
-<br>
-MQTT sketch (in addition to basic):<br>
-PubSubClient https://github.com/knolleary/pubsubclient
-<br>
-LittleFS install:<br>
-https://arduino-esp8266.readthedocs.io/en/latest/filesystem.html#uploading-files-to-file-system<br>
-Link to LittleFS upload tool: https://github.com/esp8266/arduino-esp8266fs-plugin/releases/<br>
+Link to Eric's PCB: https://easyeda.com/Naesstrom/lay-z-spa_remote 
+Technical details in https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/blob/master/bwc_docs.xlsx
+Build instructions and more: https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/blob/master/Build%20instructions%20Bestway%20WiFi%20remote.pdf
 
-Open File/examples/BWC2.0.0 from the arduino IDE. 
-
-Select the right board, and set "FS 2MB/OTA 1MB", speed 80 MHz.
-Upload LittleFS files.
-Upload sketch.
-An Access Point is created called "Auto portal". Log in and enter wifi credentials.
-Visit IP/ and click "Go to config page"
-Enter your settings, click SAVE.
 
 Problems? Read FAQ in discussions and current issues
