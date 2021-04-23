@@ -50,7 +50,19 @@ function handlemsg(e) {
     doc["CH3"] = _cio.states[CHAR3]; */
 	if(msgobj.CONTENT == "OTHER"){
 		//if(msgobj.MQTT){
-			document.getElementById('mqtt').innerHTML = "MQTT:" + msgobj.MQTT.toString();
+			mqtt_states = [
+				"CONNECTION_TIMEOUT",
+				"CONNECTION_LOST",
+				"CONNECT_FAILED",
+				"DISCONNECTED",
+				"CONNECTED",
+				"CONNECT_BAD_PROTOCOL",
+				"CONNECT_BAD_CLIENT_ID",
+				"CONNECT_UNAVAILABLE",
+				"CONNECT_BAD_CREDENTIALS",
+				"CONNECT_UNAUTHORIZED"
+			];
+			document.getElementById('mqtt').innerHTML = "MQTT:" + mqtt_states[msgobj.MQTT + 4];
 		//}
 	}
 	if(msgobj.CONTENT == "STATES"){
