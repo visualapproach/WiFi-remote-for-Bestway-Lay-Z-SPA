@@ -54,10 +54,36 @@ function handlemsg(e) {
 
 	if(msgobj.CONTENT == "OTHER"){
 		//if(msgobj.MQTT){
-			document.getElementById('mqtt').innerHTML = "MQTT:" + msgobj.MQTT.toString();
+			mqtt_states = [
+				"CONNECTION_TIMEOUT",
+				"CONNECTION_LOST",
+				"CONNECT_FAILED",
+				"DISCONNECTED",
+				"CONNECTED",
+				"CONNECT_BAD_PROTOCOL",
+				"CONNECT_BAD_CLIENT_ID",
+				"CONNECT_UNAVAILABLE",
+				"CONNECT_BAD_CREDENTIALS",
+				"CONNECT_UNAUTHORIZED"
+			]
+			document.getElementById('mqtt').innerHTML = "MQTT:" + mqtt_states[msgobj.MQTT + 4];
 			//document.getElementById('debug').innerHTML = "code:" + msgobj.PressedButton;
 		//}
 	}
+	
+/*       MQTTclient.state return code meanings...
+      -4 : MQTT_CONNECTION_TIMEOUT - the server didn't respond within the keepalive time
+      -3 : MQTT_CONNECTION_LOST - the network connection was broken
+      -2 : MQTT_CONNECT_FAILED - the network connection failed
+      -1 : MQTT_DISCONNECTED - the client is disconnected cleanly
+      0 : MQTT_CONNECTED - the client is connected
+      1 : MQTT_CONNECT_BAD_PROTOCOL - the server doesn't support the requested version of MQTT
+      2 : MQTT_CONNECT_BAD_CLIENT_ID - the server rejected the client identifier
+      3 : MQTT_CONNECT_UNAVAILABLE - the server was unable to accept the connection
+      4 : MQTT_CONNECT_BAD_CREDENTIALS - the username/password were rejected
+      5 : MQTT_CONNECT_UNAUTHORIZED - the client was not authorized to connect * */
+	
+	
 	if(msgobj.CONTENT == "STATES"){
 		document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
 		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
