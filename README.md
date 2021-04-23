@@ -44,9 +44,9 @@ Follow instructions in the code. <br>
 
 ### Installation:<br>
 
-Link to Eric's PCB: https://easyeda.com/Naesstrom/lay-z-spa_remote 
-Technical details in https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/blob/master/bwc_docs.xlsx
-Build instructions and more: https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/blob/master/Build%20instructions%20Bestway%20WiFi%20remote.pdf
+Link to Eric's PCB: https://easyeda.com/Naesstrom/lay-z-spa_remote <br>
+Technical details in https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/blob/master/bwc_docs.xlsx <br>
+Build instructions and more: https://sway.office.com/03McFrCU1ZyMHFex?ref=Link
 
 
 Problems? Read FAQ in discussions and current issues
