@@ -910,6 +910,11 @@ void BWC::_saveCommandQueue(){
 
 }
 
+void BWC::reloadCommandQueue(){
+	  _loadCommandQueue();
+	  return;
+}
+
 void BWC::saveEventlog(){
   if(maxeffort) {
 	  _saveEventlogNeeded = true;
