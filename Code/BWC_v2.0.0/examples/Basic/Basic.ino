@@ -294,6 +294,9 @@ void handleFileUpload() { // upload a new file to the LittleFS
       Serial.print(F("handleFileUpload Size: ")); Serial.println(upload.totalSize);
       server.sendHeader("Location", "/success.html");     // Redirect the client to the success page
       server.send(303);
+	  if(upload.filename == "cmdq.txt"){
+        bwc.reloadCommandQueue();
+      }
     } else {
       server.send(500, "text/plain", "500: couldn't create file");
     }

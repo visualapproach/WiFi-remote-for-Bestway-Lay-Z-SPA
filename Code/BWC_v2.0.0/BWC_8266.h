@@ -107,6 +107,7 @@ class BWC {
 	void saveSettings();
 	bool maxeffort = false;
 	String getPressedButton();
+	void reloadCommandQueue();
 
   private:
     CIO _cio;
