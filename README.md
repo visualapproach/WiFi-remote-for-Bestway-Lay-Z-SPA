@@ -44,9 +44,13 @@ Follow instructions in the code. <br>
 
 ### Installation:<br>
 
-Link to Eric's PCB: https://easyeda.com/Naesstrom/lay-z-spa_remote <br>
+Link to Eric's PCB (use with LLC below, choose 1x8 ch or 2x4 ch according to the PCB): https://easyeda.com/Naesstrom/lay-z-spa_remote <br>
+<img src="./pics/LLC_eric.jpg" width="300"><br>
+Link to my (yet untested) version of the PCB (use with LLC below): https://oshwlab.com/Visualapproach/bestway-wifi-controller <br>
+<img src="./pics/txs0108e.jpg" width="300"><br>
+Open the project in editor and download gerber files. Upload them to a PCB factory like JLCPCB.com. <br>
 Technical details in https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/blob/master/bwc_docs.xlsx <br>
-Build instructions and more: https://sway.office.com/yYbGW1X7YItzwXVx?ref=Link
+Build instructions and more: https://sway.office.com/yYbGW1X7YItzwXVx?ref=Link <br>
 
 
 Problems? Read FAQ in discussions and current issues

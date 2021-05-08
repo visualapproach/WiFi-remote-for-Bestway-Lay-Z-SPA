@@ -324,6 +324,7 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
   server.on(F("/addcommand/"), handleAddCommand);
   server.on(F("/getmqtt/"), handleGetMQTT);
   server.on(F("/setmqtt/"), handleSetMQTT);
+  server.on(F("/resetwifi/"), handleResetWifi);
   //  server.on(F("/remove.html"), handleLogRemove);  //not implemented
 
   server.onNotFound(handleNotFound);          // if someone requests any other file or page, go to function 'handleNotFound'
@@ -380,6 +381,14 @@ void startWiFi() { // Start a Wi-Fi access point, and try to connect to some giv
 /*
    Web server functions to exchange data between server and web client
 */
+
+void handleResetWifi(){
+  WiFi.disconnect();
+  delay(3000);
+  Serial.println("resetting");
+  ESP.reset();
+  //Do this before giving away the device
+}
 
 //response to /getconfig/
 void handleGetConfig() { // reply with json document

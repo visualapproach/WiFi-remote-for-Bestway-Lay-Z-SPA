@@ -324,6 +324,7 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
   server.on(F("/addcommand/"), handleAddCommand);
   server.on(F("/getmqtt/"), handleGetMQTT);
   server.on(F("/setmqtt/"), handleSetMQTT);
+  server.on(F("/resetwifi/"), handleResetWifi);
   //  server.on(F("/remove.html"), handleLogRemove);  //not implemented
 
   server.onNotFound(handleNotFound);          // if someone requests any other file or page, go to function 'handleNotFound'
@@ -548,6 +549,14 @@ void loadMQTT() {
 	myMqttPassword = doc["mqtt_password"].as<String>();
 	mqtt_client_id = doc["mqtt_client_id"].as<String>();
 	base_mqtt_topic = doc["base_mqtt_topic"].as<String>();
+}
+
+void handleResetWifi(){
+  WiFi.disconnect();
+  delay(3000);
+  Serial.println("resetting");
+  ESP.reset();
+  //Do this before giving away the device
 }
 
 //response to /getcommands/
