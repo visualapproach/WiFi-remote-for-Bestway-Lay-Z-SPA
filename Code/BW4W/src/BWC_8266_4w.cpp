@@ -3,9 +3,9 @@
 void CIO::begin() {
   //Setup serial to CIO here
   //Using hardware UART/Serial on default pins (RX/TX)
-  cio_serial.begin(9600, SWSERIAL_8N1, D2, D3, false, 64);
+  cio_serial.begin(9600, SWSERIAL_8N1, D6, D7, false, 64);
   cio_serial.setTimeout(50);
-  dsp_serial.begin(9600, SWSERIAL_8N1, D6, D7, false, 64);
+  dsp_serial.begin(9600, SWSERIAL_8N1, D1, D2, false, 64);
   dsp_serial.setTimeout(50);
 
   states[TARGET] = 20;
