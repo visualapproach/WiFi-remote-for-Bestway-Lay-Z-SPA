@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SPA Control</title>
+    <link href='main.css' rel='stylesheet' type='text/css'>
+    <link rel="icon" type="image/png" sizes="128x128"  href="favicon128.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0066BF">
+    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport'>
+</head>
+
+<body>
+    <center>
+        <header>
+            <h1 id="header">SPA Control</h1>
+        </header>
+        <div style="background-image: url('favicon128.png'); background-repeat: no-repeat;">
+			<h2 id="at"> Actual temp: <label id="atlabel" for="at">0</label></h2>
+			<h3 id="tt"> Target temp: <label id="ttlabel" for="tt">0</label></h3>
+			<table style="margin: 0px 0px 0px 0px">
+			<tr>
+				<td style="width:30%"><h4 id="mqtt">MQTT</h4></td>
+				<td style="width:20%"><h2 id="dsp" style="text-align: center; background-color: #000; color: red">display</h2></td>
+				<td style="width:30%"></td>
+			</tr>
+			</table>
+		</div>
+		<div>
+			<style> .equal-width td { width: 30%; } </style>
+			<table class="equal-width">
+                <tr>
+					<td colspan="2" style="white-space: nowrap; text-align: right">Set target temperature: </td>
+                    <td colspan="2"><input class="enabled" id="temp" type="range" min="20" max="40" step="1" value="20" onmouseup="tempchange()" ontouchend="tempchange()" oninput="sliderchange()"></td>
+					<td style="text-align: center" id="sliderlabel">0</td>
+				</tr>
+				<tr>
+					<td align="left">
+						Unit (F/C)
+					</td>
+					<td align="left">
+						<!-- Rounded switch -->
+						<label class="switch">
+						  <input type="checkbox" id="UNT" onchange="unt()">
+						  <span class="slider round"></span>
+						</label>
+					</td>
+					<td align="left">
+						Bubbles
+					</td>
+					<td align="left">
+						<!-- Rounded switch -->
+						<label class="switch">
+						  <input type="checkbox" id="AIR" onchange="air()">
+						  <span class="slider round"></span>
+						</label>
+					</td>
+				</tr>				
+				<tr>
+					<td align="left">
+						Pump
+					</td>
+					<td align="left">
+						<!-- Rounded switch -->
+						<label class="switch">
+						  <input type="checkbox" id="FLT" onchange="flt()">
+						  <span class="slider round"></span>
+						</label>
+					</td>
+					<td align="left">
+						Heater
+					</td>
+					<td align="left">
+						<!-- Rounded switch -->
+						<label class="switch">
+						  <input type="checkbox" id="HTR" onchange="htr()">
+						  <span id="htrspan" class="slider round"></span>
+						</label>
+					</td>
+				</tr>				
+				<tr>
+					<td align="left">
+						Take control
+					</td>
+					<td align="left">
+						<!-- Rounded switch -->
+						<label class="switch">
+						  <input type="checkbox" id="GOD" onchange="god()">
+						  <span class="slider round"></span>
+						</label>
+					</td>
+					<td align="left">
+						Jets
+					</td>
+					<td align="left">
+						<!-- Rounded switch -->
+						<label class="switch">
+						  <input type="checkbox" id="JET" onchange="jet()">
+						  <span id="htrspan" class="slider round"></span>
+						</label>
+					</td>
+				</tr>				
+           </table>
+        </div>
+		<div>
+			<table><tr>
+				<td><button id="cltimerbtn" class="button" style="background-color:#999" onclick="clTimer()">CL added</button></td>
+				<td  style="text-align:left" id="cltimer">1000000</td>
+				<td style="white-space:nowrap">days since reset</td>
+			</tr></table>
+			<table><tr>
+				<td><button id="ftimerbtn" class="button" style="background-color:#999" onclick="fTimer()">Filter changed</button></td>
+				<td  style="text-align:left" id="ftimer">1000000</td>
+				<td style="white-space:nowrap">days since change</td>
+			</tr></table>
+		</div>
+
+		<div>
+		<style> .equal-width td { width: 20%; } </style>
+			<table><caption>Totals</caption>
+				<tr>
+					<td style="width:20%">Time: </td>
+					<td  style="width:70%;  white-space:nowrap; text-align:left" id="time">00:00:00</td>
+				</tr>
+				<tr>
+					<td style="width:20%">Uptime: </td>
+					<td  style="width:70%;  white-space:nowrap; text-align:left" id="uptime">00:00:00</td>
+				</tr>
+				<tr>
+					<td style="width:20%">Pump: </td>
+					<td  style="width:70%;  white-space:nowrap; text-align:left" id="filtertime">00:00:00</td>
+				</tr>
+				<tr>
+					<td style="width:20%; white-space:nowrap">Heating: </td>
+					<td  style="width:70%;  white-space:nowrap; text-align:left" id="heatingtime">00:00:00</td>
+				</tr>
+				<tr>
+					<td style="width:20%; white-space:nowrap">Air: </td>
+					<td style="width:70%;  white-space:nowrap; text-align:left" id="airtime">2456:-</td>
+				</tr>
+				<tr>
+					<td style="width:20%; white-space:nowrap">Estimated cost: </td>
+					<td style="width:70%;  white-space:nowrap; text-align:left" id="cost">00:00:00</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<button id="reset" class="button" style="background-color:#999" onclick="zero()">Reset</button>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div><a href="config.html">Go to config page</a></div>
+		<div>
+			
+			<button id="reboot" class="button" style="background-color:#911" onclick="reboot()">Reboot ESP</button>
+		</div>
+    </center>
+	<script>
+		//
+var connection;
+connect();
+
+function connect(){
+	connection = new WebSocket('ws://'+location.hostname+':81/', ['arduino']);
+	connection.onopen = function () { 
+		document.getElementById('header').style = "background-color: #00508F";
+	};
+	connection.onerror = function (error) {
+		console.log('WebSocket Error ', error);
+		document.getElementById('header').style = "background-color: #FF0000";
+		connection.close();
+	};
+	connection.onclose = function(){
+		console.log('WebSocket connection closed, reconnecting in 5 s');
+		document.getElementById('header').style = "background-color: #FF0000";
+		setTimeout(function() {
+			connect();}, 5000);
+	};	
+	connection.onmessage = function(e){
+		handlemsg(e);}
+} 
+
+
+String.prototype.pad = function(String, len) { 
+                var str = this; 
+                while (str.length < len) 
+                    str = String + str; 
+                return str; 
+            }
+
+function handlemsg(e) {  
+	var msgobj = JSON.parse(e.data);
+	var mycolor;
+	console.log(msgobj);
+	
+/*     
+	doc["LCK"] = _cio.states[LOCKEDSTATE];
+    doc["PWR"] = _cio.states[POWERSTATE];
+    doc["UNT"] = _cio.states[UNITSTATE];
+    doc["AIR"] = _cio.states[BUBBLESSTATE];
+    doc["GRN"] = _cio.states[HEATGRNSTATE];
+    doc["RED"] = _cio.states[HEATREDSTATE];
+    doc["FLT"] = _cio.states[PUMPSTATE];
+    doc["TGT"] = _cio.states[TARGET];
+    doc["TMP"] = _cio.states[TEMPERATURE];
+    doc["CH1"] = _cio.states[CHAR1];
+    doc["CH2"] = _cio.states[CHAR2];
+    doc["CH3"] = _cio.states[CHAR3]; */
+	if(msgobj.CONTENT == "OTHER"){
+		//if(msgobj.MQTT){
+			document.getElementById('mqtt').innerHTML = 
+				"MQTT:" + msgobj.MQTT.toString() + " CIOTX:" + msgobj.CIOTX.toString() +
+				" DSPTX:" + msgobj.DSPTX.toString();
+		//}
+	}
+	if(msgobj.CONTENT == "STATES"){
+		var element = document.getElementById('temp');
+		if (element.value == 0) element.value = msgobj.TGT;
+		document.getElementById('sliderlabel').innerHTML = element.value.toString();
+		document.getElementById('AIR').checked = msgobj.AIR;
+		document.getElementById('UNT').checked = msgobj.UNT;
+		document.getElementById('GOD').checked = msgobj.GOD;
+		if(msgobj.UNT){
+			document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
+			document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
+		} else {
+			document.getElementById('atlabel').innerHTML = String(msgobj.TMP * 1.8 + 32);
+			document.getElementById('ttlabel').innerHTML = String(msgobj.TGT * 1.8 + 32);
+		}
+		if(msgobj.RED) {
+			mycolor = "background-color: #FF0000";
+			}
+		else {
+			mycolor = "background-color: #00FF00";
+		}
+		if(!(msgobj.RED || msgobj.GRN)) mycolor = "background-color: #CCC";
+		//2 is unknown (shown as black)
+		if(msgobj.GRN == 2) mycolor = "background-color: #000";
+
+		document.getElementById('HTR').checked = msgobj.RED;
+		document.getElementById('htrspan').style = mycolor;
+		document.getElementById('FLT').checked = msgobj.FLT;
+		if(document.getElementById('UNT').checked){
+			document.getElementById('temp').min = 20;
+			document.getElementById('temp').max = 40;
+		} else {
+			document.getElementById('temp').min = 68;
+			document.getElementById('temp').max = 104;
+		}
+		document.getElementById('dsp').innerHTML = "[" + String.fromCharCode(msgobj.CH1,msgobj.CH2,msgobj.CH3)+ "]";
+	}
+	if(msgobj.CONTENT == "TIMES"){
+		var date = new Date(msgobj.TIME * 1000);
+		document.getElementById('time').innerHTML = date.toLocaleString();
+		
+		var d = (Date.now()/1000-msgobj.CLTIME)/(24*3600.0);
+		if(d > msgobj.CLINT) {
+			mycolor = "background-color:#"+"900";
+		} else {
+			mycolor = "background-color:#"+"999";
+		}
+		document.getElementById('cltimer').innerHTML = d.toFixed(2);
+		document.getElementById('cltimerbtn').style = mycolor;
+
+		var df = (Date.now()/1000-msgobj.FTIME)/(24*3600.0);
+		if(df > msgobj.FINT) {
+			mycolor = "background-color:#"+"900";
+		} else {
+			mycolor = "background-color:#"+"999";
+		}
+		document.getElementById('ftimer').innerHTML = df.toFixed(2);
+		document.getElementById('ftimerbtn').style = mycolor;
+		
+		document.getElementById('heatingtime').innerHTML = s2dhms(msgobj.HEATINGTIME);			
+		document.getElementById('uptime').innerHTML = s2dhms(msgobj.UPTIME);		
+		document.getElementById('airtime').innerHTML = s2dhms(msgobj.AIRTIME);		
+		document.getElementById('filtertime').innerHTML = s2dhms(msgobj.PUMPTIME);		
+		document.getElementById('cost').innerHTML = (msgobj.COST).toFixed(2);		
+	}
+	
+};
+
+
+function s2dhms(val) {
+	var day = 3600*24;
+	var hour = 3600;
+	var minute = 60;
+	var rem;
+	var days = Math.floor(val/day);
+	rem = val % day;
+	var hours = Math.floor(rem/hour);
+	rem = val % hour;
+	var minutes = Math.floor(rem/minute);
+	rem = val % minute;
+	var seconds = Math.floor(rem);
+	return days + "d " + hours.toString().pad("0", 2) + ":" + minutes.toString().pad("0", 2) + ":" + seconds.toString().pad("0", 2);
+}
+
+const settarget = 0;
+const setunit = 1;
+const setbubbles = 2;
+const setheat = 3;
+const setpump = 4;
+const resetq = 5;
+const rebootesp = 6;
+const gettarget = 7;
+const resettimes = 8;
+const resetcltimer = 9;
+const resetftimer = 10;
+const setjets = 11;
+const setgodmode = 12;
+
+function air() {
+	var sendobj = {};
+	sendobj["CMD"] = setbubbles;
+	sendobj["VALUE"] = document.getElementById('AIR').checked;
+	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
+function unt() {
+	var sendobj = {};
+	sendobj["CMD"] = setunit;
+	sendobj["VALUE"] = document.getElementById('UNT').checked;
+	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+	alert("Setting is only changing the web interface.\n Change also required on the pump display.");
+}
+function htr() {
+	var sendobj = {};
+	sendobj["CMD"] = setheat;
+	sendobj["VALUE"] = document.getElementById('HTR').checked;
+	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
+function flt() {
+	var sendobj = {};
+	sendobj["CMD"] = setpump;
+	sendobj["VALUE"] = document.getElementById('FLT').checked;
+	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
+
+function god() {
+	var sendobj = {};
+	sendobj["CMD"] = setgodmode;
+	sendobj["VALUE"] = document.getElementById('GOD').checked;
+	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+	alert("Warning! Control is now given to ESP module. \nFactory safety guards might fail.");
+}
+
+function jet() {
+	var sendobj = {};
+	sendobj["CMD"] = setjets;
+	sendobj["VALUE"] = document.getElementById('JET').checked;
+	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
+
+function tempchange() {
+	var sendobj = {};
+	sendobj["CMD"] = settarget;
+	var mytemp = parseInt(document.getElementById('temp').value);
+	if(!document.getElementById('UNT').checked) {
+		mytemp = Math.floor((mytemp - 32) / 1.8);
+	}
+	sendobj["VALUE"] = mytemp;  //in Celsius
+	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
+
+function sliderchange(){
+	document.getElementById("sliderlabel").innerHTML = document.getElementById('temp').value.toString();
+}
+
+function clTimer() {
+	var sendobj = {};
+	sendobj["CMD"] = resetcltimer;
+	sendobj["VALUE"] = 0;
+	sendobj["XTIME"] = 0;
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
+
+function fTimer() {
+	var sendobj = {};
+	sendobj["CMD"] = resetftimer;
+	sendobj["VALUE"] = 0;
+	sendobj["XTIME"] = 0;
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
+function reboot() {
+	var sendobj = {};
+	sendobj["CMD"] = rebootesp;
+	sendobj["VALUE"] = 0;
+	sendobj["XTIME"] = 0;
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
+
+function zero() {
+	var sendobj = {};
+	sendobj["CMD"] = resettimes;
+	sendobj["VALUE"] = 0;
+	sendobj["XTIME"] = 0;
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
+
+
+	</script>
+</body>
+</html>

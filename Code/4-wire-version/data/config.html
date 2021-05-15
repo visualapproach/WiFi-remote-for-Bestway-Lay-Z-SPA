@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SPA Config</title>
+    <link href='main.css' rel='stylesheet' type='text/css'>
+    <link rel="icon" type="image/png" sizes="128x128"  href="favicon128.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0066BF">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+</head>
+
+<body onload="loadconfig()">
+    <center>
+        <header>
+            <h1>SPA Config</h1>
+        </header>
+		<div style="text-align: left">
+			<input type="text" id="timezone" value="2" maxlength="2" size="2">
+			<label for="timezone">Timezone (adj. manually for DST/Summertime)</label><br>
+			<input type="text" id="price" value="1.50" maxlength="4" size="4">
+			<label for="price">Price per kWh</label><br>
+<input type="text" id="clinterval" value="7" maxlength="3" size="3">
+			<label for="clinterval">Chlorine add Interval</label><br>
+<input type="text" id="finterval" value="30" maxlength="3" size="3">
+			<label for="finterval">Filterchange Interval</label><br>
+			<input type="checkbox" id="audio" style="background-color:#999">
+			<label for="audio">Audio (not used)</label><br>
+			<button id="save" class="button" style="background-color:#DDD" onclick="saveconfig()">Save config</button>
+		</div>
+		<div style="text-align: left">
+			<select name="commands" id="commands">
+				<option value="0">Set target temp</option>
+				<option value="1">Set unit</option>
+				<option value="2">Set air bubbles</option>
+				<option value="3">Set heater</option>
+				<option value="4">Set filter pump</option>
+				<option value="6">Reboot ESP</option>
+			</select>
+			<label for="cars">Command</label>
+			<br>
+			<input type="text" id="val" value="1" maxlength="3" size="3">
+			<label for="val">Value</label>
+			<br>
+			<input type="datetime-local" id="xtime" name="xtime" onchange="totimestamp()">
+			<label for="xtime">Execute time</label>
+			<br>
+			<input type="text" id="interval" value="0" maxlength="8" size="8">
+			<label for="interval">Repeat interval (seconds). 0=once</label>
+			<br>
+			<h4>1h=3600, 1d=86400, 1w=604800</h4>
+			<button id="addcmd" class="button" style="background-color:#DDD" onclick="addcommand()">Add command to queue</button>
+		</div>
+		<div style="text-align: left">
+			<h4>Command queue</h4>
+			<p id="cmdq"><p>
+			<button id="resetq" class="button" style="background-color:#DDD" onclick="resetqueue()">Clear queue</button>
+		</div>
+		<div><a href="upload.html">Upload a file</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="update.html">Update firmware</a></div>
+		<div id="reboot" style="font-size: 10px">last boot: </div>
+	</center>
+
+	
+<script>
+
+const settarget = 0;
+const setunit = 1;
+const setbubbles = 2;
+const setheat = 3;
+const setpump = 4;
+const resetq = 5;
+const rebootesp = 6;
+const gettarget = 7;
+const setjets = 11;
+const commandlist = ["Set target", "Set unit", "Set bubbles", "Set heat", "Set pump", "Reset queue", "Reboot ESP", "Internal cmd", "Set jets"];
+
+function loadconfig(){
+	const Http = new XMLHttpRequest();
+	const url='/getconfig/';
+	Http.open("POST", url);
+	Http.send();
+
+	Http.onreadystatechange = function(){
+		if(this.readyState==4 && this.status==200){
+		  console.log(Http.responseText);
+		  var msgobj = JSON.parse(Http.responseText);
+		  document.getElementById("timezone").value = msgobj.TIMEZONE.toString();
+		  document.getElementById("price").value = msgobj.PRICE.toString();
+		  document.getElementById("finterval").value = msgobj.FINT.toString();
+		  document.getElementById("clinterval").value = msgobj.CLINT.toString();
+		  document.getElementById("audio").checked = msgobj.AUDIO;
+		  var date = new Date(msgobj.REBOOTTIME * 1000);
+		  document.getElementById('reboot').innerHTML = "Last boot: " + date.toLocaleString() + " " + msgobj.REBOOTINFO;
+		}
+	}
+	setInterval(loadcmd,4000);
+
+
+	var now = new Date();
+    var offset = now.getTimezoneOffset() * 60000;
+    var adjustedDate = new Date(now.getTime() - offset);
+    var formattedDate = adjustedDate.toISOString().substring(0,16); // For minute precision
+    var datetimeField = document.getElementById("xtime");
+    datetimeField.value = formattedDate;
+}
+
+function loadcmd(){
+	const Http = new XMLHttpRequest();
+	const url='/getcommands/';
+	Http.open("POST", url);
+	Http.send();
+
+	Http.onreadystatechange = function(){
+		if(this.readyState==4 && this.status==200){
+		  console.log(Http.responseText);
+		  var msgobj = JSON.parse(Http.responseText);
+		  document.getElementById("cmdq").innerHTML = "";
+		  for(var i = 0; i < msgobj.LEN; i++){
+			document.getElementById("cmdq").innerHTML += commandlist[msgobj["CMD"][i]] + ":";
+			document.getElementById("cmdq").innerHTML += msgobj["VALUE"][i] + " ";
+		    var date = new Date(msgobj.XTIME[i] * 1000);
+			document.getElementById("cmdq").innerHTML += date.toLocaleString() + " interval: ";
+			document.getElementById("cmdq").innerHTML += msgobj["INTERVAL"][i] + "s<br>";
+		  }
+		}
+	}
+}
+
+
+function saveconfig(){
+	const Http = new XMLHttpRequest();
+	const url='/setconfig/';
+	Http.open("POST", url);
+
+	var msgobj = {
+		"TIMEZONE":parseInt(document.getElementById("timezone").value),
+		"PRICE":parseFloat(document.getElementById("price").value),
+		"FINT":parseInt(document.getElementById("finterval").value),
+		"CLINT":parseInt(document.getElementById("clinterval").value),
+		"AUDIO":document.getElementById("audio").checked
+		}
+	Http.send(JSON.stringify(msgobj));
+	console.log(msgobj);
+	alert("Saved.");
+	window.location.replace("/");
+}
+
+function totimestamp(){
+	console.log(Date.parse(document.getElementById("xtime").value)/1000);
+	console.log("value "+document.getElementById("xtime").value);
+}
+
+function addcommand(){
+	const Http = new XMLHttpRequest();
+	const url='/addcommand/';
+	Http.open("POST", url);
+
+	var msgobj = {
+		"CMD":parseInt(document.getElementById("commands").value),
+		"VALUE":parseFloat(document.getElementById("val").value),
+		"XTIME":Date.parse(document.getElementById("xtime").value)/1000,
+		"INTERVAL":parseInt(document.getElementById("interval").value)
+		}
+	Http.send(JSON.stringify(msgobj));
+
+	console.log(msgobj);
+	
+}
+
+function resetqueue(){
+	const Http = new XMLHttpRequest();
+	const url='/addcommand/';
+	Http.open("POST", url);
+
+	var msgobj = {
+		"CMD":resetq,
+		"VAL":1,
+		"XTIME":0,
+		"INTERVAL":0
+		}
+	Http.send(JSON.stringify(msgobj));
+	console.log(msgobj);
+	loadcmd();
+}
+
+
+</script>	
+</body>
+</html>
