@@ -29,7 +29,7 @@ void CIO::begin(int cio_cs_pin, int cio_data_pin, int cio_clk_pin) {
 
 //match 7 segment pattern to a real digit
 char CIO::_getChar(uint8_t value) {
-  for (int index = 0; index < sizeof(CHARCODES); index++) {
+  for (unsigned int index = 0; index < sizeof(CHARCODES); index++) {
     if (value == CHARCODES[index]) {
       return CHARS[index];
     }
@@ -232,7 +232,7 @@ uint16_t DSP::_receiveBitsFromDSP() {
 }
 
 char DSP::_getCode(char value) {
-  for (int index = 0; index < sizeof(CHARS); index++) {
+  for (unsigned int index = 0; index < sizeof(CHARS); index++) {
     if (value == CHARS[index]) {
       return CHARCODES[index];
     }
@@ -333,7 +333,7 @@ void DSP::playIntro() {
 }
 
 void DSP::beep() {
-  int longnote = 125;
+  //int longnote = 125;
   int shortnote = 63;
   tone(_AUDIO_PIN, NOTE_C6, shortnote);
   delay(shortnote);
@@ -935,7 +935,7 @@ void BWC::saveEventlog(){
   DynamicJsonDocument doc(1024);
 
   // Set the values in the document
-  for(int i = 0; i < sizeof(_cio.states); i++){
+  for(unsigned int i = 0; i < sizeof(_cio.states); i++){
 	doc[i] = _cio.states[i];
   }
   doc["timestamp"] = DateTime.format(DateFormatter::SIMPLE);
