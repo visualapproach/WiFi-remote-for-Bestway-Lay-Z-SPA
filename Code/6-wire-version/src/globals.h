@@ -20,7 +20,7 @@ bool portalRunning = false;
 File fsUploadFile;                 // a File variable to temporarily store the received file
 
 //OTA credentials
-const char *OTAName = LEGACY_NAME;           // A name and a password for the OTA service
+const char *OTAName = LEGACY_NAME;          // A name and a password for the OTA service
 const char *OTAPassword = "esp8266";        //myOTApassword;
 
 //MQTT Credentials
@@ -28,7 +28,7 @@ IPAddress myMqttIP(192,168,4,126);
 int myMqttPort = 1883;
 String myMqttUser = "admin";
 String myMqttPassword = "admin";
-int mqtt_connect_count;                    // Count of how may times we've connected to the MQTT server since booting (should always be 1 or more)
+int mqtt_connect_count;                // Count of how may times we've connected to the MQTT server since booting (should always be 1 or more)
 String mqtt_client_id = LEGACY_NAME;   // Used for unique MQTT Client ID
 String base_mqtt_topic = LEGACY_NAME;  // Start of the MQTT Topic name used by this device
 WiFiClient My_WiFi_Client;
