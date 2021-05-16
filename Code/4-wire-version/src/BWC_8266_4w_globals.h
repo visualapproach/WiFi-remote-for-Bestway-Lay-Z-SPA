@@ -1,6 +1,3 @@
-//only declarations here please! Definitions belong in the cpp-file
-
-
 #ifndef BWC_8266_4W_GLOBALS_H
 #define BWC_8266_4W_GLOBALS_H
 #include "model.h"
@@ -10,6 +7,8 @@
 //	136 = Jets
 //	138 = Jets and bubbles
 //	181 = heating both elements with filter pump
+
+//only declarations here please! Definitions belong in the cpp-file
 
 
 
