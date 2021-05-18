@@ -5,22 +5,21 @@
 ### News: To enable 2021 support, you just need to comment out one line in the file BWC_8266_globals.h. It is (in addition to hardcode in globals.h) possible to set/change MQTT credentials via web interface.
 The ESPDateTime library is updated which broke timezones in my code. I decided to omit that config. So device is using UTC only. Web pages will most likely translate to local time. It should only affect MQTT. I think.<br><br>
 
-4-wire version: Only tested with the pump inside the house. No pool or water connected yet. More info in the CODE/BW4W folder.
+4-wire version: Only tested by me with the pump "on the bench".
 <br><br>
-Code/BWC_v2.0.0 is a *LIBRARY*. Copy the whole folder "BWC_v2.0.0" to ...arduino/Libraries/ Then open IDE and pick FILE/EXAMPLES/BWC_v2.0.0/...ino
-Follow instructions in the code. <br>
+Moved to Visual Studio Code + PlatformIO.
+Follow instructions (readme.md) in the code folder. <br>
 
 ### Features:<br>
 -Watch the temperature and status from your browser.<br>
 -Custom text on the SPA pump display.<br>
--Custom sound instead of just beeping. Plays a melody when starting etc.<br>
--Optional: Basic logging to LittleFS (on the ESP8266).<br>
+-Custom sound instead of just beeping is possible.<br>
 -OTA: Update firmware over the air. Super convenient when mounted inside the pump.<br>
 -Simple to build. No hardware changes needed on the SPA pump. Just remove the display, disconnect the 6-pin ribbon cable and plug it into this device.<br>
 -Timer for chlorine. Hit the button on the webpage when adding cl and it will count the days for you.<br>
 -Timer for filter change. Pulled from @Bankaifan.<br>
 -Electricity cost estimation and more<br>
--MQTT support! I have it installed and working with a Raspberry Pi 4 B with Docker/Mosquitto/grafana/influxdb. Thanks to faboaic and 877dev for MQTT support.<br>
+-MQTT support! I have it installed and working with a Raspberry Pi 4 B with Docker/Mosquitto/grafana/influxdb. Thanks to faboaic and 877dev for MQTT support! Now you can control the SPA from Home assistant etc.<br>
 -Schedule events like heater on/off at specific dates, with repeat functionality.<br>
 -Listen to input signal on one pin and trigger a signal on another pin on desired events. For instance let solar panels turn on/off heater.<br>
 <br>
