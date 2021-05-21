@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SPA Config</title>
+    <link href='main.css' rel='stylesheet' type='text/css'>
+    <link rel="icon" type="image/png" sizes="128x128"  href="favicon128.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0066BF">
+    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport'>
+</head>
+<body>
+<p>Check console (chrome: right click - inspect)</p>
+<script>
+var connection = new WebSocket('ws://'+location.hostname+':81/', ['arduino']);
+connection.onerror = function (error) {
+    console.log('WebSocket Error ', error);
+};
+connection.onmessage = function (e) {  
+	
+	console.log(e.data);
+	}
+
+
+</script>
+</body>
+</html>
