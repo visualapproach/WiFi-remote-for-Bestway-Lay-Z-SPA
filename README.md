@@ -4,11 +4,26 @@
 ### Caution - unplug mains power to the pump before trying to replicate this hack, or you can die! <br><br>
 ### News: To enable 2021 support, you just need to comment out one line in the file BWC_8266_globals.h. It is (in addition to hardcode in globals.h) possible to set/change MQTT credentials via web interface.
 The ESPDateTime library is updated which broke timezones in my code. I decided to omit that config. So device is using UTC only. Web pages will most likely translate to local time. It should only affect MQTT. I think.<br><br>
+Keeping track of versions has been increasingly difficult over the time.
+Arduino is really nice and I will still use it, but it has its limits.
+To mitigate this problem I decided to move to another platform:
+Visual Studio Code (free) with PlatformIO extension (free)
+This way I can sync my local files with github, and hopefully use version numbering more correctly.
+I'll keep present Arduino files as a separate branch "Backup" until further.
+My plan is that future updates (if any) will be made to "development" branch, and pulled to "master" when I think it's time.<br>
+
+After downloading and unpacking the files, you can open VSCode, click on PlatformIO icon and open a project folder. Either "4-wire-version" or "6-wire-version". Edit the file "platformio.ini" to your liking. Upload program then upload filesystem.<br>
+
+If you still want to use Arduino, just rename "main.cpp" to "src.ino" (or "src-for-mqtt.ino" etc. It must have the same name as the parent directory) then move "data" folder to the same folder:
+--my source folder<br>
+  |-my source folder.ino<br>
+  |--data<br>
+    |-index.html<br>
+    |-...<br>
+Install libraries listed in "platformio.ini"<br>
 
 4-wire version: Only tested by me with the pump "on the bench".
 <br><br>
-Moved to Visual Studio Code + PlatformIO.
-Follow instructions (readme.md) in the code folder. <br>
 
 ### Features:<br>
 -Watch the temperature and status from your browser.<br>
