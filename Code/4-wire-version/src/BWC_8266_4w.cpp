@@ -435,7 +435,7 @@ void BWC::_startNTP() {
   // setup this after wifi connected
   // you can use custom timezone,server and timeout
   // DateTime.setTimeZone(-4);
-  DateTime.setTimeZone(_timezone);
+  //DateTime.setTimeZone(_timezone); //deprecated
   DateTime.setServer("pool.ntp.org");
   //   DateTime.begin(15 * 1000);
   DateTime.begin();
@@ -536,7 +536,7 @@ void BWC::saveSettings(){
   }
   file.close();
   //update clock
-  DateTime.setTimeZone(_timezone);
+  //DateTime.setTimeZone(_timezone); //deprecated
   DateTime.begin();	
   //revive the dog
   ESP.wdtEnable(0);
