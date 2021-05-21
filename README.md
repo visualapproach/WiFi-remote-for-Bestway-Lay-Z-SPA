@@ -14,12 +14,13 @@ My plan is that future updates (if any) will be made to "development" branch, an
 
 After downloading and unpacking the files, you can open VSCode, click on PlatformIO icon and open a project folder. Either "4-wire-version" or "6-wire-version". Edit the file "platformio.ini" to your liking. Upload program then upload filesystem.<br>
 
-If you still want to use Arduino, just rename "main.cpp" to "src.ino" (or "src-for-mqtt.ino" etc. It must have the same name as the parent directory) then move "data" folder to the same folder:
+
+If you still want to use Arduino, just rename "main.cpp" to "src.ino" (or "src-for-mqtt.ino" etc. It must have the same name as the parent directory) then move "data" folder to the same folder:<br>
 --my source folder<br>
-  |-my source folder.ino<br>
-  |--data<br>
-    |-index.html<br>
-    |-...<br>
+&nbsp;&nbsp;|-my source folder.ino<br>
+&nbsp;&nbsp;|--data<br>
+&nbsp;&nbsp;&nbsp;&nbsp;|-index.html<br>
+&nbsp;&nbsp;&nbsp;&nbsp;|-...<br>
 Install libraries listed in "platformio.ini"<br>
 
 4-wire version: Only tested by me with the pump "on the bench".
