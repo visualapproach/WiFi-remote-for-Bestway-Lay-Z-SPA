@@ -14,5 +14,4 @@ If you still want to use Arduino, just rename "main.cpp" to "src.ino" (or "src-f
   |--data
     |-index.html
     |-...
-
 Install libraries listed in "platformio.ini"
