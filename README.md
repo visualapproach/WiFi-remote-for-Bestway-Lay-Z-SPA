@@ -65,7 +65,7 @@ Link to my version of the PCB (use with LLC below): https://oshwlab.com/Visualap
 <img src="./pics/txs0108e.jpg" width="300"><br>
 Open the project in editor and download gerber files. Upload them to a PCB factory like JLCPCB.com. <br>
 Technical details in <a href="./bwc_docs.xlsx">Documentation</a> <br>
-Build instructions and more: <a href="./Build-instructions-Bestway-WiFi-remote.docx">Instructions</a> <br>
+Build instructions and more: <a href="./Build-instructions-Bestway-WiFi-remote.pdf">Instructions</a> <br>
 
 
 Problems? Read FAQ in discussions and current issues
