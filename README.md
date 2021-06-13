@@ -65,7 +65,7 @@ Link to my version of the PCB (use with LLC below): https://oshwlab.com/Visualap
 <img src="./pics/txs0108e.jpg" width="300"><br>
 Open the project in editor and download gerber files. Upload them to a PCB factory like JLCPCB.com. <br>
 Technical details in https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/blob/master/bwc_docs.xlsx <br>
-Build instructions and more: https://sway.office.com/yYbGW1X7YItzwXVx?ref=Link <br>
+Build instructions and more: "Build instructions Bestway WiFi remote.docx" <br>
 
 
 Problems? Read FAQ in discussions and current issues
