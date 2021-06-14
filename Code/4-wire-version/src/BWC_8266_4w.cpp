@@ -28,9 +28,14 @@ void CIO::loop(void) {
   }
   //pass message to display
   if(msglen == PAYLOADSIZE){
-    for(int i = 0; i < PAYLOADSIZE; i++){
-      if(to_DSP_buf[i] != from_CIO_buf[i]) dataAvailable = true;
-      to_DSP_buf[i] = from_CIO_buf[i];
+    //discard message if checksum is wrong
+    uint8_t calculatedChecksum;
+    calculatedChecksum = from_CIO_buf[1]+from_CIO_buf[2]+from_CIO_buf[3]+from_CIO_buf[4];
+    if(from_CIO_buf[CIO_CHECKSUMINDEX] == calculatedChecksum){
+      for(int i = 0; i < PAYLOADSIZE; i++){
+        if(to_DSP_buf[i] != from_CIO_buf[i]) dataAvailable = true;
+        to_DSP_buf[i] = from_CIO_buf[i];
+      }
     }
     states[TEMPERATURE] = from_CIO_buf[TEMPINDEX];
     states[ERROR] =       from_CIO_buf[ERRORINDEX];
@@ -54,12 +59,16 @@ void CIO::loop(void) {
   msglen = 0;
   if(dsp_serial.available()){
     msglen = dsp_serial.readBytes(from_DSP_buf, PAYLOADSIZE);
-
   }
   //pass message to CIO
   if(msglen == PAYLOADSIZE){
-    for(int i = 0; i < PAYLOADSIZE; i++){
-      to_CIO_buf[i] = from_DSP_buf[i];
+    //discard message if checksum is wrong
+    uint8_t calculatedChecksum;
+    calculatedChecksum = from_DSP_buf[1]+from_DSP_buf[2]+from_DSP_buf[3]+from_DSP_buf[4];
+    if(from_CIO_buf[CIO_CHECKSUMINDEX] == calculatedChecksum){
+      for(int i = 0; i < PAYLOADSIZE; i++){
+        to_CIO_buf[i] = from_DSP_buf[i];
+      }
     }
     //Do stuff here to command the CIO
     if(GODMODE){
