@@ -22,6 +22,8 @@
  			<p align="left">MQTT client ID <input type="text" id="clientID"></p>
 			<p align="left">MQTT base topic <input type="text" id="topic"></p>
         </div>
+		<div><input type="checkbox" id="enableMQTT" style="background-color:#999">
+			<label for="enableMQTT">Enable MQTT</label><br></div>
  		<div>If you save, these credentials will be used instead of the default.<br><button id="save" class="button" style="background-color:#DDD" onclick="saveconfig()">Save</button></div>
 	</center>
 
@@ -47,6 +49,7 @@ function loadconfig(){
 		  document.getElementById("pwd").value = msgobj.mqtt_password;
 		  document.getElementById("clientID").value = msgobj.mqtt_client_id;
 		  document.getElementById("topic").value = msgobj.base_mqtt_topic;
+		  document.getElementById("enableMQTT").checked = msgobj.enableMQTT;
 		}
 	}
 }
@@ -65,7 +68,8 @@ function saveconfig(){
 		"mqtt_username":(document.getElementById("name").value),
 		"mqtt_password":(document.getElementById("pwd").value),
 		"mqtt_client_id":(document.getElementById("clientID").value),
-		"base_mqtt_topic":(document.getElementById("topic").value)
+		"base_mqtt_topic":(document.getElementById("topic").value),
+		"enableMQTT":(document.getElementById("enableMQTT").checked)
 	};
 	Http.send(JSON.stringify(msgobj));
 	console.log(msgobj);

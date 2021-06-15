@@ -31,5 +31,6 @@ String myMqttPassword = "admin";
 int mqtt_connect_count;                // Count of how may times we've connected to the MQTT server since booting (should always be 1 or more)
 String mqtt_client_id = LEGACY_NAME;   // Used for unique MQTT Client ID
 String base_mqtt_topic = LEGACY_NAME;  // Start of the MQTT Topic name used by this device
+bool enableMQTT = false;
 WiFiClient My_WiFi_Client;
 PubSubClient MQTTclient(My_WiFi_Client);

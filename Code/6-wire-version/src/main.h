@@ -2,6 +2,7 @@
 #include "BWC_8266.h"
 #include "globals.h"
 
+void handleAUX();
 void sendMQTTsetFlag();
 void sendWSsetFlag();
 void sendMessage(int msgtype);
