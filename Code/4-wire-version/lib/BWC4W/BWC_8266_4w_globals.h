@@ -1,6 +1,6 @@
 #ifndef BWC_8266_4W_GLOBALS_H
 #define BWC_8266_4W_GLOBALS_H
-#include "model.h"
+#include <model.h>
 //Commands to CIO
 //	130 = bubbles
 //	133 = filter pump
