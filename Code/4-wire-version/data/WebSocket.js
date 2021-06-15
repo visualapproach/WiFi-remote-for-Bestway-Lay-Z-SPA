@@ -1,5 +1,6 @@
 //
 var connection;
+var initTargetSlider = true;
 connect();
 
 function connect(){
@@ -55,7 +56,8 @@ function handlemsg(e) {
 	}
 	if(msgobj.CONTENT == "STATES"){
 		var element = document.getElementById('temp');
-		if (element.value == 0) element.value = msgobj.TGT;
+		if (initTargetSlider) element.value = msgobj.TGT;
+		initTargetSlider = false;
 		document.getElementById('sliderlabel').innerHTML = element.value.toString();
 		document.getElementById('AIR').checked = msgobj.AIR;
 		document.getElementById('UNT').checked = msgobj.UNT;
