@@ -35,6 +35,7 @@ void setup() {
   startMQTT();
   updateMqttTimer.attach(600, sendMQTTsetFlag); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
   updateWSTimer.attach(2.0, sendWSsetFlag);     //update webpage every 2 secs plus state changes
+  bwc.print(WiFi.localIP().toString());
 }
 
 void loop() {
