@@ -65,7 +65,7 @@ void CIO::loop(void) {
     //discard message if checksum is wrong
     uint8_t calculatedChecksum;
     calculatedChecksum = from_DSP_buf[1]+from_DSP_buf[2]+from_DSP_buf[3]+from_DSP_buf[4];
-    if(from_CIO_buf[CIO_CHECKSUMINDEX] == calculatedChecksum){
+    if(from_DSP_buf[DSP_CHECKSUMINDEX] == calculatedChecksum){
       for(int i = 0; i < PAYLOADSIZE; i++){
         to_CIO_buf[i] = from_DSP_buf[i];
       }
