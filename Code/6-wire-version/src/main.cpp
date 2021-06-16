@@ -135,7 +135,10 @@ void sendMessage(int msgtype) {
   //    {
   //      Serial.println(F("MQTT not published"));
   //    }
-  String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + String("}");
+  String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + 
+                          String(",\"PressedButton\":\"") + bwc.getPressedButton() +
+                          String("\",\"HASJETS\":") + String(HASJETS) +
+                          String("}");
   webSocket.broadcastTXT(mqttJSONstatus);
 }
 

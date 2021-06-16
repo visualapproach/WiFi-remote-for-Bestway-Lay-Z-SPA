@@ -1,6 +1,19 @@
 //
 var connection;
 var initTargetSlider = true;
+const settarget = 0;
+const setunit = 1;
+const setbubbles = 2;
+const setheat = 3;
+const setpump = 4;
+const resetq = 5;
+const rebootesp = 6;
+const gettarget = 7;
+const resettimes = 8;
+const resetcltimer = 9;
+const resetftimer = 10;
+const setjets = 11;
+
 connect();
 
 function connect(){
@@ -50,7 +63,7 @@ function handlemsg(e) {
     doc["CH1"] = _cio.states[CHAR1];
     doc["CH2"] = _cio.states[CHAR2];
     doc["CH3"] = _cio.states[CHAR3]; 
-	
+	doc["HJT"] = _cio.states[JETSSTATE];	
 */
 
 	if(msgobj.CONTENT == "OTHER"){
@@ -68,7 +81,9 @@ function handlemsg(e) {
 				"CONNECT_UNAUTHORIZED"
 			]
 			document.getElementById('mqtt').innerHTML = "MQTT:" + mqtt_states[msgobj.MQTT + 4];
-			//document.getElementById('debug').innerHTML = "code:" + msgobj.PressedButton;
+			//console.log(msgobj.PressedButton);
+			if(msgobj.HASJETS) document.getElementById('jets').style.visibility = 'visible'
+			else document.getElementById('jets').style.visibility = 'hidden';
 		//}
 	}
 	
@@ -161,23 +176,20 @@ function s2dhms(val) {
 	return days + "d " + hours.toString().pad("0", 2) + ":" + minutes.toString().pad("0", 2) + ":" + seconds.toString().pad("0", 2);
 }
 
-const settarget = 0;
-const setunit = 1;
-const setbubbles = 2;
-const setheat = 3;
-const setpump = 4;
-const resetq = 5;
-const rebootesp = 6;
-const gettarget = 7;
-const resettimes = 8;
-const resetcltimer = 9;
-const resetftimer = 10;
-
 
 function air() {
 	var sendobj = {};
 	sendobj["CMD"] = setbubbles;
 	sendobj["VALUE"] = document.getElementById('AIR').checked;
+	sendobj["XTIME"] = Math.floor(Date.now()/1000);
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
+function hjt() {
+	var sendobj = {};
+	sendobj["CMD"] = setjets;
+	sendobj["VALUE"] = document.getElementById('HJT').checked;
 	sendobj["XTIME"] = Math.floor(Date.now()/1000);
 	sendobj["INTERVAL"] = 0;
 	connection.send(JSON.stringify(sendobj));

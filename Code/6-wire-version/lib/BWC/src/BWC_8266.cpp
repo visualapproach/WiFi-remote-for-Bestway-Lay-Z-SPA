@@ -67,6 +67,7 @@ void CIO::loop(void) {
 		states[CHAR1] = (uint8_t)_getChar(payload[DGT1_IDX]);
 		states[CHAR2] = (uint8_t)_getChar(payload[DGT2_IDX]);
 		states[CHAR3] = (uint8_t)_getChar(payload[DGT3_IDX]);
+    states[HYDROJETS] = (payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
 		//Determine if display is showing target temp or actual temp or anything else.
 		//capture TARGET after UP/DOWN has been pressed...
 		if( ((button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN])) && (prevButton != ButtonCodes[UP]) && (prevButton != ButtonCodes[DOWN]) ) capturePhase = 1;
@@ -560,6 +561,9 @@ void BWC::_handleCommandQ(void) {
 					_ftime = _timestamp;
 					_saveSettingsNeeded = true;
 					break;
+				case SETJETS:
+					_qButton(HYDROJETS, JETSSTATE, _commandQ[0][1], 5000);
+					break;
 			}
 			//If interval > 0 then append to commandQ with updated xtime.
 			if(_commandQ[0][3] > 0) qCommand(_commandQ[0][0],_commandQ[0][1],_commandQ[0][2]+_commandQ[0][3],_commandQ[0][3]);
@@ -603,6 +607,7 @@ String BWC::getJSONStates() {
     doc["CH1"] = _cio.states[CHAR1];
     doc["CH2"] = _cio.states[CHAR2];
     doc["CH3"] = _cio.states[CHAR3];
+    doc["HJT"] = _cio.states[JETSSTATE];
 
     // Serialize JSON to string
     String jsonmsg;
@@ -629,6 +634,7 @@ String BWC::getJSONTimes() {
     doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;
     doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
     doc["AIRTIME"] = _airtime + _airtime_ms/1000;
+    doc["JETTIME"] = _jettime + _jettime_ms/1000;
     doc["COST"] = _cost;
     doc["FINT"] = _finterval;
     doc["CLINT"] = _clinterval;
@@ -771,6 +777,7 @@ void BWC::_loadSettings(){
   _pumptime = doc["PUMPTIME"];
   _heatingtime = doc["HEATINGTIME"];
   _airtime = doc["AIRTIME"];
+  _jettime = doc["JETTIME"];
   _timezone = doc["TIMEZONE"];
   _price = doc["PRICE"];
   _finterval = doc["FINT"];
@@ -808,6 +815,7 @@ void BWC::saveSettings(){
 	_heatingtime += _heatingtime_ms/1000;
 	_pumptime += _pumptime_ms/1000;
 	_airtime += _airtime_ms/1000;
+	_jettime += _jettime_ms/1000;
 	_uptime += _uptime_ms/1000;
 	_heatingtime_ms = 0;
 	_pumptime_ms = 0;
@@ -820,6 +828,7 @@ void BWC::saveSettings(){
   doc["PUMPTIME"] = _pumptime;
   doc["HEATINGTIME"] = _heatingtime;
   doc["AIRTIME"] = _airtime;
+  doc["JETTIME"] = _jettime;
   doc["TIMEZONE"] = _timezone;
   doc["PRICE"] = _price;
   doc["FINT"] = _finterval;
@@ -988,20 +997,31 @@ void BWC::_updateTimes(){
 	if(_cio.states[BUBBLESSTATE]){
 		_airtime_ms += elapsedtime;
 	}
+	if(_cio.states[JETSSTATE]){
+		_jettime_ms += elapsedtime;
+	}
 	_uptime_ms += elapsedtime;
 	
 	if(_uptime_ms > 1000000000){
 		_heatingtime += _heatingtime_ms/1000;
 		_pumptime += _pumptime_ms/1000;
 		_airtime += _airtime_ms/1000;
+		_jettime += _jettime_ms/1000;
 		_uptime += _uptime_ms/1000;
 		_heatingtime_ms = 0;
 		_pumptime_ms = 0;
 		_airtime_ms = 0;
+		_jettime_ms = 0;
 		_uptime_ms = 0;
 	}
 	
-	_cost = _price*((_heatingtime+_heatingtime_ms/1000)*1900+(_pumptime+_pumptime_ms/1000)*40+(_airtime+_airtime_ms/1000)*800+(_uptime+_uptime_ms/1000)*2)/3600000.0;
+	_cost = _price*(
+                  (_heatingtime+_heatingtime_ms/1000)*1900+
+                  (_pumptime+_pumptime_ms/1000)*40+
+                  (_airtime+_airtime_ms/1000)*800+
+                  (_uptime+_uptime_ms/1000)*2+
+                  (_jettime+_jettime_ms/1000)*400
+                  )/3600000.0;
 }
 
 void BWC::print(String txt){
@@ -1020,6 +1040,5 @@ String BWC::getPressedButton(){
 	lob = (uint8_t)(btn & 0xFF);
 	s = hib < 16 ? "0" + String(hib, HEX) : String(hib, HEX);
 	s += lob < 16 ? "0" + String(lob, HEX) : String(lob, HEX);
-	s += "(v3)";
 	return  s;
 }

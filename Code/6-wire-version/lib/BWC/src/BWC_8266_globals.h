@@ -4,8 +4,10 @@
 #ifndef BWC_8266_globals_H
 #define BWC_8266_globals_H
 
-//if you have a 2021(+) year model, comment the line below
-#define PRE2021
+//uncomment your model and comment out the rest
+#define PRE2021			//the older one, no hydrojets
+//#define MIAMI2021		//no hydrojets
+//#define MALDIVES2021	//hydrojets
 
 
 //LSB
@@ -16,7 +18,7 @@ const uint8_t DSP_DIM_BASE = 0x80;
 const uint8_t DSP_DIM_ON = 0x8;
 
 //Payload byte index and bit numbers  (see documentation in excel file on github)
-//inverted to LSB
+//LSB first
 const byte DGT1_IDX = 1;
 const byte DGT2_IDX = 3;
 const byte DGT3_IDX = 5;
@@ -42,6 +44,8 @@ const byte F_IDX = 9;
 const byte F_BIT = 3;
 const byte PWR_IDX = 9;
 const byte PWR_BIT = 4;
+const byte HJT_IDX = 9;	//still to be verified. This is an educated guess
+const byte HJT_BIT = 5;	//if correct the web page should show correct states on everything
 
 //7-segment codes. MSB always 1
 const uint8_t CHARCODES[] = {
@@ -64,7 +68,8 @@ enum Buttons: byte
 	PUMP,
 	DOWN,
 	UP,
-	POWER
+	POWER,
+	HYDROJETS
 };
 
 #ifdef PRE2021
@@ -72,12 +77,21 @@ const uint16_t ButtonCodes[] =
 {
 	0x1B1B, 0x0200, 0x0100, 0x0300, 0x1012, 0x1212, 0x1112, 0x1312, 0x0809, 0x0000
 };
-#else
+const bool HASJETS = false;
+
+#elif defined(MIAMI2021)
 const uint16_t ButtonCodes[] = 
 {
 	0x1B1B, 0x0100, 0x0300, 0x1212, 0x0809, 0x1012, 0x1112, 0x1312, 0x0200, 0x0000
 };
-	
+const bool HASJETS = false;
+
+#else 
+const uint16_t ButtonCodes[] = 
+{
+	0x1B1B, 0x0100, 0x0300, 0x1212, 0x0a09, 0x1012, 0x1312, 0x0809, 0x0200, 0x0000, 0x1112
+};
+const bool HASJETS = true;
 #endif
 
 enum States: byte
@@ -94,7 +108,8 @@ enum States: byte
 	TARGET,
 	CHAR1,
 	CHAR2,
-	CHAR3
+	CHAR3,
+	JETSSTATE
 };
 
 
@@ -111,7 +126,8 @@ enum Commands: byte
 	GETTARGET,
 	RESETTIMES,
 	RESETCLTIMER,
-	RESETFTIMER
+	RESETFTIMER,
+	SETJETS
 	//play song
 };
 

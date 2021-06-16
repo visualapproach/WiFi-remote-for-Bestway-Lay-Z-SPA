@@ -32,7 +32,7 @@ class CIO {
 	bool dataAvailable = false;
     volatile uint16_t button = 0x1B1B; //no button
     uint8_t payload[11];
-	uint8_t states[13];
+	uint8_t states[14];
 	uint8_t brightness;
 	bool targetIsDisplayed = false;
 	//uint16_t lastPressedButton;
@@ -124,10 +124,12 @@ class BWC {
 	uint32_t _pumptime;
 	uint32_t _heatingtime;
 	uint32_t _airtime;
+	uint32_t _jettime;
 	uint32_t _uptime_ms;
 	uint32_t _pumptime_ms;
 	uint32_t _heatingtime_ms;
 	uint32_t _airtime_ms;
+	uint32_t _jettime_ms;
 	int32_t _timezone;
 	float _price;
 	uint32_t _finterval;
