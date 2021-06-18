@@ -14,4 +14,5 @@ String myMqttUser = "admin";
 String myMqttPassword = "admin";
 String mqtt_client_id = LEGACY_NAME;   // Used for unique MQTT Client ID
 String base_mqtt_topic = LEGACY_NAME;  // Start of the MQTT Topic name used by this device
+bool enableMQTT = false;
 

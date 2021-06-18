@@ -18,7 +18,6 @@ bool portalRunning = false;
 File fsUploadFile;                 // a File variable to temporarily store the received file
 WiFiClient My_WiFi_Client;
 PubSubClient MQTTclient(My_WiFi_Client);
-bool enableMQTT = false;
 int mqtt_connect_count;                // Count of how may times we've connected to the MQTT server since booting (should always be 1 or more)
 
 void handleAUX();
