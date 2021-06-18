@@ -40,7 +40,7 @@ void loop() {
   webSocket.loop();             // constantly check for websocket events
   server.handleClient();        // run the server
   ArduinoOTA.handle();          // listen for OTA events
-  wm.process();
+  //wm.process();
   //if (!MQTTclient.loop()) MQTT_Connect();           // Do MQTT magic
   bwc.loop();                   // Fiddle with the pump computer
   if (bwc.newData()) {
@@ -286,7 +286,7 @@ void startOTA() { // Start the OTA service
 
 void startWiFi() { // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
   WiFi.mode(WIFI_STA);
-  wm.setConfigPortalBlocking(false);
+  //wm.setConfigPortalBlocking(false);
   wm.autoConnect("AutoPortal");
   while (WiFi.status() != WL_CONNECTED) {  // Wait for the Wi-Fi to connect
     delay(250);
