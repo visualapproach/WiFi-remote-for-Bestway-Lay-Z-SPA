@@ -65,6 +65,7 @@ class BWC {
 	Ticker saveSettingsTimer;
 	bool cio_tx;
 	bool dsp_tx;
+	void reloadCommandQueue();
 
   private:
     CIO _cio;

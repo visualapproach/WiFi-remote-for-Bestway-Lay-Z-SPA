@@ -709,3 +709,8 @@ void BWC::print(String txt){
 uint8_t BWC::getState(int state){
 	return _cio.states[state];
 }
+
+void BWC::reloadCommandQueue(){
+	  _loadCommandQueue();
+	  return;
+}

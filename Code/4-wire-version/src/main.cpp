@@ -207,6 +207,23 @@ void handleFileUpload() { // upload a new file to the LittleFS
   }
 }
 
+void handleFileRemove() { // delete a file from the LittleFS
+  String path;
+  path = server.arg("FileToRemove");
+  if (!path.startsWith("/")) path = "/" + path;
+  //Serial.print(F("handleFileRemove Name: ")); Serial.println(path);
+    if (LittleFS.exists(path) && LittleFS.remove(path)) {   // delete file if exists
+      //Serial.print(F("handleFileRemove success: ")); Serial.println(path);
+      server.sendHeader("Location", "/success.html");       // Redirect the client to the success page
+      server.send(303);
+    }
+    else {
+      //Serial.print(F("handleFileRemove error: ")); Serial.println(path);
+      server.send(500, "text/plain", "500: couldn't delete file");
+    }
+}
+
+
 /*
    Starters - bon apetit
 */
