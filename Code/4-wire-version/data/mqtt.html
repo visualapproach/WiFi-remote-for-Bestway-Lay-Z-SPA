@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MQTT Config</title>
+    <link href='main.css' rel='stylesheet' type='text/css'>
+    <link rel="icon" type="image/png" sizes="128x128"  href="favicon128.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0066BF">
+    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport'>
+</head>
+
+<body onload="loadconfig()">
+    <center>
+        <header>
+            <h1>MQTT Config</h1>
+        </header>
+        <div>
+			<p align="left">MQTT server IP <input type="text" id="ip1" size="3"> . <input type="text" id="ip2" size="3"> . <input type="text" id="ip3" size="3"> . <input type="text" id="ip4" size="3"></p>
+			<p align="left">MQTT port <input type="text" id="port"></p>
+ 			<p align="left">MQTT user name <input type="text" id="name"></p>
+			<p align="left">MQTT password <input type="text" id="pwd"></p>
+ 			<p align="left">MQTT client ID <input type="text" id="clientID"></p>
+			<p align="left">MQTT base topic <input type="text" id="topic"></p>
+        </div>
+		<div><input type="checkbox" id="enableMQTT" style="background-color:#999">
+			<label for="enableMQTT">Enable MQTT</label><br></div>
+ 		<div>If you save, these credentials will be used instead of the default.<br><button id="save" class="button" style="background-color:#DDD" onclick="saveconfig()">Save</button></div>
+	</center>
+
+	
+<script>
+
+function loadconfig(){
+	const Http = new XMLHttpRequest();
+	const url='/getmqtt/';
+	Http.open("POST", url);
+	Http.send();
+
+	Http.onreadystatechange = function(){
+		if(this.readyState==4 && this.status==200){
+		  console.log(Http.responseText);
+		  var msgobj = JSON.parse(Http.responseText);
+		  document.getElementById("ip1").value = msgobj.mqtt_server_ip[0];
+		  document.getElementById("ip2").value = msgobj.mqtt_server_ip[1];
+		  document.getElementById("ip3").value = msgobj.mqtt_server_ip[2];
+		  document.getElementById("ip4").value = msgobj.mqtt_server_ip[3];
+		  document.getElementById("port").value = msgobj.mqtt_port;
+		  document.getElementById("name").value = msgobj.mqtt_username;
+		  document.getElementById("pwd").value = msgobj.mqtt_password;
+		  document.getElementById("clientID").value = msgobj.mqtt_client_id;
+		  document.getElementById("topic").value = msgobj.base_mqtt_topic;
+		  document.getElementById("enableMQTT").checked = msgobj.enableMQTT;
+		}
+	}
+}
+
+function saveconfig(){
+	const Http = new XMLHttpRequest();
+	const url='/setmqtt/';
+	Http.open("POST", url);
+
+	var msgobj = {
+		"mqtt_server_ip":[parseInt(document.getElementById("ip1").value),
+						parseInt(document.getElementById("ip2").value),
+						parseInt(document.getElementById("ip3").value),
+						parseInt(document.getElementById("ip4").value)],
+		"mqtt_port":parseInt(document.getElementById("port").value),
+		"mqtt_username":(document.getElementById("name").value),
+		"mqtt_password":(document.getElementById("pwd").value),
+		"mqtt_client_id":(document.getElementById("clientID").value),
+		"base_mqtt_topic":(document.getElementById("topic").value),
+		"enableMQTT":(document.getElementById("enableMQTT").checked)
+	};
+	Http.send(JSON.stringify(msgobj));
+	console.log(msgobj);
+	alert("Saved.");
+	window.location.replace("/");
+}
+</script>	
+</body>
+</html>

@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include "BWC_8266.h"
-
 #include <WiFiUdp.h>
 #include <ESP8266WiFi.h>
 #include <ArduinoOTA.h>

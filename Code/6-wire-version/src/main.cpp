@@ -12,9 +12,9 @@ bool runonce = true;
 
 void setup() {
   // put your setup code here, to run once:
-//  pinMode(solarpin, INPUT_PULLUP);
-//  pinMode(myoutputpin, OUTPUT);
-//  digitalWrite(myoutputpin, LOW);
+  pinMode(solarpin, INPUT_PULLUP);
+  pinMode(myoutputpin, OUTPUT);
+  digitalWrite(myoutputpin, LOW);
   Serial.begin(115200);		//As if you connected serial to your pump...
   startWiFi();
   startOTA();
@@ -361,9 +361,6 @@ void handleGetMQTT() { // reply with json document
     server.send(200, "text/plain", jsonmsg);
   }
 }
-
-
-
 
 //response to /setmqtt/
 void handleSetMQTT() {
