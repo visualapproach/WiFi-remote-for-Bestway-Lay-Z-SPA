@@ -1,7 +1,5 @@
-//Bestway-wifi-remote-control, 4-wire-version. By Thomas Landahl (Visualapproach)
-
-#include <Arduino.h>
-#include "4_wire.h"
+#include "main.h"
+#include "BWC_8266.h"
 
 WiFiManager wm;
 Ticker updateMqttTimer;
@@ -9,30 +7,35 @@ Ticker updateWSTimer;
 BWC bwc;
 bool sendWSFlag = false;
 bool sendMQTTFlag = false;
-const int solarpin = D0;    //no interrupt or PWM
-const int myoutputpin = D8; //pulled to GND. Boot fails if pulled HIGH.
-bool runonce = true;
+//const int solarpin = D0;    //no interrupt or PWM
+//const int myoutputpin = D8; //pulled to GND. Boot fails if pulled HIGH.
+//bool runonce = true;
 
 void setup() {
-
   // put your setup code here, to run once:
-  pinMode(solarpin, INPUT_PULLUP);
-  pinMode(myoutputpin, OUTPUT);
-  digitalWrite(myoutputpin, LOW);
-  Serial.begin(115200);
-  bwc.begin(); //no params = default pins
+//  pinMode(solarpin, INPUT_PULLUP);
+//  pinMode(myoutputpin, OUTPUT);
+//  digitalWrite(myoutputpin, LOW);
+  Serial.begin(115200);		//As if you connected serial to your pump...
   startWiFi();
   startOTA();
   startServer();
   startWebSocket();
-
-  startMQTT();
-  updateMqttTimer.attach(600, sendMQTTsetFlag); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
+  bwc.begin(); //no params = default pins
+  //Default pins:
+  // bwc.begin(			
+			// int cio_cs_pin 		= D1, 
+			// int cio_data_pin 	= D7, 
+			// int cio_clk_pin 		= D2, 
+			// int dsp_cs_pin 		= D3, 
+			// int dsp_data_pin 	= D5, 
+			// int dsp_clk_pin 		= D4, 
+			// int dsp_audio_pin 	= D6 
+			// );
+	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
+  //startMQTT();
+  //updateMqttTimer.attach(600, sendMQTTsetFlag); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
   updateWSTimer.attach(2.0, sendWSsetFlag);     //update webpage every 2 secs plus state changes
-
-  pinMode(D4, OUTPUT);  //built in LED for some feedback
-  digitalWrite(D4, LOW);
-
 }
 
 void loop() {
@@ -40,55 +43,47 @@ void loop() {
   server.handleClient();        // run the server
   ArduinoOTA.handle();          // listen for OTA events
   //wm.process();
-<<<<<<< HEAD
-  if(enableMQTT){
-    if (!MQTTclient.loop()) MQTT_Connect();           // Do MQTT magic
-  }
-=======
   //if (!MQTTclient.loop()) MQTT_Connect();           // Do MQTT magic
->>>>>>> master
   bwc.loop();                   // Fiddle with the pump computer
   if (bwc.newData()) {
     sendMessage(1);//ws
-    if(enableMQTT) sendMessage(0);//mqtt
+    sendMessage(0);//mqtt
     //bwc.saveEventlog();       //will only fill up and wear flash memory eventually
   }
   if (sendWSFlag) {
     sendWSFlag = false;
     sendMessage(1);//ws
   }
-  if (sendMQTTFlag && enableMQTT) {
-    sendMQTTFlag = false;
-    sendMessage(0);//MQTT
-  }
-  //handleAUX();
+  //if (sendMQTTFlag) {
+  //  sendMQTTFlag = false;
+  //  sendMessage(0);//MQTT
+  //}
+  //  //Usage example. Solar panels are giving a (3.3V) signal to start dumping electricity into the pool heater.
+  //  //Rapid changes on this pin will fill up the command queue and stop you from adding other commands
+  //  //It will also cause the heater to turn on and off as fast as it can
+  //  //I have not tested this feature, but what can go wrong ;-)
+  //  if (digitalRead(solarpin) == HIGH && runonce == true) {
+  //    bwc.qCommand(SETHEATER, 1, 0, 0);       // cmd:set heater, to ON (1), immidiately, no repeat
+  //    runonce = false;                        // to stop queing commands every loop. We only want to trigger once
+  //  }
+  //  if (digitalRead(solarpin) == LOW && runonce == false) {
+  //    bwc.qCommand(SETPUMP, 0, 0, 0);         // change to SETHEATER if you want the pump to continue filtering
+  //    runonce = true;
+  //  }
+  //
+  //  //Switch the output pin when temperature is below or above 30
+  //  //Don't load the pin above specs (a few mA)
+  //  if (bwc.getState(TEMPERATURE) < 30){
+  //    digitalWrite(myoutputpin, HIGH);
+  //  } else {
+  //    digitalWrite(myoutputpin, LOW);
+  //  }
 
   //You can add own code here, but don't stall! If CPU is choking you can try to run @ 160 MHz, but that's cheating!
 }
 
-void handleAUX() {
-   //Usage example. Solar panels are giving a (3.3V) signal to start dumping electricity into the pool heater.
-   //Rapid changes on this pin will fill up the command queue and stop you from adding other commands
-   //It will also cause the heater to turn on and off as fast as it can
-   //I have not tested this feature, but what can go wrong ;-)
-   if (digitalRead(solarpin) == HIGH && runonce == true) {
-     bwc.qCommand(SETHEATER, 1, 0, 0);       // cmd:set heater, to ON (1), immidiately, no repeat
-     runonce = false;                        // to stop queing commands every loop. We only want to trigger once
-   }
-   if (digitalRead(solarpin) == LOW && runonce == false) {
-     bwc.qCommand(SETPUMP, 0, 0, 0);         // change to SETHEATER if you want the pump to continue filtering
-     runonce = true;
-   }
-  
-   //Switch the output pin when temperature is below or above 30
-   //Don't load the pin above specs (a few mA)
-   if (bwc.getState(TEMPERATURE) < 30){
-     digitalWrite(myoutputpin, HIGH);
-   } else {
-     digitalWrite(myoutputpin, LOW);
-   }
-}
-
+// If failing to connect at all, this will stall the loop = Erratic behavior may occur if called to often.
+// Default frequency of once every 10 min shouldn't be a problem though.
 // This function is called by the mqtt timer
 void sendMQTTsetFlag() {
   sendMQTTFlag = true;
@@ -111,11 +106,11 @@ void sendMessage(int msgtype) {
   if (msgtype == 0) {
     if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
     {
-      ////Serial.println(F("MQTT published"));
+      //Serial.println(F("MQTT published"));
     }
     else
     {
-      ////Serial.println(F("MQTT not published"));
+      //Serial.println(F("MQTT not published"));
     }
   }
 
@@ -128,16 +123,13 @@ void sendMessage(int msgtype) {
   //  if (msgtype == 0) {
   //    if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
   //    {
-  //      //Serial.println(F("MQTT published"));
+  //      Serial.println(F("MQTT published"));
   //    }
   //    else
   //    {
-  //      //Serial.println(F("MQTT not published"));
+  //      Serial.println(F("MQTT not published"));
   //    }
-  String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",")+
-    String("\"MQTT\":") + String(MQTTclient.state()) + String(",") +
-    String("\"CIOTX\":") + String(bwc.cio_tx) + String(",") +
-    String("\"DSPTX\":") + String(bwc.dsp_tx) + String("}");
+  String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + String("}");
   webSocket.broadcastTXT(mqttJSONstatus);
 }
 
@@ -155,21 +147,20 @@ String getContentType(String filename) { // determine the filetype of a given fi
 }
 
 bool handleFileRead(String path) { // send the right file to the client (if it exists)
-  ////Serial.println("handleFileRead: " + path);
+  Serial.println("handleFileRead: " + path);
   if (path.endsWith("/")) path += F("index.html");          // If a folder is requested, send the index file
   String contentType = getContentType(path);             // Get the MIME type
   String pathWithGz = path + ".gz";
-  if (path.equalsIgnoreCase("/mqtt.txt")) return false; //don't broadcast credentials
   if (LittleFS.exists(pathWithGz) || LittleFS.exists(path)) { // If the file exists, either as a compressed archive, or normal
     if (LittleFS.exists(pathWithGz))                         // If there's a compressed version available
       path += ".gz";                                         // Use the compressed version
     File file = LittleFS.open(path, "r");                    // Open the file
-    server.streamFile(file, contentType);    // Send it to the client
+    size_t sent = server.streamFile(file, contentType);    // Send it to the client
     file.close();                                          // Close the file again
-    ////Serial.println(String("\tSent file: ") + path);
+    Serial.println(String("\tSent file: ") + path);
     return true;
   }
- // //Serial.println(String("\tFile Not Found: ") + path);   // If the file doesn't exist, return false
+  Serial.println(String("\tFile Not Found: ") + path);   // If the file doesn't exist, return false
   return false;
 }
 
@@ -190,7 +181,7 @@ void handleFileUpload() { // upload a new file to the LittleFS
       if (LittleFS.exists(pathWithGz))                     // version of that file must be deleted (if it exists)
         LittleFS.remove(pathWithGz);
     }
-    ////Serial.print(F("handleFileUpload Name: ")); //Serial.println(path);
+    Serial.print(F("handleFileUpload Name: ")); Serial.println(path);
     fsUploadFile = LittleFS.open(path, "w");            // Open the file for writing in LittleFS (create if it doesn't exist)
     path = String();
   } else if (upload.status == UPLOAD_FILE_WRITE) {
@@ -199,7 +190,7 @@ void handleFileUpload() { // upload a new file to the LittleFS
   } else if (upload.status == UPLOAD_FILE_END) {
     if (fsUploadFile) {                                   // If the file was successfully created
       fsUploadFile.close();                               // Close the file again
-      ////Serial.print(F("handleFileUpload Size: ")); //Serial.println(upload.totalSize);
+      Serial.print(F("handleFileUpload Size: ")); Serial.println(upload.totalSize);
       server.sendHeader("Location", "/success.html");     // Redirect the client to the success page
       server.send(303);
 	  if(upload.filename == "cmdq.txt"){
@@ -215,18 +206,17 @@ void handleFileRemove() { // delete a file from the LittleFS
   String path;
   path = server.arg("FileToRemove");
   if (!path.startsWith("/")) path = "/" + path;
-  //Serial.print(F("handleFileRemove Name: ")); Serial.println(path);
+  Serial.print(F("handleFileRemove Name: ")); Serial.println(path);
     if (LittleFS.exists(path) && LittleFS.remove(path)) {   // delete file if exists
-      //Serial.print(F("handleFileRemove success: ")); Serial.println(path);
+      Serial.print(F("handleFileRemove success: ")); Serial.println(path);
       server.sendHeader("Location", "/success.html");       // Redirect the client to the success page
       server.send(303);
     }
     else {
-      //Serial.print(F("handleFileRemove error: ")); Serial.println(path);
+      Serial.print(F("handleFileRemove error: ")); Serial.println(path);
       server.send(500, "text/plain", "500: couldn't delete file");
     }
 }
-
 
 /*
    Starters - bon apetit
@@ -235,7 +225,7 @@ void handleFileRemove() { // delete a file from the LittleFS
 void startWebSocket() { // Start a WebSocket server
   webSocket.begin();                          // start the websocket server
   webSocket.onEvent(webSocketEvent);          // if there's an incomming websocket message, go to function 'webSocketEvent'
-  ////Serial.println(F("WebSocket server started."));
+  Serial.println(F("WebSocket server started."));
 }
 
 void startServer() { // Start a HTTP server with a file read handler and an upload handler
@@ -247,41 +237,10 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
   server.on(F("/setconfig/"), handleSetConfig);
   server.on(F("/getcommands/"), handleGetCommandQueue);
   server.on(F("/addcommand/"), handleAddCommand);
-  server.on("/version", HTTP_GET, []() {server.send(200, "text/plain", LEGACY_NAME);});
   server.on(F("/getmqtt/"), handleGetMQTT);
   server.on(F("/setmqtt/"), handleSetMQTT);
   server.on(F("/resetwifi/"), handleResetWifi);
   server.on(F("/remove.html"), HTTP_POST, handleFileRemove);
-  server.on(F("/update.html"), HTTP_POST, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
-    ESP.restart();
-  }, []() {
-    HTTPUpload& upload = server.upload();
-    if (upload.status == UPLOAD_FILE_START) {
-      Serial.setDebugOutput(true);
-      WiFiUDP::stopAll();
-      Serial.printf("Update: %s\n", upload.filename.c_str());
-      uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-      if (!Update.begin(maxSketchSpace)) { //start with max available size
-        Update.printError(Serial);
-      }
-    } else if (upload.status == UPLOAD_FILE_WRITE) {
-      if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-        Update.printError(Serial);
-      }
-    } else if (upload.status == UPLOAD_FILE_END) {
-      if (Update.end(true)) { //true to set the size to the current progress
-        Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
-        server.sendHeader("Location", "/success.html");     // Redirect the client to the success page
-        server.send(303);
-      } else {
-        Update.printError(Serial);
-      }
-      Serial.setDebugOutput(false);
-    }
-    yield();
-  });
 
   server.onNotFound(handleNotFound);          // if someone requests any other file or page, go to function 'handleNotFound'
   // and check if the file exists
@@ -295,46 +254,56 @@ void startOTA() { // Start the OTA service
   ArduinoOTA.setPassword(OTAPassword);
 
   ArduinoOTA.onStart([]() {
-    //Serial.println(F("OTA Start"));
+    Serial.println(F("OTA Start"));
   });
   ArduinoOTA.onEnd([]() {
-    //Serial.println(F("\r\nOTA End"));
+    Serial.println(F("\r\nOTA End"));
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    //Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    //Serial.printf("Error[%u]: ", error);
-    // if (error == OTA_AUTH_ERROR) //Serial.println(F("Auth Failed"));
-    // else if (error == OTA_BEGIN_ERROR) //Serial.println(F("Begin Failed"));
-    // else if (error == OTA_CONNECT_ERROR) //Serial.println(F("Connect Failed"));
-    // else if (error == OTA_RECEIVE_ERROR) //Serial.println(F("Receive Failed"));
-    // else if (error == OTA_END_ERROR) //Serial.println(F("End Failed"));
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println(F("Auth Failed"));
+    else if (error == OTA_BEGIN_ERROR) Serial.println(F("Begin Failed"));
+    else if (error == OTA_CONNECT_ERROR) Serial.println(F("Connect Failed"));
+    else if (error == OTA_RECEIVE_ERROR) Serial.println(F("Receive Failed"));
+    else if (error == OTA_END_ERROR) Serial.println(F("End Failed"));
   });
   ArduinoOTA.begin();
-  //Serial.println(F("OTA ready\r\n"));
+  Serial.println(F("OTA ready\r\n"));
 }
 
 void startWiFi() { // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
   WiFi.mode(WIFI_STA);
   //wm.setConfigPortalBlocking(false);
   wm.autoConnect("AutoPortal");
+  
+  Serial.println(F("Connecting"));
   while (WiFi.status() != WL_CONNECTED) {  // Wait for the Wi-Fi to connect
     delay(250);
-    //Serial.print('.');
+    Serial.print('.');
     //checkAP_request();
   }
-  //Serial.println("\r\n");
-  //Serial.print(F("Connected to "));
-  //Serial.println(WiFi.SSID());             // Tell us what network we're connected to
-  //Serial.print(F("IP address:\t"));
-  //Serial.print(WiFi.localIP());            // Send the IP address of the ESP8266 to the computer
-  //Serial.println("\r\n");
+  Serial.println("\r\n");
+  Serial.print(F("Connected to "));
+  Serial.println(WiFi.SSID());             // Tell us what network we're connected to
+  Serial.print(F("IP address:\t"));
+  Serial.print(WiFi.localIP());            // Send the IP address of the ESP8266 to the computer
+  Serial.println("\r\n");
 }
 
 /*
    Web server functions to exchange data between server and web client
 */
+
+void handleResetWifi(){
+  WiFi.disconnect();
+  delay(3000);
+  Serial.println("resetting");
+  ESP.reset();
+  //Do this before giving away the device
+}
 
 //response to /getconfig/
 void handleGetConfig() { // reply with json document
@@ -357,6 +326,7 @@ void handleSetConfig() {
   }
 }
 
+
 //response to /getmqtt/
 void handleGetMQTT() { // reply with json document
   if (server.method() != HTTP_POST) {
@@ -373,13 +343,10 @@ void handleGetMQTT() { // reply with json document
     doc["mqtt_server_ip"][2] = myMqttIP[2];
     doc["mqtt_server_ip"][3] = myMqttIP[3];
     doc["mqtt_port"] = myMqttPort;
-    //doc["mqtt_username"] = myMqttUser;
-    //doc["mqtt_password"] = myMqttPassword;
-    doc["mqtt_username"] = "enter username";  //do not send credentials to webpage
-    doc["mqtt_password"] = "enter password";
+    doc["mqtt_username"] = myMqttUser;
+    doc["mqtt_password"] = myMqttPassword;
     doc["mqtt_client_id"] = mqtt_client_id;
     doc["base_mqtt_topic"] = base_mqtt_topic;
-    doc["enableMQTT"] = enableMQTT;
 
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
@@ -388,6 +355,9 @@ void handleGetMQTT() { // reply with json document
     server.send(200, "text/plain", jsonmsg);
   }
 }
+
+
+
 
 //response to /setmqtt/
 void handleSetMQTT() {
@@ -399,7 +369,7 @@ void handleSetMQTT() {
     DynamicJsonDocument doc(1024);
     DeserializationError error = deserializeJson(doc, message);
     if (error) {
-      //Serial.println(F("Failed to read config file"));
+      Serial.println(F("Failed to read config file"));
       server.send(400, "plain/text", "Error deserializing message");
       return;
     }
@@ -409,25 +379,20 @@ void handleSetMQTT() {
     myMqttIP[1] = doc["mqtt_server_ip"][1];
     myMqttIP[2] = doc["mqtt_server_ip"][2];
     myMqttIP[3] = doc["mqtt_server_ip"][3];
-    myMqttPort  = doc["mqtt_port"];
-/*     strlcpy(const_cast<char*>(myMqttUser),                  // <- destination
+    myMqttPort = doc["mqtt_port"];
+    strlcpy(const_cast<char*>(myMqttUser.c_str()),                  // <- destination
             doc["mqtt_username"],           // <- source
             sizeof(myMqttUser));         // <- destination's capacity
-    strlcpy(const_cast<char*>(myMqttPassword),                  // <- destination
+    strlcpy(const_cast<char*>(myMqttPassword.c_str()),                  // <- destination
             doc["mqtt_password"],           // <- source
             sizeof(myMqttPassword));         // <- destination's capacity
-    strlcpy(const_cast<char*>(mqtt_client_id),                 // <- destination
+    strlcpy(const_cast<char*>(mqtt_client_id.c_str()),                 // <- destination
             doc["mqtt_client_id"],          // <- source
             sizeof(mqtt_client_id));        // <- destination's capacity
-    strlcpy(const_cast<char*>(base_mqtt_topic),                 // <- destination
+    strlcpy(const_cast<char*>(base_mqtt_topic.c_str()),                 // <- destination
             doc["base_mqtt_topic"],          // <- source
-            sizeof(base_mqtt_topic));        // <- destination's capacity */
-    myMqttUser      = doc["mqtt_username"].as<String>();
-    myMqttPassword  = doc["mqtt_password"].as<String>();
-    mqtt_client_id  = doc["mqtt_client_id"].as<String>();
-    base_mqtt_topic = doc["base_mqtt_topic"].as<String>();
-    enableMQTT      = doc["enableMQTT"];
-	
+            sizeof(base_mqtt_topic));        // <- destination's capacity
+
     server.send(200, "plain/text", "");
     saveMQTT();
   }
@@ -436,7 +401,7 @@ void handleSetMQTT() {
 void saveMQTT() {
   File file = LittleFS.open("mqtt.txt", "w");
   if (!file) {
-    //Serial.println(F("Failed to save mqtt.txt"));
+    Serial.println(F("Failed to save mqtt.txt"));
     return;
   }
 
@@ -444,20 +409,19 @@ void saveMQTT() {
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
   DynamicJsonDocument doc(1024);
-  // Set the values in the document
-  doc["mqtt_server_ip"][0] = myMqttIP[0];
-  doc["mqtt_server_ip"][1] = myMqttIP[1];
-  doc["mqtt_server_ip"][2] = myMqttIP[2];
-  doc["mqtt_server_ip"][3] = myMqttIP[3];
-  doc["mqtt_port"]         = myMqttPort;
-  doc["mqtt_username"]     = myMqttUser;
-  doc["mqtt_password"]     = myMqttPassword;
-  doc["mqtt_client_id"]    = mqtt_client_id;
-  doc["base_mqtt_topic"]   = base_mqtt_topic;
-  doc["enableMQTT"]        = enableMQTT;
+    // Set the values in the document
+    doc["mqtt_server_ip"][0] = myMqttIP[0];
+    doc["mqtt_server_ip"][1] = myMqttIP[1];
+    doc["mqtt_server_ip"][2] = myMqttIP[2];
+    doc["mqtt_server_ip"][3] = myMqttIP[3];
+    doc["mqtt_port"] = myMqttPort;
+    doc["mqtt_username"] = myMqttUser;
+    doc["mqtt_password"] = myMqttPassword;
+    doc["mqtt_client_id"] = mqtt_client_id;
+    doc["base_mqtt_topic"] = base_mqtt_topic;
 
   if (serializeJson(doc, file) == 0) {
-    //Serial.println("{\"error\": \"Failed to serialize mqtt file\"}");
+    Serial.println("{\"error\": \"Failed to serialize mqtt file\"}");
   }
   file.close();
 
@@ -466,7 +430,7 @@ void saveMQTT() {
 void loadMQTT() {
   File file = LittleFS.open("mqtt.txt", "r");
   if (!file) {
-    //Serial.println(F("Failed to read mqtt.txt. Using default."));
+    Serial.println(F("Failed to read mqtt.txt. Using default."));
     return;
   }
 
@@ -477,7 +441,7 @@ void loadMQTT() {
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, file);
   if (error) {
-    //Serial.println(F("Failed to deserialize mqtt.txt"));
+    Serial.println(F("Failed to deserialize mqtt.txt"));
     file.close();
     return;
   }
@@ -487,32 +451,19 @@ void loadMQTT() {
   myMqttIP[1] = doc["mqtt_server_ip"][1];
   myMqttIP[2] = doc["mqtt_server_ip"][2];
   myMqttIP[3] = doc["mqtt_server_ip"][3];
-  myMqttPort  = doc["mqtt_port"];
-/*   strlcpy(const_cast<char*>(myMqttUser),                  // <- destination
+  myMqttPort = doc["mqtt_port"];
+  strlcpy(const_cast<char*>(myMqttUser.c_str()),                  // <- destination
           doc["mqtt_username"],           // <- source
           sizeof(myMqttUser));         // <- destination's capacity
-  strlcpy(const_cast<char*>(myMqttPassword),                  // <- destination
+  strlcpy(const_cast<char*>(myMqttPassword.c_str()),                  // <- destination
           doc["mqtt_password"],           // <- source
           sizeof(myMqttPassword));         // <- destination's capacity
-  strlcpy(const_cast<char*>(mqtt_client_id.),                 // <- destination
+  strlcpy(const_cast<char*>(mqtt_client_id.c_str()),                 // <- destination
           doc["mqtt_client_id"],          // <- source
           sizeof(mqtt_client_id));        // <- destination's capacity
-  strlcpy(const_cast<char*>(base_mqtt_topic),                 // <- destination
+  strlcpy(const_cast<char*>(base_mqtt_topic.c_str()),                 // <- destination
           doc["base_mqtt_topic"],          // <- source
-          sizeof(base_mqtt_topic));        // <- destination's capacity */
-	myMqttUser      = doc["mqtt_username"].as<String>();
-	myMqttPassword  = doc["mqtt_password"].as<String>();
-	mqtt_client_id  = doc["mqtt_client_id"].as<String>();
-	base_mqtt_topic = doc["base_mqtt_topic"].as<String>();
-  enableMQTT      = doc["enableMQTT"];
-}
-
-void handleResetWifi(){
-  WiFi.disconnect();
-  delay(3000);
-  //Serial.println("resetting");
-  ESP.reset();
-  //Do this before giving away the device
+          sizeof(base_mqtt_topic));        // <- destination's capacity
 }
 
 //response to /getcommands/
@@ -550,21 +501,20 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
   // When a WebSocket message is received
   switch (type) {
     case WStype_DISCONNECTED:             // if the websocket is disconnected
-      //Serial.printf("[%u] Disconnected!\n", num);
+      Serial.printf("[%u] Disconnected!\n", num);
       break;
     case WStype_CONNECTED: {              // if a new websocket connection is established
-        //IPAddress ip = webSocket.remoteIP(num);
-        //Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+        IPAddress ip = webSocket.remoteIP(num);
+        Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
         sendMessage(1);
       }
       break;
     case WStype_TEXT:                     // if new text data is received
-      {
-      //Serial.printf("[%u] get Text: %s\n", num, payload);
+      Serial.printf("[%u] get Text: %s\n", num, payload);
       DynamicJsonDocument doc(256);
       DeserializationError error = deserializeJson(doc, payload);
       if (error) {
-        //Serial.println(F("JSON command failed"));
+        Serial.println(F("JSON command failed"));
         return;
       }
 
@@ -575,9 +525,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
       uint32_t interval = doc["INTERVAL"];
       //add command to the command queue
       bwc.qCommand(command, value, xtime, interval);
-      }
-      break;
-    default:
       break;
   }
 }
@@ -585,8 +532,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
 /*
    MQTT functions
 */
-
-
 
 void startMQTT() { //MQTT setup and connect - 877dev
   //load mqtt credential file if it exists, and update default strings  ********************
@@ -596,27 +541,27 @@ void startMQTT() { //MQTT setup and connect - 877dev
   MQTTclient.setServer(myMqttIP, myMqttPort); //setup MQTT broker information as defined earlier
   if (MQTTclient.setBufferSize (1024))      //set buffer for larger messages, new to library 2.8.0
   {
-    //Serial.println(F("MQTT buffer size successfully increased"));
+    Serial.println(F("MQTT buffer size successfully increased"));
   }
   MQTTclient.setKeepAlive(60);
   MQTTclient.setSocketTimeout(30);
   MQTTclient.setCallback(MQTTcallback);          // set callback details - this function is called automatically whenever a message arrives on a subscribed topic.
-  //MQTT_Connect();                                //Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
+  MQTT_Connect();                                //Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
 }
 
 
 void MQTTcallback(char* topic, byte* payload, unsigned int length) {  //877dev
 
-  //Serial.print(F("Message arrived ["));
-  //Serial.print(topic);
-  //Serial.print("] ");
-  for (unsigned int i = 0; i < length; i++) {
-    //Serial.print((char)payload[i]);
+  Serial.print(F("Message arrived ["));
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
   }
-  //Serial.println();
+  Serial.println();
   if (String(topic).equals(String(base_mqtt_topic) + "/command")) {
     DynamicJsonDocument doc(256);
-    // DeSerialize the JSON document
+    // Deserialize the JSON document
     String message = (const char *) &payload[0];
     DeserializationError error = deserializeJson(doc, message);
     if (error) {
@@ -634,7 +579,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {  //877dev
 
 void MQTT_Connect()
 {
-  //Serial.print(F("Connecting to MQTT...  "));
+  Serial.print(F("Connecting to MQTT...  "));
   // We'll connect with a Retained Last Will that updates the '.../Status' topic with "Dead" when the device goes offline...
   // Attempt to connect...
   /*
@@ -657,7 +602,7 @@ void MQTT_Connect()
   {
     // We get here if the connection was successful...
     mqtt_connect_count++;
-    //Serial.println(F("CONNECTED!"));
+    Serial.println(F("CONNECTED!"));
     // Once connected, publish some announcements...
     // These all have the Retained flag set to true, so that the value is stored on the server and can be retrieved at any point
     // Check the .../Status topic to see that the device is still online before relying on the data from these retained topics
@@ -675,9 +620,9 @@ void MQTT_Connect()
   else
   {
     // We get here if the connection failed...
-    //Serial.print(F("MQTT Connection FAILED, Return Code = "));
-    //Serial.println(MQTTclient.state());
-    //Serial.println();
+    Serial.print(F("MQTT Connection FAILED, Return Code = "));
+    Serial.println(MQTTclient.state());
+    Serial.println();
     /*
       MQTTclient.state return code meanings...
       -4 : MQTT_CONNECTION_TIMEOUT - the server didn't respond within the keepalive time
