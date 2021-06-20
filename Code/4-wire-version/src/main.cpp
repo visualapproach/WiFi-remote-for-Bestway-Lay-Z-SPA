@@ -40,13 +40,9 @@ void loop() {
   server.handleClient();        // run the server
   ArduinoOTA.handle();          // listen for OTA events
   //wm.process();
-<<<<<<< HEAD
   if(enableMQTT){
     if (!MQTTclient.loop()) MQTT_Connect();           // Do MQTT magic
   }
-=======
-  //if (!MQTTclient.loop()) MQTT_Connect();           // Do MQTT magic
->>>>>>> master
   bwc.loop();                   // Fiddle with the pump computer
   if (bwc.newData()) {
     sendMessage(1);//ws
