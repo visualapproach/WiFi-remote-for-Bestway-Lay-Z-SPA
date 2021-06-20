@@ -57,7 +57,6 @@ class CIO {
 	bool _prevUNT;
 	bool _prevHTR;
 	bool _prevFLT;
-	bool _prevTGT;
 	
 	char _getChar(uint8_t value);
 };

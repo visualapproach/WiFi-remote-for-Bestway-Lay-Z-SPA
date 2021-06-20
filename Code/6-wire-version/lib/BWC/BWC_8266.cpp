@@ -85,13 +85,12 @@ void CIO::loop(void) {
 		if( (capturePhase == 0) && (millis()-buttonReleaseTime > 10000)) states[TEMPERATURE] = tmpTemp;		
 		prevButton = button;
 
-    // if(states[UNITSTATE] != _prevUNT || states[HEATSTATE] != _prevHTR || states[PUMPSTATE] != _prevFLT || states[TARGET] != _prevTGT) {
-    //   stateChanged = true;
-    //   _prevTGT = states[TARGET];
-    //   _prevUNT = states[UNITSTATE];
-    //   _prevHTR = states[HEATSTATE];
-    //   _prevFLT = states[PUMPSTATE];
-    // }
+    if(states[UNITSTATE] != _prevUNT || states[HEATSTATE] != _prevHTR || states[PUMPSTATE] != _prevFLT) {
+      stateChanged = true;
+      _prevUNT = states[UNITSTATE];
+      _prevHTR = states[HEATSTATE];
+      _prevFLT = states[PUMPSTATE];
+    }
 	}
 	//store buttoncodes in global variable, to send to webinterface for debugging
 	//if(button != ButtonCodes[NOBTN]) lastPressedButton = button;
@@ -385,7 +384,7 @@ void BWC::begin2(){
 	_loadSettings();
 	_loadCommandQueue();
 	_saveRebootInfo();
-  //_restoreStates();
+  _restoreStates();
 	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));	
 }
 
@@ -409,9 +408,7 @@ void BWC::loop(){
   }
   _dsp.updateDSP(7); //_cio.brightness);
   _updateTimes();
-  //feed the dog
-  //ESP.wdtFeed();
-  //update cio public payload
+ //update cio public payload
   _cio.loop();
   //manage command queue
   _handleCommandQ();
@@ -419,11 +416,11 @@ void BWC::loop(){
   if(_saveEventlogNeeded) saveEventlog();
   if(_saveCmdqNeeded) _saveCommandQueue();
   if(_saveSettingsNeeded) saveSettings();
-  // if(_cio.stateChanged) {
-  //   _saveStates();
-  //   _cio.stateChanged = false;
-  // }
-  // if(_saveStatesNeeded) _saveStates();
+  if(_cio.stateChanged) {
+    _saveStates();
+    _cio.stateChanged = false;
+  }
+  if(_saveStatesNeeded) _saveStates();
   //if set target command overshot we need to correct that
   if( (_cio.states[TARGET] != _latestTarget) && (_qButtonLen == 0) && (_latestTarget != 0) && (_sliderPrio) ) qCommand(SETTARGET, _latestTarget, 0, 0);
   //if target temp is unknown, find out.
@@ -959,7 +956,6 @@ void BWC::_saveStates() {
   DynamicJsonDocument doc(1024);
 
   // Set the values in the document
-  doc["TGT"] = _cio.states[TARGET];
   doc["UNT"] = _cio.states[UNITSTATE];
   doc["HTR"] = _cio.states[HEATSTATE];
   doc["FLT"] = _cio.states[PUMPSTATE];
@@ -995,11 +991,9 @@ void BWC::_restoreStates() {
   uint8_t unt = doc["UNT"];
   uint8_t flt = doc["FLT"];
   uint8_t htr = doc["HTR"];
-  uint8_t tgt = doc["TGT"];
-  qCommand(SETUNIT, unt, DateTime.now()+30, 0);
-  qCommand(SETPUMP, flt, DateTime.now()+32, 0);
-  qCommand(SETHEATER, htr, DateTime.now()+34, 0);
-  qCommand(SETTARGET, tgt, DateTime.now()+36, 0);
+  qCommand(SETUNIT, unt, DateTime.now()+10, 0);
+  qCommand(SETPUMP, flt, DateTime.now()+12, 0);
+  qCommand(SETHEATER, htr, DateTime.now()+14, 0);
 
   file.close();		
 }
