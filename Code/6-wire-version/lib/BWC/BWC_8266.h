@@ -30,6 +30,7 @@ class CIO {
 
     volatile bool newData = false;
 	bool dataAvailable = false;
+	bool stateChanged = false; //save states when true
     volatile uint16_t button = 0x1B1B; //no button
     uint8_t payload[11];
 	uint8_t states[14];
@@ -53,6 +54,10 @@ class CIO {
     int _CLK_PIN;
     int _DATA_PIN;
 	uint8_t _prevPayload[11];
+	bool _prevUNT;
+	bool _prevHTR;
+	bool _prevFLT;
+	bool _prevTGT;
 	
 	char _getChar(uint8_t value);
 };
@@ -139,6 +144,7 @@ class BWC {
 	bool _saveSettingsNeeded = false;
 	bool _saveEventlogNeeded = false;
 	bool _saveCmdqNeeded = false;
+	bool _saveStatesNeeded = false;
 	int _latestTarget;
 	int _tickerCount;
 	bool _sliderPrio = true;
@@ -152,6 +158,8 @@ class BWC {
 	void _saveCommandQueue();
 	void _saveRebootInfo();
 	void _updateTimes();
+	void _restoreStates();
+	void _saveStates();
 };
 
 #endif

@@ -68,7 +68,8 @@ void CIO::loop(void) {
 		states[CHAR2] = (uint8_t)_getChar(payload[DGT2_IDX]);
 		states[CHAR3] = (uint8_t)_getChar(payload[DGT3_IDX]);
     states[HYDROJETS] = (payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
-		//Determine if display is showing target temp or actual temp or anything else.
+
+ 		//Determine if display is showing target temp or actual temp or anything else.
 		//capture TARGET after UP/DOWN has been pressed...
 		if( ((button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN])) && (prevButton != ButtonCodes[UP]) && (prevButton != ButtonCodes[DOWN]) ) capturePhase = 1;
 		//...until 2 seconds after UP/DOWN released
@@ -84,6 +85,14 @@ void CIO::loop(void) {
 		//wait 4 seconds after UP/DOWN is released to be sure that actual temp is shown
 		if( (capturePhase == 0) && (millis()-buttonReleaseTime > 10000)) states[TEMPERATURE] = tmpTemp;		
 		prevButton = button;
+
+    // if(states[UNITSTATE] != _prevUNT || states[HEATSTATE] != _prevHTR || states[PUMPSTATE] != _prevFLT || states[TARGET] != _prevTGT) {
+    //   stateChanged = true;
+    //   _prevTGT = states[TARGET];
+    //   _prevUNT = states[UNITSTATE];
+    //   _prevHTR = states[HEATSTATE];
+    //   _prevFLT = states[PUMPSTATE];
+    // }
 	}
 	//store buttoncodes in global variable, to send to webinterface for debugging
 	//if(button != ButtonCodes[NOBTN]) lastPressedButton = button;
@@ -377,8 +386,11 @@ void BWC::begin2(){
 	_loadSettings();
 	_loadCommandQueue();
 	_saveRebootInfo();
+  //_restoreStates();
 	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));	
 }
+
+
 
 void BWC::loop(){
   //feed the dog
@@ -408,6 +420,11 @@ void BWC::loop(){
   if(_saveEventlogNeeded) saveEventlog();
   if(_saveCmdqNeeded) _saveCommandQueue();
   if(_saveSettingsNeeded) saveSettings();
+  // if(_cio.stateChanged) {
+  //   _saveStates();
+  //   _cio.stateChanged = false;
+  // }
+  // if(_saveStatesNeeded) _saveStates();
   //if set target command overshot we need to correct that
   if( (_cio.states[TARGET] != _latestTarget) && (_qButtonLen == 0) && (_latestTarget != 0) && (_sliderPrio) ) qCommand(SETTARGET, _latestTarget, 0, 0);
   //if target temp is unknown, find out.
@@ -422,8 +439,6 @@ void BWC::loop(){
 	}
 	return 0;
 } */
-
-
 
 void BWC::_qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration) {
 	if(_qButtonLen == MAXBUTTONS) return;	//maybe textout an error message if queue is full?
@@ -922,6 +937,72 @@ void BWC::_saveCommandQueue(){
 void BWC::reloadCommandQueue(){
 	  _loadCommandQueue();
 	  return;
+}
+
+void BWC::_saveStates() {
+  if(maxeffort) {
+	  _saveStatesNeeded = true;
+	  return;
+  }
+  //kill the dog
+  ESP.wdtDisable();
+  
+  _saveStatesNeeded = false;
+  File file = LittleFS.open("states.txt", "w");
+  if (!file) {
+    Serial.println(F("Failed to save states.txt"));
+    return;
+  }
+
+  // Allocate a temporary JsonDocument
+  // Don't forget to change the capacity to match your requirements.
+  // Use arduinojson.org/assistant to compute the capacity.
+  DynamicJsonDocument doc(1024);
+
+  // Set the values in the document
+  doc["TGT"] = _cio.states[TARGET];
+  doc["UNT"] = _cio.states[UNITSTATE];
+  doc["HTR"] = _cio.states[HEATSTATE];
+  doc["FLT"] = _cio.states[PUMPSTATE];
+
+  // Serialize JSON to file
+  if (serializeJson(doc, file) == 0) {
+    Serial.println(F("Failed to write states.txt"));
+  }
+  file.close();	
+  //revive the dog
+  ESP.wdtEnable(0);
+}
+
+void BWC::_restoreStates() {
+  File file = LittleFS.open("states.txt", "r");
+  if (!file) {
+    Serial.println(F("Failed to read states.txt"));
+    return;
+  }
+
+  // Allocate a temporary JsonDocument
+  // Don't forget to change the capacity to match your requirements.
+  // Use arduinojson.org/assistant to compute the capacity.
+  DynamicJsonDocument doc(1024);
+  // Deserialize the JSON document
+  DeserializationError error = deserializeJson(doc, file);
+  if (error) {
+    Serial.println(F("Failed to deserialize states.txt"));
+    file.close();
+    return;
+  }
+
+  uint8_t unt = doc["UNT"];
+  uint8_t flt = doc["FLT"];
+  uint8_t htr = doc["HTR"];
+  uint8_t tgt = doc["TGT"];
+  qCommand(SETUNIT, unt, DateTime.now()+30, 0);
+  qCommand(SETPUMP, flt, DateTime.now()+32, 0);
+  qCommand(SETHEATER, htr, DateTime.now()+34, 0);
+  qCommand(SETTARGET, tgt, DateTime.now()+36, 0);
+
+  file.close();		
 }
 
 void BWC::saveEventlog(){
