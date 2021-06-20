@@ -67,9 +67,8 @@ void CIO::loop(void) {
 		states[CHAR1] = (uint8_t)_getChar(payload[DGT1_IDX]);
 		states[CHAR2] = (uint8_t)_getChar(payload[DGT2_IDX]);
 		states[CHAR3] = (uint8_t)_getChar(payload[DGT3_IDX]);
-    states[HYDROJETS] = (payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
-
- 		//Determine if display is showing target temp or actual temp or anything else.
+    states[JETSSTATE] = (payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
+		//Determine if display is showing target temp or actual temp or anything else.
 		//capture TARGET after UP/DOWN has been pressed...
 		if( ((button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN])) && (prevButton != ButtonCodes[UP]) && (prevButton != ButtonCodes[DOWN]) ) capturePhase = 1;
 		//...until 2 seconds after UP/DOWN released
