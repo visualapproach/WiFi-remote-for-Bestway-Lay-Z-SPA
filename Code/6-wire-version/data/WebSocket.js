@@ -1,6 +1,19 @@
 //
 var connection;
 var initTargetSlider = true;
+const settarget = 0;
+const setunit = 1;
+const setbubbles = 2;
+const setheat = 3;
+const setpump = 4;
+const resetq = 5;
+const rebootesp = 6;
+const gettarget = 7;
+const resettimes = 8;
+const resetcltimer = 9;
+const resetftimer = 10;
+const setjets = 11;
+
 connect();
 
 function connect(){
@@ -37,6 +50,7 @@ function handlemsg(e) {
 	console.log(msgobj);
 	
 /*     
+	for my memory
 	doc["LCK"] = _cio.states[LOCKEDSTATE];
     doc["PWR"] = _cio.states[POWERSTATE];
     doc["UNT"] = _cio.states[UNITSTATE];
@@ -48,27 +62,53 @@ function handlemsg(e) {
     doc["TMP"] = _cio.states[TEMPERATURE];
     doc["CH1"] = _cio.states[CHAR1];
     doc["CH2"] = _cio.states[CHAR2];
-    doc["CH3"] = _cio.states[CHAR3]; */
+    doc["CH3"] = _cio.states[CHAR3]; 
+	doc["HJT"] = _cio.states[JETSSTATE];	
+*/
+
 	if(msgobj.CONTENT == "OTHER"){
 		//if(msgobj.MQTT){
-			document.getElementById('mqtt').innerHTML = "MQTT:" + msgobj.MQTT.toString();
+			mqtt_states = [
+				"CONNECTION_TIMEOUT",
+				"CONNECTION_LOST",
+				"CONNECT_FAILED",
+				"DISCONNECTED",
+				"CONNECTED",
+				"CONNECT_BAD_PROTOCOL",
+				"CONNECT_BAD_CLIENT_ID",
+				"CONNECT_UNAVAILABLE",
+				"CONNECT_BAD_CREDENTIALS",
+				"CONNECT_UNAUTHORIZED"
+			]
+			document.getElementById('mqtt').innerHTML = "MQTT:" + mqtt_states[msgobj.MQTT + 4];
+			//console.log(msgobj.PressedButton);
+			if(msgobj.HASJETS) document.getElementById('jets').style.visibility = 'visible'
+			else document.getElementById('jets').style.visibility = 'hidden';
 		//}
 	}
+	
+/*       MQTTclient.state return code meanings...
+      -4 : MQTT_CONNECTION_TIMEOUT - the server didn't respond within the keepalive time
+      -3 : MQTT_CONNECTION_LOST - the network connection was broken
+      -2 : MQTT_CONNECT_FAILED - the network connection failed
+      -1 : MQTT_DISCONNECTED - the client is disconnected cleanly
+      0 : MQTT_CONNECTED - the client is connected
+      1 : MQTT_CONNECT_BAD_PROTOCOL - the server doesn't support the requested version of MQTT
+      2 : MQTT_CONNECT_BAD_CLIENT_ID - the server rejected the client identifier
+      3 : MQTT_CONNECT_UNAVAILABLE - the server was unable to accept the connection
+      4 : MQTT_CONNECT_BAD_CREDENTIALS - the username/password were rejected
+      5 : MQTT_CONNECT_UNAUTHORIZED - the client was not authorized to connect * */
+	
+	
 	if(msgobj.CONTENT == "STATES"){
+		document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
+		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
 		var element = document.getElementById('temp');
 		if (initTargetSlider) element.value = msgobj.TGT;
 		initTargetSlider = false;
 		document.getElementById('sliderlabel').innerHTML = element.value.toString();
 		document.getElementById('AIR').checked = msgobj.AIR;
 		document.getElementById('UNT').checked = msgobj.UNT;
-		document.getElementById('GOD').checked = msgobj.GOD;
-		if(msgobj.UNT){
-			document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
-			document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
-		} else {
-			document.getElementById('atlabel').innerHTML = String(msgobj.TMP * 1.8 + 32);
-			document.getElementById('ttlabel').innerHTML = String(msgobj.TGT * 1.8 + 32);
-		}
 		if(msgobj.RED) {
 			mycolor = "background-color: #FF0000";
 			}
@@ -76,10 +116,8 @@ function handlemsg(e) {
 			mycolor = "background-color: #00FF00";
 		}
 		if(!(msgobj.RED || msgobj.GRN)) mycolor = "background-color: #CCC";
-		//2 is unknown (shown as black)
-		if(msgobj.GRN == 2) mycolor = "background-color: #000";
 
-		document.getElementById('HTR').checked = msgobj.RED;
+		document.getElementById('HTR').checked = msgobj.RED || msgobj.GRN;
 		document.getElementById('htrspan').style = mycolor;
 		document.getElementById('FLT').checked = msgobj.FLT;
 		if(document.getElementById('UNT').checked){
@@ -138,25 +176,21 @@ function s2dhms(val) {
 	return days + "d " + hours.toString().pad("0", 2) + ":" + minutes.toString().pad("0", 2) + ":" + seconds.toString().pad("0", 2);
 }
 
-const settarget = 0;
-const setunit = 1;
-const setbubbles = 2;
-const setheat = 3;
-const setpump = 4;
-const resetq = 5;
-const rebootesp = 6;
-const gettarget = 7;
-const resettimes = 8;
-const resetcltimer = 9;
-const resetftimer = 10;
-const setjets = 11;
-const setgodmode = 12;
 
 function air() {
 	var sendobj = {};
 	sendobj["CMD"] = setbubbles;
 	sendobj["VALUE"] = document.getElementById('AIR').checked;
-	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
+	sendobj["XTIME"] = Math.floor(Date.now()/1000);
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
+function hjt() {
+	var sendobj = {};
+	sendobj["CMD"] = setjets;
+	sendobj["VALUE"] = document.getElementById('HJT').checked;
+	sendobj["XTIME"] = Math.floor(Date.now()/1000);
 	sendobj["INTERVAL"] = 0;
 	connection.send(JSON.stringify(sendobj));
 	console.log(JSON.stringify(sendobj));
@@ -165,17 +199,16 @@ function unt() {
 	var sendobj = {};
 	sendobj["CMD"] = setunit;
 	sendobj["VALUE"] = document.getElementById('UNT').checked;
-	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
+	sendobj["XTIME"] = Math.floor(Date.now()/1000);
 	sendobj["INTERVAL"] = 0;
 	connection.send(JSON.stringify(sendobj));
 	console.log(JSON.stringify(sendobj));
-	alert("Setting is only changing the web interface.\n Change also required on the pump display.");
 }
 function htr() {
 	var sendobj = {};
 	sendobj["CMD"] = setheat;
 	sendobj["VALUE"] = document.getElementById('HTR').checked;
-	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
+	sendobj["XTIME"] = Math.floor(Date.now()/1000);
 	sendobj["INTERVAL"] = 0;
 	connection.send(JSON.stringify(sendobj));
 	console.log(JSON.stringify(sendobj));
@@ -184,28 +217,7 @@ function flt() {
 	var sendobj = {};
 	sendobj["CMD"] = setpump;
 	sendobj["VALUE"] = document.getElementById('FLT').checked;
-	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
-	sendobj["INTERVAL"] = 0;
-	connection.send(JSON.stringify(sendobj));
-	console.log(JSON.stringify(sendobj));
-}
-
-function god() {
-	var sendobj = {};
-	sendobj["CMD"] = setgodmode;
-	sendobj["VALUE"] = document.getElementById('GOD').checked;
-	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
-	sendobj["INTERVAL"] = 0;
-	connection.send(JSON.stringify(sendobj));
-	console.log(JSON.stringify(sendobj));
-	alert("Warning! Control is now given to ESP module. \nFactory safety guards might fail.");
-}
-
-function jet() {
-	var sendobj = {};
-	sendobj["CMD"] = setjets;
-	sendobj["VALUE"] = document.getElementById('JET').checked;
-	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
+	sendobj["XTIME"] = Math.floor(Date.now()/1000);
 	sendobj["INTERVAL"] = 0;
 	connection.send(JSON.stringify(sendobj));
 	console.log(JSON.stringify(sendobj));
@@ -214,12 +226,8 @@ function jet() {
 function tempchange() {
 	var sendobj = {};
 	sendobj["CMD"] = settarget;
-	var mytemp = parseInt(document.getElementById('temp').value);
-	if(!document.getElementById('UNT').checked) {
-		mytemp = Math.floor((mytemp - 32) / 1.8);
-	}
-	sendobj["VALUE"] = mytemp;  //in Celsius
-	sendobj["XTIME"] = 0; //Math.floor(Date.now()/1000);
+	sendobj["VALUE"] = parseInt(document.getElementById('temp').value);
+	sendobj["XTIME"] = Math.floor(Date.now()/1000);
 	sendobj["INTERVAL"] = 0;
 	connection.send(JSON.stringify(sendobj));
 	console.log(JSON.stringify(sendobj));

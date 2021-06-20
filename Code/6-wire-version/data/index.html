@@ -16,6 +16,7 @@
             <h1 id="header">SPA Control</h1>
         </header>
         <div style="background-image: url('favicon128.png'); background-repeat: no-repeat;">
+<!--			<h2 id="debug"><label id="debuglabel" for="debug">Button:</label></h2> -->
 			<h2 id="at"> Actual temp: <label id="atlabel" for="at">0</label></h2>
 			<h3 id="tt"> Target temp: <label id="ttlabel" for="tt">0</label></h3>
 			<table style="margin: 0px 0px 0px 0px">
@@ -78,26 +79,21 @@
 						</label>
 					</td>
 				</tr>				
-				<tr>
+				<tr id="jets">
 					<td align="left">
-						Take control
+						Hydrojets
 					</td>
 					<td align="left">
 						<!-- Rounded switch -->
 						<label class="switch">
-						  <input type="checkbox" id="GOD" onchange="god()">
+						  <input type="checkbox" id="HJT" onchange="hjt()">
 						  <span class="slider round"></span>
 						</label>
 					</td>
 					<td align="left">
-						Jets
+						
 					</td>
 					<td align="left">
-						<!-- Rounded switch -->
-						<label class="switch">
-						  <input type="checkbox" id="JET" onchange="jet()">
-						  <span id="htrspan" class="slider round"></span>
-						</label>
 					</td>
 				</tr>				
            </table>
