@@ -302,6 +302,16 @@ void DSP::textOut(String txt) {
   }
 }
 
+void DSP::LEDshow() {
+  for(int y = 7; y < 11; y++){
+    for(int x = 1; x < 9; x++){
+      payload[y] = (1 << x) + 1;
+      updateDSP(7);
+      delay(200);
+    }
+  }
+}
+
 void DSP::begin(int dsp_cs_pin, int dsp_data_pin, int dsp_clk_pin, int dsp_audio_pin) {
 	_CS_PIN = dsp_cs_pin;
 	_DATA_PIN = dsp_data_pin;
@@ -376,15 +386,15 @@ void BWC::begin(
 }
 
 void BWC::begin2(){
-	//other stuff like intro music
 	_dsp.textOut(F("   hello   "));
-	if(_audio) _dsp.playIntro();
 	_startNTP();
 	LittleFS.begin();
 	_loadSettings();
 	_loadCommandQueue();
 	_saveRebootInfo();
   _restoreStates();
+	if(_audio) _dsp.playIntro();
+  _dsp.LEDshow();
 	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));	
 }
 
