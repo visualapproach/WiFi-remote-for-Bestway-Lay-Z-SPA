@@ -1,11 +1,17 @@
 #include "BWC_8266_4w.h"
 
 void CIO::begin() {
-  //Setup serial to CIO here
-  //Using hardware UART/Serial on default pins (RX/TX)
-  cio_serial.begin(9600, SWSERIAL_8N1, D6, D7, false, 64);
+  //Setup serial to CIO and DSP here according to my PCB
+  /*
+    CIO_RX = D3
+    CIO_TX = D2
+    DSP_TX = D6
+    DSP_RX = D7
+    Devices are sending on their TX lines, so we read that with RX pins on the ESP
+  */
+  cio_serial.begin(9600, SWSERIAL_8N1, D2, D3, false, 64);
   cio_serial.setTimeout(50);
-  dsp_serial.begin(9600, SWSERIAL_8N1, D1, D2, false, 64);
+  dsp_serial.begin(9600, SWSERIAL_8N1, D6, D7, false, 64);
   dsp_serial.setTimeout(50);
 
   states[TARGET] = 20;
