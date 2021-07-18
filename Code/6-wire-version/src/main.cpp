@@ -8,6 +8,7 @@ BWC bwc;
 bool sendWSFlag = false;
 bool sendMQTTFlag = false;
 bool sendMQTTFlag2 = false;
+String prevButtonName = "";
 const int solarpin = D0;    //no interrupt or PWM
 const int myoutputpin = D8; //pulled to GND. Boot fails if pulled HIGH.
 bool runonce = true;
@@ -67,8 +68,11 @@ void loop() {
   if(enableMQTT && sendMQTTFlag2){
     sendMQTTFlag2 = false;
     String msg = bwc.getButtonName();
-    //publish pretty button name if display button is pressed
-    if(msg != "NOBTN") MQTTclient.publish((String(base_mqtt_topic) + "/button").c_str(), String(msg).c_str(), false);
+    //publish pretty button name if display button is pressed (or NOBTN if released)
+    if(!msg.equals(prevButtonName)) {
+      MQTTclient.publish((String(base_mqtt_topic) + "/button").c_str(), String(msg).c_str(), false);
+      prevButtonName = msg;
+    }
   }
   //handleAUX();
 
