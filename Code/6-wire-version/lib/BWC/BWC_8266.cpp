@@ -82,7 +82,7 @@ void CIO::loop(void) {
 			states[TARGET] = tmpTemp;
 		}
 		//wait 4 seconds after UP/DOWN is released to be sure that actual temp is shown
-		if( (capturePhase == 0) && (millis()-buttonReleaseTime > 10000) && payload[DGT3_IDX]!=0xED) states[TEMPERATURE] = tmpTemp;		
+		if( (capturePhase == 0) && (millis()-buttonReleaseTime > 10000) && payload[DGT3_IDX]!=0xED && payload[DGT3_IDX]!=0) states[TEMPERATURE] = tmpTemp;		
 		prevButton = button;
 
     if(states[UNITSTATE] != _prevUNT || states[HEATSTATE] != _prevHTR || states[PUMPSTATE] != _prevFLT) {
