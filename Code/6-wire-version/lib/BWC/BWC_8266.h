@@ -114,6 +114,7 @@ class BWC {
 	bool maxeffort = false;
 	String getPressedButton();
 	void reloadCommandQueue();
+	String getButtonName();
 
   private:
     CIO _cio;
@@ -161,6 +162,7 @@ class BWC {
 	void _updateTimes();
 	void _restoreStates();
 	void _saveStates();
+	int _CodeToButton(uint16_t val);
 };
 
 #endif

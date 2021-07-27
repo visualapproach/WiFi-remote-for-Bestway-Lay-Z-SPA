@@ -439,12 +439,12 @@ void BWC::loop(){
   ESP.wdtEnable(0);
 }
 
-/* int BWC::_CodeToButton(uint16_t val){
-	for(int i = 0; i < sizeof(ButtonCodes)/sizeof(uint16_t); i++){
+int BWC::_CodeToButton(uint16_t val){
+	for(unsigned int i = 0; i < sizeof(ButtonCodes)/sizeof(uint16_t); i++){
 		if(val == ButtonCodes[i]) return i;
 	}
 	return 0;
-} */
+}
 
 void BWC::_qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration) {
 	if(_qButtonLen == MAXBUTTONS) return;	//maybe textout an error message if queue is full?
@@ -477,7 +477,9 @@ void BWC::_handleButtonQ(void) {
 	} else {
 		//no queue so let dsp value through
 		uint16_t pressedButton = _dsp.getButton();
-		_cio.button = pressedButton;
+    int index = _CodeToButton(pressedButton);
+    //if button is not enabled, NOBTN will result (buttoncodes[0])
+		_cio.button = ButtonCodes[index*EnabledButtons[index]];
 		//prioritize manual temp setting by not competing with the set target command
 		if (pressedButton == ButtonCodes[UP] || pressedButton == ButtonCodes[DOWN]) _sliderPrio = false;
 	}
@@ -1125,4 +1127,8 @@ String BWC::getPressedButton(){
 	s = hib < 16 ? "0" + String(hib, HEX) : String(hib, HEX);
 	s += lob < 16 ? "0" + String(lob, HEX) : String(lob, HEX);
 	return  s;
+}
+
+String BWC::getButtonName() {
+  return ButtonNames[_CodeToButton(_dsp.getButton() )];
 }

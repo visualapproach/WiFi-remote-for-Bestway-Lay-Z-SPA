@@ -72,6 +72,23 @@ enum Buttons: byte
 	HYDROJETS
 };
 
+//set to zero to disable display buttons. Order as above.
+//Example: to disable UNIT and TIMER set 1,1,0,1,0,1,1,1,1,1,1
+const uint8_t EnabledButtons[] = {1,1,0,1,0,1,1,1,1,1,1};
+const String ButtonNames[] = {
+	"NOBTN",
+	"LOCK",
+	"TIMER",
+	"BUBBLES",
+	"UNIT",
+	"HEAT",
+	"PUMP",
+	"DOWN",
+	"UP",
+	"POWER",
+	"HYDROJETS"
+};
+
 #ifdef PRE2021
 const uint16_t ButtonCodes[] =
 {
