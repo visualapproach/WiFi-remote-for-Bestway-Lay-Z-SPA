@@ -19,7 +19,7 @@ void CIO::begin(int cio_cs_pin, int cio_data_pin, int cio_clk_pin) {
   pointerToClass = this;
   _CS_PIN = cio_cs_pin;
   _DATA_PIN = cio_data_pin;
-  _CLK_PIN = cio_clk_pin;  
+  _CLK_PIN = cio_clk_pin;
   pinMode(_CS_PIN, INPUT);
   pinMode(_DATA_PIN, INPUT);
   pinMode(_CLK_PIN, INPUT);
@@ -48,7 +48,7 @@ void CIO::loop(void) {
 			if (payload[i] != _prevPayload[i]) dataAvailable = true;
 			_prevPayload[i] = payload[i];
 		}
-		
+
 		newData = false;
 		//copy private array to public array
 		for(int i = 0; i < 11; i++){
@@ -82,7 +82,7 @@ void CIO::loop(void) {
 			states[TARGET] = tmpTemp;
 		}
 		//wait 4 seconds after UP/DOWN is released to be sure that actual temp is shown
-		if( (capturePhase == 0) && (millis()-buttonReleaseTime > 10000)) states[TEMPERATURE] = tmpTemp;		
+		if( (capturePhase == 0) && (millis()-buttonReleaseTime > 10000) && payload[DGT3_IDX]!=0xED && payload[DGT3_IDX]!=0) states[TEMPERATURE] = tmpTemp;		
 		prevButton = button;
 
     if(states[UNITSTATE] != _prevUNT || states[HEATSTATE] != _prevHTR || states[PUMPSTATE] != _prevFLT) {
@@ -120,7 +120,7 @@ void ICACHE_RAM_ATTR CIO::eopHandler(void) {
       if (_CIO_cmd_matches == 3) {
         _brightness = msg;
         _CIO_cmd_matches = 0;
-        newData = true;      
+        newData = true;
 	  }
       if (_CIO_cmd_matches == 2) {
         _CIO_cmd_matches = 3;
@@ -317,7 +317,7 @@ void DSP::begin(int dsp_cs_pin, int dsp_data_pin, int dsp_clk_pin, int dsp_audio
 	_DATA_PIN = dsp_data_pin;
 	_CLK_PIN = dsp_clk_pin;
 	_AUDIO_PIN = dsp_audio_pin;
-	
+
 	pinMode(_CS_PIN, OUTPUT);
 	pinMode(_DATA_PIN, INPUT);
 	pinMode(_CLK_PIN, OUTPUT);
@@ -364,18 +364,18 @@ BWC::BWC(){}
 
 void BWC::begin(void){
 	_cio.begin(D1, D7, D2);
-	_dsp.begin(D3, D5, D4, D6);	
+	_dsp.begin(D3, D5, D4, D6);
 	begin2();
 }
 
 void BWC::begin(
-			int cio_cs_pin, 
-			int cio_data_pin, 
-			int cio_clk_pin, 
-			int dsp_cs_pin, 
-			int dsp_data_pin, 
-			int dsp_clk_pin, 
-			int dsp_audio_pin 
+			int cio_cs_pin,
+			int cio_data_pin,
+			int cio_clk_pin,
+			int dsp_cs_pin,
+			int dsp_data_pin,
+			int dsp_clk_pin,
+			int dsp_audio_pin
 			)
 			{
 	//pointerToBWC = this;
@@ -395,7 +395,7 @@ void BWC::begin2(){
   _restoreStates();
 	if(_audio) _dsp.playIntro();
   _dsp.LEDshow();
-	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));	
+	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
 }
 
 
@@ -404,13 +404,13 @@ void BWC::loop(){
   //feed the dog
   ESP.wdtFeed();
   ESP.wdtDisable();
-  
+
 	if (!DateTime.isTimeValid()) {
       //Serial.println("Failed to get time from server, retry.");
       DateTime.begin();
-    } 
+    }
 	_timestamp = DateTime.now();
-  
+
   //update DSP payload (memcpy(dest*, source*, len))
   //memcpy(&_dsp.payload[0], &_cio.payload[0], 11);
   for(int i = 0; i < 11; i++){
@@ -467,8 +467,8 @@ void BWC::_handleButtonQ(void) {
 				_buttonQ[i][2] = _buttonQ[i+1][2];
 				_buttonQ[i][3] = _buttonQ[i+1][3];
 			}
-			_qButtonLen--;	
-			_cio.button = ButtonCodes[NOBTN];			
+			_qButtonLen--;
+			_cio.button = ButtonCodes[NOBTN];
 		} else {
 			if(_buttonQ[0][0] == UP || _buttonQ[0][0] == DOWN) maxeffort = true;
 			//set buttoncode
@@ -483,6 +483,7 @@ void BWC::_handleButtonQ(void) {
 		//prioritize manual temp setting by not competing with the set target command
 		if (pressedButton == ButtonCodes[UP] || pressedButton == ButtonCodes[DOWN]) _sliderPrio = false;
 	}
+
 }
 
 bool BWC::qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval) {
@@ -492,7 +493,7 @@ bool BWC::qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval
 		_qCommandLen = 0;
 		_saveCommandQueue();
 		return true;
-	} 
+	}
 
 	//add parameters to _commandQ[rows][parameter columns] and sort the array on xtime.
 	int row = _qCommandLen;
@@ -504,7 +505,7 @@ bool BWC::qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval
 			row = i;
 			break;
 		}
-	}	
+	}
 	//make room for new row
 	for (int i = _qCommandLen; i > (row); i--){
 		_commandQ[i][0] = _commandQ[i-1][0];
@@ -525,9 +526,9 @@ bool BWC::qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval
 
 void BWC::_handleCommandQ(void) {
 	bool restartESP = false;
-	if(_qCommandLen > 0) { 
+	if(_qCommandLen > 0) {
 	//cmp time with xtime. If more, then execute (adding buttons to buttonQ).
-	
+
 		if (_timestamp >= _commandQ[0][2]){
 			_qButton(POWER, POWERSTATE, 1, 5000); //press POWER button until states[POWERSTATE] is 1, max 5000 ms
 			_qButton(LOCK, LOCKEDSTATE, 0, 5000); //press LOCK button until states[LOCKEDSTATE] is 0
@@ -557,7 +558,7 @@ void BWC::_handleCommandQ(void) {
 				case SETPUMP:
 					_qButton(PUMP, PUMPSTATE, _commandQ[0][1], 5000);
 					break;
-				case REBOOTESP:				
+				case REBOOTESP:
 					restartESP = true;
 					break;
 				case GETTARGET:
@@ -573,7 +574,7 @@ void BWC::_handleCommandQ(void) {
 					_heatingtime_ms = 0;
 					_airtime_ms = 0;
 					_cost = 0;
-					_saveSettingsNeeded = true;		
+					_saveSettingsNeeded = true;
 					break;
 				case RESETCLTIMER:
 					_cltime = _timestamp;
@@ -599,13 +600,13 @@ void BWC::_handleCommandQ(void) {
 			_qCommandLen--;
 			_saveCommandQueue();
 			if(restartESP) {
-				saveSettings();			
+				saveSettings();
 				ESP.restart();
 			}
 		}
 	}
 }
-	
+
 
 String BWC::getJSONStates() {
     // Allocate a temporary JsonDocument
@@ -686,13 +687,13 @@ String BWC::getJSONSettings(){
     doc["AUDIO"] = _audio;
     doc["REBOOTINFO"] = ESP.getResetReason();
     doc["REBOOTTIME"] = DateTime.getBootTime();
-	
+
     // Serialize JSON to string
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
       jsonmsg = "{\"error\": \"Failed to serialize message\"}";
 	}
-	return jsonmsg;	
+	return jsonmsg;
 }
 
 void BWC::setJSONSettings(String message){
@@ -716,7 +717,7 @@ void BWC::setJSONSettings(String message){
   _finterval = doc["FINT"];
   _clinterval = doc["CLINT"];
   _audio = doc["AUDIO"];
-  saveSettings();	
+  saveSettings();
 }
 
 String BWC::getJSONCommandQueue(){
@@ -749,7 +750,7 @@ bool BWC::newData(){
 	if (result && _audio) _dsp.beep();
 	if(maxeffort) return false; else return result;
 }
-	
+
 void BWC::_startNTP() {
   // setup this after wifi connected
   // you can use custom timezone,server and timeout
@@ -770,7 +771,7 @@ void BWC::_startNTP() {
     if (c++ > 5) break;
   }
   Serial.println(DateTime.format(DateFormatter::SIMPLE));
-}	
+}
 
 void BWC::_loadSettings(){
   File file = LittleFS.open("settings.txt", "r");
@@ -811,7 +812,7 @@ void BWC::_loadSettings(){
 void BWC::saveSettingsFlag(){
 	//ticker fails if duration is more than 71 min. So we use a counter every 60 minutes
 	if(++_tickerCount >= 3){
-		_saveSettingsNeeded = true;	
+		_saveSettingsNeeded = true;
 		_tickerCount = 0;
 	}
 }
@@ -865,7 +866,7 @@ void BWC::saveSettings(){
   file.close();
   //update clock
   //DateTime.setTimeZone(_timezone);
-  DateTime.begin();	
+  DateTime.begin();
   //revive the dog
   ESP.wdtEnable(0);
 
@@ -899,7 +900,7 @@ void BWC::_loadCommandQueue(){
 	  _commandQ[i][3] = doc["INTERVAL"][i];
   }
 
-  file.close();		
+  file.close();
 }
 
 void BWC::_saveCommandQueue(){
@@ -909,7 +910,7 @@ void BWC::_saveCommandQueue(){
   }
   //kill the dog
   ESP.wdtDisable();
-  
+
   _saveCmdqNeeded = false;
   File file = LittleFS.open("cmdq.txt", "w");
   if (!file) {
@@ -935,7 +936,7 @@ void BWC::_saveCommandQueue(){
   if (serializeJson(doc, file) == 0) {
     Serial.println(F("Failed to write cmdq.txt"));
   }
-  file.close();	
+  file.close();
   //revive the dog
   ESP.wdtEnable(0);
 
@@ -953,7 +954,7 @@ void BWC::_saveStates() {
   }
   //kill the dog
   ESP.wdtDisable();
-  
+
   _saveStatesNeeded = false;
   File file = LittleFS.open("states.txt", "w");
   if (!file) {
@@ -975,7 +976,7 @@ void BWC::_saveStates() {
   if (serializeJson(doc, file) == 0) {
     Serial.println(F("Failed to write states.txt"));
   }
-  file.close();	
+  file.close();
   //revive the dog
   ESP.wdtEnable(0);
 }
@@ -1006,7 +1007,7 @@ void BWC::_restoreStates() {
   qCommand(SETPUMP, flt, DateTime.now()+12, 0);
   qCommand(SETHEATER, htr, DateTime.now()+14, 0);
 
-  file.close();		
+  file.close();
 }
 
 void BWC::saveEventlog(){
@@ -1038,7 +1039,7 @@ void BWC::saveEventlog(){
   if (serializeJson(doc, file) == 0) {
     Serial.println(F("Failed to write eventlog.txt"));
   }
-  file.close();		
+  file.close();
   //revive the dog
   ESP.wdtEnable(0);
 
@@ -1064,7 +1065,7 @@ void BWC::_saveRebootInfo(){
     Serial.println(F("Failed to write bootlog.txt"));
   }
   file.println();
-  file.close();	
+  file.close();
 }
 
 void BWC::_updateTimes(){
@@ -1086,7 +1087,7 @@ void BWC::_updateTimes(){
 		_jettime_ms += elapsedtime;
 	}
 	_uptime_ms += elapsedtime;
-	
+
 	if(_uptime_ms > 1000000000){
 		_heatingtime += _heatingtime_ms/1000;
 		_pumptime += _pumptime_ms/1000;
@@ -1099,7 +1100,7 @@ void BWC::_updateTimes(){
 		_jettime_ms = 0;
 		_uptime_ms = 0;
 	}
-	
+
 	_cost = _price*(
                   (_heatingtime+_heatingtime_ms/1000)*1900+
                   (_pumptime+_pumptime_ms/1000)*40+
