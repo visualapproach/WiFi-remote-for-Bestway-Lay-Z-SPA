@@ -69,4 +69,4 @@ Alternative PCB: Eric's PCB (use with LLC below, choose 1x8 ch or 2x4 ch accordi
 <img src="./pics/LLC_eric.jpg" width="300"><br>
 
 
-Problems? Read FAQ in discussions and current issues
+Problems? Read <a href="https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/discussions/46">FAQ</a> and other discussions and current issues
