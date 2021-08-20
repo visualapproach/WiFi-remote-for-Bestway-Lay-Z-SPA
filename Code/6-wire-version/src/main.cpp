@@ -2,10 +2,13 @@
 
 WiFiManager wm;
 Ticker updateMqttTimer;
+Ticker updateMqttTimer2;
 Ticker updateWSTimer;
 BWC bwc;
 bool sendWSFlag = false;
 bool sendMQTTFlag = false;
+bool sendMQTTFlag2 = false;
+String prevButtonName = "";
 const int solarpin = D0;    //no interrupt or PWM
 const int myoutputpin = D8; //pulled to GND. Boot fails if pulled HIGH.
 bool runonce = true;
@@ -34,6 +37,7 @@ void setup() {
 	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
   startMQTT();
   updateMqttTimer.attach(600, sendMQTTsetFlag); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
+  updateMqttTimer2.attach(0.5, sendMQTTsetFlag2); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
   updateWSTimer.attach(2.0, sendWSsetFlag);     //update webpage every 2 secs plus state changes
   bwc.print(WiFi.localIP().toString());
 }
@@ -61,7 +65,15 @@ void loop() {
     sendMQTTFlag = false;
     sendMessage(0);//MQTT
   }
-
+  if(enableMQTT && sendMQTTFlag2){
+    sendMQTTFlag2 = false;
+    String msg = bwc.getButtonName();
+    //publish pretty button name if display button is pressed (or NOBTN if released)
+    if(!msg.equals(prevButtonName)) {
+      MQTTclient.publish((String(base_mqtt_topic) + "/button").c_str(), String(msg).c_str(), false);
+      prevButtonName = msg;
+    }
+  }
   //handleAUX();
 
   //You can add own code here, but don't stall! If CPU is choking you can try to run @ 160 MHz, but that's cheating!
@@ -94,6 +106,9 @@ void handleAUX() {
 void sendMQTTsetFlag() {
   sendMQTTFlag = true;
 }
+void sendMQTTsetFlag2() {
+  sendMQTTFlag2 = true;
+}
 
 void sendWSsetFlag() {
   sendWSFlag = true;
@@ -101,15 +116,23 @@ void sendWSsetFlag() {
 
 // Send status data to web client in JSON format (because it is easy to decode on the other side)
 void sendMessage(int msgtype) {
-  String jsonmsg = bwc.getJSONStates();
 
   //send states to web sockets
   if (msgtype == 1) {
+    String jsonmsg = bwc.getJSONStates();
     webSocket.broadcastTXT(jsonmsg);
+    jsonmsg = bwc.getJSONTimes();
+    webSocket.broadcastTXT(jsonmsg);
+    String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + 
+                            String(",\"PressedButton\":\"") + bwc.getPressedButton() +
+                            String("\",\"HASJETS\":") + String(HASJETS) +
+                            String("}");
+    webSocket.broadcastTXT(mqttJSONstatus);
   }
 
   //Send to MQTT - 877dev
   if (msgtype == 0) {
+    String jsonmsg = bwc.getJSONStates();
     if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
     {
       //Serial.println(F("MQTT published"));
@@ -120,26 +143,6 @@ void sendMessage(int msgtype) {
     }
   }
 
-  jsonmsg = bwc.getJSONTimes();
-
-  if (msgtype == 1) {
-    webSocket.broadcastTXT(jsonmsg);
-  }
-  //  if you want up-times etc sent to mqtt:
-  //  if (msgtype == 0) {
-  //    if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
-  //    {
-  //      Serial.println(F("MQTT published"));
-  //    }
-  //    else
-  //    {
-  //      Serial.println(F("MQTT not published"));
-  //    }
-  String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + 
-                          String(",\"PressedButton\":\"") + bwc.getPressedButton() +
-                          String("\",\"HASJETS\":") + String(HASJETS) +
-                          String("}");
-  webSocket.broadcastTXT(mqttJSONstatus);
 }
 
 /*
@@ -252,6 +255,7 @@ void startServer() { // Start a HTTP server with a file read handler and an uplo
   server.on(F("/setmqtt/"), handleSetMQTT);
   server.on(F("/resetwifi/"), handleResetWifi);
   server.on(F("/remove.html"), HTTP_POST, handleFileRemove);
+  server.on(F("/dir/"), handleDir);
 
   server.onNotFound(handleNotFound);          // if someone requests any other file or page, go to function 'handleNotFound'
   // and check if the file exists
@@ -307,6 +311,18 @@ void startWiFi() { // Start a Wi-Fi access point, and try to connect to some giv
 /*
    Web server functions to exchange data between server and web client
 */
+
+void handleDir() {
+  String mydir;
+  Dir root = LittleFS.openDir("/");
+  while (root.next()){
+    Serial.println(root.fileName());
+    mydir += root.fileName() + F(" \t Size: ");
+    mydir += String(root.fileSize()) + F(" Bytes\n");
+  }
+
+  server.send(200, "text/plain", mydir);
+}
 
 //response to /getconfig/
 void handleGetConfig() { // reply with json document

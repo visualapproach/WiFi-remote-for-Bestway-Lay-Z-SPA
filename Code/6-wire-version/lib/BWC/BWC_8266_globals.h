@@ -50,11 +50,11 @@ const byte HJT_BIT = 5;	//if correct the web page should show correct states on 
 //7-segment codes. MSB always 1
 const uint8_t CHARCODES[] = {
   0x7F, 0x0D, 0xB7, 0x9F, 0xCD, 0xDB, 0xFB, 0x0F, 0xFF, 0xDF, 0x01, 0x81, 0xEF, 0xF9, 0x73, 0xBD, 0xF3, 0xE3,
-  0xFB, 0xE9, 0x61, 0x1D, 0xE1, 0x71, 0x01, 0xA9, 0xB9, 0xE7, 0xCF, 0xA1, 0xDB, 0xF1, 0x39, 0x7D, 0x01, 0xDD, 0xB7
+  0xFB, 0xE9, 0xED, 0x61, 0x1D, 0xE1, 0x71, 0x01, 0xA9, 0xB9, 0xE7, 0xCF, 0xA1, 0xDB, 0xF1, 0x39, 0x7D, 0x01, 0xDD, 0xB7
 };
 const uint8_t CHARS[] = {
   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '-', 'a', 'b', 'c', 'd', 'e', 'f',
-  'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z'
+  'g', 'h', 'H', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z'
 };
 
 enum Buttons: byte
@@ -72,22 +72,39 @@ enum Buttons: byte
 	HYDROJETS
 };
 
+//set to zero to disable display buttons. Order as above.
+//Example: to disable UNIT and TIMER set 1,1,0,1,0,1,1,1,1,1,1
+const uint8_t EnabledButtons[] = {1,1,0,1,0,1,1,1,1,1,1};
+const String ButtonNames[] = {
+	"NOBTN",
+	"LOCK",
+	"TIMER",
+	"BUBBLES",
+	"UNIT",
+	"HEAT",
+	"PUMP",
+	"DOWN",
+	"UP",
+	"POWER",
+	"HYDROJETS"
+};
+
 #ifdef PRE2021
-const uint16_t ButtonCodes[] = 
+const uint16_t ButtonCodes[] =
 {
 	0x1B1B, 0x0200, 0x0100, 0x0300, 0x1012, 0x1212, 0x1112, 0x1312, 0x0809, 0x0000
 };
 const bool HASJETS = false;
 
 #elif defined(MIAMI2021)
-const uint16_t ButtonCodes[] = 
+const uint16_t ButtonCodes[] =
 {
 	0x1B1B, 0x0100, 0x0300, 0x1212, 0x0809, 0x1012, 0x1112, 0x1312, 0x0200, 0x0000
 };
 const bool HASJETS = false;
 
-#else 
-const uint16_t ButtonCodes[] = 
+#else
+const uint16_t ButtonCodes[] =
 {
 	0x1B1B, 0x0100, 0x0300, 0x1212, 0x0a09, 0x1012, 0x1312, 0x0809, 0x0200, 0x0000, 0x1112
 };
