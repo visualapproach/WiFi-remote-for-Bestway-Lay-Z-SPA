@@ -37,7 +37,7 @@ void setup() {
 	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
   startMQTT();
   updateMqttTimer.attach(600, sendMQTTsetFlag); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
-  updateMqttTimer2.attach(0.5, sendMQTTsetFlag2); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
+  updateMqttTimer2.attach(0.5, sendMQTTsetFlag2); //update mqtt twice every second. Mqtt will also be updated on every state change
   updateWSTimer.attach(2.0, sendWSsetFlag);     //update webpage every 2 secs plus state changes
   bwc.print(WiFi.localIP().toString());
 }
@@ -130,7 +130,11 @@ void sendMessage(int msgtype) {
     webSocket.broadcastTXT(mqttJSONstatus);
   }
 
-  //Send to MQTT - 877dev
+  //Send STATES and TIMES to MQTT - 877dev
+  //It would be more elegant to send both states and times on the "message" topic
+  //and use the "CONTENT" field to distinguish between them
+  //but it might break peoples home automation setups, so to keep it backwards
+  //compatible I choose to start a new topic "/times"
   if (msgtype == 0) {
     String jsonmsg = bwc.getJSONStates();
     if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
@@ -141,8 +145,16 @@ void sendMessage(int msgtype) {
     {
       //Serial.println(F("MQTT not published"));
     }
+    jsonmsg = bwc.getJSONTimes();
+    if (MQTTclient.publish((String(base_mqtt_topic) + "/times").c_str(), String(jsonmsg).c_str(), true))
+    {
+      //Serial.println(F("MQTT published"));
+    }
+    else
+    {
+      //Serial.println(F("MQTT not published"));
+    }
   }
-
 }
 
 /*
