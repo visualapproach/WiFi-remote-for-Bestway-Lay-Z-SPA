@@ -74,6 +74,7 @@ class DSP {
 	void LEDshow();
 	void playIntro();
 	void beep();
+	void beep2();
 
   private:
     void _sendBitsToDSP(uint32_t outBits, int bitsToSend);

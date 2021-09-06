@@ -350,12 +350,26 @@ void DSP::playIntro() {
   noTone(_AUDIO_PIN);
 }
 
+//silent beep instead of annoying beeps every time something changes
 void DSP::beep() {
   //int longnote = 125;
-  int shortnote = 63;
-  tone(_AUDIO_PIN, NOTE_C6, shortnote);
+  // int shortnote = 63;
+  // tone(_AUDIO_PIN, NOTE_C6, shortnote);
+  // delay(shortnote);
+  // tone(_AUDIO_PIN, NOTE_C7, shortnote);
+  // delay(shortnote);
+  // noTone(_AUDIO_PIN);
+}
+
+//new beep for button presses only
+void DSP::beep2() {
+  //int longnote = 125;
+  int shortnote = 40;
+  tone(_AUDIO_PIN, NOTE_D6, shortnote);
   delay(shortnote);
-  tone(_AUDIO_PIN, NOTE_C7, shortnote);
+  tone(_AUDIO_PIN, NOTE_D7, shortnote);
+  delay(shortnote);
+  tone(_AUDIO_PIN, NOTE_D8, shortnote);
   delay(shortnote);
   noTone(_AUDIO_PIN);
 }
@@ -482,6 +496,8 @@ void BWC::_handleButtonQ(void) {
 		_cio.button = ButtonCodes[index*EnabledButtons[index]];
 		//prioritize manual temp setting by not competing with the set target command
 		if (pressedButton == ButtonCodes[UP] || pressedButton == ButtonCodes[DOWN]) _sliderPrio = false;
+    //make noise
+    if(index*EnabledButtons[index]) _dsp.beep2();
 	}
 
 }
@@ -745,10 +761,11 @@ String BWC::getJSONCommandQueue(){
 }
 
 bool BWC::newData(){
-	bool result = _cio.dataAvailable;
+	if(maxeffort) return false;	
+  bool result = _cio.dataAvailable;
 	_cio.dataAvailable = false;
 	if (result && _audio) _dsp.beep();
-	if(maxeffort) return false; else return result;
+  return result;
 }
 
 void BWC::_startNTP() {
