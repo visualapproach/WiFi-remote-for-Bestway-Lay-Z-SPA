@@ -142,8 +142,9 @@ class BWC {
 	float _price;
 	uint32_t _finterval;
 	uint32_t _clinterval;
-	uint32_t _audio;
+	bool _audio;
 	float _cost;
+	bool _restoreStatesOnStart = false;
 	bool _saveSettingsNeeded = false;
 	bool _saveEventlogNeeded = false;
 	bool _saveCmdqNeeded = false;

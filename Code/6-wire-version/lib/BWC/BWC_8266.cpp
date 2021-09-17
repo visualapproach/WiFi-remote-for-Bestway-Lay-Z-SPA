@@ -733,6 +733,7 @@ void BWC::setJSONSettings(String message){
   _finterval = doc["FINT"];
   _clinterval = doc["CLINT"];
   _audio = doc["AUDIO"];
+  _restoreStatesOnStart = doc["RESTORE"];
   saveSettings();
 }
 
@@ -823,6 +824,7 @@ void BWC::_loadSettings(){
   _finterval = doc["FINT"];
   _clinterval = doc["CLINT"];
   _audio = doc["AUDIO"];
+  _restoreStatesOnStart = doc["RESTORE"];
   file.close();
 }
 
@@ -875,6 +877,7 @@ void BWC::saveSettings(){
   doc["CLINT"] = _clinterval;
   doc["AUDIO"] = _audio;
   doc["SAVETIME"] = DateTime.format(DateFormatter::SIMPLE);
+  doc["RESTORE"] = _restoreStatesOnStart;
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
@@ -999,6 +1002,7 @@ void BWC::_saveStates() {
 }
 
 void BWC::_restoreStates() {
+  if(!_restoreStatesOnStart) return;
   File file = LittleFS.open("states.txt", "r");
   if (!file) {
     Serial.println(F("Failed to read states.txt"));
