@@ -92,7 +92,7 @@ function loadconfig(){
 		  document.getElementById("price").value = msgobj.PRICE.toString();
 		  document.getElementById("finterval").value = msgobj.FINT.toString();
 		  document.getElementById("clinterval").value = msgobj.CLINT.toString();
-		  document.getElementById("restore").value = msgobj.RESTORE;
+		  document.getElementById("restore").value = Number(msgobj.RESTORE);
 		  document.getElementById("audio").checked = msgobj.AUDIO;
 		  var date = new Date(msgobj.REBOOTTIME * 1000);
 		  document.getElementById('reboot').innerHTML = "Last boot: " + date.toLocaleString() + " " + msgobj.REBOOTINFO;

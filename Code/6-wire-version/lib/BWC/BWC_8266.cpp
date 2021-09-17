@@ -703,6 +703,7 @@ String BWC::getJSONSettings(){
     doc["AUDIO"] = _audio;
     doc["REBOOTINFO"] = ESP.getResetReason();
     doc["REBOOTTIME"] = DateTime.getBootTime();
+    doc["RESTORE"] = _restoreStatesOnStart;
 
     // Serialize JSON to string
     String jsonmsg;
