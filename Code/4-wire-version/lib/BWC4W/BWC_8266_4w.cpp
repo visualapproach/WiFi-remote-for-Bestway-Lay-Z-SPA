@@ -102,12 +102,15 @@ void CIO::updateStates(){
 
 void CIO::updatePayload(){
   //alter payload to CIO to reflect user setting (GODMODE)
-  //this is a simple thermostat with no inertia. Add average temperature to compare with *************
+  //this is a simple thermostat with hysteresis. Will heat until target+1 and then cool until target-1
   static uint8_t prevchksum;
-  if(states[HEATSTATE] && states[TEMPERATURE] < states[TARGET]){
+  static uint8_t hysteresis = 0;
+  if(states[HEATSTATE] && ( (states[TEMPERATURE] + hysteresis) <= states[TARGET]) ){
     states[HEATREDSTATE] = true;
+    hysteresis = 0;
   } else {
     states[HEATREDSTATE] = false;
+    hysteresis = 1;
   }
 
   //antifreeze
