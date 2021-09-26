@@ -489,6 +489,7 @@ void BWC::_handleButtonQ(void) {
 			_cio.button = ButtonCodes[_buttonQ[0][0]];
 		}
 	} else {
+    static uint16_t prevbtn = ButtonCodes[NOBTN];
 		//no queue so let dsp value through
 		uint16_t pressedButton = _dsp.getButton();
     int index = _CodeToButton(pressedButton);
@@ -497,7 +498,8 @@ void BWC::_handleButtonQ(void) {
 		//prioritize manual temp setting by not competing with the set target command
 		if (pressedButton == ButtonCodes[UP] || pressedButton == ButtonCodes[DOWN]) _sliderPrio = false;
     //make noise
-    if(index*EnabledButtons[index]) _dsp.beep2();
+    if((index*EnabledButtons[index]) & (prevbtn == ButtonCodes[NOBTN])) _dsp.beep2();
+    prevbtn = pressedButton;
 	}
 
 }
