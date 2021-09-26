@@ -62,6 +62,7 @@ function handlemsg(e) {
 		document.getElementById('AIR').checked = msgobj.AIR;
 		document.getElementById('UNT').checked = msgobj.UNT;
 		document.getElementById('GOD').checked = msgobj.GOD;
+		document.getElementById('JET').checked = msgobj.JET;
 		if(msgobj.UNT){
 			document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
 			document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
