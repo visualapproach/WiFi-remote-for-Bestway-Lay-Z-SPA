@@ -41,6 +41,8 @@ class CIO {
 	bool cio_tx;			  //set to true when data received. Send to webinterface+serial for debugging
 	bool dsp_tx;			  //set to true when data received. Send to webinterface+serial for debugging
 
+	uint8_t heatbitmask;
+
   private:
 
 };

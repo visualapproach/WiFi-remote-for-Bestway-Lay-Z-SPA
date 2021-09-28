@@ -92,7 +92,7 @@ void CIO::updateStates(){
   //extract information from payload to a better format
   states[BUBBLESSTATE] = (from_DSP_buf[COMMANDINDEX] & BUBBLESBITMASK) > 0;
   states[HEATGRNSTATE] = 2;                           //unknowable
-  states[HEATREDSTATE] = (from_DSP_buf[COMMANDINDEX] & HEATBITMASK) > 0;  //
+  states[HEATREDSTATE] = (from_DSP_buf[COMMANDINDEX] & (HEATBITMASK1|HEATBITMASK2)) > 0;  //
   states[HEATSTATE] = 2;                              //unknowable
   states[PUMPSTATE] = (from_DSP_buf[COMMANDINDEX] & PUMPBITMASK) > 0;
   states[JETSSTATE] = (from_DSP_buf[COMMANDINDEX] & JETSBITMASK) > 0;
@@ -117,7 +117,7 @@ void CIO::updatePayload(){
   if(states[TEMPERATURE] < 10) states[HEATREDSTATE] = true;
 
   states[HEATGRNSTATE] = !states[HEATREDSTATE] && states[HEATSTATE];
-  to_CIO_buf[COMMANDINDEX] =  (states[HEATREDSTATE] * HEATBITMASK)    |  
+  to_CIO_buf[COMMANDINDEX] =  (states[HEATREDSTATE] * heatbitmask)    |  
                               (states[JETSSTATE] * JETSBITMASK)       | 
                               (states[PUMPSTATE] * PUMPBITMASK)       |
                               (states[BUBBLESSTATE] * BUBBLESBITMASK) | 
@@ -226,8 +226,13 @@ void BWC::_handleCommandQ(void) {
 					break;
 				case SETBUBBLES:
 					_cio.states[BUBBLESSTATE] = _commandQ[0][1];
-          _cio.states[PUMPSTATE] = false;
-          _cio.states[HEATSTATE] = false;
+          if(_commandQ[0][1]){
+            _cio.states[PUMPSTATE] &= HEATBITMASK1>0;  //turn off pump if heatbitmask1 == 0
+            _cio.heatbitmask = HEATBITMASK1;          //lower the heating power (or turn it off if heatbitmask1 == 0)
+            _cio.states[JETSSTATE] = false;
+          } else {
+            _cio.heatbitmask = HEATBITMASK1 | HEATBITMASK2; //set full heating power
+          }
 					break;
 				case SETHEATER:
 					_cio.states[HEATSTATE] = _commandQ[0][1];
@@ -235,6 +240,7 @@ void BWC::_handleCommandQ(void) {
             _cio.states[PUMPSTATE] = true;
             _cio.states[BUBBLESSTATE] = false;
             _cio.states[JETSSTATE] = false;
+            _cio.heatbitmask = HEATBITMASK1 | HEATBITMASK2; //set full heating power
           } 
 					break;
 				case SETPUMP:

@@ -1,6 +1,7 @@
-//Comment/uncomment so desired model is the only defined one
+//Comment/uncomment so the desired model is the only defined one
 
-#define NO54138 //this is the only option for now. Maybe there will be other pumps supported in the future.
+#define NO54138 //no heater or jets when bubbles are on. 
+//#define NO54173 //this is same as 54138 but can run heater on 50% when bubbles are on.
 
 
 //WARNING: THIS DEVICE HAS DIFFERENT PINOUTS!!! CHECK BEFORE USING
