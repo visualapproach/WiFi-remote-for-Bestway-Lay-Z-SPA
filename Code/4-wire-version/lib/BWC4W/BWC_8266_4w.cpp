@@ -240,7 +240,13 @@ void BWC::_handleCommandQ(void) {
             _cio.states[PUMPSTATE] = true;
             _cio.states[BUBBLESSTATE] = false;
             _cio.states[JETSSTATE] = false;
-            _cio.heatbitmask = HEATBITMASK1 | HEATBITMASK2; //set full heating power
+            if(_commandQ[0][1] == 1) {
+              _cio.heatbitmask = HEATBITMASK1;    //start first heater element
+              qCommand(SETHEATER, 2, _timestamp + 10, 0); //after 10 s start the other element
+            }
+            if(_commandQ[0][1] == 2) {
+              _cio.heatbitmask |= HEATBITMASK2;
+            }
           } 
 					break;
 				case SETPUMP:
