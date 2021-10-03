@@ -64,7 +64,7 @@ ten boolean values above stored in a word "comb_matrix"
 Heater and pump values are still partly hardcoded in combination with the heatbitmasks.
 Do not change the heatbitmasks below unless you really know what you are doing.
 */
-uint16_t COMB_MATRIX = 0x3CF;	// B0000001111001111;
+const uint16_t COMB_MATRIX = 0x3CF;	// B0000001111001111;
 //cio
 const uint8_t TEMPINDEX = 2;
 const uint8_t ERRORINDEX = 3;
@@ -95,7 +95,7 @@ ten boolean values above stored in a word "comb_matrix"
 Heater and pump values are still partly hardcoded in combination with the heatbitmasks.
 Do not change the heatbitmasks below unless you really know what you are doing.
 */
-uint16_t COMB_MATRIX = 0x248;	// B0000001001001000;
+const uint16_t COMB_MATRIX = 0x248;	// B0000001001001000;
 //cio
 const uint8_t TEMPINDEX = 2;
 const uint8_t ERRORINDEX = 3;
@@ -128,7 +128,7 @@ ten boolean values above stored in a word "comb_matrix"
 Heater and pump values are still partly hardcoded in combination with the heatbitmasks.
 Do not change the heatbitmasks below unless you really know what you are doing.
 */
-uint16_t COMB_MATRIX = 0x248;	// B0000001001001000;
+const uint16_t COMB_MATRIX = 0x248;	// B0000001001001000;
 //cio
 const uint8_t TEMPINDEX = 2;
 const uint8_t ERRORINDEX = 3;
