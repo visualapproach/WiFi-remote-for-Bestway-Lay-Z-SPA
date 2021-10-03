@@ -227,9 +227,9 @@ void BWC::_handleCommandQ(void) {
 				case SETBUBBLES:
 					_cio.states[BUBBLESSTATE] = _commandQ[0][1];
           if(_commandQ[0][1]){
-            _cio.states[PUMPSTATE] &= HEATBITMASK1>0;  //turn off pump if heatbitmask1 == 0
-            _cio.heatbitmask = HEATBITMASK1;          //lower the heating power (or turn it off if heatbitmask1 == 0)
-            _cio.states[JETSSTATE] = false;
+            _cio.states[PUMPSTATE] &= COMB_MATRIX & 1<<1; //turn off pump if heatbitmask1 == 0
+            _cio.heatbitmask = HEATBITMASK1;              //lower the heating power (or turn it off if heatbitmask1 == 0)
+            _cio.states[JETSSTATE] &= COMB_MATRIX & 1<<2; //Keep jets state if allowed by the matrix (won't be turned on again automatically)
           } else {
             _cio.heatbitmask = HEATBITMASK1 | HEATBITMASK2; //set full heating power
           }
@@ -237,15 +237,18 @@ void BWC::_handleCommandQ(void) {
 				case SETHEATER:
 					_cio.states[HEATSTATE] = _commandQ[0][1];
           if(_commandQ[0][1]) {
-            _cio.states[PUMPSTATE] = true;
-            _cio.states[BUBBLESSTATE] = false;
-            _cio.states[JETSSTATE] = false;
             if(_commandQ[0][1] == 1) {
-              _cio.heatbitmask = HEATBITMASK1;    //start first heater element
-              qCommand(SETHEATER, 2, _timestamp + 10, 0); //after 10 s start the other element
+              _cio.heatbitmask = HEATBITMASK1;                  //start first heater element
+              qCommand(SETHEATER, 2, _timestamp + 10, 0);       //after 10 s start the other element
+              _cio.states[PUMPSTATE] = true;                    //mandatory ON regardless of the matrix allows it or not
+              _cio.states[BUBBLESSTATE] &= COMB_MATRIX & 1<<8;  //Keeps state if allowed by the matrix
+              _cio.states[JETSSTATE] &= COMB_MATRIX & 1<<7;     //Keeps state if allowed by the matrix
             }
             if(_commandQ[0][1] == 2) {
               _cio.heatbitmask |= HEATBITMASK2;
+              _cio.states[PUMPSTATE] = true;                    //mandatory ON regardless of the matrix allows it or not
+              _cio.states[BUBBLESSTATE] &= COMB_MATRIX & 1<<5;  //Keeps state if allowed by the matrix
+              _cio.states[JETSSTATE] &= COMB_MATRIX & 1<<4;     //Keeps state if allowed by the matrix
             }
           } 
 					break;
@@ -257,6 +260,8 @@ void BWC::_handleCommandQ(void) {
             qCommand(SETPUMP, 0, _timestamp + 10, 0);
           } else {
             _cio.states[PUMPSTATE] = _commandQ[0][1];
+            _cio.states[BUBBLESSTATE] &= COMB_MATRIX & 1<<1;  //Keeps state if allowed by the matrix
+            _cio.states[JETSSTATE] &= COMB_MATRIX & 1<<2;     //Keeps state if allowed by the matrix
           }
 					break;
 				case REBOOTESP:				
@@ -288,8 +293,11 @@ void BWC::_handleCommandQ(void) {
         case SETJETS:
           _cio.states[JETSSTATE] = _commandQ[0][1];
           if(_commandQ[0][1]) {
-            _cio.states[PUMPSTATE] = false;
-            _cio.states[HEATSTATE] = false;
+            _cio.states[PUMPSTATE] &= COMB_MATRIX & 1<<0;     //Keeps state if allowed by the matrix
+            _cio.states[BUBBLESSTATE] &= COMB_MATRIX & 1<<2;  //Keeps state if allowed by the matrix
+            _cio.heatbitmask = HEATBITMASK1;                  //lower the heating power (or turn it off if heatbitmask1 == 0)
+          } else {
+            _cio.heatbitmask = HEATBITMASK1 | HEATBITMASK2;   //set full heating power
           } 
           break;
         case SETGODMODE:
