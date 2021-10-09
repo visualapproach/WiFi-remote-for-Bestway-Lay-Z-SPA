@@ -46,7 +46,8 @@ enum Commands: byte
 	RESETCLTIMER,
 	RESETFTIMER,
 	SETJETS,
-	SETGODMODE
+	SETGODMODE,
+	SETFULLPOWER
 };
 
 const int MAXCOMMANDS = 11;
@@ -55,16 +56,43 @@ const int MAXBUTTONS = 33;
 #ifdef NO54173
 /*combination matrix
 	Heater1	Heater2	Bubbles	Jets	Pump
-H1	-		1		1		1		1
+H1	-		1		1		0		1
 H2			-		0		0		1
 B					-		1		1
-J							-		1
+J							-		0
 P
 ten boolean values above stored in a word "comb_matrix"
 Heater and pump values are still partly hardcoded in combination with the heatbitmasks.
 Do not change the heatbitmasks below unless you really know what you are doing.
 */
-const uint16_t COMB_MATRIX = 0x3CF;	// B0000001111001111;
+// const uint16_t COMB_MATRIX = 0x3CF;	// B0000001111001111;
+
+//what row in allowedstates to go to when pressing Bubbles, Jets, Pump, Heat (columns in that order)
+//Example: We are in state zero (first row). If we press Bubbles (first column) then there is a 6
+//meaning current state (row) is now 6. According to ALLOWEDSTATES table, we turn on Bubbles and keep
+//everything else off. (1,0,0,0)
+const uint8_t JUMPTABLE[][4] = {
+	{6,4,1,3},
+	{7,4,0,3},
+	{3,5,6,7},
+	{2,4,0,1},
+	{5,0,1,3},
+	{4,6,1,3},
+	{0,5,7,2},
+	{1,5,6,2}
+};
+//Bubbles, Jets, Pump, Heat
+const uint8_t ALLOWEDSTATES[][4] = {
+	{0,0,0,0},
+	{0,0,1,0},
+	{1,0,1,1},
+	{0,0,1,2},	//the "2" means both heater elements
+	{0,1,0,0},
+	{1,1,0,0},
+	{1,0,0,0},
+	{1,0,1,0}
+};
+
 //cio
 const uint8_t TEMPINDEX = 2;
 const uint8_t ERRORINDEX = 3;
@@ -84,18 +112,39 @@ const uint8_t POWERBITMASK = 	B10000000;	//128
 #endif
 
 #ifdef NO54138
-/*combination matrix
-	Heater1	Heater2	Bubbles	Jets	Pump
-H1	-		1		0		0		1
-H2			-		0		0		1
-B					-		0		0
-J							-		0
-P
-ten boolean values above stored in a word "comb_matrix"
-Heater and pump values are still partly hardcoded in combination with the heatbitmasks.
-Do not change the heatbitmasks below unless you really know what you are doing.
-*/
-const uint16_t COMB_MATRIX = 0x248;	// B0000001001001000;
+// /*combination matrix
+// 	Heater1	Heater2	Bubbles	Jets	Pump
+// H1	-		1		0		0		1
+// H2			-		0		0		1
+// B					-		0		0
+// J							-		0
+// P
+// ten boolean values above stored in a word "comb_matrix"
+// Heater and pump values are still partly hardcoded in combination with the heatbitmasks.
+// Do not change the heatbitmasks below unless you really know what you are doing.
+// */
+// const uint16_t COMB_MATRIX = 0x248;	// B0000001001001000;
+
+//what row in allowedstates to go to when pressing Bubbles, Jets, Pump, Heat (columns in that order)
+//Example: We are in state zero (first row). If we press Bubbles (first column) then there is a 6
+//meaning current state (row) is now 6. According to ALLOWEDSTATES table, we turn on Bubbles and keep
+//everything else off. (1,0,0,0)
+const uint8_t JUMPTABLE[][4] = {
+	{1,2,3,4},
+	{0,2,3,4},
+	{1,0,3,4},
+	{1,2,0,4},
+	{1,2,0,3}
+};
+//Bubbles, Jets, Pump, Heat
+const uint8_t ALLOWEDSTATES[][4] = {
+	{0,0,0,0},	//the "2" means both heater elements
+	{1,0,0,0},
+	{0,1,0,0},
+	{0,0,1,0},
+	{0,0,1,2}
+};
+
 //cio
 const uint8_t TEMPINDEX = 2;
 const uint8_t ERRORINDEX = 3;
@@ -117,18 +166,39 @@ const uint8_t POWERBITMASK = 	B10000000;	//128
 #ifdef NO54123
 //WARNING: THIS DEVICE HAS DIFFERENT PINOUTS!!! CHECK BEFORE USING
 //NOT TESTED BY ME!!
-/*combination matrix
-	Heater1	Heater2	Bubbles	Jets	Pump
-H1	-		1		0		0		1
-H2			-		0		0		1
-B					-		0		0
-J							-		0
-P
-ten boolean values above stored in a word "comb_matrix"
-Heater and pump values are still partly hardcoded in combination with the heatbitmasks.
-Do not change the heatbitmasks below unless you really know what you are doing.
-*/
-const uint16_t COMB_MATRIX = 0x248;	// B0000001001001000;
+// /*combination matrix
+// 	Heater1	Heater2	Bubbles	Jets	Pump
+// H1	-		1		0		0		1
+// H2			-		0		0		1
+// B					-		0		0
+// J							-		0
+// P
+// ten boolean values above stored in a word "comb_matrix"
+// Heater and pump values are still partly hardcoded in combination with the heatbitmasks.
+// Do not change the heatbitmasks below unless you really know what you are doing.
+// */
+// const uint16_t COMB_MATRIX = 0x248;	// B0000001001001000;
+
+//what row in allowedstates to go to when pressing Bubbles, Jets, Pump, Heat (columns in that order)
+//Example: We are in state zero (first row). If we press Bubbles (first column) then there is a 6
+//meaning current state (row) is now 6. According to ALLOWEDSTATES table, we turn on Bubbles and keep
+//everything else off. (1,0,0,0)
+const uint8_t JUMPTABLE[][4] = {
+	{1,2,3,4},
+	{0,2,3,4},
+	{1,0,3,4},
+	{1,2,0,4},
+	{1,2,0,3}
+};
+//Bubbles, Jets, Pump, Heat
+const uint8_t ALLOWEDSTATES[][4] = {
+	{0,0,0,0},	//the "2" means both heater elements
+	{1,0,0,0},
+	{0,1,0,0},
+	{0,0,1,0},
+	{0,0,1,2}
+};
+
 //cio
 const uint8_t TEMPINDEX = 2;
 const uint8_t ERRORINDEX = 3;
