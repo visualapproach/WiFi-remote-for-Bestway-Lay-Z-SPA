@@ -80,7 +80,7 @@ function handlemsg(e) {
 		//2 is unknown (shown as black)
 		if(msgobj.GRN == 2) mycolor = "background-color: #000";
 
-		document.getElementById('HTR').checked = msgobj.RED;
+		document.getElementById('HTR').checked = msgobj.RED || msgobj.GRN;
 		document.getElementById('htrspan').style = mycolor;
 		document.getElementById('FLT').checked = msgobj.FLT;
 		if(document.getElementById('UNT').checked){

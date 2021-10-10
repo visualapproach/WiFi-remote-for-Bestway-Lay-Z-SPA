@@ -297,7 +297,7 @@ void BWC::_handleCommandQ(void) {
             qCommand(SETHEATER, 0, 0, 0);
             qCommand(SETPUMP, 0, _timestamp + 10, 0);
           } else {
-            _currentStateIndex = JUMPTABLE[_currentStateIndex][3];
+            _currentStateIndex = JUMPTABLE[_currentStateIndex][2];
             _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
             _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
             _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
@@ -342,7 +342,7 @@ void BWC::_handleCommandQ(void) {
 
         case SETJETS:
           if(_cio.states[JETSSTATE] == _commandQ[0][1]) break;  //no change required
-          _currentStateIndex = JUMPTABLE[_currentStateIndex][3];
+          _currentStateIndex = JUMPTABLE[_currentStateIndex][1];
           _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
           _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
           _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
