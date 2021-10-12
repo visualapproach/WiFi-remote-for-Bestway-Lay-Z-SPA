@@ -92,7 +92,7 @@ void CIO::updateStates(){
   //extract information from payload to a better format
   states[BUBBLESSTATE] = (from_DSP_buf[COMMANDINDEX] & BUBBLESBITMASK) > 0;
   states[HEATGRNSTATE] = 2;                           //unknowable
-  states[HEATREDSTATE] = (from_DSP_buf[COMMANDINDEX] & HEATBITMASK) > 0;  //
+  states[HEATREDSTATE] = (from_DSP_buf[COMMANDINDEX] & (HEATBITMASK1|HEATBITMASK2)) > 0;  //
   states[HEATSTATE] = 2;                              //unknowable
   states[PUMPSTATE] = (from_DSP_buf[COMMANDINDEX] & PUMPBITMASK) > 0;
   states[JETSSTATE] = (from_DSP_buf[COMMANDINDEX] & JETSBITMASK) > 0;
@@ -102,19 +102,22 @@ void CIO::updateStates(){
 
 void CIO::updatePayload(){
   //alter payload to CIO to reflect user setting (GODMODE)
-  //this is a simple thermostat with no inertia. Add average temperature to compare with *************
+  //this is a simple thermostat with hysteresis. Will heat until target+1 and then cool until target-1
   static uint8_t prevchksum;
-  if(states[HEATSTATE] && states[TEMPERATURE] < states[TARGET]){
-    states[HEATREDSTATE] = true;
+  static uint8_t hysteresis = 0;
+  if(states[HEATSTATE] && ( (states[TEMPERATURE] + hysteresis) <= states[TARGET]) ){
+    states[HEATREDSTATE] = 1; //on
+    hysteresis = 0;
   } else {
-    states[HEATREDSTATE] = false;
+    states[HEATREDSTATE] = 0; //off
+    hysteresis = 1;
   }
 
   //antifreeze
   if(states[TEMPERATURE] < 10) states[HEATREDSTATE] = true;
 
   states[HEATGRNSTATE] = !states[HEATREDSTATE] && states[HEATSTATE];
-  to_CIO_buf[COMMANDINDEX] =  (states[HEATREDSTATE] * HEATBITMASK)    |  
+  to_CIO_buf[COMMANDINDEX] =  (states[HEATREDSTATE] * heatbitmask)    |  
                               (states[JETSSTATE] * JETSBITMASK)       | 
                               (states[PUMPSTATE] * PUMPBITMASK)       |
                               (states[BUBBLESSTATE] * BUBBLESBITMASK) | 
@@ -214,42 +217,106 @@ void BWC::_handleCommandQ(void) {
 	
 		if (_timestamp >= _commandQ[0][2]){
 			switch (_commandQ[0][0]) {
+
 				case SETTARGET:
 					_cio.states[TARGET] = _commandQ[0][1];
           if(_cio.states[TARGET] > 40) _cio.states[TARGET] = 40;  //don't cook anyone
 					break;
+
 				case SETUNIT:
           _cio.states[UNITSTATE] = _commandQ[0][1];
 					break;
+
 				case SETBUBBLES:
-					_cio.states[BUBBLESSTATE] = _commandQ[0][1];
-          _cio.states[PUMPSTATE] = false;
-          _cio.states[HEATSTATE] = false;
+          if(_cio.states[BUBBLESSTATE] == _commandQ[0][1]) break;  //no change required
+          _currentStateIndex = JUMPTABLE[_currentStateIndex][0];
+          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
+          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
+          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
+          _cio.heatbitmask = HEATBITMASK1;
+          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][3]>0;
+          if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
+            qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
+          }
+					// _cio.states[BUBBLESSTATE] = _commandQ[0][1];
+          // if(_commandQ[0][1]){
+          // //bubbles is turned on. Limit H1, H2 and pump according to matrix
+          //   _cio.states[PUMPSTATE] = _cio.states[PUMPSTATE] && (COMB_MATRIX & 1<<1); 
+          //   //lower the heating power (or turn it off if heatbitmask1 == 0)
+          //   _cio.heatbitmask = (HEATBITMASK1 * ((COMB_MATRIX & 1<<8)>0)) | (HEATBITMASK2 * ((COMB_MATRIX & 1<<5)>0));
+          //   //Keep jets state if allowed by the matrix (won't be turned on again automatically)
+          //   _cio.states[JETSSTATE] = _cio.states[JETSSTATE] && (COMB_MATRIX & 1<<2);
+          //   //check and limit H1, H2 and pump if Jets are on
+
+          // } else {
+          //   //bubbles is turned off
+          //   _cio.heatbitmask = HEATBITMASK1 | HEATBITMASK2; //set full heating power
+          // }
 					break;
+
 				case SETHEATER:
-					_cio.states[HEATSTATE] = _commandQ[0][1];
-          if(_commandQ[0][1]) {
-            _cio.states[PUMPSTATE] = true;
-            _cio.states[BUBBLESSTATE] = false;
-            _cio.states[JETSSTATE] = false;
-          } 
+          if(_cio.states[HEATSTATE] == _commandQ[0][1]) break;  //no change required
+          _currentStateIndex = JUMPTABLE[_currentStateIndex][3];
+          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
+          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
+          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
+          _cio.heatbitmask = HEATBITMASK1;
+          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][3]>0;
+          if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
+            qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
+          }
+
+					// _cio.states[HEATSTATE] = _commandQ[0][1];
+          // if(_commandQ[0][1]) {
+          //   if(_commandQ[0][1] == 1) {
+          //     //start first heater element
+          //     _cio.heatbitmask = HEATBITMASK1;
+          //     //after 10 s start the other element
+          //     qCommand(SETHEATER, 2, _timestamp + 10, 0);
+          //     //mandatory ON regardless of the matrix allows it or not
+          //     _cio.states[PUMPSTATE] = true;
+          //     //Keeps states if allowed by the matrix
+          //     _cio.states[BUBBLESSTATE] = _cio.states[BUBBLESSTATE] && (COMB_MATRIX & 1<<8);
+          //     _cio.states[JETSSTATE] = _cio.states[JETSSTATE] && (COMB_MATRIX & 1<<7);
+          //   }
+          //   if(_commandQ[0][1] == 2) {
+          //     _cio.heatbitmask |= HEATBITMASK2;
+          //     //mandatory ON regardless of the matrix allows it or not
+          //     _cio.states[PUMPSTATE] = true;
+          //     //Keeps states if allowed by the matrix
+          //     _cio.states[BUBBLESSTATE] = _cio.states[BUBBLESSTATE] && (COMB_MATRIX & 1<<5);
+          //     _cio.states[JETSSTATE] &= _cio.states[JETSSTATE] && (COMB_MATRIX & 1<<4);
+          //   }
+          // } 
 					break;
+
 				case SETPUMP:
-					
+          if(_cio.states[PUMPSTATE] == _commandQ[0][1]) break;  //no change required
           //let pump run a bit to cool element
           if(_cio.states[HEATSTATE] && !_commandQ[0][1]) {
             qCommand(SETHEATER, 0, 0, 0);
             qCommand(SETPUMP, 0, _timestamp + 10, 0);
           } else {
-            _cio.states[PUMPSTATE] = _commandQ[0][1];
+            _currentStateIndex = JUMPTABLE[_currentStateIndex][2];
+            _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
+            _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
+            _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
+            _cio.heatbitmask = HEATBITMASK1;
+            _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][3]>0;
+            if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
+              qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
+            }
           }
 					break;
+
 				case REBOOTESP:				
 					restartESP = true;
 					break;
+
 				case GETTARGET:
 					
 					break;
+
 				case RESETTIMES:
 					_uptime = 0;
 					_pumptime = 0;
@@ -262,26 +329,45 @@ void BWC::_handleCommandQ(void) {
 					_cost = 0;
 					_saveSettingsNeeded = true;		
 					break;
+
 				case RESETCLTIMER:
 					_cltime = _timestamp;
 					_saveSettingsNeeded = true;
 					break;
+
 				case RESETFTIMER:
 					_ftime = _timestamp;
 					_saveSettingsNeeded = true;
 					break;
+
         case SETJETS:
-          _cio.states[JETSSTATE] = _commandQ[0][1];
-          if(_commandQ[0][1]) {
-            _cio.states[PUMPSTATE] = false;
-            _cio.states[HEATSTATE] = false;
-          } 
+          if(_cio.states[JETSSTATE] == _commandQ[0][1]) break;  //no change required
+          _currentStateIndex = JUMPTABLE[_currentStateIndex][1];
+          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
+          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
+          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
+          _cio.heatbitmask = HEATBITMASK1;
+          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][3]>0;
+          if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
+            qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
+          }
           break;
+
         case SETGODMODE:
           _cio.GODMODE = _commandQ[0][1];
           _cio.states[HEATGRNSTATE] = 0;
           _cio.states[HEATREDSTATE] = 0;
           _cio.states[HEATSTATE] = 0;
+          break;
+        
+        case SETFULLPOWER:
+          if(_commandQ[0][1]){
+            if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
+              _cio.heatbitmask = HEATBITMASK1 | HEATBITMASK2;
+            }
+          }
+          else
+            _cio.heatbitmask = HEATBITMASK1;
           break;
 			}
 			//If interval > 0 then append to commandQ with updated xtime.

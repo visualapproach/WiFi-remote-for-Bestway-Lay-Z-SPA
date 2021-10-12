@@ -25,6 +25,12 @@
 			<label for="finterval">Filterchange Interval</label><br>
 			<input type="checkbox" id="audio" style="background-color:#999">
 			<label for="audio">Audio</label><br>
+			<select name="Startup behaviour" id="restore">
+				<option value="0">Default (off)</option>
+				<option value="1">Last saved states</option>
+			</select>
+			<label for="restore">Start behaviour</label>
+			<br>
 			<button id="save" class="button" style="background-color:#DDD" onclick="saveconfig()">Save config</button>
 		</div>
 		<div style="text-align: left">
@@ -37,7 +43,7 @@
 				<option value="11">Set hydrojets</option>
 				<option value="6">Reboot ESP</option>
 			</select>
-			<label for="cars">Command</label>
+			<label for="commands">Command</label>
 			<br>
 			<input type="text" id="val" value="1" maxlength="3" size="3">
 			<label for="val">Value</label>
@@ -86,6 +92,7 @@ function loadconfig(){
 		  document.getElementById("price").value = msgobj.PRICE.toString();
 		  document.getElementById("finterval").value = msgobj.FINT.toString();
 		  document.getElementById("clinterval").value = msgobj.CLINT.toString();
+		  document.getElementById("restore").value = Number(msgobj.RESTORE);
 		  document.getElementById("audio").checked = msgobj.AUDIO;
 		  var date = new Date(msgobj.REBOOTTIME * 1000);
 		  document.getElementById('reboot').innerHTML = "Last boot: " + date.toLocaleString() + " " + msgobj.REBOOTINFO;
@@ -136,7 +143,8 @@ function saveconfig(){
 		"PRICE":parseFloat(document.getElementById("price").value),
 		"FINT":parseInt(document.getElementById("finterval").value),
 		"CLINT":parseInt(document.getElementById("clinterval").value),
-		"AUDIO":document.getElementById("audio").checked
+		"AUDIO":document.getElementById("audio").checked,
+		"RESTORE":document.getElementById("restore").value
 		}
 	Http.send(JSON.stringify(msgobj));
 	console.log(msgobj);

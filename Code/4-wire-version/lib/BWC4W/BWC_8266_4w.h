@@ -41,6 +41,8 @@ class CIO {
 	bool cio_tx;			  //set to true when data received. Send to webinterface+serial for debugging
 	bool dsp_tx;			  //set to true when data received. Send to webinterface+serial for debugging
 
+	uint8_t heatbitmask;
+
   private:
 
 };
@@ -97,6 +99,7 @@ class BWC {
 	int _latestTarget;
 	int _tickerCount;
 	bool _sliderPrio = true;
+	uint8_t _currentStateIndex = 0;
 
 	void _qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration);
 	void _handleCommandQ(void);

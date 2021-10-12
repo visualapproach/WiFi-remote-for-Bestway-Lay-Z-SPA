@@ -350,12 +350,26 @@ void DSP::playIntro() {
   noTone(_AUDIO_PIN);
 }
 
+//silent beep instead of annoying beeps every time something changes
 void DSP::beep() {
   //int longnote = 125;
-  int shortnote = 63;
-  tone(_AUDIO_PIN, NOTE_C6, shortnote);
+  // int shortnote = 63;
+  // tone(_AUDIO_PIN, NOTE_C6, shortnote);
+  // delay(shortnote);
+  // tone(_AUDIO_PIN, NOTE_C7, shortnote);
+  // delay(shortnote);
+  // noTone(_AUDIO_PIN);
+}
+
+//new beep for button presses only
+void DSP::beep2() {
+  //int longnote = 125;
+  int shortnote = 40;
+  tone(_AUDIO_PIN, NOTE_D6, shortnote);
   delay(shortnote);
-  tone(_AUDIO_PIN, NOTE_C7, shortnote);
+  tone(_AUDIO_PIN, NOTE_D7, shortnote);
+  delay(shortnote);
+  tone(_AUDIO_PIN, NOTE_D8, shortnote);
   delay(shortnote);
   noTone(_AUDIO_PIN);
 }
@@ -475,6 +489,7 @@ void BWC::_handleButtonQ(void) {
 			_cio.button = ButtonCodes[_buttonQ[0][0]];
 		}
 	} else {
+    static uint16_t prevbtn = ButtonCodes[NOBTN];
 		//no queue so let dsp value through
 		uint16_t pressedButton = _dsp.getButton();
     int index = _CodeToButton(pressedButton);
@@ -482,6 +497,9 @@ void BWC::_handleButtonQ(void) {
 		_cio.button = ButtonCodes[index*EnabledButtons[index]];
 		//prioritize manual temp setting by not competing with the set target command
 		if (pressedButton == ButtonCodes[UP] || pressedButton == ButtonCodes[DOWN]) _sliderPrio = false;
+    //make noise
+    if((index*EnabledButtons[index]) & (prevbtn == ButtonCodes[NOBTN])) _dsp.beep2();
+    prevbtn = pressedButton;
 	}
 
 }
@@ -687,6 +705,7 @@ String BWC::getJSONSettings(){
     doc["AUDIO"] = _audio;
     doc["REBOOTINFO"] = ESP.getResetReason();
     doc["REBOOTTIME"] = DateTime.getBootTime();
+    doc["RESTORE"] = _restoreStatesOnStart;
 
     // Serialize JSON to string
     String jsonmsg;
@@ -717,6 +736,7 @@ void BWC::setJSONSettings(String message){
   _finterval = doc["FINT"];
   _clinterval = doc["CLINT"];
   _audio = doc["AUDIO"];
+  _restoreStatesOnStart = doc["RESTORE"];
   saveSettings();
 }
 
@@ -745,10 +765,11 @@ String BWC::getJSONCommandQueue(){
 }
 
 bool BWC::newData(){
-	bool result = _cio.dataAvailable;
+	if(maxeffort) return false;	
+  bool result = _cio.dataAvailable;
 	_cio.dataAvailable = false;
 	if (result && _audio) _dsp.beep();
-	if(maxeffort) return false; else return result;
+  return result;
 }
 
 void BWC::_startNTP() {
@@ -806,6 +827,7 @@ void BWC::_loadSettings(){
   _finterval = doc["FINT"];
   _clinterval = doc["CLINT"];
   _audio = doc["AUDIO"];
+  _restoreStatesOnStart = doc["RESTORE"];
   file.close();
 }
 
@@ -858,6 +880,7 @@ void BWC::saveSettings(){
   doc["CLINT"] = _clinterval;
   doc["AUDIO"] = _audio;
   doc["SAVETIME"] = DateTime.format(DateFormatter::SIMPLE);
+  doc["RESTORE"] = _restoreStatesOnStart;
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
@@ -982,6 +1005,7 @@ void BWC::_saveStates() {
 }
 
 void BWC::_restoreStates() {
+  if(!_restoreStatesOnStart) return;
   File file = LittleFS.open("states.txt", "r");
   if (!file) {
     Serial.println(F("Failed to read states.txt"));

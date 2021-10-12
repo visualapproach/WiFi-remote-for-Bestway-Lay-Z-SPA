@@ -62,6 +62,7 @@ function handlemsg(e) {
 		document.getElementById('AIR').checked = msgobj.AIR;
 		document.getElementById('UNT').checked = msgobj.UNT;
 		document.getElementById('GOD').checked = msgobj.GOD;
+		document.getElementById('JET').checked = msgobj.JET;
 		if(msgobj.UNT){
 			document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
 			document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
@@ -79,7 +80,7 @@ function handlemsg(e) {
 		//2 is unknown (shown as black)
 		if(msgobj.GRN == 2) mycolor = "background-color: #000";
 
-		document.getElementById('HTR').checked = msgobj.RED;
+		document.getElementById('HTR').checked = msgobj.RED || msgobj.GRN;
 		document.getElementById('htrspan').style = mycolor;
 		document.getElementById('FLT').checked = msgobj.FLT;
 		if(document.getElementById('UNT').checked){
