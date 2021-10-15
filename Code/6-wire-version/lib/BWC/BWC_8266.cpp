@@ -400,6 +400,20 @@ void BWC::begin(
 }
 
 void BWC::begin2(){
+  //Initialize variables
+  _cltime = 0;
+  _ftime = 0;
+  _uptime = 0;
+  _pumptime = 0;
+  _heatingtime = 0;
+  _airtime = 0;
+  _jettime = 0;
+  _timezone = 0;
+  _price = 1;
+  _finterval = 30;
+  _clinterval = 14;
+  _audio = true;
+  _restoreStatesOnStart = false;
 	_dsp.textOut(F("   hello   "));
 	_startNTP();
 	LittleFS.begin();
@@ -411,8 +425,6 @@ void BWC::begin2(){
   _dsp.LEDshow();
 	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
 }
-
-
 
 void BWC::loop(){
   //feed the dog
@@ -970,6 +982,11 @@ void BWC::reloadCommandQueue(){
 	  return;
 }
 
+void BWC::reloadSettings(){
+	  _loadSettings();
+	  return;
+}
+
 void BWC::_saveStates() {
   if(maxeffort) {
 	  _saveStatesNeeded = true;
@@ -1094,7 +1111,7 @@ void BWC::_saveRebootInfo(){
 
 void BWC::_updateTimes(){
 	uint32_t now = millis();
-	static uint32_t prevtime;
+	static uint32_t prevtime = now;
 	int elapsedtime = now-prevtime;
 	prevtime = now;
 	if (elapsedtime < 0) return; //millis() rollover every 49 days
