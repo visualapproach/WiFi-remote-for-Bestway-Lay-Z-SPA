@@ -67,7 +67,8 @@ void CIO::loop(void) {
 		states[CHAR1] = (uint8_t)_getChar(payload[DGT1_IDX]);
 		states[CHAR2] = (uint8_t)_getChar(payload[DGT2_IDX]);
 		states[CHAR3] = (uint8_t)_getChar(payload[DGT3_IDX]);
-    states[JETSSTATE] = (payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
+    if(HASJETS) states[JETSSTATE] = (payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
+    else states[JETSSTATE] = 0;
 		//Determine if display is showing target temp or actual temp or anything else.
 		//capture TARGET after UP/DOWN has been pressed...
 		if( ((button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN])) && (prevButton != ButtonCodes[UP]) && (prevButton != ButtonCodes[DOWN]) ) capturePhase = 1;
@@ -400,6 +401,20 @@ void BWC::begin(
 }
 
 void BWC::begin2(){
+  //Initialize variables
+  _cltime = 0;
+  _ftime = 0;
+  _uptime = 0;
+  _pumptime = 0;
+  _heatingtime = 0;
+  _airtime = 0;
+  _jettime = 0;
+  _timezone = 0;
+  _price = 1;
+  _finterval = 30;
+  _clinterval = 14;
+  _audio = true;
+  _restoreStatesOnStart = false;
 	_dsp.textOut(F("   hello   "));
 	_startNTP();
 	LittleFS.begin();
@@ -411,8 +426,6 @@ void BWC::begin2(){
   _dsp.LEDshow();
 	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
 }
-
-
 
 void BWC::loop(){
   //feed the dog
@@ -970,6 +983,11 @@ void BWC::reloadCommandQueue(){
 	  return;
 }
 
+void BWC::reloadSettings(){
+	  _loadSettings();
+	  return;
+}
+
 void BWC::_saveStates() {
   if(maxeffort) {
 	  _saveStatesNeeded = true;
@@ -1094,7 +1112,7 @@ void BWC::_saveRebootInfo(){
 
 void BWC::_updateTimes(){
 	uint32_t now = millis();
-	static uint32_t prevtime;
+	static uint32_t prevtime = now;
 	int elapsedtime = now-prevtime;
 	prevtime = now;
 	if (elapsedtime < 0) return; //millis() rollover every 49 days

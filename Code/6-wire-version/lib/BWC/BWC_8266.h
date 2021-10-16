@@ -115,6 +115,7 @@ class BWC {
 	bool maxeffort = false;
 	String getPressedButton();
 	void reloadCommandQueue();
+	void reloadSettings();
 	String getButtonName();
 
   private:

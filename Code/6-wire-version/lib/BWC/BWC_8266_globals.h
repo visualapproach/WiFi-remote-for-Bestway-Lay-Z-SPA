@@ -44,8 +44,8 @@ const byte F_IDX = 9;
 const byte F_BIT = 3;
 const byte PWR_IDX = 9;
 const byte PWR_BIT = 4;
-const byte HJT_IDX = 9;	//still to be verified. This is an educated guess
-const byte HJT_BIT = 5;	//if correct the web page should show correct states on everything
+const byte HJT_IDX = 9;
+const byte HJT_BIT = 5;
 
 //7-segment codes. MSB always 1
 const uint8_t CHARCODES[] = {

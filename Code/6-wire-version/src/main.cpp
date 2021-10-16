@@ -222,6 +222,9 @@ void handleFileUpload() { // upload a new file to the LittleFS
 	  if(upload.filename == "cmdq.txt"){
         bwc.reloadCommandQueue();
       }
+	  if(upload.filename == "settings.txt"){
+        bwc.reloadSettings();
+      }
     } else {
       server.send(500, "text/plain", "500: couldn't create file");
     }
