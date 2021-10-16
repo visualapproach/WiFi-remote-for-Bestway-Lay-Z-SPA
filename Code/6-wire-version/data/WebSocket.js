@@ -82,8 +82,14 @@ function handlemsg(e) {
 			]
 			document.getElementById('mqtt').innerHTML = "MQTT:" + mqtt_states[msgobj.MQTT + 4];
 			//console.log(msgobj.PressedButton);
-			if(msgobj.HASJETS) document.getElementById('jets').style.visibility = 'visible'
-			else document.getElementById('jets').style.visibility = 'hidden';
+			if(msgobj.HASJETS) {
+				document.getElementById('jets').style.visibility = 'visible';
+				document.getElementById('jettime').style.visibility = 'visible';
+			}
+			else {
+				document.getElementById('jets').style.visibility = 'hidden';
+				document.getElementById('jettime').style.visibility = 'hidden';
+			}
 		//}
 	}
 	
