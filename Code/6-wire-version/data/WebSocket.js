@@ -85,10 +85,12 @@ function handlemsg(e) {
 			if(msgobj.HASJETS) {
 				document.getElementById('jets').style.visibility = 'visible';
 				document.getElementById('jettime').style.visibility = 'visible';
+				document.getElementById('jettitle').style.visibility = 'visible';
 			}
 			else {
 				document.getElementById('jets').style.visibility = 'hidden';
 				document.getElementById('jettime').style.visibility = 'hidden';
+				document.getElementById('jettitle').style.visibility = 'hidden';
 			}
 		//}
 	}
