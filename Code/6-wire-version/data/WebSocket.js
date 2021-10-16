@@ -161,6 +161,7 @@ function handlemsg(e) {
 		document.getElementById('uptime').innerHTML = s2dhms(msgobj.UPTIME);		
 		document.getElementById('airtime').innerHTML = s2dhms(msgobj.AIRTIME);		
 		document.getElementById('filtertime').innerHTML = s2dhms(msgobj.PUMPTIME);		
+		document.getElementById('jettime').innerHTML = s2dhms(msgobj.JETTIME);		
 		document.getElementById('cost').innerHTML = (msgobj.COST).toFixed(2);		
 	}
 	
