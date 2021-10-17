@@ -144,7 +144,8 @@ enum Commands: byte
 	RESETTIMES,
 	RESETCLTIMER,
 	RESETFTIMER,
-	SETJETS
+	SETJETS,
+	SETBRIGHTNESS
 	//play song
 };
 

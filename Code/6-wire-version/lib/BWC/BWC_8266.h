@@ -121,6 +121,7 @@ class BWC {
   private:
     CIO _cio;
     DSP _dsp;
+	uint8_t _dspBrightness;
 	uint32_t _commandQ[MAXCOMMANDS][4];
 	int _qCommandLen = 0;		//length of commandQ
 	uint32_t _buttonQ[MAXBUTTONS][4];

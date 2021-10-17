@@ -402,6 +402,7 @@ void BWC::begin(
 
 void BWC::begin2(){
   //Initialize variables
+  _dspBrightness = 7; //default = max brightness
   _cltime = 0;
   _ftime = 0;
   _uptime = 0;
@@ -443,7 +444,7 @@ void BWC::loop(){
   for(int i = 0; i < 11; i++){
 	  _dsp.payload[i] = _cio.payload[i];
   }
-  _dsp.updateDSP(7); //_cio.brightness);
+  _dsp.updateDSP(_dspBrightness);
   _updateTimes();
  //update cio public payload
   _cio.loop();
@@ -618,6 +619,9 @@ void BWC::_handleCommandQ(void) {
 				case SETJETS:
 					_qButton(HYDROJETS, JETSSTATE, _commandQ[0][1], 5000);
 					break;
+        case SETBRIGHTNESS:
+          _dspBrightness = _commandQ[0][1] & 7;
+          break;
 			}
 			//If interval > 0 then append to commandQ with updated xtime.
 			if(_commandQ[0][3] > 0) qCommand(_commandQ[0][0],_commandQ[0][1],_commandQ[0][2]+_commandQ[0][3],_commandQ[0][3]);

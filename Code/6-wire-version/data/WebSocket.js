@@ -13,6 +13,7 @@ const resettimes = 8;
 const resetcltimer = 9;
 const resetftimer = 10;
 const setjets = 11;
+const setbrightness = 12;
 
 connect();
 
@@ -245,6 +246,25 @@ function tempchange() {
 function sliderchange(){
 	document.getElementById("sliderlabel").innerHTML = document.getElementById('temp').value.toString();
 }
+
+function brtchange(){
+	var v = document.getElementById('brt').value;
+	document.getElementById("dsp").style.color = rgb((v+1) * 255/8, 0, 0);
+	var sendobj = {};
+	sendobj["CMD"] = setbrightness;
+	sendobj["VALUE"] = v;
+	sendobj["XTIME"] = 0;
+	sendobj["INTERVAL"] = 0;
+	connection.send(JSON.stringify(sendobj));
+	console.log(JSON.stringify(sendobj));
+}
+
+function rgb(r, g, b){
+	r = Math.floor(r);
+	g = Math.floor(g);
+	b = Math.floor(b);
+	return ["rgb(",r,",",g,",",b,")"].join("");
+  }
 
 function clTimer() {
 	var sendobj = {};
