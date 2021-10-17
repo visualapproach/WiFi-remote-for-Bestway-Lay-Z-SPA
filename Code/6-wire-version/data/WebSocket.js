@@ -249,7 +249,7 @@ function sliderchange(){
 
 function brtchange(){
 	var v = document.getElementById('brt').value;
-	document.getElementById("dsp").style.color = rgb((v+1) * 255/8, 0, 0);
+	document.getElementById("dsp").style.color = rgb((parseInt(v)+1) * 255/8, 0, 0);
 	var sendobj = {};
 	sendobj["CMD"] = setbrightness;
 	sendobj["VALUE"] = v;
