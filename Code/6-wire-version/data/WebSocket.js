@@ -137,6 +137,8 @@ function handlemsg(e) {
 			document.getElementById('temp').max = 104;
 		}
 		document.getElementById('dsp').innerHTML = "[" + String.fromCharCode(msgobj.CH1,msgobj.CH2,msgobj.CH3)+ "]";
+		document.getElementById('brt').value = msgobj.BRT;
+		document.getElementById("dsp").style.color = rgb((parseInt(msgobj.BRT)+1) * 255/8, 0, 0);
 	}
 	if(msgobj.CONTENT == "TIMES"){
 		var date = new Date(msgobj.TIME * 1000);

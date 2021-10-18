@@ -666,6 +666,7 @@ String BWC::getJSONStates() {
     doc["CH2"] = _cio.states[CHAR2];
     doc["CH3"] = _cio.states[CHAR3];
     doc["HJT"] = _cio.states[JETSSTATE];
+    doc["BRT"] = _dspBrightness;
 
     // Serialize JSON to string
     String jsonmsg;
