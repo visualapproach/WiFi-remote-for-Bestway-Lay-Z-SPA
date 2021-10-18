@@ -697,6 +697,7 @@ String BWC::getJSONTimes() {
     doc["COST"] = _cost;
     doc["FINT"] = _finterval;
     doc["CLINT"] = _clinterval;
+    doc["KWH"] = _cost/_price;
 
     // Serialize JSON to string
     String jsonmsg;
