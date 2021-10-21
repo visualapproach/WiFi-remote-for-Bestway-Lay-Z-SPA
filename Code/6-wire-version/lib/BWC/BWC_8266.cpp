@@ -479,7 +479,7 @@ void BWC::loop(){
   if(dtemp != 0 && (dtemp*dtemp) < 5 && dtime > 300) {
     _tttt = (_cio.states[TARGET]-_tttt_temp1)*dtime/dtemp;
   } else _tttt = (_cio.states[TARGET]-_tttt_temp1)*(1333+_cio.states[UNITSTATE]*1100); //defaults to 1.5 degree C/h
-
+  _tttt -= _timestamp - _tttt_time1;
   ESP.wdtEnable(0);
 }
 
