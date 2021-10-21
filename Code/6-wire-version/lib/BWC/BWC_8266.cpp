@@ -93,8 +93,6 @@ void CIO::loop(void) {
       _prevFLT = states[PUMPSTATE];
     }
 	}
-	//store buttoncodes in global variable, to send to webinterface for debugging
-	//if(button != ButtonCodes[NOBTN]) lastPressedButton = button;
 }
 
 //end of packet
@@ -426,6 +424,11 @@ void BWC::begin2(){
 	if(_audio) _dsp.playIntro();
   _dsp.LEDshow();
 	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
+  _tttt = 0;
+  _tttt_time0 = 0;
+  _tttt_time1 = DateTime.now();
+  _tttt_temp0 = 20;
+  _tttt_temp1 = 20;
 }
 
 void BWC::loop(){
@@ -463,6 +466,19 @@ void BWC::loop(){
   if( (_cio.states[TARGET] != _latestTarget) && (_qButtonLen == 0) && (_latestTarget != 0) && (_sliderPrio) ) qCommand(SETTARGET, _latestTarget, 0, 0);
   //if target temp is unknown, find out.
   if( (_cio.states[TARGET] == 0) && (_qButtonLen == 0) ) qCommand(GETTARGET, (uint32_t)' ', 0, 0);
+
+  //calculate time (in seconds) to target temperature
+  if(_cio.states[TEMPERATURE] != _tttt_temp1){
+    _tttt_temp0 = _tttt_temp1;
+    _tttt_temp1 = _cio.states[TEMPERATURE];
+    _tttt_time0 = _tttt_time1;
+    _tttt_time1 = _timestamp;
+  }
+  int dtemp = _tttt_temp1 - _tttt_temp0;  //usually 1 or -1
+  int dtime = _tttt_time1 - _tttt_time0;
+  if(dtemp != 0 && (dtemp*dtemp) < 5 && dtime > 300) {
+    _tttt = (_cio.states[TARGET]-_tttt_temp1)*dtime/dtemp;
+  } else _tttt = (_cio.states[TARGET]-_tttt_temp1)*(1333+_cio.states[UNITSTATE]*1100); //defaults to 1.5 degree C/h
 
   ESP.wdtEnable(0);
 }
@@ -698,6 +714,7 @@ String BWC::getJSONTimes() {
     doc["FINT"] = _finterval;
     doc["CLINT"] = _clinterval;
     doc["KWH"] = _cost/_price;
+    doc["TTTT"] = _tttt;
 
     // Serialize JSON to string
     String jsonmsg;

@@ -154,6 +154,11 @@ class BWC {
 	int _latestTarget;
 	int _tickerCount;
 	bool _sliderPrio = true;
+	uint32_t _tttt_time0;	//time at previous temperature change
+	uint32_t _tttt_time1;	//time at last temperature change
+	int _tttt_temp0;		//temp after previous change
+	int _tttt_temp1;		//temp after last change
+	int _tttt;				//time to target temperature
 
 	void _qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration);
 	void _handleCommandQ(void);

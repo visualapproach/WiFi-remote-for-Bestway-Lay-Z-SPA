@@ -168,6 +168,7 @@ function handlemsg(e) {
 		document.getElementById('filtertime').innerHTML = s2dhms(msgobj.PUMPTIME);		
 		document.getElementById('jettime').innerHTML = s2dhms(msgobj.JETTIME);		
 		document.getElementById('cost').innerHTML = (msgobj.COST).toFixed(2);		
+		document.getElementById('tttt').innerHTML = (msgobj.TTTT/3600).toFixed(2) + " h";		
 	}
 	
 };
