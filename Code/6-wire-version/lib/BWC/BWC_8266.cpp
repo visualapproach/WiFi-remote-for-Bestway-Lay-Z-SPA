@@ -425,7 +425,7 @@ void BWC::begin2(){
   _dsp.LEDshow();
 	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
   _tttt = 0;
-  _tttt_time0 = 0;
+  _tttt_time0 = DateTime.now()-3600;
   _tttt_time1 = DateTime.now();
   _tttt_temp0 = 20;
   _tttt_temp1 = 20;
@@ -477,8 +477,10 @@ void BWC::loop(){
   int dtemp = _tttt_temp1 - _tttt_temp0;  //usually 1 or -1
   int dtime = _tttt_time1 - _tttt_time0;
   if(dtemp != 0 && (dtemp*dtemp) < 5 && dtime > 300) {
-    _tttt = (_cio.states[TARGET]-_tttt_temp1)*dtime/dtemp;
-  } else _tttt = (_cio.states[TARGET]-_tttt_temp1)*(1333+_cio.states[UNITSTATE]*1100); //defaults to 1.5 degree C/h
+    _tttt = (_cio.states[TARGET]-_tttt_temp1) * dtime/dtemp;
+  } else {
+    _tttt = (_cio.states[TARGET]-_tttt_temp1) * (1333+_cio.states[UNITSTATE]*1100); //defaults to 1.5 degree C/h
+  }
   _tttt -= _timestamp - _tttt_time1;
   ESP.wdtEnable(0);
 }
