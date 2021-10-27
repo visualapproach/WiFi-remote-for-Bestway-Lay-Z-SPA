@@ -285,6 +285,7 @@ void startOTA() { // Start the OTA service
 
   ArduinoOTA.onStart([]() {
     Serial.println(F("OTA Start"));
+    bwc.stop();
   });
   ArduinoOTA.onEnd([]() {
     Serial.println(F("\r\nOTA End"));

@@ -27,6 +27,11 @@ void CIO::begin(int cio_cs_pin, int cio_data_pin, int cio_clk_pin) {
   attachInterrupt(digitalPinToInterrupt(_CLK_PIN), clockpin, CHANGE); //Write on falling edge and read on rising edge
 }
 
+void CIO::stop(){
+  detachInterrupt(digitalPinToInterrupt(_CS_PIN));
+  detachInterrupt(digitalPinToInterrupt(_CLK_PIN));
+}
+
 //match 7 segment pattern to a real digit
 char CIO::_getChar(uint8_t value) {
   for (unsigned int index = 0; index < sizeof(CHARCODES); index++) {
@@ -34,7 +39,7 @@ char CIO::_getChar(uint8_t value) {
       return CHARS[index];
     }
   }
-  return ' ';
+  return '*';
 }
 
 void CIO::loop(void) {
@@ -43,6 +48,18 @@ void CIO::loop(void) {
 		static int capturePhase = 0;
 		static uint32_t buttonReleaseTime;
 		static uint16_t prevButton = ButtonCodes[NOBTN];
+    //require two consecutive messages to be equal before registering
+		static uint8_t prev_checksum = 0;
+    uint8_t checksum = 0;
+    for(int i = 0; i < 11; i++){
+			checksum += payload[i];
+		}
+    if(checksum != prev_checksum) {
+      prev_checksum = checksum;
+      return;
+    }
+    prev_checksum = checksum;
+    
 		//determine if anything changed, so we can update webclients
 		for(int i = 0; i < 11; i++){
 			if (payload[i] != _prevPayload[i]) dataAvailable = true;
@@ -75,7 +92,8 @@ void CIO::loop(void) {
 		//...until 2 seconds after UP/DOWN released
 		if( (button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN]) ) buttonReleaseTime = millis();
 		if(millis()-buttonReleaseTime > 2000) capturePhase = 0;
-		//convert text on display to a value
+		//convert text on display to a value if the chars are recognized
+    if(states[CHAR1] == '*' || states[CHAR2] == '*' || states[CHAR3] == '*') return;
 		String tempstring = String((char)states[CHAR1])+String((char)states[CHAR2])+String((char)states[CHAR3]);
 		uint8_t tmpTemp = tempstring.toInt();
 		//capture only if showing plausible values (not blank screen while blinking)
@@ -391,7 +409,6 @@ void BWC::begin(
 			int dsp_audio_pin
 			)
 			{
-	//pointerToBWC = this;
 	//start CIO and DSP modules
 	_cio.begin(cio_cs_pin, cio_data_pin, cio_clk_pin);
 	_dsp.begin(dsp_cs_pin, dsp_data_pin, dsp_clk_pin, dsp_audio_pin);
@@ -425,10 +442,15 @@ void BWC::begin2(){
   _dsp.LEDshow();
 	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
   _tttt = 0;
+  _tttt_calculated = 0;
   _tttt_time0 = DateTime.now()-3600;
   _tttt_time1 = DateTime.now();
   _tttt_temp0 = 20;
   _tttt_temp1 = 20;
+}
+
+void BWC::stop(){
+  _cio.stop();
 }
 
 void BWC::loop(){
@@ -468,22 +490,48 @@ void BWC::loop(){
   if( (_cio.states[TARGET] == 0) && (_qButtonLen == 0) ) qCommand(GETTARGET, (uint32_t)' ', 0, 0);
 
   //calculate time (in seconds) to target temperature
-  if(_cio.states[TEMPERATURE] != _tttt_temp1){
+  //these variables can change anytime in the interrupts so copy them first
+  uint8_t temperature = _cio.states[TEMPERATURE];
+  uint8_t target = _cio.states[TARGET];
+  //uint8_t unit = _cio.states[UNITSTATE];
+  if(temperature != _tttt_temp1){
     _tttt_temp0 = _tttt_temp1;
-    _tttt_temp1 = _cio.states[TEMPERATURE];
+    _tttt_temp1 = temperature;
     _tttt_time0 = _tttt_time1;
     _tttt_time1 = _timestamp;
+    // String st = "_temp0: " + String(_tttt_temp0) + " _temp1: " + String(_tttt_temp1) + 
+    //             " _time0: " + String(_tttt_time0) + " _time1: " + String(_tttt_time1);
+    // saveDebugInfo(st);
   }
   int dtemp = _tttt_temp1 - _tttt_temp0;  //usually 1 or -1
   int dtime = _tttt_time1 - _tttt_time0;
-  if(dtemp != 0 && (dtemp*dtemp) < 5 && dtime > 300) {
-    _tttt = (_cio.states[TARGET]-_tttt_temp1) * dtime/dtemp;
-  } else {
-    _tttt = (_cio.states[TARGET]-_tttt_temp1) * (1333+_cio.states[UNITSTATE]*1100); //defaults to 1.5 degree C/h
-  }
-  _tttt -= _timestamp - _tttt_time1;
+  if(dtemp != 0 && abs(dtemp)<2) {        //if dtemp is larger we probably have a bad reading
+    _tttt_calculated = (target-_tttt_temp1) * dtime/dtemp;
+  } 
+  _tttt = _tttt_calculated - _timestamp + _tttt_time1;
   ESP.wdtEnable(0);
 }
+
+//save out debug text to file "debug.txt" on littleFS
+void BWC::saveDebugInfo(String s){
+  File file = LittleFS.open("debug.txt", "a");
+  if (!file) {
+    Serial.println(F("Failed to save eventlog.txt"));
+    return;
+  }
+
+  DynamicJsonDocument doc(1024);
+
+  // Set the values in the document
+  doc["timestamp"] = DateTime.format(DateFormatter::SIMPLE);
+  doc["message"] = s;
+  // Serialize JSON to file
+  if (serializeJson(doc, file) == 0) {
+    Serial.println(F("Failed to write debug.txt"));
+  }
+  file.close();  
+}
+
 
 int BWC::_CodeToButton(uint16_t val){
 	for(unsigned int i = 0; i < sizeof(ButtonCodes)/sizeof(uint16_t); i++){
@@ -754,9 +802,6 @@ String BWC::getJSONSettings(){
 }
 
 void BWC::setJSONSettings(String message){
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/v6/assistant to compute the capacity.
   //feed the dog
   ESP.wdtFeed();
   DynamicJsonDocument doc(1024);
@@ -779,9 +824,6 @@ void BWC::setJSONSettings(String message){
 }
 
 String BWC::getJSONCommandQueue(){
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/assistant to compute the capacity.
   //feed the dog
   ESP.wdtFeed();
   DynamicJsonDocument doc(1024);
@@ -812,20 +854,14 @@ bool BWC::newData(){
 
 void BWC::_startNTP() {
   // setup this after wifi connected
-  // you can use custom timezone,server and timeout
-  // DateTime.setTimeZone(-4);
-  //DateTime.setTimeZone(_timezone);
   DateTime.setServer("pool.ntp.org");
-  //   DateTime.begin(15 * 1000);
   DateTime.begin();
   DateTime.begin();
-//  delay(5000);
   int c = 0;
   while (!DateTime.isTimeValid()) {
     Serial.println(F("Failed to get time from server. Trying again."));
     delay(1000);
     //DateTime.setServer("time.cloudflare.com");
-    //DateTime.setTimeZone(_timezone);
     DateTime.begin();
     if (c++ > 5) break;
   }
@@ -838,10 +874,6 @@ void BWC::_loadSettings(){
     Serial.println(F("Failed to load settings.txt"));
     return;
   }
-
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/v6/assistant to compute the capacity.
   DynamicJsonDocument doc(1024);
 
   // Deserialize the JSON document
@@ -891,9 +923,6 @@ void BWC::saveSettings(){
     return;
   }
 
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/assistant to compute the capacity.
   DynamicJsonDocument doc(1024);
 	_heatingtime += _heatingtime_ms/1000;
 	_pumptime += _pumptime_ms/1000;
@@ -925,8 +954,6 @@ void BWC::saveSettings(){
     Serial.println(F("Failed to write json to settings.txt"));
   }
   file.close();
-  //update clock
-  //DateTime.setTimeZone(_timezone);
   DateTime.begin();
   //revive the dog
   ESP.wdtEnable(0);
@@ -940,9 +967,6 @@ void BWC::_loadCommandQueue(){
     return;
   }
 
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/assistant to compute the capacity.
   DynamicJsonDocument doc(1024);
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, file);
@@ -979,9 +1003,6 @@ void BWC::_saveCommandQueue(){
     return;
   }
 
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/assistant to compute the capacity.
   DynamicJsonDocument doc(1024);
 
   // Set the values in the document
@@ -1028,9 +1049,6 @@ void BWC::_saveStates() {
     return;
   }
 
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/assistant to compute the capacity.
   DynamicJsonDocument doc(1024);
 
   // Set the values in the document
@@ -1054,10 +1072,6 @@ void BWC::_restoreStates() {
     Serial.println(F("Failed to read states.txt"));
     return;
   }
-
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/assistant to compute the capacity.
   DynamicJsonDocument doc(1024);
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, file);
@@ -1091,9 +1105,6 @@ void BWC::saveEventlog(){
     return;
   }
 
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/assistant to compute the capacity.
   DynamicJsonDocument doc(1024);
 
   // Set the values in the document
@@ -1119,9 +1130,6 @@ void BWC::_saveRebootInfo(){
     return;
   }
 
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/assistant to compute the capacity.
   DynamicJsonDocument doc(1024);
 
   // Set the values in the document
