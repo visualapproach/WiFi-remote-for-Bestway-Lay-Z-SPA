@@ -45,6 +45,7 @@ char CIO::_getChar(uint8_t value) {
 void CIO::loop(void) {
 	//newdata is true when a data packet has arrived from cio
 	if(newData) {
+		newData = false;
 		static int capturePhase = 0;
 		static uint32_t buttonReleaseTime;
 		static uint16_t prevButton = ButtonCodes[NOBTN];
@@ -66,7 +67,6 @@ void CIO::loop(void) {
 			_prevPayload[i] = payload[i];
 		}
 
-		newData = false;
 		//copy private array to public array
 		for(int i = 0; i < 11; i++){
 			payload[i] = _payload[i];
@@ -516,7 +516,7 @@ void BWC::loop(){
 void BWC::saveDebugInfo(String s){
   File file = LittleFS.open("debug.txt", "a");
   if (!file) {
-    Serial.println(F("Failed to save eventlog.txt"));
+    Serial.println(F("Failed to save debug.txt"));
     return;
   }
 
