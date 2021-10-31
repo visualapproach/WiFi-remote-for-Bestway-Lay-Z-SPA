@@ -74,7 +74,7 @@ enum Buttons: byte
 
 //set to zero to disable display buttons. Order as above.
 //Example: to disable UNIT and TIMER set 1,1,0,1,0,1,1,1,1,1,1
-const uint8_t EnabledButtons[] = {1,1,0,1,0,1,1,1,1,1,1};
+const uint8_t EnabledButtons[] = {1,1,1,1,1,1,1,1,1,1,1};
 const String ButtonNames[] = {
 	"NOBTN",
 	"LOCK",
