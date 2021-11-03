@@ -37,7 +37,7 @@ void setup() {
 	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
   startMQTT();
   updateMqttTimer.attach(600, sendMQTTsetFlag); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
-  updateMqttTimer2.attach(0.5, sendMQTTsetFlag2); //update mqtt twice every second. Mqtt will also be updated on every state change
+  //updateMqttTimer2.attach(0.5, sendMQTTsetFlag2); //update mqtt twice every second. Mqtt will also be updated on every state change
   updateWSTimer.attach(2.0, sendWSsetFlag);     //update webpage every 2 secs plus state changes
   bwc.print(WiFi.localIP().toString());
 }
@@ -65,12 +65,12 @@ void loop() {
     sendMQTTFlag = false;
     sendMessage(0);//MQTT
   }
-  if(enableMQTT && sendMQTTFlag2){
-    sendMQTTFlag2 = false;
+  if(enableMQTT){
+    //sendMQTTFlag2 = false;
     String msg = bwc.getButtonName();
     //publish pretty button name if display button is pressed (or NOBTN if released)
     if(!msg.equals(prevButtonName)) {
-      MQTTclient.publish((String(base_mqtt_topic) + "/button").c_str(), String(msg).c_str(), false);
+      MQTTclient.publish((String(base_mqtt_topic) + "/button").c_str(), String(msg).c_str(), true);
       prevButtonName = msg;
     }
   }
@@ -285,6 +285,7 @@ void startOTA() { // Start the OTA service
 
   ArduinoOTA.onStart([]() {
     Serial.println(F("OTA Start"));
+    bwc.stop();
   });
   ArduinoOTA.onEnd([]() {
     Serial.println(F("\r\nOTA End"));

@@ -27,6 +27,7 @@ class CIO {
     void eopHandler(void);
     void packetHandler(void);
     void clkHandler(void);
+	void stop(void);
 
     volatile bool newData = false;
 	bool dataAvailable = false;
@@ -117,10 +118,13 @@ class BWC {
 	void reloadCommandQueue();
 	void reloadSettings();
 	String getButtonName();
+	void saveDebugInfo(String s);
+	void stop(void);
 
   private:
     CIO _cio;
     DSP _dsp;
+	uint8_t _dspBrightness;
 	uint32_t _commandQ[MAXCOMMANDS][4];
 	int _qCommandLen = 0;		//length of commandQ
 	uint32_t _buttonQ[MAXBUTTONS][4];
@@ -153,6 +157,12 @@ class BWC {
 	int _latestTarget;
 	int _tickerCount;
 	bool _sliderPrio = true;
+	uint32_t _tttt_time0;	//time at previous temperature change
+	uint32_t _tttt_time1;	//time at last temperature change
+	int _tttt_temp0;		//temp after previous change
+	int _tttt_temp1;		//temp after last change
+	int _tttt;				//time to target temperature after subtracting running time since last calculation
+	int _tttt_calculated;	//constant between calculations
 
 	void _qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration);
 	void _handleCommandQ(void);
