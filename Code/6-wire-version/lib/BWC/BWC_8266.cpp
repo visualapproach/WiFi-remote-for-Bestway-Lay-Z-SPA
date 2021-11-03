@@ -53,7 +53,7 @@ void CIO::loop(void) {
 		static uint8_t prev_checksum = 0;
     uint8_t checksum = 0;
     for(int i = 0; i < 11; i++){
-			checksum += payload[i];
+			checksum += _payload[i];
 		}
     if(checksum != prev_checksum) {
       prev_checksum = checksum;
@@ -61,16 +61,17 @@ void CIO::loop(void) {
     }
     prev_checksum = checksum;
     
-		//determine if anything changed, so we can update webclients
+		//copy private array to public array
+		for(int i = 0; i < 11; i++){
+			payload[i] = _payload[i];
+		}
+
+	  //determine if anything changed, so we can update webclients
 		for(int i = 0; i < 11; i++){
 			if (payload[i] != _prevPayload[i]) dataAvailable = true;
 			_prevPayload[i] = payload[i];
 		}
 
-		//copy private array to public array
-		for(int i = 0; i < 11; i++){
-			payload[i] = _payload[i];
-		}
 		brightness = _brightness & 7; //extract only the brightness bits (0-7)
 		//extract information from payload to a better format
 		states[LOCKEDSTATE] = (payload[LCK_IDX] & (1 << LCK_BIT)) > 0;
@@ -499,9 +500,6 @@ void BWC::loop(){
     _tttt_temp1 = temperature;
     _tttt_time0 = _tttt_time1;
     _tttt_time1 = _timestamp;
-    // String st = "_temp0: " + String(_tttt_temp0) + " _temp1: " + String(_tttt_temp1) + 
-    //             " _time0: " + String(_tttt_time0) + " _time1: " + String(_tttt_time1);
-    // saveDebugInfo(st);
   }
   int dtemp = _tttt_temp1 - _tttt_temp0;  //usually 1 or -1
   int dtime = _tttt_time1 - _tttt_time0;
@@ -756,7 +754,7 @@ String BWC::getJSONTimes() {
     doc["CLTIME"] = _cltime;
     doc["FTIME"] = _ftime;
     doc["UPTIME"] = _uptime + _uptime_ms/1000;
-    doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;
+    doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;    
     doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
     doc["AIRTIME"] = _airtime + _airtime_ms/1000;
     doc["JETTIME"] = _jettime + _jettime_ms/1000;
@@ -1147,6 +1145,7 @@ void BWC::_updateTimes(){
 	uint32_t now = millis();
 	static uint32_t prevtime = now;
 	int elapsedtime = now-prevtime;
+
 	prevtime = now;
 	if (elapsedtime < 0) return; //millis() rollover every 49 days
 	if(_cio.states[HEATREDSTATE]){
