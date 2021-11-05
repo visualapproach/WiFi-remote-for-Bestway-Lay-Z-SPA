@@ -36,7 +36,9 @@ see build instructions for more info.
 
 ### Installation:<br>
 
-Link to my version of the PCB (use with LLC below): https://oshwlab.com/Visualapproach/bestway-wifi-controller <br>
+Link to my version of the PCB (use with LLC below): <br>
+https://oshwlab.com/Visualapproach/bestway-wifi-controller <br>
+https://easyeda.com/Visualapproach/bestway-wifi-controller <br>
 <img src="./pics/txs0108e.jpg" width="300"><br>
 Open the project in editor and download gerber files. Upload them to a PCB factory like JLCPCB.com. <br>
 Technical details in <a href="./bwc_docs.xlsx">Documentation</a> <br>
