@@ -157,7 +157,7 @@ const uint8_t POWERBITMASK = 	B10000000;	//128
 
 #ifdef NO54123
 //WARNING: THIS DEVICE HAS DIFFERENT PINOUTS!!! CHECK BEFORE USING
-
+//#NO54112 - @jenswalit: "this is the Version Vegas 4Pin Pump 1->5V+ 2->Data 3->Data 4->5V-"  
 //what row in allowedstates to go to when pressing Bubbles, Jets, Pump, Heat (columns in that order)
 //Example: We are in state zero (first row). If we press Bubbles (first column) then there is a 6
 //meaning current state (row) is now 6. According to ALLOWEDSTATES table, we turn on Bubbles and keep
