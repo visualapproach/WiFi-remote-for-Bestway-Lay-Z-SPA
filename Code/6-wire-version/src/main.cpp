@@ -171,6 +171,10 @@ String getContentType(String filename) { // determine the filetype of a given fi
 }
 
 bool handleFileRead(String path) { // send the right file to the client (if it exists)
+  if (!server.authenticate(www_username, www_password)) {
+    server.requestAuthentication();
+  }
+
   Serial.println("handleFileRead: " + path);
   if (path.endsWith("/")) path += F("index.html");          // If a folder is requested, send the index file
   String contentType = getContentType(path);             // Get the MIME type
