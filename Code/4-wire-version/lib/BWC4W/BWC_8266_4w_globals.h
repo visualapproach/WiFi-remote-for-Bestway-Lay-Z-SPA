@@ -50,6 +50,14 @@ enum Commands: byte
 	SETFULLPOWER
 };
 
+enum ToggleButtons: byte
+{
+	BUBBLETOGGLE,
+	JETSTOGGLE,
+	PUMPTOGGLE,
+	HEATTOGGLE
+}
+
 const int MAXCOMMANDS = 11;
 const int MAXBUTTONS = 33;
 

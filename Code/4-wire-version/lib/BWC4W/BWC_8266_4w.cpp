@@ -91,9 +91,9 @@ void CIO::updateStates(){
   static uint8_t prevchksum;
   //extract information from payload to a better format
   states[BUBBLESSTATE] = (from_DSP_buf[COMMANDINDEX] & BUBBLESBITMASK) > 0;
-  states[HEATGRNSTATE] = 2;                           //unknowable
-  states[HEATREDSTATE] = (from_DSP_buf[COMMANDINDEX] & (HEATBITMASK1|HEATBITMASK2)) > 0;  //
-  states[HEATSTATE] = 2;                              //unknowable
+  states[HEATGRNSTATE] = 2;                           //unknowable in antigodmode
+  states[HEATREDSTATE] = (from_DSP_buf[COMMANDINDEX] & (HEATBITMASK1|HEATBITMASK2)) > 0;
+  states[HEATSTATE] = 2;                              //unknowable in antigodmode
   states[PUMPSTATE] = (from_DSP_buf[COMMANDINDEX] & PUMPBITMASK) > 0;
   states[JETSSTATE] = (from_DSP_buf[COMMANDINDEX] & JETSBITMASK) > 0;
   if(from_DSP_buf[DSP_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
@@ -114,7 +114,7 @@ void CIO::updatePayload(){
   }
 
   //antifreeze
-  if(states[TEMPERATURE] < 10) states[HEATREDSTATE] = true;
+  if(states[TEMPERATURE] < 10) states[HEATREDSTATE] = 1;
 
   states[HEATGRNSTATE] = !states[HEATREDSTATE] && states[HEATSTATE];
   to_CIO_buf[COMMANDINDEX] =  (states[HEATREDSTATE] * heatbitmask)    |  
@@ -229,12 +229,12 @@ void BWC::_handleCommandQ(void) {
 
 				case SETBUBBLES:
           if(_cio.states[BUBBLESSTATE] == _commandQ[0][1]) break;  //no change required
-          _currentStateIndex = JUMPTABLE[_currentStateIndex][0];
-          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
-          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
-          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
+          _currentStateIndex = JUMPTABLE[_currentStateIndex][BUBBLETOGGLE];
+          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][BUBBLETOGGLE];
+          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][JETSTOGGLE];
+          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][PUMPTOGGLE];
           _cio.heatbitmask = HEATBITMASK1;
-          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][3]>0;
+          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE]>0;
           if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
             qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
           }
@@ -256,13 +256,13 @@ void BWC::_handleCommandQ(void) {
 
 				case SETHEATER:
           if(_cio.states[HEATSTATE] == _commandQ[0][1]) break;  //no change required
-          _currentStateIndex = JUMPTABLE[_currentStateIndex][3];
-          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
-          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
-          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
+          _currentStateIndex = JUMPTABLE[_currentStateIndex][HEATTOGGLE];
+          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][BUBBLETOGGLE];
+          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][JETSTOGGLE];
+          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][PUMPTOGGLE];
           _cio.heatbitmask = HEATBITMASK1;
-          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][3]>0;
-          if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
+          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE]>0;
+          if(ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE] == 2) {
             qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
           }
 
@@ -297,13 +297,13 @@ void BWC::_handleCommandQ(void) {
             qCommand(SETHEATER, 0, 0, 0);
             qCommand(SETPUMP, 0, _timestamp + 10, 0);
           } else {
-            _currentStateIndex = JUMPTABLE[_currentStateIndex][2];
-            _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
-            _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
-            _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
+            _currentStateIndex = JUMPTABLE[_currentStateIndex][PUMPTOGGLE];
+            _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][BUBBLETOGGLE];
+            _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][JETSTOGGLE];
+            _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][PUMPTOGGLE];
             _cio.heatbitmask = HEATBITMASK1;
-            _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][3]>0;
-            if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
+            _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE]>0;
+            if(ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE] == 2) {
               qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
             }
           }
@@ -342,13 +342,13 @@ void BWC::_handleCommandQ(void) {
 
         case SETJETS:
           if(_cio.states[JETSSTATE] == _commandQ[0][1]) break;  //no change required
-          _currentStateIndex = JUMPTABLE[_currentStateIndex][1];
-          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
-          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
-          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
+          _currentStateIndex = JUMPTABLE[_currentStateIndex][JETSTOGGLE];
+          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][BUBBLETOGGLE];
+          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][JETSTOGGLE];
+          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][PUMPTOGGLE];
           _cio.heatbitmask = HEATBITMASK1;
-          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][3]>0;
-          if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
+          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE]>0;
+          if(ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE] == 2) {
             qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
           }
           break;
@@ -362,7 +362,7 @@ void BWC::_handleCommandQ(void) {
         
         case SETFULLPOWER:
           if(_commandQ[0][1]){
-            if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
+            if(ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE] == 2) {
               _cio.heatbitmask = HEATBITMASK1 | HEATBITMASK2;
             }
           }
