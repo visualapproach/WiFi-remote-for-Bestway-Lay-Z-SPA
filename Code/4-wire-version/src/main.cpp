@@ -20,8 +20,8 @@ void setup() {
   pinMode(myoutputpin, OUTPUT);
   digitalWrite(myoutputpin, LOW);
   Serial.begin(115200);
-  bwc.begin(); //no params = default pins
   startWiFi();
+  bwc.begin(); //no params = default pins
   startOTA();
   startServer();
   startWebSocket();
@@ -36,6 +36,7 @@ void setup() {
 }
 
 void loop() {
+  bwc.loop();                   // Fiddle with the pump computer
   webSocket.loop();             // constantly check for websocket events
   server.handleClient();        // run the server
   ArduinoOTA.handle();          // listen for OTA events
@@ -43,7 +44,6 @@ void loop() {
   if(enableMQTT){
     if (!MQTTclient.loop()) MQTT_Connect();           // Do MQTT magic
   }
-  bwc.loop();                   // Fiddle with the pump computer
   if (bwc.newData()) {
     sendMessage(1);//ws
     if(enableMQTT) sendMessage(0);//mqtt
@@ -120,16 +120,16 @@ void sendMessage(int msgtype) {
   if (msgtype == 1) {
     webSocket.broadcastTXT(jsonmsg);
   }
-  //  if you want up-times etc sent to mqtt:
-  //  if (msgtype == 0) {
-  //    if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
-  //    {
-  //      //Serial.println(F("MQTT published"));
-  //    }
-  //    else
-  //    {
-  //      //Serial.println(F("MQTT not published"));
-  //    }
+  if (msgtype == 0) {
+    if (MQTTclient.publish((String(base_mqtt_topic) + "/times").c_str(), String(jsonmsg).c_str(), true))
+    {
+      //Serial.println(F("MQTT published"));
+    }
+    else
+    {
+      //Serial.println(F("MQTT not published"));
+    }
+  }
   String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",")+
     String("\"MQTT\":") + String(MQTTclient.state()) + String(",") +
     String("\"CIOTX\":") + String(bwc.cio_tx) + String(",") +

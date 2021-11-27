@@ -84,7 +84,7 @@ void CIO::loop(void) {
     }
     cio_serial.write(to_CIO_buf, PAYLOADSIZE);
     dsp_tx = true;  //show the user that this line works (appears to work)
-  }    
+  }
 }
 
 void CIO::updateStates(){
@@ -322,11 +322,14 @@ void BWC::_handleCommandQ(void) {
 					_pumptime = 0;
 					_heatingtime = 0;
 					_airtime = 0;
+          _jettime = 0;
 					_uptime_ms = 0;
 					_pumptime_ms = 0;
 					_heatingtime_ms = 0;
 					_airtime_ms = 0;
+          _jettime_ms = 0;
 					_cost = 0;
+          _kwh = 0;
 					_saveSettingsNeeded = true;		
 					break;
 
@@ -440,6 +443,8 @@ String BWC::getJSONTimes() {
     doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;
     doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
     doc["AIRTIME"] = _airtime + _airtime_ms/1000;
+    doc["JETTIME"] = _jettime + _jettime_ms/1000;
+    doc["KWH"] = _kwh;
     doc["COST"] = _cost;
     doc["FINT"] = _finterval;
     doc["CLINT"] = _clinterval;
@@ -548,9 +553,9 @@ void BWC::_startNTP() {
     //DateTime.setServer("time.cloudflare.com");
     //DateTime.setTimeZone(_timezone);
     DateTime.begin();
-    if (c++ > 5) break;
+    if (c++ > 3) break;
   }
-}	
+}
 
 void BWC::_loadSettings(){
   File file = LittleFS.open("settings.txt", "r");
@@ -579,6 +584,7 @@ void BWC::_loadSettings(){
   _pumptime = doc["PUMPTIME"];
   _heatingtime = doc["HEATINGTIME"];
   _airtime = doc["AIRTIME"];
+  _jettime = doc["JETTIME"];
   _timezone = doc["TIMEZONE"];
   _price = doc["PRICE"];
   _finterval = doc["FINT"];
@@ -612,6 +618,7 @@ void BWC::saveSettings(){
 	_heatingtime += _heatingtime_ms/1000;
 	_pumptime += _pumptime_ms/1000;
 	_airtime += _airtime_ms/1000;
+  _jettime += _jettime_ms/1000;
 	_uptime += _uptime_ms/1000;
 	_heatingtime_ms = 0;
 	_pumptime_ms = 0;
@@ -624,6 +631,7 @@ void BWC::saveSettings(){
   doc["PUMPTIME"] = _pumptime;
   doc["HEATINGTIME"] = _heatingtime;
   doc["AIRTIME"] = _airtime;
+  doc["JETTIME"] = _jettime;
   doc["TIMEZONE"] = _timezone;
   doc["PRICE"] = _price;
   doc["FINT"] = _finterval;
@@ -779,20 +787,31 @@ void BWC::_updateTimes(){
 	if(_cio.states[BUBBLESSTATE]){
 		_airtime_ms += elapsedtime;
 	}
+	if(_cio.states[JETSSTATE]){
+		_jettime_ms += elapsedtime;
+	}
 	_uptime_ms += elapsedtime;
 	
 	if(_uptime_ms > 1000000000){
 		_heatingtime += _heatingtime_ms/1000;
 		_pumptime += _pumptime_ms/1000;
 		_airtime += _airtime_ms/1000;
+    _jettime += _jettime_ms/1000;
 		_uptime += _uptime_ms/1000;
 		_heatingtime_ms = 0;
 		_pumptime_ms = 0;
 		_airtime_ms = 0;
+    _jettime_ms = 0;
 		_uptime_ms = 0;
 	}
 	
-	_cost = _price*((_heatingtime+_heatingtime_ms/1000)*1900+(_pumptime+_pumptime_ms/1000)*40+(_airtime+_airtime_ms/1000)*800+(_uptime+_uptime_ms/1000)*2)/3600000.0;
+  _kwh =  HEATER_WATTS * (_heatingtime+_heatingtime_ms/1000) +
+          PUMP_WATTS * (_pumptime+_pumptime_ms/1000) +
+          BUBBLES_WATTS * (_airtime+_airtime_ms/1000) +
+          JETS_WATTS * (_jettime+_jettime_ms/1000) +
+          IDLE_WATTS * (_uptime+_uptime_ms/1000) / 
+          3600000.0;
+	_cost = _price*_kwh;
 }
 
 void BWC::print(String txt){

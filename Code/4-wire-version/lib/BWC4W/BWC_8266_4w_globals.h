@@ -56,10 +56,16 @@ enum ToggleButtons: byte
 	JETSTOGGLE,
 	PUMPTOGGLE,
 	HEATTOGGLE
-}
+};
 
 const int MAXCOMMANDS = 11;
 const int MAXBUTTONS = 33;
+
+const int IDLE_WATTS = 2;
+const int PUMP_WATTS = 40;
+const int HEATER_WATTS = 1900;
+const int BUBBLES_WATTS = 800;
+const int JETS_WATTS = 800;
 
 #ifdef NO54173
 /*combination matrix
