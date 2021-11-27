@@ -177,17 +177,15 @@ const uint8_t POWERBITMASK = 	B10000000;	//128
 //meaning current state (row) is now 6. According to ALLOWEDSTATES table, we turn on Bubbles and keep
 //everything else off. (1,0,0,0)
 const uint8_t JUMPTABLE[][4] = {
-	{1,2,3,4},
-	{0,2,3,4},
-	{1,0,3,4},
-	{1,2,0,4},
-	{1,2,0,3}
+	{1,0,2,3},
+	{0,1,2,3},
+	{1,2,0,3},
+	{1,3,0,2}
 };
 //Bubbles, Jets, Pump, Heat
 const uint8_t ALLOWEDSTATES[][4] = {
 	{0,0,0,0},
 	{1,0,0,0},
-	{0,1,0,0},
 	{0,0,1,0},
 	{0,0,1,2}	//the "2" means both heater elements
 };
