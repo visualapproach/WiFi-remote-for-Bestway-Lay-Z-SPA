@@ -142,8 +142,19 @@ void BWC::begin(void){
 	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
   cio_tx = false;
   dsp_tx = false;	
+  _cltime = 0;
+  _ftime = 0;
+  _uptime = 0;
+  _pumptime = 0;
+  _heatingtime = 0;
+  _airtime = 0;
+  _jettime = 0;
+  _timezone = 0;
+  _price = 1;
+  _finterval = 30;
+  _clinterval = 14;
+  _audio = 1;
 }
-
 
 void BWC::loop(){
   //feed the dog
