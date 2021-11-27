@@ -31,7 +31,7 @@ see build instructions for more info.
 <img src="./pics/device.jpg" width="300">
 <img src="./pics/pump.jpg" width="300"><br>
 <br>My schematics<br>
-<img src="./pics/schematic2.png"><br>
+<img src="./pics/schematic.png"><br>
 
 
 ### Installation:<br>
@@ -45,6 +45,7 @@ Technical details in <a href="./bwc_docs.xlsx">Documentation</a> <br>
 Build instructions and more: <a href="./Build-instructions-Bestway-WiFi-remote.pdf">Instructions</a> <br><br>
 
 Alternative PCB: Eric's PCB (use with LLC below, choose 1x8 ch or 2x4 ch according to the PCB): https://easyeda.com/Naesstrom/lay-z-spa_remote <br>
+Replace the resistors with wires. They cause more problems than they solve.<br>
 <img src="./pics/LLC_eric.jpg" width="300"><br>
 
 
