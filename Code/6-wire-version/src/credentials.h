@@ -16,3 +16,14 @@ String mqtt_client_id = LEGACY_NAME;   // Used for unique MQTT Client ID
 String base_mqtt_topic = LEGACY_NAME;  // Start of the MQTT Topic name used by this device
 bool enableMQTT = false;
 
+/*
+ * WiFi static IPv4 configuration
+ */
+/** set or get the state of the WiFi static IP setup */
+bool enableStaticIp4 = false;
+/** set or get the IP address */
+IPAddress ip4Address(192,168,0,30);
+/** set or get the gateway address */
+IPAddress ip4Gateway(192,168,0,1);
+/** set or get the subnet mask */
+IPAddress ip4Subnet(255,255,255,0);
