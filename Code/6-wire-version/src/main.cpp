@@ -173,9 +173,14 @@ String getContentType(String filename) { // determine the filetype of a given fi
 bool handleFileRead(String path) { // send the right file to the client (if it exists)
   Serial.println("handleFileRead: " + path);
   if (path.endsWith("/")) path += F("index.html");          // If a folder is requested, send the index file
+  // deny reading credentials
+  if (path.equalsIgnoreCase("/mqtt.txt") || path.equalsIgnoreCase("/wifi.txt"))
+  {
+    Serial.println(String("\tFile reading denied (credentials)."));
+    return false;
+  }
   String contentType = getContentType(path);             // Get the MIME type
   String pathWithGz = path + ".gz";
-  if (path.equalsIgnoreCase("/mqtt.txt")) return false; //don't broadcast credentials
   if (LittleFS.exists(pathWithGz) || LittleFS.exists(path)) { // If the file exists, either as a compressed archive, or normal
     if (LittleFS.exists(pathWithGz))                         // If there's a compressed version available
       path += ".gz";                                         // Use the compressed version
@@ -308,6 +313,7 @@ void startOTA() { // Start the OTA service
 void startWiFi() { // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
   WiFi.mode(WIFI_STA);
   //wm.setConfigPortalBlocking(false);
+  if (enableStaticIp4) wm.setSTAStaticIPConfig(ip4Address, ip4Gateway, ip4Subnet);
   wm.autoConnect("AutoPortal");
   
   Serial.println(F("Connecting"));
@@ -382,6 +388,9 @@ void handleGetMQTT() { // reply with json document
     //doc["mqtt_password"] = myMqttPassword;
     doc["mqtt_username"] = "enter username";  //do not send credentials to webpage
     doc["mqtt_password"] = "enter password";
+    doc["mqtt_password"] = myMqttPassword;
+    //doc["mqtt_username"] = "enter username";  //do not send credentials to webpage
+    //doc["mqtt_password"] = "enter password";
     doc["mqtt_client_id"] = mqtt_client_id;
     doc["base_mqtt_topic"] = base_mqtt_topic;
     doc["enableMQTT"] = enableMQTT;
