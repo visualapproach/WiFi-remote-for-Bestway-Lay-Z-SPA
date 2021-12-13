@@ -50,8 +50,22 @@ enum Commands: byte
 	SETFULLPOWER
 };
 
+enum ToggleButtons: byte
+{
+	BUBBLETOGGLE,
+	JETSTOGGLE,
+	PUMPTOGGLE,
+	HEATTOGGLE
+};
+
 const int MAXCOMMANDS = 11;
 const int MAXBUTTONS = 33;
+
+const int IDLE_WATTS = 2;
+const int PUMP_WATTS = 40;
+const int HEATER_WATTS = 1900;
+const int BUBBLES_WATTS = 800;
+const int JETS_WATTS = 800;
 
 #ifdef NO54173
 /*combination matrix
@@ -157,23 +171,21 @@ const uint8_t POWERBITMASK = 	B10000000;	//128
 
 #ifdef NO54123
 //WARNING: THIS DEVICE HAS DIFFERENT PINOUTS!!! CHECK BEFORE USING
-
+//#NO54112 - @jenswalit: "this is the Version Vegas 4Pin Pump 1->5V+ 2->Data 3->Data 4->5V-"  
 //what row in allowedstates to go to when pressing Bubbles, Jets, Pump, Heat (columns in that order)
 //Example: We are in state zero (first row). If we press Bubbles (first column) then there is a 6
 //meaning current state (row) is now 6. According to ALLOWEDSTATES table, we turn on Bubbles and keep
 //everything else off. (1,0,0,0)
 const uint8_t JUMPTABLE[][4] = {
-	{1,2,3,4},
-	{0,2,3,4},
-	{1,0,3,4},
-	{1,2,0,4},
-	{1,2,0,3}
+	{1,0,2,3},
+	{0,1,2,3},
+	{1,2,0,3},
+	{1,3,0,2}
 };
 //Bubbles, Jets, Pump, Heat
 const uint8_t ALLOWEDSTATES[][4] = {
 	{0,0,0,0},
 	{1,0,0,0},
-	{0,1,0,0},
 	{0,0,1,0},
 	{0,0,1,2}	//the "2" means both heater elements
 };

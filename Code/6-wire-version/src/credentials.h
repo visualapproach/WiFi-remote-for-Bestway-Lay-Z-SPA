@@ -6,6 +6,8 @@
 //OTA credentials
 const char *OTAName = LEGACY_NAME;          // A name and a password for the OTA service
 const char *OTAPassword = "esp8266";        //myOTApassword;
+const char *www_username = "admin";
+const char *www_password = "esp8266";
 
 //MQTT Credentials
 IPAddress myMqttIP(192,168,4,126);

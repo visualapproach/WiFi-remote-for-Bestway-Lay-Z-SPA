@@ -84,16 +84,16 @@ void CIO::loop(void) {
     }
     cio_serial.write(to_CIO_buf, PAYLOADSIZE);
     dsp_tx = true;  //show the user that this line works (appears to work)
-  }    
+  }
 }
 
 void CIO::updateStates(){
   static uint8_t prevchksum;
   //extract information from payload to a better format
   states[BUBBLESSTATE] = (from_DSP_buf[COMMANDINDEX] & BUBBLESBITMASK) > 0;
-  states[HEATGRNSTATE] = 2;                           //unknowable
-  states[HEATREDSTATE] = (from_DSP_buf[COMMANDINDEX] & (HEATBITMASK1|HEATBITMASK2)) > 0;  //
-  states[HEATSTATE] = 2;                              //unknowable
+  states[HEATGRNSTATE] = 2;                           //unknowable in antigodmode
+  states[HEATREDSTATE] = (from_DSP_buf[COMMANDINDEX] & (HEATBITMASK1|HEATBITMASK2)) > 0;
+  states[HEATSTATE] = 2;                              //unknowable in antigodmode
   states[PUMPSTATE] = (from_DSP_buf[COMMANDINDEX] & PUMPBITMASK) > 0;
   states[JETSSTATE] = (from_DSP_buf[COMMANDINDEX] & JETSBITMASK) > 0;
   if(from_DSP_buf[DSP_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
@@ -114,7 +114,7 @@ void CIO::updatePayload(){
   }
 
   //antifreeze
-  if(states[TEMPERATURE] < 10) states[HEATREDSTATE] = true;
+  if(states[TEMPERATURE] < 10) states[HEATREDSTATE] = 1;
 
   states[HEATGRNSTATE] = !states[HEATREDSTATE] && states[HEATSTATE];
   to_CIO_buf[COMMANDINDEX] =  (states[HEATREDSTATE] * heatbitmask)    |  
@@ -142,8 +142,19 @@ void BWC::begin(void){
 	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
   cio_tx = false;
   dsp_tx = false;	
+  _cltime = 0;
+  _ftime = 0;
+  _uptime = 0;
+  _pumptime = 0;
+  _heatingtime = 0;
+  _airtime = 0;
+  _jettime = 0;
+  _timezone = 0;
+  _price = 1;
+  _finterval = 30;
+  _clinterval = 14;
+  _audio = 1;
 }
-
 
 void BWC::loop(){
   //feed the dog
@@ -229,12 +240,12 @@ void BWC::_handleCommandQ(void) {
 
 				case SETBUBBLES:
           if(_cio.states[BUBBLESSTATE] == _commandQ[0][1]) break;  //no change required
-          _currentStateIndex = JUMPTABLE[_currentStateIndex][0];
-          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
-          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
-          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
+          _currentStateIndex = JUMPTABLE[_currentStateIndex][BUBBLETOGGLE];
+          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][BUBBLETOGGLE];
+          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][JETSTOGGLE];
+          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][PUMPTOGGLE];
           _cio.heatbitmask = HEATBITMASK1;
-          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][3]>0;
+          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE]>0;
           if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
             qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
           }
@@ -256,13 +267,13 @@ void BWC::_handleCommandQ(void) {
 
 				case SETHEATER:
           if(_cio.states[HEATSTATE] == _commandQ[0][1]) break;  //no change required
-          _currentStateIndex = JUMPTABLE[_currentStateIndex][3];
-          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
-          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
-          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
+          _currentStateIndex = JUMPTABLE[_currentStateIndex][HEATTOGGLE];
+          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][BUBBLETOGGLE];
+          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][JETSTOGGLE];
+          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][PUMPTOGGLE];
           _cio.heatbitmask = HEATBITMASK1;
-          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][3]>0;
-          if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
+          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE]>0;
+          if(ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE] == 2) {
             qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
           }
 
@@ -297,13 +308,13 @@ void BWC::_handleCommandQ(void) {
             qCommand(SETHEATER, 0, 0, 0);
             qCommand(SETPUMP, 0, _timestamp + 10, 0);
           } else {
-            _currentStateIndex = JUMPTABLE[_currentStateIndex][2];
-            _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
-            _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
-            _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
+            _currentStateIndex = JUMPTABLE[_currentStateIndex][PUMPTOGGLE];
+            _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][BUBBLETOGGLE];
+            _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][JETSTOGGLE];
+            _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][PUMPTOGGLE];
             _cio.heatbitmask = HEATBITMASK1;
-            _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][3]>0;
-            if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
+            _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE]>0;
+            if(ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE] == 2) {
               qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
             }
           }
@@ -322,11 +333,14 @@ void BWC::_handleCommandQ(void) {
 					_pumptime = 0;
 					_heatingtime = 0;
 					_airtime = 0;
+          _jettime = 0;
 					_uptime_ms = 0;
 					_pumptime_ms = 0;
 					_heatingtime_ms = 0;
 					_airtime_ms = 0;
+          _jettime_ms = 0;
 					_cost = 0;
+          _kwh = 0;
 					_saveSettingsNeeded = true;		
 					break;
 
@@ -342,13 +356,13 @@ void BWC::_handleCommandQ(void) {
 
         case SETJETS:
           if(_cio.states[JETSSTATE] == _commandQ[0][1]) break;  //no change required
-          _currentStateIndex = JUMPTABLE[_currentStateIndex][1];
-          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][0];
-          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][1];
-          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][2];
+          _currentStateIndex = JUMPTABLE[_currentStateIndex][JETSTOGGLE];
+          _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][BUBBLETOGGLE];
+          _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][JETSTOGGLE];
+          _cio.states[PUMPSTATE] = ALLOWEDSTATES[_currentStateIndex][PUMPTOGGLE];
           _cio.heatbitmask = HEATBITMASK1;
-          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][3]>0;
-          if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
+          _cio.states[HEATSTATE] = ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE]>0;
+          if(ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE] == 2) {
             qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
           }
           break;
@@ -362,7 +376,7 @@ void BWC::_handleCommandQ(void) {
         
         case SETFULLPOWER:
           if(_commandQ[0][1]){
-            if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
+            if(ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE] == 2) {
               _cio.heatbitmask = HEATBITMASK1 | HEATBITMASK2;
             }
           }
@@ -440,6 +454,8 @@ String BWC::getJSONTimes() {
     doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;
     doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
     doc["AIRTIME"] = _airtime + _airtime_ms/1000;
+    doc["JETTIME"] = _jettime + _jettime_ms/1000;
+    doc["KWH"] = _kwh;
     doc["COST"] = _cost;
     doc["FINT"] = _finterval;
     doc["CLINT"] = _clinterval;
@@ -548,9 +564,9 @@ void BWC::_startNTP() {
     //DateTime.setServer("time.cloudflare.com");
     //DateTime.setTimeZone(_timezone);
     DateTime.begin();
-    if (c++ > 5) break;
+    if (c++ > 3) break;
   }
-}	
+}
 
 void BWC::_loadSettings(){
   File file = LittleFS.open("settings.txt", "r");
@@ -579,6 +595,7 @@ void BWC::_loadSettings(){
   _pumptime = doc["PUMPTIME"];
   _heatingtime = doc["HEATINGTIME"];
   _airtime = doc["AIRTIME"];
+  _jettime = doc["JETTIME"];
   _timezone = doc["TIMEZONE"];
   _price = doc["PRICE"];
   _finterval = doc["FINT"];
@@ -612,6 +629,7 @@ void BWC::saveSettings(){
 	_heatingtime += _heatingtime_ms/1000;
 	_pumptime += _pumptime_ms/1000;
 	_airtime += _airtime_ms/1000;
+  _jettime += _jettime_ms/1000;
 	_uptime += _uptime_ms/1000;
 	_heatingtime_ms = 0;
 	_pumptime_ms = 0;
@@ -624,6 +642,7 @@ void BWC::saveSettings(){
   doc["PUMPTIME"] = _pumptime;
   doc["HEATINGTIME"] = _heatingtime;
   doc["AIRTIME"] = _airtime;
+  doc["JETTIME"] = _jettime;
   doc["TIMEZONE"] = _timezone;
   doc["PRICE"] = _price;
   doc["FINT"] = _finterval;
@@ -779,20 +798,31 @@ void BWC::_updateTimes(){
 	if(_cio.states[BUBBLESSTATE]){
 		_airtime_ms += elapsedtime;
 	}
+	if(_cio.states[JETSSTATE]){
+		_jettime_ms += elapsedtime;
+	}
 	_uptime_ms += elapsedtime;
 	
 	if(_uptime_ms > 1000000000){
 		_heatingtime += _heatingtime_ms/1000;
 		_pumptime += _pumptime_ms/1000;
 		_airtime += _airtime_ms/1000;
+    _jettime += _jettime_ms/1000;
 		_uptime += _uptime_ms/1000;
 		_heatingtime_ms = 0;
 		_pumptime_ms = 0;
 		_airtime_ms = 0;
+    _jettime_ms = 0;
 		_uptime_ms = 0;
 	}
 	
-	_cost = _price*((_heatingtime+_heatingtime_ms/1000)*1900+(_pumptime+_pumptime_ms/1000)*40+(_airtime+_airtime_ms/1000)*800+(_uptime+_uptime_ms/1000)*2)/3600000.0;
+  _kwh =  HEATER_WATTS * (_heatingtime+_heatingtime_ms/1000) +
+          PUMP_WATTS * (_pumptime+_pumptime_ms/1000) +
+          BUBBLES_WATTS * (_airtime+_airtime_ms/1000) +
+          JETS_WATTS * (_jettime+_jettime_ms/1000) +
+          IDLE_WATTS * (_uptime+_uptime_ms/1000) / 
+          3600000.0;
+	_cost = _price*_kwh;
 }
 
 void BWC::print(String txt){
