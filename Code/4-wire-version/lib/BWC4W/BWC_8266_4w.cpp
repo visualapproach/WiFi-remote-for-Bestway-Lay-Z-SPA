@@ -816,12 +816,12 @@ void BWC::_updateTimes(){
 		_uptime_ms = 0;
 	}
 	
-  _kwh =  HEATER_WATTS * (_heatingtime+_heatingtime_ms/1000) +
-          PUMP_WATTS * (_pumptime+_pumptime_ms/1000) +
-          BUBBLES_WATTS * (_airtime+_airtime_ms/1000) +
-          JETS_WATTS * (_jettime+_jettime_ms/1000) +
-          IDLE_WATTS * (_uptime+_uptime_ms/1000) / 
-          3600000.0;
+  _kwh =  HEATER_WATTS * (_heatingtime+_heatingtime_ms/1000) / 3600 +
+          PUMP_WATTS * (_pumptime+_pumptime_ms/1000) / 3600 +
+          BUBBLES_WATTS * (_airtime+_airtime_ms/1000) / 3600 +
+          JETS_WATTS * (_jettime+_jettime_ms/1000) / 3600 +
+          IDLE_WATTS * (_uptime+_uptime_ms/1000) / 3600 / 
+          1000.0; //Wh -> kWh
 	_cost = _price*_kwh;
 }
 
