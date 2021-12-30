@@ -179,17 +179,14 @@ void startOTA() { // Start the OTA service
   Serial.println(F("OTA ready\r\n"));
 }
 
+
+
 /**
  * Start a Wi-Fi access point, and try to connect to some given access points.
  * Then wait for either an AP or STA connection
  */
 void startWiFi()
 {
-  WiFi.mode(WIFI_STA);
-  //wm.setConfigPortalBlocking(false);
-  if (enableStaticIp4) wm.setSTAStaticIPConfig(ip4Address, ip4Gateway, ip4Subnet);
-  wm.autoConnect("AutoPortal");
-  
   if (enableStaticIp4)
   {
     WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
