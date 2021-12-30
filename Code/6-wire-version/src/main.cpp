@@ -200,15 +200,16 @@ void startWiFi()
     WiFi.begin(apSsid, apPwd);
 
     Serial.print("WiFi > Trying to connect ...");
-    int maxRetries = 5;
-    int retryCount = 0;
+    int maxTries = 5;
+    int tryCount = 0;
 
     while (WiFi.status() != WL_CONNECTED)
     {
       delay(1000);
       Serial.print(".");
+      tryCount++;
 
-      if (retryCount >= maxRetries)
+      if (tryCount >= maxTries)
       {
         Serial.println("");
         Serial.println("WiFi > NOT Connected!");
@@ -220,7 +221,6 @@ void startWiFi()
         startWiFiConfigPortal();
         break;
       }
-      retryCount++;
     }
   }
   else
@@ -421,9 +421,9 @@ bool checkHttpPost(HTTPMethod method)
   if (method != HTTP_POST)
   {
     server.send(405, "text/plain", "Method Not Allowed");
-    return true;
+    return false;
   }
-  return false;
+  return true;
 }
 
 /**
@@ -432,7 +432,7 @@ bool checkHttpPost(HTTPMethod method)
  */
 void handleGetConfig()
 {
-  if (checkHttpPost(server.method())) return;
+  if (!checkHttpPost(server.method())) return;
 
   String json = bwc.getJSONSettings();
   server.send(200, "text/plain", json);
@@ -444,7 +444,7 @@ void handleGetConfig()
  */
 void handleSetConfig()
 {
-  if (checkHttpPost(server.method())) return;
+  if (!checkHttpPost(server.method())) return;
 
   String message = server.arg(0);
   bwc.setJSONSettings(message);
@@ -458,7 +458,7 @@ void handleSetConfig()
  */
 void handleGetCommandQueue()
 {
-  if (checkHttpPost(server.method())) return;
+  if (!checkHttpPost(server.method())) return;
 
   String json = bwc.getJSONCommandQueue();
   server.send(200, "text/plain", json);
@@ -470,7 +470,7 @@ void handleGetCommandQueue()
  */
 void handleAddCommand()
 {
-  if (checkHttpPost(server.method())) return;
+  if (!checkHttpPost(server.method())) return;
 
   DynamicJsonDocument doc(256);
   String message = server.arg(0);
@@ -593,7 +593,7 @@ void saveWifi()
  */
 void handleGetWifi()
 {
-  if (checkHttpPost(server.method())) return;
+  if (!checkHttpPost(server.method())) return;
   
   DynamicJsonDocument doc(1024);
 
@@ -642,7 +642,7 @@ void handleGetWifi()
  */
 void handleSetWifi()
 {
-  if (checkHttpPost(server.method())) return;
+  if (!checkHttpPost(server.method())) return;
 
   DynamicJsonDocument doc(1024);
   String message = server.arg(0);
@@ -770,7 +770,7 @@ void saveMqtt()
  */
 void handleGetMqtt()
 {
-  if (checkHttpPost(server.method())) return;
+  if (!checkHttpPost(server.method())) return;
   
   DynamicJsonDocument doc(1024);
 
@@ -805,7 +805,7 @@ void handleGetMqtt()
  */
 void handleSetMqtt()
 {
-  if (checkHttpPost(server.method())) return;
+  if (!checkHttpPost(server.method())) return;
 
   DynamicJsonDocument doc(1024);
   String message = server.arg(0);
