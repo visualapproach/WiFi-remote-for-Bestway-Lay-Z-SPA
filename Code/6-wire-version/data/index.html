@@ -4,9 +4,11 @@
     <title>Lay-Z-Spa Module</title>
 	<link rel="icon" type="image/png" sizes="300x300" href="favicon.png">
 	<link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="main.css" type="text/css">
+    <link rel="stylesheet" href="main.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <meta name="theme-color" content="#0066BF">
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <script src="topNavi.js" type="text/javascript"></script>
     <script src="WebSocket.js" type="text/javascript"></script>
 </head>
 
@@ -14,7 +16,22 @@
 	<div id="site">
 		<header>
 			<span id="header">Lay-Z-Spa Module</span>
+			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()">
+				<i class="fa fa-bars"></i>
+			</a>
 		</header>
+
+		<div class="topnav" id="topnav">
+			<a href="./" class="active">Home</a>
+			<a href="config.html">SPA Config</a>
+			<a href="wifi.html">Network Config</a>
+			<a href="mqtt.html">MQTT Config</a>
+			<a href="/dir/">Directory</a>
+			<a href="upload.html">File Uploader</a>
+			<a href="remove.html">File Remover</a>
+			<a href="/restart/">Restart ESP</a>
+			<!-- <button id="reboot" class="button_red" onclick="reboot()">Reboot ESP</button> -->
+		</div>
 
 		<section>
 			<h2>Temperature:</h2>
@@ -157,17 +174,19 @@
 				</tr>
 			</table>
 		</section>
-	
+		<!--
 		<section>
 			<p class="center"><a href="config.html" class="button">SPA Config</a></p>
+			<p class="center"><a href="wifi.html" class="button">Network Config</a></p>
 			<p class="center"><a href="mqtt.html" class="button">MQTT Config</a></p>
-			<p class="center"><a href="debug.html" class="button">Debug</a></p>
 			<p class="center"><a href="/dir/" class="button">Directory</a></p>
 			<p class="center"><a href="upload.html" class="button">File Uploader</a></p>
 			<p class="center"><a href="remove.html" class="button">File Remover</a></p>
+			<p class="center"><a href="debug.html" class="button">Debug</a></p>
+			<p class="center"><a href="/restart/" class="button">Restart ESP</a></p>
 			<p class="center"><button id="reboot" class="button_red" onclick="reboot()">Reboot ESP</button></p>
 		</section>
-
+		-->
 		<footer>
 			<p class="center"><span id="mqtt">MQTT: loading status...</span></p>
 		</footer>

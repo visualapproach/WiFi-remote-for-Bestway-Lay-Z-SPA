@@ -25,10 +25,6 @@ header span {
   font-weight: bold;
   color: #FFF;
 }
-header a {
-  color: #FFF;
-  font-size: 0.6em;
-}
 
 section {
   border-bottom: 1px dashed #00508F;
@@ -201,4 +197,44 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+/* navigation */
+a.topnavicon {
+  float: right;
+  display: block;
+  color: white;
+  font-size: 1.4em;
+}
+
+.topnav {
+  overflow: hidden;
+  background-color: #ccc;
+}
+
+.topnav a {
+  float: left;
+  display: none;
+  color: #444;
+  text-align: center;
+  padding: 6px 16px;
+  text-decoration: none;
+  font-size: 1.1em;
+}
+
+.topnav a:hover {
+  background-color: #ddd;
+}
+
+.topnav a.active {
+  background-color: #04AA6D;
+  color: white;
+}
+
+.topnav.responsive {position: relative;}
+
+.topnav.responsive a {
+  float: none;
+  display: block;
+  text-align: center;
 }

@@ -4,16 +4,33 @@
     <title>Lay-Z-Spa Module | SPA Config</title>
 	<link rel="icon" type="image/png" sizes="300x300" href="favicon.png">
 	<link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="main.css" type="text/css">
+    <link rel="stylesheet" href="main.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <meta name="theme-color" content="#0066BF">
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <script src="topNavi.js" type="text/javascript"></script>
 </head>
 
 <body onload="loadconfig()">
 	<div id="site">
 		<header>
-			<span>SPA Config <a href="./">[back]</a></span>
+			<span>SPA Config</span>
+			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()">
+				<i class="fa fa-bars"></i>
+			</a>
 		</header>
+
+		<div class="topnav" id="topnav">
+			<a href="./">Home</a>
+			<a href="config.html" class="active">SPA Config</a>
+			<a href="wifi.html">Network Config</a>
+			<a href="mqtt.html">MQTT Config</a>
+			<a href="/dir/">Directory</a>
+			<a href="upload.html">File Uploader</a>
+			<a href="remove.html">File Remover</a>
+			<a href="/restart/">Restart ESP</a>
+			<!-- <button id="reboot" class="button_red" onclick="reboot()">Reboot ESP</button> -->
+		</div>
 
         <section>
 			<table>
