@@ -214,8 +214,11 @@ input:checked + .slider:before {
 a.topnavicon {
   float: right;
   display: block;
-  color: white;
-  font-size: 1.4em;
+  width: 26px;
+  height: 26px;
+  background-image: url('./menu.png');
+  background-repeat: no-repeat;
+  background-size: 26px 26px;
 }
 
 .topnav {
