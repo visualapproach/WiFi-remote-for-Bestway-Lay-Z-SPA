@@ -187,6 +187,8 @@ void startOTA() { // Start the OTA service
  */
 void startWiFi()
 {
+  WiFi.mode(WIFI_STA);
+  
   if (enableStaticIp4)
   {
     WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
