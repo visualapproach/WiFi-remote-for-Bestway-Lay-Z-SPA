@@ -29,11 +29,12 @@
 			<a href="/dir/">Directory</a>
 			<a href="upload.html">File Uploader</a>
 			<a href="remove.html">File Remover</a>
-			<a href="/restart/">Restart ESP</a>
-			<!-- <button id="reboot" class="button_red" onclick="reboot()">Reboot ESP</button> -->
+			<!--<a href="/restart/">Restart ESP</a>-->
+			<a href="#" class="bgred" onclick="reboot()">Restart ESP</a>
 		</div>
 
-		<section>
+		<section style="position:relative">
+			<div class="visualapproach"></div>
 			<h2>Temperature:</h2>
 			<table class="fixed">
 				<tr>
@@ -78,15 +79,15 @@
 					<td>Bubbles</td>
 					<td>
 						<label class="switch">
-						  <input type="checkbox" id="AIR" onchange="air()">
-						  <span class="slider round"></span>
+						<input type="checkbox" id="AIR" onchange="air()">
+						<span class="slider round"></span>
 						</label>
 					</td>
 					<td>Heater</td>
 					<td>
 						<label class="switch">
-						  <input type="checkbox" id="HTR" onchange="htr()">
-						  <span id="htrspan" class="slider round"></span>
+						<input type="checkbox" id="HTR" onchange="htr()">
+						<span id="htrspan" class="slider round"></span>
 						</label>
 					</td>
 				</tr>
@@ -94,15 +95,15 @@
 					<td>Pump</td>
 					<td>
 						<label class="switch">
-						  <input type="checkbox" id="FLT" onchange="flt()">
-						  <span class="slider round"></span>
+						<input type="checkbox" id="FLT" onchange="flt()">
+						<span class="slider round"></span>
 						</label>
 					</td>
 					<td>Unit (F/C)</td>
 					<td>
 						<label class="switch">
-						  <input type="checkbox" id="UNT" onchange="unt()">
-						  <span class="slider round"></span>
+						<input type="checkbox" id="UNT" onchange="unt()">
+						<span class="slider round"></span>
 						</label>
 					</td>
 				</tr>
@@ -110,14 +111,14 @@
 					<td>Hydrojets</td>
 					<td>
 						<label class="switch">
-						  <input type="checkbox" id="HJT" onchange="hjt()">
-						  <span class="slider round"></span>
+						<input type="checkbox" id="HJT" onchange="hjt()">
+						<span class="slider round"></span>
 						</label>
 					</td>
 					<td></td>
 					<td></td>
 				</tr>
-		   </table>
+			</table>
 		</section>
 	
 		<section>

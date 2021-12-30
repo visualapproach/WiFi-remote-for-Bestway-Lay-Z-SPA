@@ -94,6 +94,17 @@ table.fixed {
   background-color: #be7171;
 }
 
+div.visualapproach {
+  position: absolute;
+  right: 0px;
+  top: 10px;
+  width: 128px;
+  height: 128px;
+  opacity: 0.4;
+  background-image: url('./visualapproach.png');
+  background-repeat: no-repeat;
+}
+
 
 
 input[type=range] {
@@ -222,7 +233,13 @@ a.topnavicon {
   font-size: 1.1em;
 }
 
+.topnav a.bgred {
+  color: white;
+  background-color: #bf0000;
+}
+
 .topnav a:hover {
+  color: #444;
   background-color: #ddd;
 }
 
