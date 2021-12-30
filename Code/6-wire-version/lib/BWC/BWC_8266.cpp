@@ -1176,12 +1176,12 @@ void BWC::_updateTimes(){
 	}
 
 	_cost = _price*(
-                  (_heatingtime+_heatingtime_ms/1000)*1900+
-                  (_pumptime+_pumptime_ms/1000)*40+
-                  (_airtime+_airtime_ms/1000)*800+
-                  (_uptime+_uptime_ms/1000)*2+
-                  (_jettime+_jettime_ms/1000)*400
-                  )/3600000.0;
+                  (_heatingtime+_heatingtime_ms/1000)/3600.0 * 1900 + //s -> h ->Wh
+                  (_pumptime+_pumptime_ms/1000)/3600.0 * 40 +
+                  (_airtime+_airtime_ms/1000)/3600.0 * 800 +
+                  (_uptime+_uptime_ms/1000)/3600.0 * 2 +
+                  (_jettime+_jettime_ms/1000)/3600.0 * 400
+                  )/1000.0; //Wh -> kWh
 }
 
 void BWC::print(String txt){
