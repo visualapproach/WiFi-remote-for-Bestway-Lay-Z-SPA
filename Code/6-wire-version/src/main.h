@@ -21,9 +21,10 @@ int mqtt_connect_count;                // Count of how may times we've connected
 
 void handleAUX();
 void sendMQTTsetFlag();
-void sendMQTTsetFlag2();
 void sendWSsetFlag();
-void sendMessage(int msgtype);
+void sendWS();
+void sendMQTT();
+void reconnect();
 String getContentType(String filename);
 bool handleFileRead(String path);
 void handleNotFound();
@@ -32,6 +33,7 @@ void handleFileRemove();
 void startWebSocket();
 void startServer();
 void handleDir();
+void startNTP();
 void startOTA();
 void startWiFi();
 void handleGetConfig();

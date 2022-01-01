@@ -11,6 +11,8 @@
 #include "BWC_8266_globals.h"
 #endif
 
+//long long needed in arduino core v3+, but pubsubclient is showing errors in v3 so I stick to v2
+#define ARDUINOJSON_USE_LONG_LONG 1
 #include <ArduinoJson.h>
 #include "ESPDateTime.h"
 #include <LittleFS.h>

@@ -4,14 +4,17 @@ WiFiManager wm;
 Ticker updateMqttTimer;
 Ticker updateMqttTimer2;
 Ticker updateWSTimer;
+Ticker checkConnections;
+
 BWC bwc;
 bool sendWSFlag = false;
 bool sendMQTTFlag = false;
-bool sendMQTTFlag2 = false;
 String prevButtonName = "";
 const int solarpin = D0;    //no interrupt or PWM
 const int myoutputpin = D8; //pulled to GND. Boot fails if pulled HIGH.
 bool runonce = true;
+
+bool wifiConnected = false;
 
 void setup() {
   // put your setup code here, to run once:
@@ -19,10 +22,6 @@ void setup() {
   pinMode(myoutputpin, OUTPUT);
   digitalWrite(myoutputpin, LOW);
   Serial.begin(115200);		//As if you connected serial to your pump...
-  startWiFi();
-  startOTA();
-  startServer();
-  startWebSocket();
   bwc.begin(); //no params = default pins
   //Default pins:
   // bwc.begin(			
@@ -35,48 +34,76 @@ void setup() {
 			// int dsp_audio_pin 	= D6 
 			// );
 	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
+  startWiFi();
+  startNTP();
+  startOTA();
+  startServer();
+  startWebSocket();
   startMQTT();
   updateMqttTimer.attach(600, sendMQTTsetFlag); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
   //updateMqttTimer2.attach(0.5, sendMQTTsetFlag2); //update mqtt twice every second. Mqtt will also be updated on every state change
   updateWSTimer.attach(2.0, sendWSsetFlag);     //update webpage every 2 secs plus state changes
+  checkConnections.attach(30, reconnect);
   bwc.print(WiFi.localIP().toString());
 }
 
 void loop() {
-  webSocket.loop();             // constantly check for websocket events
-  server.handleClient();        // run the server
-  ArduinoOTA.handle();          // listen for OTA events
-  //wm.process();
-  if(enableMQTT){
-    if (!MQTTclient.loop()) MQTT_Connect();           // Do MQTT magic
-  }
-  
-  bwc.loop();                   // Fiddle with the pump computer
-  if (bwc.newData()) {
-    sendMessage(1);//ws
-    if(enableMQTT) sendMessage(0);//mqtt
-    //bwc.saveEventlog();       //will only fill up and wear flash memory eventually
-  }
-  if (sendWSFlag) {
-    sendWSFlag = false;
-    sendMessage(1);//ws
-  }
-  if (sendMQTTFlag && enableMQTT) {
-    sendMQTTFlag = false;
-    sendMessage(0);//MQTT
-  }
-  if(enableMQTT){
-    //sendMQTTFlag2 = false;
-    String msg = bwc.getButtonName();
-    //publish pretty button name if display button is pressed (or NOBTN if released)
-    if(!msg.equals(prevButtonName)) {
-      MQTTclient.publish((String(base_mqtt_topic) + "/button").c_str(), String(msg).c_str(), true);
-      prevButtonName = msg;
+  bwc.loop();                     // Fiddle with the pump computer
+  if(wifiConnected){
+    webSocket.loop();             // check for websocket events
+    server.handleClient();        // run the server
+    ArduinoOTA.handle();          // listen for OTA events
+      
+    if (enableMQTT){
+      if(!MQTTclient.loop()){
+        MQTT_Connect();
+      } else {
+        String msg = bwc.getButtonName();
+        //publish pretty button name if display button is pressed (or NOBTN if released)
+        if(!msg.equals(prevButtonName)) {
+          MQTTclient.publish((String(base_mqtt_topic) + "/button").c_str(), String(msg).c_str(), true);
+          prevButtonName = msg;
+        }
+        if (bwc.newData()) sendMQTT();
+      }
+    }
+    
+    if (bwc.newData()) {
+      sendWS();
+    }
+    if (sendWSFlag) {
+      sendWSFlag = false;
+      sendWS();
+    }
+    if (sendMQTTFlag && enableMQTT) {
+      sendMQTTFlag = false;
+      sendMQTT();
     }
   }
   //handleAUX();
-
   //You can add own code here, but don't stall! If CPU is choking you can try to run @ 160 MHz, but that's cheating!
+}
+
+//instead of checking mqtt etc every loop() we do it every 30 seconds to keep up
+void reconnect() {
+  //first, check for WiFi
+  //then for NTP, MQTT
+  if (WiFi.status() != WL_CONNECTED) {
+    wifiConnected = false;
+    bwc.print("check net");
+    Serial.println(F("WiFi reconnect"));
+    WiFi.reconnect();
+
+    //wm.autoConnect("AutoPortal", "supersecret");
+  }
+  if (WiFi.status() == WL_CONNECTED) {
+    wifiConnected = true;
+    //Serial.println("Checking NTP");
+    if (!DateTime.isTimeValid()) {
+      Serial.println(F("Reconnecting to NTP."));
+      DateTime.begin();
+    }
+  }
 }
 
 void handleAUX() {
@@ -106,54 +133,50 @@ void handleAUX() {
 void sendMQTTsetFlag() {
   sendMQTTFlag = true;
 }
-void sendMQTTsetFlag2() {
-  sendMQTTFlag2 = true;
-}
 
 void sendWSsetFlag() {
   sendWSFlag = true;
 }
 
 // Send status data to web client in JSON format (because it is easy to decode on the other side)
-void sendMessage(int msgtype) {
-
+void sendWS() {
   //send states to web sockets
-  if (msgtype == 1) {
-    String jsonmsg = bwc.getJSONStates();
-    webSocket.broadcastTXT(jsonmsg);
-    jsonmsg = bwc.getJSONTimes();
-    webSocket.broadcastTXT(jsonmsg);
-    String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + 
-                            String(",\"PressedButton\":\"") + bwc.getPressedButton() +
-                            String("\",\"HASJETS\":") + String(HASJETS) +
-                            String("}");
-    webSocket.broadcastTXT(mqttJSONstatus);
+  String jsonmsg = bwc.getJSONStates();
+  webSocket.broadcastTXT(jsonmsg);
+
+  //send times
+  jsonmsg = bwc.getJSONTimes();
+  webSocket.broadcastTXT(jsonmsg);
+
+  //send other info
+  String other = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + 
+                          String(",\"PressedButton\":\"") + bwc.getPressedButton() +
+                          String("\",\"HASJETS\":") + String(HASJETS) +
+                          String("}");
+  webSocket.broadcastTXT(other);
+}
+
+void sendMQTT(){
+  //Send STATES
+  String jsonmsg = bwc.getJSONStates();
+  if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
+  {
+    //Serial.println(F("MQTT published"));
+  }
+  else
+  {
+    //Serial.println(F("MQTT not published"));
   }
 
-  //Send STATES and TIMES to MQTT - 877dev
-  //It would be more elegant to send both states and times on the "message" topic
-  //and use the "CONTENT" field to distinguish between them
-  //but it might break peoples home automation setups, so to keep it backwards
-  //compatible I choose to start a new topic "/times"
-  if (msgtype == 0) {
-    String jsonmsg = bwc.getJSONStates();
-    if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
-    {
-      //Serial.println(F("MQTT published"));
-    }
-    else
-    {
-      //Serial.println(F("MQTT not published"));
-    }
-    jsonmsg = bwc.getJSONTimes();
-    if (MQTTclient.publish((String(base_mqtt_topic) + "/times").c_str(), String(jsonmsg).c_str(), true))
-    {
-      //Serial.println(F("MQTT published"));
-    }
-    else
-    {
-      //Serial.println(F("MQTT not published"));
-    }
+  //send times
+  jsonmsg = bwc.getJSONTimes();
+  if (MQTTclient.publish((String(base_mqtt_topic) + "/times").c_str(), String(jsonmsg).c_str(), true))
+  {
+    //Serial.println(F("MQTT published"));
+  }
+  else
+  {
+    //Serial.println(F("MQTT not published"));
   }
 }
 
@@ -311,21 +334,26 @@ void startOTA() { // Start the OTA service
 
 void startWiFi() { // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
   WiFi.mode(WIFI_STA);
-  //wm.setConfigPortalBlocking(false);
-  wm.autoConnect("AutoPortal");
+  Serial.println(F("Connecting to WiFi"));
+  wm.setConfigPortalTimeout(240);
+  wm.autoConnect("AutoPortal", "supersecret");
   
-  Serial.println(F("Connecting"));
-  while (WiFi.status() != WL_CONNECTED) {  // Wait for the Wi-Fi to connect
-    delay(250);
-    Serial.print('.');
-    //checkAP_request();
+  if (WiFi.status() == WL_CONNECTED) {  // Wait for the Wi-Fi to connect
+    Serial.println("\r\n");
+    Serial.print(F("Connected to "));
+    Serial.println(WiFi.SSID());             // Tell us what network we're connected to
+    Serial.print(F("IP address:\t"));
+    Serial.print(WiFi.localIP());            // Send the IP address of the ESP8266 to the computer
+    Serial.println("\r\n");
+    wifiConnected = true;
+  } else {
+    Serial.println("Connection failed. Retrying in a while");
   }
-  Serial.println("\r\n");
-  Serial.print(F("Connected to "));
-  Serial.println(WiFi.SSID());             // Tell us what network we're connected to
-  Serial.print(F("IP address:\t"));
-  Serial.print(WiFi.localIP());            // Send the IP address of the ESP8266 to the computer
-  Serial.println("\r\n");
+}
+
+void startNTP(){
+  DateTime.setServer("pool.ntp.org");
+  DateTime.begin(3000); //timeout 3s
 }
 
 /*
@@ -516,12 +544,22 @@ void loadMQTT() {
   enableMQTT      = doc["enableMQTT"];
 }
 
+//Do this before giving away the device
+//If this doesn't work you need to erase flash (from tool in pio-menu). Then it should work again.
 void handleResetWifi(){
-  WiFi.disconnect();
-  delay(3000);
-  Serial.println("resetting");
+  server.send(200, F("text/html"), F("Restart device. If credentials is not forgotten you need to erase flash memory."));
+  Serial.println(F("Deleting credentials. Resetting in 9 s"));
+  delay(1000);
+  checkConnections.detach();
+  bwc.stop();
+  bwc.saveSettings();
+  ESP.eraseConfig();
+  delay(4000);
+  wm.resetSettings();
+  //WiFi.disconnect();
+  delay(5000);
   ESP.reset();
-  //Do this before giving away the device
+  delay(5000);
 }
 
 //response to /getcommands/
@@ -564,7 +602,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
     case WStype_CONNECTED: {              // if a new websocket connection is established
         IPAddress ip = webSocket.remoteIP(num);
         Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-        sendMessage(1);
+        sendWS();
       }
       break;
     case WStype_TEXT:                     // if new text data is received
@@ -599,7 +637,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
 void startMQTT() { //MQTT setup and connect - 877dev
   //load mqtt credential file if it exists, and update default strings  ********************
   loadMQTT();
-
   //MQTTclient.setServer(mqtt_server_name, mqtt_port); //setup MQTT broker information as defined earlier
   MQTTclient.setServer(myMqttIP, myMqttPort); //setup MQTT broker information as defined earlier
   if (MQTTclient.setBufferSize (1024))      //set buffer for larger messages, new to library 2.8.0
@@ -609,7 +646,9 @@ void startMQTT() { //MQTT setup and connect - 877dev
   MQTTclient.setKeepAlive(60);
   MQTTclient.setSocketTimeout(30);
   MQTTclient.setCallback(MQTTcallback);          // set callback details - this function is called automatically whenever a message arrives on a subscribed topic.
-  //MQTT_Connect();                                //Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
+  if(enableMQTT){
+    MQTT_Connect();                                //Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
+  }
 }
 
 
