@@ -8,7 +8,7 @@
 #include <DNSServer.h>
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 #include <PubSubClient.h>         //** Requires library 2.8.0 or higher ** https://github.com/knolleary/pubsubclient
-#include "credentials.h"
+#include "config.h"
 
 bool checkMqttConnection = false;
 ESP8266WebServer server(80);       // Create a webserver object that listens for HTTP request on port 80
@@ -21,33 +21,38 @@ int mqtt_connect_count;                // Count of how may times we've connected
 
 void handleAUX();
 void sendMQTTsetFlag();
-void sendMQTTsetFlag2();
 void sendWSsetFlag();
 void sendMessage(int msgtype);
-String getContentType(String filename);
-bool handleFileRead(String path);
-void handleNotFound();
-void handleFileUpload();
-void handleFileRemove();
-void startWebSocket();
-void startServer();
-void handleDir();
+
 void startOTA();
 void startWiFi();
-void handleGetConfig();
-void handleSetConfig();
-void handleGetMQTT();
-void handleSetMQTT();
-void saveMQTT();
-void loadMQTT();
-void handleResetWifi();
-void handleGetCommandQueue();
-void handleAddCommand();
+void startWiFiConfigPortal();
+
+void startWebSocket();
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len);
 
-/*
-   MQTT functions
-*/
+void startServer();
+void handleNotFound();
+String getContentType(String filename);
+bool handleFileRead(String path);
+void handleGetConfig();
+void handleSetConfig();
+void handleGetCommandQueue();
+void handleAddCommand();
+void loadWifi();
+void saveWifi();
+void handleGetWifi();
+void handleSetWifi();
+void handleResetWifi();
+void loadMqtt();
+void saveMqtt();
+void handleGetMqtt();
+void handleSetMqtt();
+void handleDir();
+void handleFileUpload();
+void handleFileRemove();
+void handleRestart();
+
 void startMQTT();
 void MQTTcallback(char* topic, byte* payload, unsigned int length);
 void MQTT_Connect();
