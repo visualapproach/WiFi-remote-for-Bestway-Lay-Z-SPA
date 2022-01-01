@@ -1,0 +1,20 @@
+Changes in dev-branch (master is v2.1.6)
+
+basic www authentication
+
+Home assistant config examples
+
+Feature: send KWH
+
+removed jets in allowedstated for NO54123
+
+change execute time selector to show seconds (in some browsers)
+
+fixed cost/kWh overflow
+
+WiFi outage won't stop program
+	At start-up an autoportal will be available for 4 minutes if no WiFi connection is available.
+	The pump will function during the autoportal, but the display will not update.
+	Device can run without WiFi connection and tries to reconnect every 30 seconds.
+	If started without WiFi the internal clock will be way behind present time, leading to command queue will delay scheduled events by a couple of years.
+	NTP will try to sync after WiFi is reestablished.
