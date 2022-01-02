@@ -1,3 +1,5 @@
+DEV VERSION MOMENTARILY NOT STABLE
+
 # WiFi-remote-for-Bestway-Lay-Z-SPA (including 2021 year model)
 ## Hack - ESP8266 as WiFi remote control for Bestway Lay-Z spa Helsinki<br>
 ### Disclaimer: As mentioned, this is a hack. If anything breaks it breaks and it's your fault.<br>
