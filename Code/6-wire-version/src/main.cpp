@@ -1,20 +1,5 @@
 #include "main.h"
 
-WiFiManager wm;
-Ticker updateMqttTimer;
-Ticker updateMqttTimer2;
-Ticker updateWSTimer;
-Ticker checkConnections;
-
-BWC bwc;
-bool sendWSFlag = false;
-bool sendMQTTFlag = false;
-String prevButtonName = "";
-const int solarpin = D0;    //no interrupt or PWM
-const int myoutputpin = D8; //pulled to GND. Boot fails if pulled HIGH.
-bool runonce = true;
-
-bool wifiConnected = false;
 
 void setup() {
   // put your setup code here, to run once:
@@ -22,7 +7,9 @@ void setup() {
   pinMode(myoutputpin, OUTPUT);
   digitalWrite(myoutputpin, LOW);
   Serial.begin(115200);		//As if you connected serial to your pump...
+  //Serial.setDebugOutput(true);
   bwc.begin(); //no params = default pins
+  bwc.loop();
   //Default pins:
   // bwc.begin(			
 			// int cio_cs_pin 		= D1, 
@@ -34,22 +21,23 @@ void setup() {
 			// int dsp_audio_pin 	= D6 
 			// );
 	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
+  updateMqttTimer.attach(600, sendMQTTsetFlag);     //update mqtt every 10 minutes. Mqtt will also be updated on every state change
+  updateWSTimer.attach(2.0, sendWSsetFlag);         //update webpage every 2 secs plus state changes
+  periodicTimer.attach(60, periodicTimerCallback);  //things to do once in a while
   startWiFi();
   startNTP();
   startOTA();
   startServer();
   startWebSocket();
   startMQTT();
-  updateMqttTimer.attach(600, sendMQTTsetFlag); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
-  //updateMqttTimer2.attach(0.5, sendMQTTsetFlag2); //update mqtt twice every second. Mqtt will also be updated on every state change
-  updateWSTimer.attach(2.0, sendWSsetFlag);     //update webpage every 2 secs plus state changes
-  checkConnections.attach(30, reconnect);
   bwc.print(WiFi.localIP().toString());
+  Serial.println("\nEnd of setup()");
 }
 
 void loop() {
   bwc.loop();                     // Fiddle with the pump computer
-  if(wifiConnected){
+
+  if(WiFi.status() == WL_CONNECTED){
     webSocket.loop();             // check for websocket events
     server.handleClient();        // run the server
     ArduinoOTA.handle();          // listen for OTA events
@@ -80,30 +68,27 @@ void loop() {
       sendMQTT();
     }
   }
+
+  if(periodicTimerFlag){
+    periodicTimerFlag = false;
+    if (WiFi.status() != WL_CONNECTED) {
+      bwc.print(F("check net"));
+      Serial.println(F("WiFi not connected"));
+    }
+    if (WiFi.status() == WL_CONNECTED) {
+      if (!DateTime.isTimeValid()) {
+        Serial.println(F("Syncing NTP."));
+        DateTime.begin();
+      }
+    }
+  }
   //handleAUX();
   //You can add own code here, but don't stall! If CPU is choking you can try to run @ 160 MHz, but that's cheating!
 }
 
-//instead of checking mqtt etc every loop() we do it every 30 seconds to keep up
-void reconnect() {
-  //first, check for WiFi
-  //then for NTP, MQTT
-  if (WiFi.status() != WL_CONNECTED) {
-    wifiConnected = false;
-    bwc.print("check net");
-    Serial.println(F("WiFi reconnect"));
-    WiFi.reconnect();
-
-    //wm.autoConnect("AutoPortal", "supersecret");
-  }
-  if (WiFi.status() == WL_CONNECTED) {
-    wifiConnected = true;
-    //Serial.println("Checking NTP");
-    if (!DateTime.isTimeValid()) {
-      Serial.println(F("Reconnecting to NTP."));
-      DateTime.begin();
-    }
-  }
+//instead of checking NTP etc every loop() we do it every 30 seconds to keep up
+void periodicTimerCallback() {
+  periodicTimerFlag = true;
 }
 
 void handleAUX() {
@@ -335,17 +320,28 @@ void startOTA() { // Start the OTA service
 void startWiFi() { // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
   WiFi.mode(WIFI_STA);
   Serial.println(F("Connecting to WiFi"));
-  wm.setConfigPortalTimeout(240);
-  wm.autoConnect("AutoPortal", "supersecret");
-  
-  if (WiFi.status() == WL_CONNECTED) {  // Wait for the Wi-Fi to connect
+  WiFi.setAutoReconnect(true);
+  WiFi.persistent(true);
+  String hn = "SPA-" + String(ESP.getChipId());
+  WiFi.hostname(hn.c_str());
+  if(WiFi.SSID() == "" || WiFi.psk() == ""){
+    //start autoportal if no credentials are available
+    //calling this with no wifi will need a restart to reconnect.
+    // wm.setConfigPortalTimeout(30);
+    wm.autoConnect("Spa autoportal", wm_password);
+  } else {
+    //just connect the usual way.
+    //if starting with no wifi, the device will reconnect when wifi is up.
+    WiFi.begin();
+  }
+ 
+  if (WiFi.status() == WL_CONNECTED) {
     Serial.println("\r\n");
     Serial.print(F("Connected to "));
     Serial.println(WiFi.SSID());             // Tell us what network we're connected to
     Serial.print(F("IP address:\t"));
     Serial.print(WiFi.localIP());            // Send the IP address of the ESP8266 to the computer
     Serial.println("\r\n");
-    wifiConnected = true;
   } else {
     Serial.println("Connection failed. Retrying in a while");
   }
@@ -550,7 +546,9 @@ void handleResetWifi(){
   server.send(200, F("text/html"), F("Restart device. If credentials is not forgotten you need to erase flash memory."));
   Serial.println(F("Deleting credentials. Resetting in 9 s"));
   delay(1000);
-  checkConnections.detach();
+  periodicTimer.detach();
+  updateMqttTimer.detach();
+  updateWSTimer.detach();
   bwc.stop();
   bwc.saveSettings();
   ESP.eraseConfig();

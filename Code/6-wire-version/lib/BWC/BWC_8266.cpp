@@ -1080,7 +1080,8 @@ void BWC::_restoreStates() {
   qCommand(SETUNIT, unt, DateTime.now()+10, 0);
   qCommand(SETPUMP, flt, DateTime.now()+12, 0);
   qCommand(SETHEATER, htr, DateTime.now()+14, 0);
-
+Serial.println("restoring states");
+Serial.println(DateTime.now());
   file.close();
 }
 
