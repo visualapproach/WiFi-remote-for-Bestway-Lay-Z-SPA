@@ -1,11 +1,11 @@
 #include "main.h"
 
-WiFiManager wm;
-Ticker updateMqttTimer;
-Ticker updateWSTimer;
 BWC bwc;
+WiFiManager wm;
 bool sendWSFlag = false;
 bool sendMQTTFlag = false;
+Ticker updateWSTimer;
+Ticker updateMqttTimer;
 String prevButtonName = "";
 const int solarpin = D0;    //no interrupt or PWM
 const int myoutputpin = D8; //pulled to GND. Boot fails if pulled HIGH.
@@ -21,7 +21,7 @@ void setup() {
   loadWifi();
   startWiFi();
   startOTA();
-  startServer();
+  startHttpServer();
   startWebSocket();
   bwc.begin(); //no params = default pins
   //Default pins:
@@ -36,8 +36,13 @@ void setup() {
 			// );
 	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
   startMQTT();
-  updateMqttTimer.attach(600, sendMQTTsetFlag); //update mqtt every 10 minutes. Mqtt will also be updated on every state change
-  updateWSTimer.attach(2.0, sendWSsetFlag);     //update webpage every 2 secs plus state changes
+
+  // update webpage every 2 seconds. (will also be updated on state changes)
+  updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
+
+  // update MQTT every 10 minutes. (will also be updated on state changes)
+  updateMqttTimer.attach(600, []{ sendMQTTFlag = true; });
+  
   bwc.print(WiFi.localIP().toString());
 }
 
@@ -98,14 +103,6 @@ void handleAUX() {
    } else {
      digitalWrite(myoutputpin, LOW);
    }
-}
-
-// This function is called by the mqtt timer
-void sendMQTTsetFlag() {
-  sendMQTTFlag = true;
-}
-void sendWSsetFlag() {
-  sendWSFlag = true;
 }
 
 // Send status data to web client in JSON format (because it is easy to decode on the other side)
@@ -229,6 +226,7 @@ void startWiFi()
     startWiFiConfigPortal();
   }
 
+  enableAp = true;
   apSsid = WiFi.SSID();
   apPwd = WiFi.psk();
   saveWifi();
@@ -244,7 +242,7 @@ void startWiFi()
  */
 void startWiFiConfigPortal()
 {
-  wm.autoConnect("Lay-Z-Spa WiFi Config");
+  wm.autoConnect("Lay-Z-Spa WiFi Module");
 
   Serial.print("WiFi > Trying to connect ...");
   while (WiFi.status() != WL_CONNECTED)
@@ -320,7 +318,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
 /**
  * start a HTTP server with a file read and upload handler
  */
-void startServer()
+void startHttpServer()
 {
   server.on(F("/getconfig/"), handleGetConfig);
   server.on(F("/setconfig/"), handleSetConfig);
@@ -686,6 +684,10 @@ void handleSetWifi()
  */
 void handleResetWifi()
 {
+  enableAp = false;
+  apSsid = "empty";
+  apPwd = "empty";
+  saveWifi();
   Serial.println("WiFi connection reset (erase) ...");
   WiFi.disconnect();
   delay(3000);
@@ -955,62 +957,65 @@ void handleRestart()
 
 
 
-
-
-
-
-
-
-
-
-
-/*
-   MQTT functions
+/**
+ * MQTT setup and connect
+ * @author 877dev
  */
-
-void startMQTT() { //MQTT setup and connect - 877dev
-  //load mqtt credential file if it exists, and update default strings  ********************
+void startMQTT()
+{
+  // load mqtt credential file if it exists, and update default strings
   loadMqtt();
 
-  MQTTclient.setServer(mqttIpAddress, mqttPort); //setup MQTT broker information as defined earlier
-  if (MQTTclient.setBufferSize (1024))      //set buffer for larger messages, new to library 2.8.0
+  // setup MQTT broker information as defined earlier
+  MQTTclient.setServer(mqttIpAddress, mqttPort);
+  // set buffer for larger messages, new to library 2.8.0
+  if (MQTTclient.setBufferSize(1024))
   {
     Serial.println(F("MQTT buffer size successfully increased"));
   }
   MQTTclient.setKeepAlive(60);
   MQTTclient.setSocketTimeout(30);
-  MQTTclient.setCallback(MQTTcallback);          // set callback details - this function is called automatically whenever a message arrives on a subscribed topic.
-  //MQTT_Connect();                                //Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
+  // set callback details
+  // this function is called automatically whenever a message arrives on a subscribed topic.
+  MQTTclient.setCallback(MQTTcallback);
+  //MQTT_Connect();
 }
 
-
-void MQTTcallback(char* topic, byte* payload, unsigned int length) {  //877dev
-
+/**
+ * MQTT callback function
+ * @author 877dev
+ */
+void MQTTcallback(char* topic, byte* payload, unsigned int length)
+{
   Serial.print(F("Message arrived ["));
   Serial.print(topic);
   Serial.print("] ");
-  for (unsigned int i = 0; i < length; i++) {
+  for (unsigned int i = 0; i < length; i++)
+  {
     Serial.print((char)payload[i]);
   }
   Serial.println();
-  if (String(topic).equals(String(mqttBaseTopic) + "/command")) {
+  if (String(topic).equals(String(mqttBaseTopic) + "/command"))
+  {
     DynamicJsonDocument doc(256);
-    // Deserialize the JSON document
     String message = (const char *) &payload[0];
     DeserializationError error = deserializeJson(doc, message);
-    if (error) {
+    if (error)
+    {
       return;
     }
 
-    // Copy values from the JsonDocument to the Config
     uint32_t command = doc["CMD"];
     uint32_t value = doc["VALUE"];
     uint32_t xtime = doc["XTIME"];
     uint32_t interval = doc["INTERVAL"];
     bwc.qCommand(command, value, xtime, interval);
   }
-} // End of void MQTTcallback
+}
 
+/**
+ * Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
+ */
 void MQTT_Connect()
 {
   Serial.print(F("Connecting to MQTT...  "));
@@ -1045,7 +1050,6 @@ void MQTT_Connect()
     MQTTclient.publish((String(mqttBaseTopic) + "/MQTT_Connect_Count").c_str(), String(mqtt_connect_count).c_str(), true); // MQTT Connect Count
     MQTTclient.loop();
 
-
     // ... and then re/subscribe to the watched topics
     MQTTclient.subscribe((String(mqttBaseTopic) + "/command").c_str());   // Watch the .../command topic for incoming MQTT messages
     MQTTclient.loop();
@@ -1071,4 +1075,4 @@ void MQTT_Connect()
       5 : MQTT_CONNECT_UNAUTHORIZED - the client was not authorized to connect *
     */
   }
-} // End of void MQTT_Connect
+}
