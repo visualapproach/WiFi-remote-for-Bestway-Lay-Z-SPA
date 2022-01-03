@@ -379,7 +379,7 @@ bool handleFileRead(String path)
   // ask for web authentication
   if (enableWebAuth)
   {
-    if (!server.authenticate(authUsername, authPassword))
+    if (!server.authenticate(authUsername.c_str(), authPassword.c_str()))
     {
       server.requestAuthentication();
     }

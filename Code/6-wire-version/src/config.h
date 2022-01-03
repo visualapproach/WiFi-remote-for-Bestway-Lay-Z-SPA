@@ -9,9 +9,9 @@
 /** get or set the state of the web authentication */
 bool enableWebAuth = false;
 /** get or set the username for web authentication */
-const char *authUsername = "username";
+String authUsername = "username";
 /** get or set the password for web authentication */
-const char *authPassword = "password";
+String authPassword = "password";
 
 /*
  * OTA Service Credentials
