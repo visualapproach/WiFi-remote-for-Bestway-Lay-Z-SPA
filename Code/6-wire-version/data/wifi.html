@@ -42,7 +42,7 @@
 				</tr>
 				<tr>
 					<td>Password:</td>
-					<td><input type="text" id="apPwd"></td>
+					<td><input type="password" id="apPwd"></td>
 				</tr>
 			</table>
         </section>
@@ -107,6 +107,22 @@
 				<tr>
 					<td colspan="2" style="text-align:center">
 						<button id="save" class="button" onclick="saveConfig()">save</button>
+					</td>
+				</tr>
+			</table>
+        </section>
+
+        <section>
+			<h2>Reset WiFi Config:</h2>
+			<p>
+				This button resets the access point settings.<br />
+				The ESP will restart and start the "WiFi Configuration Manager".
+				Connect to it's access point and configure your WiFi (just like the first configuration).
+			</p>
+			<table>
+				<tr>
+					<td colspan="2" style="text-align:center">
+						<button id="save" class="button_red" onclick="resetWifi()">Reset WiFi</button>
 					</td>
 				</tr>
 			</table>
@@ -202,6 +218,16 @@ function saveConfig()
 	Http.send(JSON.stringify(json));
 	alert("Saved. (Don't forget to restart.)");
 	window.location.replace("/wifi.html");
+}
+
+function resetWifi()
+{
+	const Http = new XMLHttpRequest();
+	const url='/resetwifi/';
+	Http.open("POST", url);
+	Http.send();
+	alert("ESP restarts now. Please connect to the access point and re-configure your WiFi.");
+	window.location.replace("/");
 }
 </script>	
 </body>

@@ -599,12 +599,7 @@ void handleGetWifi()
 
   doc["enableAp"] = enableAp;
   doc["apSsid"] = apSsid;
-  doc["apPwd"] = "<enter password>";
-  // print credentials
-  if (true)
-  {
-    doc["apPwd"] = apPwd;
-  }
+  doc["apPwd"] = apPwd;
 
   doc["enableStaticIp4"] = enableStaticIp4;
   doc["ip4Address"][0] = ip4Address[0];
@@ -780,14 +775,8 @@ void handleGetMqtt()
   doc["mqttIpAddress"][2] = mqttIpAddress[2];
   doc["mqttIpAddress"][3] = mqttIpAddress[3];
   doc["mqttPort"] = mqttPort;
-  doc["mqttUsername"] = "<enter username>";
-  doc["mqttPassword"] = "<enter password>";
-  // print credentials
-  if (true)
-  {
-    doc["mqttUsername"] = mqttUsername;
-    doc["mqttPassword"] = mqttPassword;
-  }
+  doc["mqttUsername"] = mqttUsername;
+  doc["mqttPassword"] = mqttPassword;
   doc["mqttClientId"] = mqttClientId;
   doc["mqttBaseTopic"] = mqttBaseTopic;
 
@@ -977,7 +966,7 @@ void handleRestart()
 
 /*
    MQTT functions
-*/
+ */
 
 void startMQTT() { //MQTT setup and connect - 877dev
   //load mqtt credential file if it exists, and update default strings  ********************
