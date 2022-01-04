@@ -24,6 +24,8 @@ void setup() {
   updateMqttTimer.attach(600, sendMQTTsetFlag);     //update mqtt every 10 minutes. Mqtt will also be updated on every state change
   updateWSTimer.attach(2.0, sendWSsetFlag);         //update webpage every 2 secs plus state changes
   periodicTimer.attach(60, periodicTimerCallback);  //things to do once in a while
+  LittleFS.begin(); // needs to be loaded here for reading the wifi.json
+  loadWifi();
   startWiFi();
   startNTP();
   startOTA();
@@ -42,14 +44,14 @@ void loop() {
     server.handleClient();        // run the server
     ArduinoOTA.handle();          // listen for OTA events
       
-    if (enableMQTT){
+    if (enableMqtt){
       if(!MQTTclient.loop()){
         MQTT_Connect();
       } else {
         String msg = bwc.getButtonName();
         //publish pretty button name if display button is pressed (or NOBTN if released)
         if(!msg.equals(prevButtonName)) {
-          MQTTclient.publish((String(base_mqtt_topic) + "/button").c_str(), String(msg).c_str(), true);
+          MQTTclient.publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
           prevButtonName = msg;
         }
         if (bwc.newData()) sendMQTT();
@@ -63,7 +65,7 @@ void loop() {
       sendWSFlag = false;
       sendWS();
     }
-    if (sendMQTTFlag && enableMQTT) {
+    if (sendMQTTFlag && enableMqtt) {
       sendMQTTFlag = false;
       sendMQTT();
     }
@@ -118,7 +120,6 @@ void handleAUX() {
 void sendMQTTsetFlag() {
   sendMQTTFlag = true;
 }
-
 void sendWSsetFlag() {
   sendWSFlag = true;
 }
@@ -144,7 +145,7 @@ void sendWS() {
 void sendMQTT(){
   //Send STATES
   String jsonmsg = bwc.getJSONStates();
-  if (MQTTclient.publish((String(base_mqtt_topic) + "/message").c_str(), String(jsonmsg).c_str(), true))
+  if (MQTTclient.publish((String(mqttBaseTopic) + "/message").c_str(), String(jsonmsg).c_str(), true))
   {
     //Serial.println(F("MQTT published"));
   }
@@ -155,7 +156,7 @@ void sendMQTT(){
 
   //send times
   jsonmsg = bwc.getJSONTimes();
-  if (MQTTclient.publish((String(base_mqtt_topic) + "/times").c_str(), String(jsonmsg).c_str(), true))
+  if (MQTTclient.publish((String(mqttBaseTopic) + "/times").c_str(), String(jsonmsg).c_str(), true))
   {
     //Serial.println(F("MQTT published"));
   }
@@ -165,131 +166,7 @@ void sendMQTT(){
   }
 }
 
-/*
-   File handlers below. Most users can stop reading here.
-*/
 
-String getContentType(String filename) { // determine the filetype of a given filename, based on the extension
-  if (filename.endsWith(".html")) return "text/html";
-  else if (filename.endsWith(".css")) return "text/css";
-  else if (filename.endsWith(".js")) return "application/javascript";
-  else if (filename.endsWith(".ico")) return "image/x-icon";
-  else if (filename.endsWith(".gz")) return "application/x-gzip";
-  return "text/plain";
-}
-
-bool handleFileRead(String path) { // send the right file to the client (if it exists)
-  if (!server.authenticate(www_username, www_password)) {
-    server.requestAuthentication();
-  }
-
-  Serial.println("handleFileRead: " + path);
-  if (path.endsWith("/")) path += F("index.html");          // If a folder is requested, send the index file
-  String contentType = getContentType(path);             // Get the MIME type
-  String pathWithGz = path + ".gz";
-  if (path.equalsIgnoreCase("/mqtt.txt")) return false; //don't broadcast credentials
-  if (LittleFS.exists(pathWithGz) || LittleFS.exists(path)) { // If the file exists, either as a compressed archive, or normal
-    if (LittleFS.exists(pathWithGz))                         // If there's a compressed version available
-      path += ".gz";                                         // Use the compressed version
-    File file = LittleFS.open(path, "r");                    // Open the file
-    size_t sent = server.streamFile(file, contentType);    // Send it to the client
-    file.close();                                          // Close the file again
-    Serial.println(String("\tSent file: ") + path);
-    Serial.println(String("\tFile size: ") + String(sent));
-    return true;
-  }
-  Serial.println(String("\tFile Not Found: ") + path);   // If the file doesn't exist, return false
-  return false;
-}
-
-void handleNotFound() { // if the requested file or page doesn't exist, return a 404 not found error
-  if (!handleFileRead(server.uri())) {        // check if the file exists in the flash memory (LittleFS), if so, send it
-    server.send(404, "text/plain", "404: File Not Found");
-  }
-}
-
-void handleFileUpload() { // upload a new file to the LittleFS
-  HTTPUpload& upload = server.upload();
-  String path;
-  if (upload.status == UPLOAD_FILE_START) {
-    path = upload.filename;
-    if (!path.startsWith("/")) path = "/" + path;
-    if (!path.endsWith(".gz")) {                         // The file server always prefers a compressed version of a file
-      String pathWithGz = path + ".gz";                  // So if an uploaded file is not compressed, the existing compressed
-      if (LittleFS.exists(pathWithGz))                     // version of that file must be deleted (if it exists)
-        LittleFS.remove(pathWithGz);
-    }
-    Serial.print(F("handleFileUpload Name: ")); Serial.println(path);
-    fsUploadFile = LittleFS.open(path, "w");            // Open the file for writing in LittleFS (create if it doesn't exist)
-    path = String();
-  } else if (upload.status == UPLOAD_FILE_WRITE) {
-    if (fsUploadFile)
-      fsUploadFile.write(upload.buf, upload.currentSize); // Write the received bytes to the file
-  } else if (upload.status == UPLOAD_FILE_END) {
-    if (fsUploadFile) {                                   // If the file was successfully created
-      fsUploadFile.close();                               // Close the file again
-      Serial.print(F("handleFileUpload Size: ")); Serial.println(upload.totalSize);
-      server.sendHeader("Location", "/success.html");     // Redirect the client to the success page
-      server.send(303);
-	  if(upload.filename == "cmdq.txt"){
-        bwc.reloadCommandQueue();
-      }
-	  if(upload.filename == "settings.txt"){
-        bwc.reloadSettings();
-      }
-    } else {
-      server.send(500, "text/plain", "500: couldn't create file");
-    }
-  }
-}
-
-void handleFileRemove() { // delete a file from the LittleFS
-  String path;
-  path = server.arg("FileToRemove");
-  if (!path.startsWith("/")) path = "/" + path;
-  Serial.print(F("handleFileRemove Name: ")); Serial.println(path);
-    if (LittleFS.exists(path) && LittleFS.remove(path)) {   // delete file if exists
-      Serial.print(F("handleFileRemove success: ")); Serial.println(path);
-      server.sendHeader("Location", "/success.html");       // Redirect the client to the success page
-      server.send(303);
-    }
-    else {
-      Serial.print(F("handleFileRemove error: ")); Serial.println(path);
-      server.send(500, "text/plain", "500: couldn't delete file");
-    }
-}
-
-/*
-   Starters - bon apetit
-*/
-
-void startWebSocket() { // Start a WebSocket server
-  webSocket.begin();                          // start the websocket server
-  webSocket.onEvent(webSocketEvent);          // if there's an incomming websocket message, go to function 'webSocketEvent'
-  Serial.println(F("WebSocket server started."));
-}
-
-void startServer() { // Start a HTTP server with a file read handler and an upload handler
-  server.on(F("/upload.html"),  HTTP_POST, []() {  // If a POST request is sent to the /upload.html address,
-    server.send(200, "text/plain", "");
-  }, handleFileUpload);                       // go to 'handleFileUpload'
-
-  server.on(F("/getconfig/"), handleGetConfig);
-  server.on(F("/setconfig/"), handleSetConfig);
-  server.on(F("/getcommands/"), handleGetCommandQueue);
-  server.on(F("/addcommand/"), handleAddCommand);
-  server.on(F("/getmqtt/"), handleGetMQTT);
-  server.on(F("/setmqtt/"), handleSetMQTT);
-  server.on(F("/resetwifi/"), handleResetWifi);
-  server.on(F("/remove.html"), HTTP_POST, handleFileRemove);
-  server.on(F("/dir/"), handleDir);
-
-  server.onNotFound(handleNotFound);          // if someone requests any other file or page, go to function 'handleNotFound'
-  // and check if the file exists
-
-  server.begin();                             // start the HTTP server
-  Serial.println(F("HTTP server started."));
-}
 
 void startOTA() { // Start the OTA service
   ArduinoOTA.setHostname(OTAName);
@@ -315,6 +192,367 @@ void startOTA() { // Start the OTA service
   });
   ArduinoOTA.begin();
   Serial.println(F("OTA ready\r\n"));
+}
+
+
+
+/**
+ * Start a Wi-Fi access point, and try to connect to some given access points.
+ * Then wait for either an AP or STA connection
+ */
+void startWiFi()
+{
+  WiFi.mode(WIFI_STA);
+  
+  if (enableStaticIp4)
+  {
+    WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
+  }
+
+  if (enableAp)
+  {
+    Serial.println("WiFi > using WiFi configuration with SSID \"" + apSsid + "\"");
+    WiFi.begin(apSsid, apPwd);
+
+    Serial.print("WiFi > Trying to connect ...");
+    int maxTries = 5;
+    int tryCount = 0;
+
+    while (WiFi.status() != WL_CONNECTED)
+    {
+      delay(1000);
+      Serial.print(".");
+      tryCount++;
+
+      if (tryCount >= maxTries)
+      {
+        Serial.println("");
+        Serial.println("WiFi > NOT Connected!");
+        // disable specific WiFi config
+        enableAp = false;
+        enableStaticIp4 = false;
+        // fallback to WiFi config portal
+        Serial.println("WiFi > Using WiFiManager Config Portal");
+        startWiFiConfigPortal();
+        break;
+      }
+    }
+  }
+  else
+  {
+    Serial.println("WiFi > Using WiFiManager Config Portal");
+    startWiFiConfigPortal();
+  }
+
+  apSsid = WiFi.SSID();
+  apPwd = WiFi.psk();
+  saveWifi();
+
+  Serial.println("");
+  Serial.println("WiFi > Connected");
+  Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
+  Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
+}
+
+/**
+ * start WiFiManager configuration portal
+ */
+void startWiFiConfigPortal()
+{
+  wm.autoConnect("Lay-Z-Spa WiFi Config");
+
+  Serial.print("WiFi > Trying to connect ...");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+}
+
+
+
+/**
+ * start a web socket server
+ */
+void startWebSocket()
+{
+  webSocket.begin();
+  webSocket.onEvent(webSocketEvent);
+  Serial.println(F("WebSocket server started."));
+}
+
+/**
+ * handle web socket events
+ */
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
+{
+  // When a WebSocket message is received
+  switch (type)
+  {
+    // if the websocket is disconnected
+    case WStype_DISCONNECTED:
+      Serial.printf("[%u] Disconnected!\n", num);
+      break;
+
+    // if a new websocket connection is established
+    case WStype_CONNECTED:
+      {
+        IPAddress ip = webSocket.remoteIP(num);
+        Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+        sendWS();
+      }
+      break;
+
+    // if new text data is received
+    case WStype_TEXT:
+      {
+        Serial.printf("[%u] get Text: %s\n", num, payload);
+        DynamicJsonDocument doc(256);
+        DeserializationError error = deserializeJson(doc, payload);
+        if (error)
+        {
+          Serial.println(F("JSON command failed"));
+          return;
+        }
+
+        // Copy values from the JsonDocument to the Config
+        uint32_t command = doc["CMD"];
+        uint32_t value = doc["VALUE"];
+        uint32_t xtime = doc["XTIME"];
+        uint32_t interval = doc["INTERVAL"];
+        //add command to the command queue
+        bwc.qCommand(command, value, xtime, interval);
+      }
+      break;
+      
+    default:
+      break;
+  }
+}
+
+
+
+/**
+ * start a HTTP server with a file read and upload handler
+ */
+void startServer()
+{
+  server.on(F("/getconfig/"), handleGetConfig);
+  server.on(F("/setconfig/"), handleSetConfig);
+  server.on(F("/getcommands/"), handleGetCommandQueue);
+  server.on(F("/addcommand/"), handleAddCommand);
+  server.on(F("/getwifi/"), handleGetWifi);
+  server.on(F("/setwifi/"), handleSetWifi);
+  server.on(F("/resetwifi/"), handleResetWifi);
+  server.on(F("/getmqtt/"), handleGetMqtt);
+  server.on(F("/setmqtt/"), handleSetMqtt);
+  server.on(F("/dir/"), handleDir);
+  server.on(F("/upload.html"), HTTP_POST, [](){
+    server.send(200, "text/plain", "");
+  }, handleFileUpload);
+  server.on(F("/remove.html"), HTTP_POST, handleFileRemove);
+  server.on(F("/restart/"), handleRestart);
+  // if someone requests any other file or page, go to function 'handleNotFound'
+  // and check if the file exists
+  server.onNotFound(handleNotFound);
+  // start the HTTP server
+  server.begin();
+  Serial.println(F("HTTP server started."));
+}
+
+/**
+ * if the requested file or page doesn't exist, return a 404 not found error
+ */
+void handleNotFound()
+{
+  // check if the file exists in the flash memory (LittleFS), if so, send it
+  if (!handleFileRead(server.uri()))
+  {
+    server.send(404, "text/plain", "404: File Not Found");
+  }
+}
+
+/**
+ * determine the filetype of a given filename, based on the extension
+ */
+String getContentType(String filename)
+{
+  if (filename.endsWith(".html")) return "text/html";
+  else if (filename.endsWith(".css")) return "text/css";
+  else if (filename.endsWith(".js")) return "application/javascript";
+  else if (filename.endsWith(".ico")) return "image/x-icon";
+  else if (filename.endsWith(".gz")) return "application/x-gzip";
+  else if (filename.endsWith(".json")) return "application/json";
+  return "text/plain";
+}
+
+/**
+ * send the right file to the client (if it exists)
+ */
+bool handleFileRead(String path)
+{
+  // ask for web authentication
+  if (enableWebAuth)
+  {
+    if (!server.authenticate(authUsername, authPassword))
+    {
+      server.requestAuthentication();
+    }
+  }
+  
+  Serial.println("handleFileRead: " + path);
+  // If a folder is requested, send the index file
+  if (path.endsWith("/"))
+  {
+    path += F("index.html");
+  }
+  // deny reading credentials
+  //if (path.equalsIgnoreCase("/mqtt.json") || path.equalsIgnoreCase("/wifi.json"))
+  //{
+  //  Serial.println(String("\tFile reading denied (credentials)."));
+  //  return false;
+  //}
+  String contentType = getContentType(path);             // Get the MIME type
+  String pathWithGz = path + ".gz";
+  if (LittleFS.exists(pathWithGz) || LittleFS.exists(path)) { // If the file exists, either as a compressed archive, or normal
+    if (LittleFS.exists(pathWithGz))                         // If there's a compressed version available
+      path += ".gz";                                         // Use the compressed version
+    File file = LittleFS.open(path, "r");                    // Open the file
+    size_t sent = server.streamFile(file, contentType);    // Send it to the client
+    file.close();                                          // Close the file again
+    Serial.println(String("\tSent file: ") + path);
+    Serial.println(String("\tFile size: ") + String(sent));
+    return true;
+  }
+  Serial.println(String("\tFile Not Found: ") + path);   // If the file doesn't exist, return false
+  return false;
+}
+
+/**
+ * checks the method to be a POST
+ */
+bool checkHttpPost(HTTPMethod method)
+{
+  if (method != HTTP_POST)
+  {
+    server.send(405, "text/plain", "Method Not Allowed");
+    return false;
+  }
+  return true;
+}
+
+/**
+ * response for /getconfig/
+ * web server prints a json document
+ */
+void handleGetConfig()
+{
+  if (!checkHttpPost(server.method())) return;
+
+  String json = bwc.getJSONSettings();
+  server.send(200, "text/plain", json);
+}
+
+/**
+ * response for /setconfig/
+ * save spa config
+ */
+void handleSetConfig()
+{
+  if (!checkHttpPost(server.method())) return;
+
+  String message = server.arg(0);
+  bwc.setJSONSettings(message);
+
+  server.send(200, "plain/text", "");
+}
+
+/**
+ * response for /getcommands/
+ * web server prints a json document
+ */
+void handleGetCommandQueue()
+{
+  if (!checkHttpPost(server.method())) return;
+
+  String json = bwc.getJSONCommandQueue();
+  server.send(200, "text/plain", json);
+}
+
+/**
+ * response for /addcommand/
+ * add a command to the queue
+ */
+void handleAddCommand()
+{
+  if (!checkHttpPost(server.method())) return;
+
+  DynamicJsonDocument doc(256);
+  String message = server.arg(0);
+  DeserializationError error = deserializeJson(doc, message);
+  if (error)
+  {
+    server.send(400, "plain/text", "Error deserializing message");
+    return;
+  }
+
+  uint32_t command = doc["CMD"];
+  uint32_t value = doc["VALUE"];
+  uint32_t xtime = doc["XTIME"];
+  uint32_t interval = doc["INTERVAL"];
+
+  bwc.qCommand(command, value, xtime, interval);
+
+  server.send(200, "text/plain", "");
+}
+
+/**
+ * load WiFi json configuration from "wifi.json"
+ */
+void loadWifi()
+{
+  File file = LittleFS.open("wifi.json", "r");
+  if (!file)
+  {
+    Serial.println(F("Failed to read wifi.json. Using defaults."));
+    return;
+  }
+
+  DynamicJsonDocument doc(1024);
+
+  DeserializationError error = deserializeJson(doc, file);
+  if (error)
+  {
+    Serial.println(F("Failed to deserialize wifi.json"));
+    file.close();
+    return;
+  }
+
+  enableAp = doc["enableAp"];
+  apSsid = doc["apSsid"].as<String>();
+  apPwd = doc["apPwd"].as<String>();
+
+  enableStaticIp4 = doc["enableStaticIp4"];
+  ip4Address[0] = doc["ip4Address"][0];
+  ip4Address[1] = doc["ip4Address"][1];
+  ip4Address[2] = doc["ip4Address"][2];
+  ip4Address[3] = doc["ip4Address"][3];
+  ip4Gateway[0] = doc["ip4Gateway"][0];
+  ip4Gateway[1] = doc["ip4Gateway"][1];
+  ip4Gateway[2] = doc["ip4Gateway"][2];
+  ip4Gateway[3] = doc["ip4Gateway"][3];
+  ip4Subnet[0] = doc["ip4Subnet"][0];
+  ip4Subnet[1] = doc["ip4Subnet"][1];
+  ip4Subnet[2] = doc["ip4Subnet"][2];
+  ip4Subnet[3] = doc["ip4Subnet"][3];
+  ip4DnsPrimary[0] = doc["ip4DnsPrimary"][0];
+  ip4DnsPrimary[1] = doc["ip4DnsPrimary"][1];
+  ip4DnsPrimary[2] = doc["ip4DnsPrimary"][2];
+  ip4DnsPrimary[3] = doc["ip4DnsPrimary"][3];
+  ip4DnsSecondary[0] = doc["ip4DnsSecondary"][0];
+  ip4DnsSecondary[1] = doc["ip4DnsSecondary"][1];
+  ip4DnsSecondary[2] = doc["ip4DnsSecondary"][2];
+  ip4DnsSecondary[3] = doc["ip4DnsSecondary"][3];
 }
 
 void startWiFi() { // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
@@ -352,197 +590,303 @@ void startNTP(){
   DateTime.begin(3000); //timeout 3s
 }
 
-/*
-   Web server functions to exchange data between server and web client
-*/
-
-void handleDir() {
-  String mydir;
-  Dir root = LittleFS.openDir("/");
-  while (root.next()){
-    Serial.println(root.fileName());
-    mydir += root.fileName() + F(" \t Size: ");
-    mydir += String(root.fileSize()) + F(" Bytes\n");
-  }
-
-  server.send(200, "text/plain", mydir);
-}
-
-//response to /getconfig/
-void handleGetConfig() { // reply with json document
-  if (server.method() != HTTP_POST) {
-    server.send(405, "text/plain", "Method Not Allowed");
-  } else {
-    String jsonmsg = bwc.getJSONSettings();
-    server.send(200, "text/plain", jsonmsg);
-  }
-}
-
-//response to /setconfig/
-void handleSetConfig() {
-  if (server.method() != HTTP_POST) {
-    server.send(405, "text/plain", "Method Not Allowed");
-  } else {
-    String message = server.arg(0);
-    bwc.setJSONSettings(message);
-    server.send(200, "plain/text", "");
-  }
-}
-
-
-//response to /getmqtt/
-void handleGetMQTT() { // reply with json document
-  if (server.method() != HTTP_POST) {
-    server.send(405, "text/plain", "Method Not Allowed");
-  } else {
-    // Allocate a temporary JsonDocument
-    // Don't forget to change the capacity to match your requirements.
-    // Use arduinojson.org/assistant to compute the capacity.
-    DynamicJsonDocument doc(1024);
-
-    // Set the values in the document
-    doc["mqtt_server_ip"][0] = myMqttIP[0];
-    doc["mqtt_server_ip"][1] = myMqttIP[1];
-    doc["mqtt_server_ip"][2] = myMqttIP[2];
-    doc["mqtt_server_ip"][3] = myMqttIP[3];
-    doc["mqtt_port"] = myMqttPort;
-    //doc["mqtt_username"] = myMqttUser;
-    //doc["mqtt_password"] = myMqttPassword;
-    doc["mqtt_username"] = "enter username";  //do not send credentials to webpage
-    doc["mqtt_password"] = "enter password";
-    doc["mqtt_client_id"] = mqtt_client_id;
-    doc["base_mqtt_topic"] = base_mqtt_topic;
-    doc["enableMQTT"] = enableMQTT;
-
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-      jsonmsg = "{\"error\": \"Failed to serialize message\"}";
-	  }
-    server.send(200, "text/plain", jsonmsg);
-  }
-}
-
-//response to /setmqtt/
-void handleSetMQTT() {
-  if (server.method() != HTTP_POST) {
-    server.send(405, "text/plain", "Method Not Allowed");
-  } else {
-    String message = server.arg(0);
-    // Deserialize the JSON document
-    DynamicJsonDocument doc(1024);
-    DeserializationError error = deserializeJson(doc, message);
-    if (error) {
-      Serial.println(F("Failed to read config file"));
-      server.send(400, "plain/text", "Error deserializing message");
-      return;
-    }
-
-    // Copy values from the JsonDocument to the mqtt credentials
-    myMqttIP[0] = doc["mqtt_server_ip"][0];
-    myMqttIP[1] = doc["mqtt_server_ip"][1];
-    myMqttIP[2] = doc["mqtt_server_ip"][2];
-    myMqttIP[3] = doc["mqtt_server_ip"][3];
-    myMqttPort  = doc["mqtt_port"];
-/*     strlcpy(const_cast<char*>(myMqttUser),                  // <- destination
-            doc["mqtt_username"],           // <- source
-            sizeof(myMqttUser));         // <- destination's capacity
-    strlcpy(const_cast<char*>(myMqttPassword),                  // <- destination
-            doc["mqtt_password"],           // <- source
-            sizeof(myMqttPassword));         // <- destination's capacity
-    strlcpy(const_cast<char*>(mqtt_client_id),                 // <- destination
-            doc["mqtt_client_id"],          // <- source
-            sizeof(mqtt_client_id));        // <- destination's capacity
-    strlcpy(const_cast<char*>(base_mqtt_topic),                 // <- destination
-            doc["base_mqtt_topic"],          // <- source
-            sizeof(base_mqtt_topic));        // <- destination's capacity */
-    myMqttUser      = doc["mqtt_username"].as<String>();
-    myMqttPassword  = doc["mqtt_password"].as<String>();
-    mqtt_client_id  = doc["mqtt_client_id"].as<String>();
-    base_mqtt_topic = doc["base_mqtt_topic"].as<String>();
-    enableMQTT      = doc["enableMQTT"];
-	
-    server.send(200, "plain/text", "");
-    saveMQTT();
-  }
-}
-
-void saveMQTT() {
-  File file = LittleFS.open("mqtt.txt", "w");
-  if (!file) {
-    Serial.println(F("Failed to save mqtt.txt"));
+/**
+ * save WiFi json configuration to "wifi.json"
+ */
+void saveWifi()
+{
+  File file = LittleFS.open("wifi.json", "w");
+  if (!file)
+  {
+    Serial.println(F("Failed to save wifi.json"));
     return;
   }
 
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/assistant to compute the capacity.
   DynamicJsonDocument doc(1024);
-  // Set the values in the document
-  doc["mqtt_server_ip"][0] = myMqttIP[0];
-  doc["mqtt_server_ip"][1] = myMqttIP[1];
-  doc["mqtt_server_ip"][2] = myMqttIP[2];
-  doc["mqtt_server_ip"][3] = myMqttIP[3];
-  doc["mqtt_port"]         = myMqttPort;
-  doc["mqtt_username"]     = myMqttUser;
-  doc["mqtt_password"]     = myMqttPassword;
-  doc["mqtt_client_id"]    = mqtt_client_id;
-  doc["base_mqtt_topic"]   = base_mqtt_topic;
-  doc["enableMQTT"]        = enableMQTT;
 
-  if (serializeJson(doc, file) == 0) {
-    Serial.println("{\"error\": \"Failed to serialize mqtt file\"}");
+  doc["enableAp"] = enableAp;
+  doc["apSsid"] = apSsid;
+  doc["apPwd"] = apPwd;
+
+  doc["enableStaticIp4"] = enableStaticIp4;
+  doc["ip4Address"][0] = ip4Address[0];
+  doc["ip4Address"][1] = ip4Address[1];
+  doc["ip4Address"][2] = ip4Address[2];
+  doc["ip4Address"][3] = ip4Address[3];
+  doc["ip4Gateway"][0] = ip4Gateway[0];
+  doc["ip4Gateway"][1] = ip4Gateway[1];
+  doc["ip4Gateway"][2] = ip4Gateway[2];
+  doc["ip4Gateway"][3] = ip4Gateway[3];
+  doc["ip4Subnet"][0] = ip4Subnet[0];
+  doc["ip4Subnet"][1] = ip4Subnet[1];
+  doc["ip4Subnet"][2] = ip4Subnet[2];
+  doc["ip4Subnet"][3] = ip4Subnet[3];
+  doc["ip4DnsPrimary"][0] = ip4DnsPrimary[0];
+  doc["ip4DnsPrimary"][1] = ip4DnsPrimary[1];
+  doc["ip4DnsPrimary"][2] = ip4DnsPrimary[2];
+  doc["ip4DnsPrimary"][3] = ip4DnsPrimary[3];
+  doc["ip4DnsSecondary"][0] = ip4DnsSecondary[0];
+  doc["ip4DnsSecondary"][1] = ip4DnsSecondary[1];
+  doc["ip4DnsSecondary"][2] = ip4DnsSecondary[2];
+  doc["ip4DnsSecondary"][3] = ip4DnsSecondary[3];
+
+  if (serializeJson(doc, file) == 0)
+  {
+    Serial.println("{\"error\": \"Failed to serialize file\"}");
   }
   file.close();
-
 }
 
-void loadMQTT() {
-  File file = LittleFS.open("mqtt.txt", "r");
-  if (!file) {
-    Serial.println(F("Failed to read mqtt.txt. Using default."));
+/**
+ * response for /getwifi/
+ * web server prints a json document
+ */
+void handleGetWifi()
+{
+  if (!checkHttpPost(server.method())) return;
+  
+  DynamicJsonDocument doc(1024);
+
+  doc["enableAp"] = enableAp;
+  doc["apSsid"] = apSsid;
+  doc["apPwd"] = "<enter password>";
+  // print credentials
+  if (true)
+  {
+    doc["apPwd"] = apPwd;
+  }
+
+  doc["enableStaticIp4"] = enableStaticIp4;
+  doc["ip4Address"][0] = ip4Address[0];
+  doc["ip4Address"][1] = ip4Address[1];
+  doc["ip4Address"][2] = ip4Address[2];
+  doc["ip4Address"][3] = ip4Address[3];
+  doc["ip4Gateway"][0] = ip4Gateway[0];
+  doc["ip4Gateway"][1] = ip4Gateway[1];
+  doc["ip4Gateway"][2] = ip4Gateway[2];
+  doc["ip4Gateway"][3] = ip4Gateway[3];
+  doc["ip4Subnet"][0] = ip4Subnet[0];
+  doc["ip4Subnet"][1] = ip4Subnet[1];
+  doc["ip4Subnet"][2] = ip4Subnet[2];
+  doc["ip4Subnet"][3] = ip4Subnet[3];
+  doc["ip4DnsPrimary"][0] = ip4DnsPrimary[0];
+  doc["ip4DnsPrimary"][1] = ip4DnsPrimary[1];
+  doc["ip4DnsPrimary"][2] = ip4DnsPrimary[2];
+  doc["ip4DnsPrimary"][3] = ip4DnsPrimary[3];
+  doc["ip4DnsSecondary"][0] = ip4DnsSecondary[0];
+  doc["ip4DnsSecondary"][1] = ip4DnsSecondary[1];
+  doc["ip4DnsSecondary"][2] = ip4DnsSecondary[2];
+  doc["ip4DnsSecondary"][3] = ip4DnsSecondary[3];
+
+  String json;
+  if (serializeJson(doc, json) == 0)
+  {
+    json = "{\"error\": \"Failed to serialize message\"}";
+  }
+  server.send(200, "text/plain", json);
+}
+
+/**
+ * response for /setwifi/
+ * web server prints a json document
+ */
+void handleSetWifi()
+{
+  if (!checkHttpPost(server.method())) return;
+
+  DynamicJsonDocument doc(1024);
+  String message = server.arg(0);
+  DeserializationError error = deserializeJson(doc, message);
+  if (error)
+  {
+    Serial.println(F("Failed to read config file"));
+    server.send(400, "plain/text", "Error deserializing message");
     return;
   }
 
-  // Allocate a temporary JsonDocument
-  // Don't forget to change the capacity to match your requirements.
-  // Use arduinojson.org/assistant to compute the capacity.
-  DynamicJsonDocument doc(1024);  
-  // Deserialize the JSON document
+  enableAp = doc["enableAp"];
+  apSsid = doc["apSsid"].as<String>();
+  apPwd = doc["apPwd"].as<String>();
+
+  enableStaticIp4 = doc["enableStaticIp4"];
+  ip4Address[0] = doc["ip4Address"][0];
+  ip4Address[1] = doc["ip4Address"][1];
+  ip4Address[2] = doc["ip4Address"][2];
+  ip4Address[3] = doc["ip4Address"][3];
+  ip4Gateway[0] = doc["ip4Gateway"][0];
+  ip4Gateway[1] = doc["ip4Gateway"][1];
+  ip4Gateway[2] = doc["ip4Gateway"][2];
+  ip4Gateway[3] = doc["ip4Gateway"][3];
+  ip4Subnet[0] = doc["ip4Subnet"][0];
+  ip4Subnet[1] = doc["ip4Subnet"][1];
+  ip4Subnet[2] = doc["ip4Subnet"][2];
+  ip4Subnet[3] = doc["ip4Subnet"][3];
+  ip4DnsPrimary[0] = doc["ip4DnsPrimary"][0];
+  ip4DnsPrimary[1] = doc["ip4DnsPrimary"][1];
+  ip4DnsPrimary[2] = doc["ip4DnsPrimary"][2];
+  ip4DnsPrimary[3] = doc["ip4DnsPrimary"][3];
+  ip4DnsSecondary[0] = doc["ip4DnsSecondary"][0];
+  ip4DnsSecondary[1] = doc["ip4DnsSecondary"][1];
+  ip4DnsSecondary[2] = doc["ip4DnsSecondary"][2];
+  ip4DnsSecondary[3] = doc["ip4DnsSecondary"][3];
+
+  saveWifi();
+
+  server.send(200, "plain/text", "");
+}
+
+/**
+ * response for /resetwifi/
+ * do this before giving away the device
+ */
+void handleResetWifi()
+{
+  Serial.println("WiFi connection reset (erase) ...");
+  WiFi.disconnect();
+  delay(3000);
+  Serial.println("ESP reset ...");
+  ESP.reset();
+}
+
+/**
+ * load MQTT json configuration from "mqtt.json"
+ */
+void loadMqtt()
+{
+  File file = LittleFS.open("mqtt.json", "r");
+  if (!file)
+  {
+    Serial.println(F("Failed to read mqtt.json. Using defaults."));
+    return;
+  }
+
+  DynamicJsonDocument doc(1024);
+
   DeserializationError error = deserializeJson(doc, file);
-  if (error) {
-    Serial.println(F("Failed to deserialize mqtt.txt"));
+  if (error)
+  {
+    Serial.println(F("Failed to deserialize mqtt.json."));
     file.close();
     return;
   }
+  
+  enableMqtt = doc["enableMqtt"];
+  mqttIpAddress[0] = doc["mqttIpAddress"][0];
+  mqttIpAddress[1] = doc["mqttIpAddress"][1];
+  mqttIpAddress[2] = doc["mqttIpAddress"][2];
+  mqttIpAddress[3] = doc["mqttIpAddress"][3];
+  mqttPort = doc["mqttPort"];
+	mqttUsername = doc["mqttUsername"].as<String>();
+	mqttPassword = doc["mqttPassword"].as<String>();
+	mqttClientId = doc["mqttClientId"].as<String>();
+	mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
+}
 
-  // Copy values from the JsonDocument to the mqtt credentials
-  myMqttIP[0] = doc["mqtt_server_ip"][0];
-  myMqttIP[1] = doc["mqtt_server_ip"][1];
-  myMqttIP[2] = doc["mqtt_server_ip"][2];
-  myMqttIP[3] = doc["mqtt_server_ip"][3];
-  myMqttPort  = doc["mqtt_port"];
-/*   strlcpy(const_cast<char*>(myMqttUser),                  // <- destination
-          doc["mqtt_username"],           // <- source
-          sizeof(myMqttUser));         // <- destination's capacity
-  strlcpy(const_cast<char*>(myMqttPassword),                  // <- destination
-          doc["mqtt_password"],           // <- source
-          sizeof(myMqttPassword));         // <- destination's capacity
-  strlcpy(const_cast<char*>(mqtt_client_id.),                 // <- destination
-          doc["mqtt_client_id"],          // <- source
-          sizeof(mqtt_client_id));        // <- destination's capacity
-  strlcpy(const_cast<char*>(base_mqtt_topic),                 // <- destination
-          doc["base_mqtt_topic"],          // <- source
-          sizeof(base_mqtt_topic));        // <- destination's capacity */
-	myMqttUser      = doc["mqtt_username"].as<String>();
-	myMqttPassword  = doc["mqtt_password"].as<String>();
-	mqtt_client_id  = doc["mqtt_client_id"].as<String>();
-	base_mqtt_topic = doc["base_mqtt_topic"].as<String>();
-  enableMQTT      = doc["enableMQTT"];
+/**
+ * save MQTT json configuration to "mqtt.json"
+ */
+void saveMqtt()
+{
+  File file = LittleFS.open("mqtt.json", "w");
+  if (!file)
+  {
+    Serial.println(F("Failed to save mqtt.json"));
+    return;
+  }
+
+  DynamicJsonDocument doc(1024);
+
+  doc["enableMqtt"] = enableMqtt;
+  doc["mqttIpAddress"][0] = mqttIpAddress[0];
+  doc["mqttIpAddress"][1] = mqttIpAddress[1];
+  doc["mqttIpAddress"][2] = mqttIpAddress[2];
+  doc["mqttIpAddress"][3] = mqttIpAddress[3];
+  doc["mqttPort"] = mqttPort;
+  doc["mqttUsername"] = mqttUsername;
+  doc["mqttPassword"] = mqttPassword;
+  doc["mqttClientId"] = mqttClientId;
+  doc["mqttBaseTopic"] = mqttBaseTopic;
+
+  if (serializeJson(doc, file) == 0)
+  {
+    Serial.println("{\"error\": \"Failed to serialize file\"}");
+  }
+  file.close();
+}
+
+/**
+ * response for /getmqtt/
+ * web server prints a json document
+ */
+void handleGetMqtt()
+{
+  if (!checkHttpPost(server.method())) return;
+  
+  DynamicJsonDocument doc(1024);
+
+  doc["enableMqtt"] = enableMqtt;
+  doc["mqttIpAddress"][0] = mqttIpAddress[0];
+  doc["mqttIpAddress"][1] = mqttIpAddress[1];
+  doc["mqttIpAddress"][2] = mqttIpAddress[2];
+  doc["mqttIpAddress"][3] = mqttIpAddress[3];
+  doc["mqttPort"] = mqttPort;
+  doc["mqttUsername"] = "<enter username>";
+  doc["mqttPassword"] = "<enter password>";
+  // print credentials
+  if (true)
+  {
+    doc["mqttUsername"] = mqttUsername;
+    doc["mqttPassword"] = mqttPassword;
+  }
+  doc["mqttClientId"] = mqttClientId;
+  doc["mqttBaseTopic"] = mqttBaseTopic;
+
+  String json;
+  if (serializeJson(doc, json) == 0)
+  {
+    json = "{\"error\": \"Failed to serialize message\"}";
+  }
+  server.send(200, "text/plain", json);
+}
+
+/**
+ * response for /setmqtt/
+ * web server prints a json document
+ */
+void handleSetMqtt()
+{
+  if (!checkHttpPost(server.method())) return;
+
+  DynamicJsonDocument doc(1024);
+  String message = server.arg(0);
+  DeserializationError error = deserializeJson(doc, message);
+  if (error)
+  {
+    Serial.println(F("Failed to read config file"));
+    server.send(400, "plain/text", "Error deserializing message");
+    return;
+  }
+
+  enableMqtt = doc["enableMqtt"];
+  mqttIpAddress[0] = doc["mqttIpAddress"][0];
+  mqttIpAddress[1] = doc["mqttIpAddress"][1];
+  mqttIpAddress[2] = doc["mqttIpAddress"][2];
+  mqttIpAddress[3] = doc["mqttIpAddress"][3];
+  mqttPort = doc["mqttPort"];
+  mqttUsername = doc["mqttUsername"].as<String>();
+  mqttPassword = doc["mqttPassword"].as<String>();
+  mqttClientId = doc["mqttClientId"].as<String>();
+  mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
+
+  saveMqtt();
+
+  server.send(200, "plain/text", "");
 }
 
 //Do this before giving away the device
 //If this doesn't work you need to erase flash (from tool in pio-menu). Then it should work again.
-void handleResetWifi(){
+void handleResetWifi()
+{
   server.send(200, F("text/html"), F("Restart device. If credentials is not forgotten you need to erase flash memory."));
   Serial.println(F("Deleting credentials. Resetting in 9 s"));
   delay(1000);
@@ -560,73 +904,137 @@ void handleResetWifi(){
   delay(5000);
 }
 
-//response to /getcommands/
-void handleGetCommandQueue() { // reply with json document
-  if (server.method() != HTTP_POST) {
-    server.send(405, "text/plain", "Method Not Allowed");
-  } else {
-    String jsonmsg = bwc.getJSONCommandQueue();
-    server.send(200, "text/plain", jsonmsg);
+/**
+ * response for /dir/
+ * web server prints a list of files
+ */
+void handleDir()
+{
+  String mydir;
+  Dir root = LittleFS.openDir("/");
+  while (root.next())
+  {
+    Serial.println(root.fileName());
+    mydir += root.fileName() + F(" \t Size: ");
+    mydir += String(root.fileSize()) + F(" Bytes\n");
   }
+  server.send(200, "text/plain", mydir);
 }
 
-//respone to /addcommand/
-void handleAddCommand() {
-  if (server.method() != HTTP_POST) {
-    server.send(405, "text/plain", "Method Not Allowed");
-  } else {
-    DynamicJsonDocument doc(256);
-    String message = server.arg(0);
-    DeserializationError error = deserializeJson(doc, message);
-    if (error) {
-      server.send(500, "text/plain", "");
-      return;
+/**
+ * response for /upload.html
+ * upload a new file to the LittleFS
+ */
+void handleFileUpload()
+{
+  HTTPUpload& upload = server.upload();
+  String path;
+  if (upload.status == UPLOAD_FILE_START)
+  {
+    path = upload.filename;
+    if (!path.startsWith("/"))
+    {
+      path = "/" + path;
     }
-    uint32_t command = doc["CMD"];
-    uint32_t value = doc["VALUE"];
-    uint32_t xtime = doc["XTIME"];
-    uint32_t interval = doc["INTERVAL"];
-    bwc.qCommand(command, value, xtime, interval);
-    server.send(200, "text/plain", "");
-  }
-}
 
-void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
-  // When a WebSocket message is received
-  switch (type) {
-    case WStype_DISCONNECTED:             // if the websocket is disconnected
-      Serial.printf("[%u] Disconnected!\n", num);
-      break;
-    case WStype_CONNECTED: {              // if a new websocket connection is established
-        IPAddress ip = webSocket.remoteIP(num);
-        Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-        sendWS();
-      }
-      break;
-    case WStype_TEXT:                     // if new text data is received
+    // The file server always prefers a compressed version of a file
+    if (!path.endsWith(".gz"))
+    {
+      // So if an uploaded file is not compressed, the existing compressed
+      String pathWithGz = path + ".gz";
+      // version of that file must be deleted (if it exists)
+      if (LittleFS.exists(pathWithGz))
       {
-        Serial.printf("[%u] get Text: %s\n", num, payload);
-        DynamicJsonDocument doc(256);
-        DeserializationError error = deserializeJson(doc, payload);
-        if (error) {
-          Serial.println(F("JSON command failed"));
-          return;
-        }
-
-        // Copy values from the JsonDocument to the Config
-        uint32_t command = doc["CMD"];
-        uint32_t value = doc["VALUE"];
-        uint32_t xtime = doc["XTIME"];
-        uint32_t interval = doc["INTERVAL"];
-        //add command to the command queue
-        bwc.qCommand(command, value, xtime, interval);
+        LittleFS.remove(pathWithGz);
       }
-      break;
-      
-    default:
-      break;
+    }
+
+    Serial.print(F("handleFileUpload Name: "));
+    Serial.println(path);
+
+    // Open the file for writing in LittleFS (create if it doesn't exist)
+    fsUploadFile = LittleFS.open(path, "w");
+    path = String();
+  }
+  else if (upload.status == UPLOAD_FILE_WRITE)
+  {
+    if (fsUploadFile)
+    {
+      // Write the received bytes to the file
+      fsUploadFile.write(upload.buf, upload.currentSize);
+    }
+  }
+  else if (upload.status == UPLOAD_FILE_END)
+  {
+    if (fsUploadFile)
+    {
+      fsUploadFile.close();
+      Serial.print(F("handleFileUpload Size: "));
+      Serial.println(upload.totalSize);
+
+      server.sendHeader("Location", "/success.html");
+      server.send(303);
+
+	    if (upload.filename == "cmdq.txt")
+      {
+        bwc.reloadCommandQueue();
+      }
+	    if (upload.filename == "settings.txt")
+      {
+        bwc.reloadSettings();
+      }
+    }
+    else
+    {
+      server.send(500, "text/plain", "500: couldn't create file");
+    }
   }
 }
+
+/**
+ * response for /remove.html
+ * delete a file from the LittleFS
+ */
+void handleFileRemove()
+{
+  String path;
+  path = server.arg("FileToRemove");
+  if (!path.startsWith("/"))
+  {
+    path = "/" + path;
+  }
+  
+  Serial.print(F("handleFileRemove Name: "));
+  Serial.println(path);
+  
+  if (LittleFS.exists(path) && LittleFS.remove(path))
+  {
+    Serial.print(F("handleFileRemove success: "));
+    Serial.println(path);
+    server.sendHeader("Location", "/success.html");
+    server.send(303);
+  }
+  else
+  {
+    Serial.print(F("handleFileRemove error: "));
+    Serial.println(path);
+    server.send(500, "text/plain", "500: couldn't delete file");
+  }
+}
+
+/**
+ * response for /restart/
+ */
+void handleRestart()
+{
+  // TODO: browser tab must move from /restart/ otherwise its an endless restart loop
+  server.sendHeader("Location", "/"); // this does not work..
+  server.send(303);
+
+  Serial.println("ESP restart ...");
+  ESP.restart();
+}
+
 
 /*
    MQTT functions
@@ -634,9 +1042,9 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len) {
 
 void startMQTT() { //MQTT setup and connect - 877dev
   //load mqtt credential file if it exists, and update default strings  ********************
-  loadMQTT();
-  //MQTTclient.setServer(mqtt_server_name, mqtt_port); //setup MQTT broker information as defined earlier
-  MQTTclient.setServer(myMqttIP, myMqttPort); //setup MQTT broker information as defined earlier
+  loadMqtt();
+
+  MQTTclient.setServer(mqttIpAddress, mqttPort); //setup MQTT broker information as defined earlier
   if (MQTTclient.setBufferSize (1024))      //set buffer for larger messages, new to library 2.8.0
   {
     Serial.println(F("MQTT buffer size successfully increased"));
@@ -644,7 +1052,7 @@ void startMQTT() { //MQTT setup and connect - 877dev
   MQTTclient.setKeepAlive(60);
   MQTTclient.setSocketTimeout(30);
   MQTTclient.setCallback(MQTTcallback);          // set callback details - this function is called automatically whenever a message arrives on a subscribed topic.
-  if(enableMQTT){
+  if(enableMqtt){
     MQTT_Connect();                                //Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
   }
 }
@@ -659,7 +1067,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {  //877dev
     Serial.print((char)payload[i]);
   }
   Serial.println();
-  if (String(topic).equals(String(base_mqtt_topic) + "/command")) {
+  if (String(topic).equals(String(mqttBaseTopic) + "/command")) {
     DynamicJsonDocument doc(256);
     // Deserialize the JSON document
     String message = (const char *) &payload[0];
@@ -698,7 +1106,7 @@ void MQTT_Connect()
     false - connection failed.
     true - connection succeeded
   */
-  if (MQTTclient.connect(mqtt_client_id.c_str(), myMqttUser.c_str(), myMqttPassword.c_str(), (String(base_mqtt_topic) + "/Status").c_str(), 0, 1, "Dead"))
+  if (MQTTclient.connect(mqttClientId.c_str(), mqttUsername.c_str(), mqttPassword.c_str(), (String(mqttBaseTopic) + "/Status").c_str(), 0, 1, "Dead"))
   {
     // We get here if the connection was successful...
     mqtt_connect_count++;
@@ -706,14 +1114,14 @@ void MQTT_Connect()
     // Once connected, publish some announcements...
     // These all have the Retained flag set to true, so that the value is stored on the server and can be retrieved at any point
     // Check the .../Status topic to see that the device is still online before relying on the data from these retained topics
-    MQTTclient.publish((String(base_mqtt_topic) + "/Status").c_str(), "Alive", true);
-    MQTTclient.publish((String(base_mqtt_topic) + "/MAC_Address").c_str(), WiFi.macAddress().c_str(), true);                 // Device MAC Address
-    MQTTclient.publish((String(base_mqtt_topic) + "/MQTT_Connect_Count").c_str(), String(mqtt_connect_count).c_str(), true); // MQTT Connect Count
+    MQTTclient.publish((String(mqttBaseTopic) + "/Status").c_str(), "Alive", true);
+    MQTTclient.publish((String(mqttBaseTopic) + "/MAC_Address").c_str(), WiFi.macAddress().c_str(), true);                 // Device MAC Address
+    MQTTclient.publish((String(mqttBaseTopic) + "/MQTT_Connect_Count").c_str(), String(mqtt_connect_count).c_str(), true); // MQTT Connect Count
     MQTTclient.loop();
 
 
     // ... and then re/subscribe to the watched topics
-    MQTTclient.subscribe((String(base_mqtt_topic) + "/command").c_str());   // Watch the .../command topic for incoming MQTT messages
+    MQTTclient.subscribe((String(mqttBaseTopic) + "/command").c_str());   // Watch the .../command topic for incoming MQTT messages
     MQTTclient.loop();
     // Add other watched topics in here...
   }
