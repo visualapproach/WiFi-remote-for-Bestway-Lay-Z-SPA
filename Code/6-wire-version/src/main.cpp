@@ -33,12 +33,11 @@ void setup() {
   startWebSocket();
   startMQTT();
   bwc.print(WiFi.localIP().toString());
-  Serial.println("\nEnd of setup()");
+  Serial.println(F("\nEnd of setup()"));
 }
 
 void loop() {
   bwc.loop();                     // Fiddle with the pump computer
-
   if(WiFi.status() == WL_CONNECTED){
     webSocket.loop();             // check for websocket events
     server.handleClient();        // run the server
@@ -455,6 +454,7 @@ void loadWifi()
   enableAp = doc["enableAp"];
   apSsid = doc["apSsid"].as<String>();
   apPwd = doc["apPwd"].as<String>();
+  Serial.println("loading pwd:   " + apPwd);
 
   enableStaticIp4 = doc["enableStaticIp4"];
   ip4Address[0] = doc["ip4Address"][0];
@@ -479,40 +479,91 @@ void loadWifi()
   ip4DnsSecondary[3] = doc["ip4DnsSecondary"][3];
 }
 
+
 void startWiFi() 
 { // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
-  WiFi.mode(WIFI_STA);
+  //WiFi.mode(WIFI_STA);
   Serial.println(F("Connecting to WiFi"));
   WiFi.setAutoReconnect(true);
   WiFi.persistent(true);
   String hn = "SPA-" + String(ESP.getChipId());
   WiFi.hostname(hn.c_str());
-  if(WiFi.SSID() == "" || WiFi.psk() == ""){
+  if(WiFi.SSID() == "" || WiFi.psk() == "")
+  {
     //start autoportal if no credentials are available
     //calling this with no wifi will need a restart to reconnect.
     // wm.setConfigPortalTimeout(30);
+    Serial.println("Start autoportal");
     wm.autoConnect("Spa autoportal", wm_password);
-  } else {
-
+  } 
+  else 
+  {
     if (enableStaticIp4)
     {
+      Serial.println(F("Using static IP"));
       WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
     }
 
-    //just connect the usual way.
-    //if starting with no wifi, the device will reconnect when wifi is up.
-    WiFi.begin();
+    // if (enableAp)
+    // {
+    //   String oldSSID = WiFi.SSID();
+    //   String oldpsk = WiFi.psk();
+    //   Serial.println("WiFi > using WiFi configuration with SSID \"" + apSsid + "\"" + " " + apPwd);
+    //   WiFi.begin(apSsid.c_str(), apPwd.c_str());
+
+    //   Serial.print("WiFi > Trying to connect ...");
+    //   int maxTries = 5;
+    //   int tryCount = 0;
+
+    //   while (WiFi.status() != WL_CONNECTED)
+    //   {
+    //     delay(3000);
+    //     Serial.print(".");
+    //     tryCount++;
+
+    //     if (tryCount >= maxTries)
+    //     {
+    //       Serial.println("");
+    //       Serial.println("WiFi > NOT Connected!");
+    //       // disable specific WiFi config
+    //       enableAp = false;
+    //       enableStaticIp4 = false;
+    //       // fallback to last WiFi
+    //       Serial.println("WiFi > Using last working SSID");
+    //       apSsid = oldSSID;
+    //       apPwd = oldpsk.c_str();
+    //       WiFi.disconnect();
+    //       WiFi.begin(oldSSID.c_str(), oldpsk.c_str()); //this breaks things. Memory issue? apPwd is random after this
+    //       break;
+    //     }
+    //   }
+    // }
+    // else
+    // {
+    //   //just connect the usual way.
+    //   //if starting with no wifi, the device will reconnect when wifi is up.
+    //   Serial.println("WiFi > no special AP");
+    //   WiFi.begin();
+    // }
+
+    // Serial.println("saving SSID "+apSsid);
+    // apSsid = WiFi.SSID();
+    // apPwd = WiFi.psk();
+    // saveWifi();
+      Serial.println(F("Start WiFi"));
+      WiFi.begin();
+
   }
  
-  if (WiFi.status() == WL_CONNECTED) {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println(F("Connection failed. Retrying in a while"));
+  } else {
     Serial.println("\r\n");
     Serial.print(F("Connected to "));
     Serial.println(WiFi.SSID());             // Tell us what network we're connected to
     Serial.print(F("IP address:\t"));
     Serial.print(WiFi.localIP());            // Send the IP address of the ESP8266 to the computer
     Serial.println("\r\n");
-  } else {
-    Serial.println("Connection failed. Retrying in a while");
   }
 }
 
@@ -563,7 +614,7 @@ void saveWifi()
 
   if (serializeJson(doc, file) == 0)
   {
-    Serial.println("{\"error\": \"Failed to serialize file\"}");
+    Serial.println(F("{\"error\": \"Failed to serialize file\"}"));
   }
   file.close();
 }
@@ -576,17 +627,14 @@ void handleGetWifi()
 {
   if (!checkHttpPost(server.method())) return;
   
-  DynamicJsonDocument doc(1024);
+  DynamicJsonDocument doc(1536);
 
   doc["enableAp"] = enableAp;
   doc["apSsid"] = apSsid;
-  doc["apPwd"] = "<enter password>";
   // print credentials
-  if (true)
-  {
-    doc["apPwd"] = apPwd;
-  }
-
+  //doc["apPwd"] = apPwd;
+  // do not print credentials
+  doc["apPwd"] = "password";
   doc["enableStaticIp4"] = enableStaticIp4;
   doc["ip4Address"][0] = ip4Address[0];
   doc["ip4Address"][1] = ip4Address[1];
@@ -728,7 +776,7 @@ void saveMqtt()
 
   if (serializeJson(doc, file) == 0)
   {
-    Serial.println("{\"error\": \"Failed to serialize file\"}");
+    Serial.println(F("{\"error\": \"Failed to serialize file\"}"));
   }
   file.close();
 }
@@ -946,9 +994,13 @@ void handleFileRemove()
  */
 void handleRestart()
 {
-  // TODO: browser tab must move from /restart/ otherwise its an endless restart loop
-  server.sendHeader("Location", "/"); // this does not work..
-  server.send(303);
+  server.send(200, F("text/html"), F("Restarting device."));
+  delay(1000);
+  periodicTimer.detach();
+  updateMqttTimer.detach();
+  updateWSTimer.detach();
+  bwc.stop();
+  bwc.saveSettings();
 
   Serial.println("ESP restart ...");
   ESP.restart();
