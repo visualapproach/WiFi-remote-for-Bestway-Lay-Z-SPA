@@ -242,7 +242,7 @@ void startWiFi()
  */
 void startWiFiConfigPortal()
 {
-  wm.autoConnect("Lay-Z-Spa WiFi Module");
+  wm.autoConnect("Lay-Z-Spa Module");
 
   Serial.print("WiFi > Trying to connect ...");
   while (WiFi.status() != WL_CONNECTED)
