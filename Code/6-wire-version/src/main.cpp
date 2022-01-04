@@ -339,7 +339,7 @@ void startOTA()
     else if (error == OTA_END_ERROR) Serial.println(F("End Failed"));
   });
   ArduinoOTA.begin();
-  Serial.println(F("OTA ready\r\n"));
+  Serial.println(F("OTA > ready"));
 }
 
 
@@ -351,7 +351,7 @@ void startWebSocket()
 {
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
-  Serial.println(F("WebSocket server started."));
+  Serial.println(F("WebSocket > server started"));
 }
 
 /**
@@ -430,7 +430,7 @@ void startHttpServer()
   server.onNotFound(handleNotFound);
   // start the HTTP server
   server.begin();
-  Serial.println(F("HTTP server started."));
+  Serial.println(F("HTTP > server started"));
 }
 
 /**
@@ -473,7 +473,7 @@ bool handleFileRead(String path)
     }
   }
   
-  Serial.println("handleFileRead: " + path);
+  Serial.println("HTTP > handleFileRead(): " + path);
   // If a folder is requested, send the index file
   if (path.endsWith("/"))
   {
@@ -493,11 +493,10 @@ bool handleFileRead(String path)
     File file = LittleFS.open(path, "r");                    // Open the file
     size_t sent = server.streamFile(file, contentType);    // Send it to the client
     file.close();                                          // Close the file again
-    Serial.println(String("\tSent file: ") + path);
-    Serial.println(String("\tFile size: ") + String(sent));
+    Serial.println(" sent: " + path + " (" + sent + ")");
     return true;
   }
-  Serial.println(String("\tFile Not Found: ") + path);   // If the file doesn't exist, return false
+  Serial.println(" not found: " + path);   // If the file doesn't exist, return false
   return false;
 }
 
