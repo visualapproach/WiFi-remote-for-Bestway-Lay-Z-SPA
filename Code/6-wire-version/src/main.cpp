@@ -8,7 +8,6 @@ void setup()
   digitalWrite(myoutputpin, LOW);
   Serial.begin(115200);		//As if you connected serial to your pump...
   //Serial.setDebugOutput(true);
-
   bwc.begin(); //no params = default pins
   bwc.loop();
   //Default pins:
@@ -220,13 +219,14 @@ void sendMQTT()
  */
 void startWiFi()
 {
-  WiFi.mode(WIFI_STA);
+  //WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(true);
   WiFi.persistent(true);
   WiFi.hostname(String("layzspa-" + ESP.getChipId()).c_str());
 
   if (enableStaticIp4)
   {
+    Serial.println("WiFi > using static IP \"" + ip4Address.toString() + "\" on gateway \"" + ip4Gateway.toString() + "\"");
     WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
   }
 
@@ -669,7 +669,7 @@ void saveWifi()
 
   if (serializeJson(doc, file) == 0)
   {
-    Serial.println("{\"error\": \"Failed to serialize file\"}");
+    Serial.println(F("{\"error\": \"Failed to serialize file\"}"));
   }
   file.close();
 }
@@ -866,7 +866,7 @@ void saveMqtt()
 
   if (serializeJson(doc, file) == 0)
   {
-    Serial.println("{\"error\": \"Failed to serialize file\"}");
+    Serial.println(F("{\"error\": \"Failed to serialize file\"}"));
   }
   file.close();
 }
@@ -1060,9 +1060,15 @@ void handleRestart()
   server.send(200, F("text/html"), F("ESP restart ..."));
   Serial.println(F("ESP restart ..."));
 
-  // TODO: browser tab must move from /restart/ otherwise its an endless restart loop
-  server.sendHeader("Location", "/"); // this does not work..
+  server.sendHeader("Location", "/");
   server.send(303);
+
+  delay(1000);
+  periodicTimer.detach();
+  updateMqttTimer.detach();
+  updateWSTimer.detach();
+  bwc.stop();
+  bwc.saveSettings();
 
   Serial.println("ESP restart ...");
   ESP.restart();

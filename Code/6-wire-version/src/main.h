@@ -35,18 +35,15 @@ bool runonce = true;
 
 void handleAUX();
 
-// merge conflicts >>>
-void sendMessage(int msgtype);
-// ---
-void periodicTimerCallback();
 void sendWS();
 void sendMQTT();
-void startNTP();
-// <<<
 
-void startOTA();
 void startWiFi();
 void startWiFiConfigPortal();
+
+void startNTP();
+
+void startOTA();
 
 void startWebSocket();
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len);

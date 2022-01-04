@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 
-#define LEGACY_NAME "layzspa-test"
+#define LEGACY_NAME "layzspa"
 
 /*
  * Web Server Authentication
