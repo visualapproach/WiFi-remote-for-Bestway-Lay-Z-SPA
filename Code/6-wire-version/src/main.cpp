@@ -195,82 +195,6 @@ void startOTA() { // Start the OTA service
 }
 
 
-
-/**
- * Start a Wi-Fi access point, and try to connect to some given access points.
- * Then wait for either an AP or STA connection
- */
-void startWiFi()
-{
-  WiFi.mode(WIFI_STA);
-  
-  if (enableStaticIp4)
-  {
-    WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
-  }
-
-  if (enableAp)
-  {
-    Serial.println("WiFi > using WiFi configuration with SSID \"" + apSsid + "\"");
-    WiFi.begin(apSsid, apPwd);
-
-    Serial.print("WiFi > Trying to connect ...");
-    int maxTries = 5;
-    int tryCount = 0;
-
-    while (WiFi.status() != WL_CONNECTED)
-    {
-      delay(1000);
-      Serial.print(".");
-      tryCount++;
-
-      if (tryCount >= maxTries)
-      {
-        Serial.println("");
-        Serial.println("WiFi > NOT Connected!");
-        // disable specific WiFi config
-        enableAp = false;
-        enableStaticIp4 = false;
-        // fallback to WiFi config portal
-        Serial.println("WiFi > Using WiFiManager Config Portal");
-        startWiFiConfigPortal();
-        break;
-      }
-    }
-  }
-  else
-  {
-    Serial.println("WiFi > Using WiFiManager Config Portal");
-    startWiFiConfigPortal();
-  }
-
-  apSsid = WiFi.SSID();
-  apPwd = WiFi.psk();
-  saveWifi();
-
-  Serial.println("");
-  Serial.println("WiFi > Connected");
-  Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
-  Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
-}
-
-/**
- * start WiFiManager configuration portal
- */
-void startWiFiConfigPortal()
-{
-  wm.autoConnect("Lay-Z-Spa WiFi Config");
-
-  Serial.print("WiFi > Trying to connect ...");
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
-  }
-}
-
-
-
 /**
  * start a web socket server
  */
@@ -555,7 +479,8 @@ void loadWifi()
   ip4DnsSecondary[3] = doc["ip4DnsSecondary"][3];
 }
 
-void startWiFi() { // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
+void startWiFi() 
+{ // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
   WiFi.mode(WIFI_STA);
   Serial.println(F("Connecting to WiFi"));
   WiFi.setAutoReconnect(true);
@@ -568,6 +493,12 @@ void startWiFi() { // Start a Wi-Fi access point, and try to connect to some giv
     // wm.setConfigPortalTimeout(30);
     wm.autoConnect("Spa autoportal", wm_password);
   } else {
+
+    if (enableStaticIp4)
+    {
+      WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
+    }
+
     //just connect the usual way.
     //if starting with no wifi, the device will reconnect when wifi is up.
     WiFi.begin();
@@ -735,18 +666,6 @@ void handleSetWifi()
   server.send(200, "plain/text", "");
 }
 
-/**
- * response for /resetwifi/
- * do this before giving away the device
- */
-void handleResetWifi()
-{
-  Serial.println("WiFi connection reset (erase) ...");
-  WiFi.disconnect();
-  delay(3000);
-  Serial.println("ESP reset ...");
-  ESP.reset();
-}
 
 /**
  * load MQTT json configuration from "mqtt.json"
