@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="main.css">
     <meta name="theme-color" content="#0066BF">
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
-    <script src="topNavi.js" type="text/javascript"></script>
+    <script src="function.js" type="text/javascript"></script>
 </head>
 
 <body onload="loadConfig()">
@@ -42,7 +42,7 @@
 				</tr>
 				<tr>
 					<td>Password:</td>
-					<td><input type="password" id="apPwd"></td>
+					<td><input type="password" id="apPwd"><input type="checkbox" onclick="togglePlainText('apPwd')"></td>
 				</tr>
 			</table>
         </section>
