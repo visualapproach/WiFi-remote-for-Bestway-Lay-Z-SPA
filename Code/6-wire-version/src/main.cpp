@@ -42,7 +42,7 @@ void setup()
   startMQTT();
 
   bwc.print(WiFi.localIP().toString());
-  Serial.println("\nEnd of setup()");
+  Serial.println(F("End of setup()"));
 }
 
 void loop()
@@ -473,7 +473,7 @@ bool handleFileRead(String path)
     }
   }
   
-  Serial.println("HTTP > handleFileRead(): " + path);
+  Serial.println("HTTP > request: " + path);
   // If a folder is requested, send the index file
   if (path.endsWith("/"))
   {
@@ -493,10 +493,10 @@ bool handleFileRead(String path)
     File file = LittleFS.open(path, "r");                    // Open the file
     size_t sent = server.streamFile(file, contentType);    // Send it to the client
     file.close();                                          // Close the file again
-    Serial.println(" sent: " + path + " (" + sent + ")");
+    Serial.println("HTTP > file sent: " + path + " (" + sent + " bytes)");
     return true;
   }
-  Serial.println(" not found: " + path);   // If the file doesn't exist, return false
+  Serial.println("HTTP > file not found: " + path);   // If the file doesn't exist, return false
   return false;
 }
 
@@ -507,7 +507,7 @@ bool checkHttpPost(HTTPMethod method)
 {
   if (method != HTTP_POST)
   {
-    server.send(405, "text/plain", "Method Not Allowed");
+    server.send(405, "text/plain", "Method not allowed.");
     return false;
   }
   return true;
@@ -536,7 +536,7 @@ void handleSetConfig()
   String message = server.arg(0);
   bwc.setJSONSettings(message);
 
-  server.send(200, "plain/text", "");
+  server.send(200, "text/plain", "");
 }
 
 /**
@@ -548,7 +548,7 @@ void handleGetCommandQueue()
   if (!checkHttpPost(server.method())) return;
 
   String json = bwc.getJSONCommandQueue();
-  server.send(200, "text/plain", json);
+  server.send(200, "application/json", json);
 }
 
 /**
@@ -564,7 +564,7 @@ void handleAddCommand()
   DeserializationError error = deserializeJson(doc, message);
   if (error)
   {
-    server.send(400, "plain/text", "Error deserializing message");
+    server.send(400, "text/plain", "Error deserializing message");
     return;
   }
 
@@ -715,7 +715,7 @@ void handleGetWifi()
   {
     json = "{\"error\": \"Failed to serialize message\"}";
   }
-  server.send(200, "text/plain", json);
+  server.send(200, "application/json", json);
 }
 
 /**
@@ -732,7 +732,7 @@ void handleSetWifi()
   if (error)
   {
     Serial.println(F("Failed to read config file"));
-    server.send(400, "plain/text", "Error deserializing message");
+    server.send(400, "text/plain", "Error deserializing message");
     return;
   }
 
@@ -764,7 +764,7 @@ void handleSetWifi()
 
   saveWifi();
 
-  server.send(200, "plain/text", "");
+  server.send(200, "text/plain", "");
 }
 
 /**
@@ -914,7 +914,7 @@ void handleSetMqtt()
   if (error)
   {
     Serial.println(F("Failed to read config file"));
-    server.send(400, "plain/text", "Error deserializing message");
+    server.send(400, "text/plain", "Error deserializing message");
     return;
   }
 
@@ -931,7 +931,7 @@ void handleSetMqtt()
 	
   saveMqtt();
 
-  server.send(200, "plain/text", "");
+  server.send(200, "text/plain", "");
 }
 
 /**
