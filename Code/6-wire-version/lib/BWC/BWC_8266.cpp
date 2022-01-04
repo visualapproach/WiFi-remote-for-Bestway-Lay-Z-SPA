@@ -8,10 +8,10 @@ CIO *pointerToClass;
 	// pointerToBWC->saveSettingsFlag();
 // }
 
-static void ICACHE_RAM_ATTR chipselectpin(void) {
+static void IRAM_ATTR chipselectpin(void) {
   pointerToClass->packetHandler();
 }
-static void ICACHE_RAM_ATTR clockpin(void) {
+static void IRAM_ATTR clockpin(void) {
   pointerToClass->clkHandler();
 }
 
@@ -115,7 +115,7 @@ void CIO::loop(void) {
 }
 
 //end of packet
-void ICACHE_RAM_ATTR CIO::eopHandler(void) {
+void IRAM_ATTR CIO::eopHandler(void) {
   //process latest data and enter corresponding mode (like listen for DSP_STS or send BTN_OUT)
   //pinMode(_DATA_PIN, INPUT);
   WRITE_PERI_REG( PIN_DIR_INPUT, 1 << _DATA_PIN);
@@ -149,7 +149,8 @@ void ICACHE_RAM_ATTR CIO::eopHandler(void) {
 
 //CIO comm
 //packet start
-void ICACHE_RAM_ATTR CIO::packetHandler(void) {
+//arduino core 3.0.1+ should work with digitalWrite() now.
+void IRAM_ATTR CIO::packetHandler(void) {
   if (!(READ_PERI_REG(PIN_IN) & (1 << _CS_PIN))) {
     //packet start
     _packet = true;
@@ -164,7 +165,7 @@ void ICACHE_RAM_ATTR CIO::packetHandler(void) {
 
 //CIO comm
 //Read incoming bits, and take action after a complete byte
-void ICACHE_RAM_ATTR CIO::clkHandler(void) {
+void IRAM_ATTR CIO::clkHandler(void) {
 
   if (!_packet) return;
   //CS line is active, so send/receive bits on DATA line
@@ -433,7 +434,7 @@ void BWC::begin2(){
   _audio = true;
   _restoreStatesOnStart = false;
 	_dsp.textOut(F("   hello   "));
-	_startNTP();
+//_startNTP();
 	LittleFS.begin();
 	_loadSettings();
 	_loadCommandQueue();
@@ -459,10 +460,6 @@ void BWC::loop(){
   ESP.wdtFeed();
   ESP.wdtDisable();
 
-	if (!DateTime.isTimeValid()) {
-      //Serial.println("Failed to get time from server, retry.");
-      DateTime.begin();
-    }
 	_timestamp = DateTime.now();
 
   //update DSP payload (memcpy(dest*, source*, len))
@@ -952,10 +949,8 @@ void BWC::saveSettings(){
     Serial.println(F("Failed to write json to settings.txt"));
   }
   file.close();
-  DateTime.begin();
   //revive the dog
   ESP.wdtEnable(0);
-
 }
 
 void BWC::_loadCommandQueue(){
@@ -1085,7 +1080,8 @@ void BWC::_restoreStates() {
   qCommand(SETUNIT, unt, DateTime.now()+10, 0);
   qCommand(SETPUMP, flt, DateTime.now()+12, 0);
   qCommand(SETHEATER, htr, DateTime.now()+14, 0);
-
+Serial.println("restoring states");
+Serial.println(DateTime.now());
   file.close();
 }
 

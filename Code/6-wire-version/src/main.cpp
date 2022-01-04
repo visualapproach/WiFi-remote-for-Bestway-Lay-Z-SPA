@@ -1,29 +1,16 @@
 #include "main.h"
 
-BWC bwc;
-WiFiManager wm;
-bool sendWSFlag = false;
-bool sendMQTTFlag = false;
-Ticker updateWSTimer;
-Ticker updateMqttTimer;
-String prevButtonName = "";
-const int solarpin = D0;    //no interrupt or PWM
-const int myoutputpin = D8; //pulled to GND. Boot fails if pulled HIGH.
-bool runonce = true;
-
-void setup() {
+void setup()
+{
   // put your setup code here, to run once:
   pinMode(solarpin, INPUT_PULLUP);
   pinMode(myoutputpin, OUTPUT);
   digitalWrite(myoutputpin, LOW);
   Serial.begin(115200);		//As if you connected serial to your pump...
-  LittleFS.begin(); // needs to be loaded here for reading the wifi.json
-  loadWifi();
-  startWiFi();
-  startOTA();
-  startHttpServer();
-  startWebSocket();
+  //Serial.setDebugOutput(true);
+
   bwc.begin(); //no params = default pins
+  bwc.loop();
   //Default pins:
   // bwc.begin(			
 			// int cio_cs_pin 		= D1, 
@@ -35,54 +22,113 @@ void setup() {
 			// int dsp_audio_pin 	= D6 
 			// );
 	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
-  startMQTT();
 
+  // check things every 60 seconds
+  periodicTimer.attach(60, []{ periodicTimerFlag = true; });
+  
   // update webpage every 2 seconds. (will also be updated on state changes)
   updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
 
   // update MQTT every 10 minutes. (will also be updated on state changes)
   updateMqttTimer.attach(600, []{ sendMQTTFlag = true; });
-  
+
+  // needs to be loaded here for reading the wifi.json
+  LittleFS.begin();
+  loadWifi();
+  startWiFi();
+  startNTP();
+  startOTA();
+  startHttpServer();
+  startWebSocket();
+  startMQTT();
+
   bwc.print(WiFi.localIP().toString());
+  Serial.println("\nEnd of setup()");
 }
 
-void loop() {
-  webSocket.loop();             // constantly check for websocket events
-  server.handleClient();        // run the server
-  ArduinoOTA.handle();          // listen for OTA events
-  //wm.process();
-  if(enableMqtt){
-    if (!MQTTclient.loop()) MQTT_Connect();           // Do MQTT magic
-  }
-  
-  bwc.loop();                   // Fiddle with the pump computer
-  if (bwc.newData()) {
-    sendMessage(1);//ws
-    if(enableMqtt) sendMessage(0);//mqtt
-    //bwc.saveEventlog();       //will only fill up and wear flash memory eventually
-  }
-  if (sendWSFlag) {
-    sendWSFlag = false;
-    sendMessage(1);//ws
-  }
-  if (sendMQTTFlag && enableMqtt) {
-    sendMQTTFlag = false;
-    sendMessage(0);//MQTT
-  }
-  if(enableMqtt){
-    String msg = bwc.getButtonName();
-    //publish pretty button name if display button is pressed (or NOBTN if released)
-    if(!msg.equals(prevButtonName)) {
-      MQTTclient.publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
-      prevButtonName = msg;
+void loop()
+{
+  // Fiddle with the pump computer
+  bwc.loop();
+
+  // do things only when WiFi is connected
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    // listen for websocket events
+    webSocket.loop();
+    // listen for webserver events
+    server.handleClient();
+    // listen for OTA events
+    ArduinoOTA.handle();
+    
+    // MQTT
+    if (enableMqtt)
+    {
+      if (!MQTTclient.loop())
+      {
+        MQTT_Connect();
+      }
+      else
+      {
+        String msg = bwc.getButtonName();
+        // publish pretty button name if display button is pressed (or NOBTN if released)
+        if (!msg.equals(prevButtonName))
+        {
+          MQTTclient.publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
+          prevButtonName = msg;
+        }
+
+        if (bwc.newData())
+        {
+          sendMQTT();
+        }
+        else if (sendMQTTFlag)
+        {
+          sendMQTTFlag = false;
+          sendMQTT();
+        }
+      }
+    }
+    
+    // web socket
+    if (bwc.newData())
+    {
+      sendWS();
+    }
+    else if (sendWSFlag)
+    {
+      sendWSFlag = false;
+      sendWS();
     }
   }
+
+  if (periodicTimerFlag)
+  {
+    periodicTimerFlag = false;
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      bwc.print(F("check net"));
+      Serial.println(F("WiFi not connected"));
+    }
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      if (!DateTime.isTimeValid()) {
+        Serial.println(F("Syncing NTP."));
+        DateTime.begin();
+      }
+    }
+  }
+
   //handleAUX();
 
-  //You can add own code here, but don't stall! If CPU is choking you can try to run @ 160 MHz, but that's cheating!
+  // You can add own code here, but don't stall!
+  // If CPU is choking you can try to run @ 160 MHz, but that's cheating!
 }
 
-void handleAUX() {
+
+
+void handleAUX()
+{
    //Usage example. Solar panels are giving a (3.3V) signal to start dumping electricity into the pool heater.
    //Rapid changes on this pin will fill up the command queue and stop you from adding other commands
    //It will also cause the heater to turn on and off as fast as it can
@@ -105,75 +151,65 @@ void handleAUX() {
    }
 }
 
-// Send status data to web client in JSON format (because it is easy to decode on the other side)
-void sendMessage(int msgtype) {
 
-  //send states to web sockets
-  if (msgtype == 1) {
-    String jsonmsg = bwc.getJSONStates();
-    webSocket.broadcastTXT(jsonmsg);
-    jsonmsg = bwc.getJSONTimes();
-    webSocket.broadcastTXT(jsonmsg);
-    String mqttJSONstatus = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + 
-                            String(",\"PressedButton\":\"") + bwc.getPressedButton() +
-                            String("\",\"HASJETS\":") + String(HASJETS) +
-                            String("}");
-    webSocket.broadcastTXT(mqttJSONstatus);
-  }
 
-  //Send STATES and TIMES to MQTT - 877dev
-  //It would be more elegant to send both states and times on the "message" topic
-  //and use the "CONTENT" field to distinguish between them
-  //but it might break peoples home automation setups, so to keep it backwards
-  //compatible I choose to start a new topic "/times"
-  if (msgtype == 0) {
-    String jsonmsg = bwc.getJSONStates();
-    if (MQTTclient.publish((String(mqttBaseTopic) + "/message").c_str(), String(jsonmsg).c_str(), true))
-    {
-      //Serial.println(F("MQTT published"));
-    }
-    else
-    {
-      //Serial.println(F("MQTT not published"));
-    }
-    jsonmsg = bwc.getJSONTimes();
-    if (MQTTclient.publish((String(mqttBaseTopic) + "/times").c_str(), String(jsonmsg).c_str(), true))
-    {
-      //Serial.println(F("MQTT published"));
-    }
-    else
-    {
-      //Serial.println(F("MQTT not published"));
-    }
-  }
+/**
+ * Send status data to web client in JSON format (because it is easy to decode on the other side)
+ */
+void sendWS()
+{
+  String json;
+
+  // send states
+  json = bwc.getJSONStates();
+  webSocket.broadcastTXT(json);
+
+  // send times
+  json = bwc.getJSONTimes();
+  webSocket.broadcastTXT(json);
+
+  // send other info
+  String other = 
+    String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + 
+    String(",\"PressedButton\":\"") + bwc.getPressedButton() + 
+    String("\",\"HASJETS\":") + String(HASJETS) + String("}");
+  
+  webSocket.broadcastTXT(other);
 }
 
+/**
+ * Send STATES and TIMES to MQTT
+ * It would be more elegant to send both states and times on the "message" topic
+ * and use the "CONTENT" field to distinguish between them
+ * but it might break peoples home automation setups, so to keep it backwards
+ * compatible I choose to start a new topic "/times"
+ * @author 877dev
+ */
+void sendMQTT()
+{
+  String json;
 
+  // send states
+  json = bwc.getJSONStates();
+  if (MQTTclient.publish((String(mqttBaseTopic) + "/message").c_str(), String(json).c_str(), true))
+  {
+    //Serial.println(F("MQTT published"));
+  }
+  else
+  {
+    //Serial.println(F("MQTT not published"));
+  }
 
-void startOTA() { // Start the OTA service
-  ArduinoOTA.setHostname(OTAName);
-  ArduinoOTA.setPassword(OTAPassword);
-
-  ArduinoOTA.onStart([]() {
-    Serial.println(F("OTA Start"));
-    bwc.stop();
-  });
-  ArduinoOTA.onEnd([]() {
-    Serial.println(F("\r\nOTA End"));
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println(F("Auth Failed"));
-    else if (error == OTA_BEGIN_ERROR) Serial.println(F("Begin Failed"));
-    else if (error == OTA_CONNECT_ERROR) Serial.println(F("Connect Failed"));
-    else if (error == OTA_RECEIVE_ERROR) Serial.println(F("Receive Failed"));
-    else if (error == OTA_END_ERROR) Serial.println(F("End Failed"));
-  });
-  ArduinoOTA.begin();
-  Serial.println(F("OTA ready\r\n"));
+  // send times
+  json = bwc.getJSONTimes();
+  if (MQTTclient.publish((String(mqttBaseTopic) + "/times").c_str(), String(json).c_str(), true))
+  {
+    //Serial.println(F("MQTT published"));
+  }
+  else
+  {
+    //Serial.println(F("MQTT not published"));
+  }
 }
 
 
@@ -185,7 +221,10 @@ void startOTA() { // Start the OTA service
 void startWiFi()
 {
   WiFi.mode(WIFI_STA);
-  
+  WiFi.setAutoReconnect(true);
+  WiFi.persistent(true);
+  WiFi.hostname(String("layzspa-" + ESP.getChipId()).c_str());
+
   if (enableStaticIp4)
   {
     WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
@@ -210,31 +249,39 @@ void startWiFi()
       {
         Serial.println("");
         Serial.println("WiFi > NOT Connected!");
-        // disable specific WiFi config
-        enableAp = false;
-        enableStaticIp4 = false;
-        // fallback to WiFi config portal
-        Serial.println("WiFi > Using WiFiManager Config Portal");
-        startWiFiConfigPortal();
+        if (enableWmAp)
+        {
+          // disable specific WiFi config
+          enableAp = false;
+          enableStaticIp4 = false;
+          // fallback to WiFi config portal
+          startWiFiConfigPortal();
+        }
         break;
       }
     }
   }
-  else
+  else if (enableWmAp)
   {
-    Serial.println("WiFi > Using WiFiManager Config Portal");
     startWiFiConfigPortal();
   }
 
-  enableAp = true;
-  apSsid = WiFi.SSID();
-  apPwd = WiFi.psk();
-  saveWifi();
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    enableAp = true;
+    apSsid = WiFi.SSID();
+    apPwd = WiFi.psk();
+    saveWifi();
 
-  Serial.println("");
-  Serial.println("WiFi > Connected");
-  Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
-  Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
+    Serial.println("");
+    Serial.println("WiFi > Connected");
+    Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
+    Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
+  }
+  else
+  {
+    Serial.println("WiFi > Connection failed. Retrying in a while");
+  }
 }
 
 /**
@@ -242,14 +289,57 @@ void startWiFi()
  */
 void startWiFiConfigPortal()
 {
-  wm.autoConnect("Lay-Z-Spa Module");
-
+  Serial.println("WiFi > Using WiFiManager Config Portal");
+  wm.autoConnect(wmApName, wmApPassword);
   Serial.print("WiFi > Trying to connect ...");
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
     Serial.print(".");
   }
+}
+
+
+
+/**
+ * start NTP sync
+ */
+void startNTP()
+{
+  DateTime.setServer("pool.ntp.org");
+  DateTime.begin(3000);
+}
+
+
+
+/**
+ * Start the OTA service
+ */
+void startOTA()
+{
+  ArduinoOTA.setHostname(OTAName);
+  ArduinoOTA.setPassword(OTAPassword);
+
+  ArduinoOTA.onStart([]() {
+    Serial.println(F("OTA Start"));
+    bwc.stop();
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println(F("\r\nOTA End"));
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println(F("Auth Failed"));
+    else if (error == OTA_BEGIN_ERROR) Serial.println(F("Begin Failed"));
+    else if (error == OTA_CONNECT_ERROR) Serial.println(F("Connect Failed"));
+    else if (error == OTA_RECEIVE_ERROR) Serial.println(F("Receive Failed"));
+    else if (error == OTA_END_ERROR) Serial.println(F("End Failed"));
+  });
+  ArduinoOTA.begin();
+  Serial.println(F("OTA ready\r\n"));
 }
 
 
@@ -282,7 +372,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
       {
         IPAddress ip = webSocket.remoteIP(num);
         Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
-        sendMessage(1);
+        sendWS();
       }
       break;
 
@@ -680,20 +770,41 @@ void handleSetWifi()
 
 /**
  * response for /resetwifi/
- * do this before giving away the device
+ * do this before giving away the device (be aware of other credentials e.g. MQTT)
+ * a complete flash erase should do the job but remember to upload the filesystem as well.
  */
 void handleResetWifi()
 {
+  server.send(200, F("text/html"), F("WiFi connection reset (erase) ..."));
+  Serial.println(F("WiFi connection reset (erase) ..."));
+
+  periodicTimer.detach();
+  updateMqttTimer.detach();
+  updateWSTimer.detach();
+  bwc.stop();
+  bwc.saveSettings();
+  delay(1000);
+
+  ESP.eraseConfig();
+  delay(1000);
+
   enableAp = false;
   apSsid = "empty";
   apPwd = "empty";
   saveWifi();
-  Serial.println("WiFi connection reset (erase) ...");
-  WiFi.disconnect();
-  delay(3000);
-  Serial.println("ESP reset ...");
+  delay(1000);
+
+  wm.resetSettings();
+  //WiFi.disconnect();
+  delay(1000);
+
+  server.send(200, F("text/html"), F("WiFi connection reset (erase) ... done."));
+  Serial.println(F("WiFi connection reset (erase) ... done."));
+  Serial.println(F("ESP reset ..."));
   ESP.reset();
 }
+
+
 
 /**
  * load MQTT json configuration from "mqtt.json"
@@ -947,6 +1058,9 @@ void handleFileRemove()
  */
 void handleRestart()
 {
+  server.send(200, F("text/html"), F("ESP restart ..."));
+  Serial.println(F("ESP restart ..."));
+
   // TODO: browser tab must move from /restart/ otherwise its an endless restart loop
   server.sendHeader("Location", "/"); // this does not work..
   server.send(303);
@@ -978,7 +1092,11 @@ void startMQTT()
   // set callback details
   // this function is called automatically whenever a message arrives on a subscribed topic.
   MQTTclient.setCallback(MQTTcallback);
-  //MQTT_Connect();
+  // Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
+  if (enableMqtt)
+  {
+    MQTT_Connect();
+  }
 }
 
 /**

@@ -19,10 +19,30 @@ WiFiClient My_WiFi_Client;
 PubSubClient MQTTclient(My_WiFi_Client);
 int mqtt_connect_count;                // Count of how may times we've connected to the MQTT server since booting (should always be 1 or more)
 
+WiFiManager wm;
+Ticker updateMqttTimer;
+Ticker updateWSTimer;
+Ticker periodicTimer;
+
+BWC bwc;
+bool sendWSFlag = false;
+bool sendMQTTFlag = false;
+bool periodicTimerFlag = false;
+String prevButtonName = "";
+const int solarpin = D0;    //no interrupt or PWM
+const int myoutputpin = D8; //pulled to GND. Boot fails if pulled HIGH.
+bool runonce = true;
+
 void handleAUX();
-void sendMQTTsetFlag();
-void sendWSsetFlag();
+
+// merge conflicts >>>
 void sendMessage(int msgtype);
+// ---
+void periodicTimerCallback();
+void sendWS();
+void sendMQTT();
+void startNTP();
+// <<<
 
 void startOTA();
 void startWiFi();

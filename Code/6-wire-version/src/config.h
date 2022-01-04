@@ -4,7 +4,7 @@
 #define LEGACY_NAME "layzspa-test"
 
 /*
- * Web Authentication
+ * Web Server Authentication
  */
 /** get or set the state of the web authentication */
 bool enableWebAuth = false;
@@ -22,7 +22,17 @@ const char *OTAName = LEGACY_NAME;
 const char *OTAPassword = "esp8266";
 
 /*
- * Access Point Configuration
+ * WiFi Configuration Manager
+ */
+/** get the state of the WiFi configuration manager */
+const bool enableWmAp = true;
+/** get the name for the WiFi configuration manager access point */
+const char *wmApName = "Lay-Z-Spa Module";
+/** get the password for the WiFi configuration manager */
+const char *wmApPassword = "esp8266";
+
+/*
+ * WiFi Access Point
  */
 /** get or set the state of the specific access point configuration */
 bool enableAp = false;
@@ -32,7 +42,7 @@ String apSsid = "ssid";
 String apPwd = "pwd";
 
 /*
- * Static IP Configuration
+ * WiFi Static IP
  */
 /** get or set the state of the static IP setup */
 bool enableStaticIp4 = false;
@@ -48,7 +58,7 @@ IPAddress ip4DnsPrimary(8,8,8,8);
 IPAddress ip4DnsSecondary(8,8,4,4);
 
 /*
- * MQTT Server Configuration
+ * MQTT Server
  */
 /** get or set the state of the MQTT server connection */
 bool enableMqtt = false;
