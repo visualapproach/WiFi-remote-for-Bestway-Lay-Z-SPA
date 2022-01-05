@@ -4,6 +4,12 @@
 #define LEGACY_NAME "layzspa"
 
 /*
+ * Miscellaneous
+ */
+/** get the state of password visibility */
+const bool hidePasswords = true;
+
+/*
  * Web Server Authentication
  */
 /** get or set the state of the web authentication */

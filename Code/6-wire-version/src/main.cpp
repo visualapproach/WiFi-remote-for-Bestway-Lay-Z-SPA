@@ -480,11 +480,12 @@ bool handleFileRead(String path)
     path += F("index.html");
   }
   // deny reading credentials
-  //if (path.equalsIgnoreCase("/mqtt.json") || path.equalsIgnoreCase("/wifi.json"))
-  //{
-  //  Serial.println(String("\tFile reading denied (credentials)."));
-  //  return false;
-  //}
+  if (path.equalsIgnoreCase("/mqtt.json") || path.equalsIgnoreCase("/wifi.json"))
+  {
+    server.send(403, "text/plain", "Permission denied.");
+    Serial.println(F("HTTP > file reading denied (credentials)."));
+    return false;
+  }
   String contentType = getContentType(path);             // Get the MIME type
   String pathWithGz = path + ".gz";
   if (LittleFS.exists(pathWithGz) || LittleFS.exists(path)) { // If the file exists, either as a compressed archive, or normal
@@ -686,8 +687,12 @@ void handleGetWifi()
 
   doc["enableAp"] = enableAp;
   doc["apSsid"] = apSsid;
-  doc["apPwd"] = apPwd;
-
+  doc["apPwd"] = "<enter password>";
+  if (!hidePasswords)
+  {
+    doc["apPwd"] = apPwd;
+  }
+  
   doc["enableStaticIp4"] = enableStaticIp4;
   doc["ip4Address"][0] = ip4Address[0];
   doc["ip4Address"][1] = ip4Address[1];
@@ -888,7 +893,11 @@ void handleGetMqtt()
   doc["mqttIpAddress"][3] = mqttIpAddress[3];
   doc["mqttPort"] = mqttPort;
   doc["mqttUsername"] = mqttUsername;
-  doc["mqttPassword"] = mqttPassword;
+  doc["mqttPassword"] = "<enter password>";
+  if (!hidePasswords)
+  {
+    doc["mqttPassword"] = mqttPassword;
+  }
   doc["mqttClientId"] = mqttClientId;
   doc["mqttBaseTopic"] = mqttBaseTopic;
 
