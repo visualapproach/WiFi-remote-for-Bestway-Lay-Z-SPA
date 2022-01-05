@@ -364,14 +364,14 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
   {
     // if the websocket is disconnected
     case WStype_DISCONNECTED:
-      Serial.printf("[%u] Disconnected!\n", num);
+      Serial.printf("WebSocket > [%u] Disconnected!\n", num);
       break;
 
     // if a new websocket connection is established
     case WStype_CONNECTED:
       {
         IPAddress ip = webSocket.remoteIP(num);
-        Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+        Serial.printf("WebSocket > [%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
         sendWS();
       }
       break;
@@ -379,12 +379,12 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
     // if new text data is received
     case WStype_TEXT:
       {
-        Serial.printf("[%u] get Text: %s\n", num, payload);
+        Serial.printf("WebSocket > [%u] get Text: %s\n", num, payload);
         DynamicJsonDocument doc(256);
         DeserializationError error = deserializeJson(doc, payload);
         if (error)
         {
-          Serial.println(F("JSON command failed"));
+          Serial.println(F("WebSocket > JSON command failed"));
           return;
         }
 
