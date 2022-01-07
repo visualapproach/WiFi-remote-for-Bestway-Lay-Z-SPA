@@ -22,8 +22,8 @@ void setup()
 			// );
 	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
 
-  // check things every 60 seconds
-  periodicTimer.attach(60, []{ periodicTimerFlag = true; });
+  // check things in a cycle
+  periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
   
   // update webpage every 2 seconds. (will also be updated on state changes)
   updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
@@ -63,7 +63,7 @@ void loop()
     // MQTT
     if (enableMqtt)
     {
-      if (!MQTTclient.loop())
+      if (!mqttClient.loop())
       {
         MQTT_Connect();
       }
@@ -73,7 +73,7 @@ void loop()
         // publish pretty button name if display button is pressed (or NOBTN if released)
         if (!msg.equals(prevButtonName))
         {
-          MQTTclient.publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
+          mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
           prevButtonName = msg;
         }
 
@@ -101,18 +101,49 @@ void loop()
     }
   }
 
+  // run when wifi connection lost
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    // run once after connection was lost
+    if (wifiConnected)
+    {
+      Serial.println("WiFi > Lost connection. Trying to reconnect ...");
+    }
+    // set marker
+    wifiConnected = false;
+  }
+
+  // run when wifi connection established
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    // run once after connection was established
+    if (!wifiConnected)
+    {
+      Serial.println("WiFi > Connected");
+      Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
+      Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
+    }
+    // reset marker
+    wifiConnected = true;
+  }
+
   if (periodicTimerFlag)
   {
     periodicTimerFlag = false;
+
     if (WiFi.status() != WL_CONNECTED)
     {
-      bwc.print(F("check net"));
-      Serial.println(F("WiFi not connected"));
+      bwc.print(F("check network"));
+      Serial.println(F("WiFi > Trying to reconnect ..."));
     }
     if (WiFi.status() == WL_CONNECTED)
     {
-      if (!DateTime.isTimeValid()) {
-        Serial.println(F("Syncing NTP."));
+      // could be interesting to display the IP
+      //bwc.print(WiFi.localIP().toString());
+
+      if (!DateTime.isTimeValid())
+      {
+        Serial.println(F("NTP > Start synchronisation"));
         DateTime.begin();
       }
     }
@@ -169,7 +200,7 @@ void sendWS()
 
   // send other info
   String other = 
-    String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + 
+    String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(mqttClient.state()) + 
     String(",\"PressedButton\":\"") + bwc.getPressedButton() + 
     String("\",\"HASJETS\":") + String(HASJETS) + String("}");
   
@@ -190,7 +221,7 @@ void sendMQTT()
 
   // send states
   json = bwc.getJSONStates();
-  if (MQTTclient.publish((String(mqttBaseTopic) + "/message").c_str(), String(json).c_str(), true))
+  if (mqttClient.publish((String(mqttBaseTopic) + "/message").c_str(), String(json).c_str(), true))
   {
     //Serial.println(F("MQTT published"));
   }
@@ -201,7 +232,7 @@ void sendMQTT()
 
   // send times
   json = bwc.getJSONTimes();
-  if (MQTTclient.publish((String(mqttBaseTopic) + "/times").c_str(), String(json).c_str(), true))
+  if (mqttClient.publish((String(mqttBaseTopic) + "/times").c_str(), String(json).c_str(), true))
   {
     //Serial.println(F("MQTT published"));
   }
@@ -222,7 +253,7 @@ void startWiFi()
   //WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(true);
   WiFi.persistent(true);
-  WiFi.hostname(String("layzspa-" + ESP.getChipId()).c_str());
+  WiFi.hostname(netHostname);
 
   if (enableStaticIp4)
   {
@@ -233,10 +264,11 @@ void startWiFi()
   if (enableAp)
   {
     Serial.println("WiFi > using WiFi configuration with SSID \"" + apSsid + "\"");
+
     WiFi.begin(apSsid, apPwd);
 
     Serial.print("WiFi > Trying to connect ...");
-    int maxTries = 5;
+    int maxTries = 10;
     int tryCount = 0;
 
     while (WiFi.status() != WL_CONNECTED)
@@ -248,8 +280,8 @@ void startWiFi()
       if (tryCount >= maxTries)
       {
         Serial.println("");
-        Serial.println("WiFi > NOT Connected!");
-        if (enableWmAp)
+        Serial.println("WiFi > NOT connected!");
+        if (enableWmApFallback)
         {
           // disable specific WiFi config
           enableAp = false;
@@ -259,9 +291,10 @@ void startWiFi()
         }
         break;
       }
+      Serial.println("");
     }
   }
-  else if (enableWmAp)
+  else
   {
     startWiFiConfigPortal();
   }
@@ -273,14 +306,15 @@ void startWiFi()
     apPwd = WiFi.psk();
     saveWifi();
 
-    Serial.println("");
-    Serial.println("WiFi > Connected");
+    wifiConnected = true;
+
+    Serial.println("WiFi > Connected.");
     Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
     Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
   }
   else
   {
-    Serial.println("WiFi > Connection failed. Retrying in a while");
+    Serial.println("WiFi > Connection failed. Retrying in a while ...");
   }
 }
 
@@ -297,6 +331,7 @@ void startWiFiConfigPortal()
     delay(500);
     Serial.print(".");
   }
+  wifiConnected = true; // TODO: <torei> i think this can be removed
 }
 
 
@@ -1095,17 +1130,17 @@ void startMQTT()
   loadMqtt();
 
   // setup MQTT broker information as defined earlier
-  MQTTclient.setServer(mqttIpAddress, mqttPort);
+  mqttClient.setServer(mqttIpAddress, mqttPort);
   // set buffer for larger messages, new to library 2.8.0
-  if (MQTTclient.setBufferSize(1024))
+  if (mqttClient.setBufferSize(1024))
   {
     Serial.println(F("MQTT buffer size successfully increased"));
   }
-  MQTTclient.setKeepAlive(60);
-  MQTTclient.setSocketTimeout(30);
+  mqttClient.setKeepAlive(60);
+  mqttClient.setSocketTimeout(30);
   // set callback details
   // this function is called automatically whenever a message arrives on a subscribed topic.
-  MQTTclient.setCallback(MQTTcallback);
+  mqttClient.setCallback(MQTTcallback);
   // Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
   if (enableMqtt)
   {
@@ -1169,7 +1204,7 @@ void MQTT_Connect()
     false - connection failed.
     true - connection succeeded
   */
-  if (MQTTclient.connect(mqttClientId.c_str(), mqttUsername.c_str(), mqttPassword.c_str(), (String(mqttBaseTopic) + "/Status").c_str(), 0, 1, "Dead"))
+  if (mqttClient.connect(mqttClientId.c_str(), mqttUsername.c_str(), mqttPassword.c_str(), (String(mqttBaseTopic) + "/Status").c_str(), 0, 1, "Dead"))
   {
     // We get here if the connection was successful...
     mqtt_connect_count++;
@@ -1177,24 +1212,24 @@ void MQTT_Connect()
     // Once connected, publish some announcements...
     // These all have the Retained flag set to true, so that the value is stored on the server and can be retrieved at any point
     // Check the .../Status topic to see that the device is still online before relying on the data from these retained topics
-    MQTTclient.publish((String(mqttBaseTopic) + "/Status").c_str(), "Alive", true);
-    MQTTclient.publish((String(mqttBaseTopic) + "/MAC_Address").c_str(), WiFi.macAddress().c_str(), true);                 // Device MAC Address
-    MQTTclient.publish((String(mqttBaseTopic) + "/MQTT_Connect_Count").c_str(), String(mqtt_connect_count).c_str(), true); // MQTT Connect Count
-    MQTTclient.loop();
+    mqttClient.publish((String(mqttBaseTopic) + "/Status").c_str(), "Alive", true);
+    mqttClient.publish((String(mqttBaseTopic) + "/MAC_Address").c_str(), WiFi.macAddress().c_str(), true);                 // Device MAC Address
+    mqttClient.publish((String(mqttBaseTopic) + "/MQTT_Connect_Count").c_str(), String(mqtt_connect_count).c_str(), true); // MQTT Connect Count
+    mqttClient.loop();
 
     // ... and then re/subscribe to the watched topics
-    MQTTclient.subscribe((String(mqttBaseTopic) + "/command").c_str());   // Watch the .../command topic for incoming MQTT messages
-    MQTTclient.loop();
+    mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());   // Watch the .../command topic for incoming MQTT messages
+    mqttClient.loop();
     // Add other watched topics in here...
   }
   else
   {
     // We get here if the connection failed...
     Serial.print(F("MQTT Connection FAILED, Return Code = "));
-    Serial.println(MQTTclient.state());
+    Serial.println(mqttClient.state());
     Serial.println();
     /*
-      MQTTclient.state return code meanings...
+      mqttClient.state return code meanings...
       -4 : MQTT_CONNECTION_TIMEOUT - the server didn't respond within the keepalive time
       -3 : MQTT_CONNECTION_LOST - the network connection was broken
       -2 : MQTT_CONNECT_FAILED - the network connection failed
