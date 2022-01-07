@@ -50,7 +50,7 @@ void loop()
   // Fiddle with the pump computer
   bwc.loop();
 
-  // do things only when WiFi is connected
+  // run only when a wifi connection is established
   if (WiFi.status() == WL_CONNECTED)
   {
     // listen for websocket events
@@ -99,23 +99,7 @@ void loop()
       sendWSFlag = false;
       sendWS();
     }
-  }
 
-  // run when wifi connection lost
-  if (WiFi.status() != WL_CONNECTED)
-  {
-    // run once after connection was lost
-    if (wifiConnected)
-    {
-      Serial.println("WiFi > Lost connection. Trying to reconnect ...");
-    }
-    // set marker
-    wifiConnected = false;
-  }
-
-  // run when wifi connection established
-  if (WiFi.status() == WL_CONNECTED)
-  {
     // run once after connection was established
     if (!wifiConnected)
     {
@@ -127,6 +111,19 @@ void loop()
     wifiConnected = true;
   }
 
+  // run only when the wifi connection got lost
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    // run once after connection was lost
+    if (wifiConnected)
+    {
+      Serial.println("WiFi > Lost connection. Trying to reconnect ...");
+    }
+    // set marker
+    wifiConnected = false;
+  }
+
+  // run every X seconds
   if (periodicTimerFlag)
   {
     periodicTimerFlag = false;
