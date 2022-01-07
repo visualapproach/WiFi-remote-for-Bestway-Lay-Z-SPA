@@ -331,7 +331,6 @@ void startWiFiConfigPortal()
     delay(500);
     Serial.print(".");
   }
-  wifiConnected = true; // TODO: <torei> i think this can be removed
 }
 
 
