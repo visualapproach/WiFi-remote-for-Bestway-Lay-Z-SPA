@@ -4,14 +4,22 @@
 #define LEGACY_NAME "layzspa"
 
 /*
- * Web Authentication
+ * Miscellaneous
+ */
+/** get the state of password visibility */
+const bool hidePasswords = true;
+/** get the network hostname of the device (max. length 26) */
+const char *netHostname = LEGACY_NAME;
+
+/*
+ * Web Server Authentication
  */
 /** get or set the state of the web authentication */
 bool enableWebAuth = false;
 /** get or set the username for web authentication */
-const char *authUsername = "username";
+String authUsername = "username";
 /** get or set the password for web authentication */
-const char *authPassword = "password";
+String authPassword = "password";
 
 /*
  * OTA Service Credentials
@@ -22,7 +30,39 @@ const char *OTAName = LEGACY_NAME;
 const char *OTAPassword = "esp8266";
 
 /*
- * Access Point Configuration
+ * WiFi Configuration Manager
+ *
+ * A fresh/clean ESP needs WiFi credentials to be connected to a network.
+ * This manager creates an access point when there is no persistent data set yet.
+ * Persistent data means, the data the ESP writes to it's internal memory,
+ *  when a connection was established successfully.
+ * Means not the data we write with the "WiFi Access Point" configuration below.
+ *  (wifi.json on flash memory)
+ * 
+ * NOTICE: If you want your ESP running continuously without creating an access point
+ *  when having WiFi issues, set 'enableWmApFallback=false', otherwise we could fallback
+ *  to this 'AP mode' on the upstart setup() job.
+ * 
+ * WARNING: For the case you set 'enableWmApFallback=false' you could lock out
+ *  yourself when loosing your home network. You would have to "Reset WiFi" but
+ *  you are not able to connect to the Web GUI without a connection.
+ * 
+ * TODO: create a hardware based key to "Reset WiFi"
+ */
+/** get the state of the WiFi configuration manager fallback on wifi failures */
+const bool enableWmApFallback = true;
+/** get the name for the WiFi configuration manager access point */
+const char *wmApName = "Lay-Z-Spa Module";
+/** get the password for the WiFi configuration manager (min. 8, max. 63 chars) */
+const char *wmApPassword = "layzspam0dule";
+
+/*
+ * WiFi Access Point
+ *
+ * When a connection was established successfully, the 'enableAp' get automatically
+ *  the state 'true' including writing credentials to the "wifi.json".
+ * 
+ * You can modify this via Web GUI.
  */
 /** get or set the state of the specific access point configuration */
 bool enableAp = false;
@@ -30,11 +70,11 @@ bool enableAp = false;
 String apSsid = "ssid";
 /** get or set the password for the SSID */
 String apPwd = "pwd";
-/** autoportal pswd */
-const char *wm_password = "esp8266";
 
 /*
- * Static IP Configuration
+ * WiFi Static IP
+ *
+ * You can modify this via Web GUI.
  */
 /** get or set the state of the static IP setup */
 bool enableStaticIp4 = false;
@@ -50,7 +90,9 @@ IPAddress ip4DnsPrimary(8,8,8,8);
 IPAddress ip4DnsSecondary(8,8,4,4);
 
 /*
- * MQTT Server Configuration
+ * MQTT Server
+ *
+ * You can modify this via Web GUI.
  */
 /** get or set the state of the MQTT server connection */
 bool enableMqtt = false;

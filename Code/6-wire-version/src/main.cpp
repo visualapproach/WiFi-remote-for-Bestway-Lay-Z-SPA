@@ -1,7 +1,7 @@
 #include "main.h"
 
-
-void setup() {
+void setup()
+{
   // put your setup code here, to run once:
   pinMode(solarpin, INPUT_PULLUP);
   pinMode(myoutputpin, OUTPUT);
@@ -21,78 +21,141 @@ void setup() {
 			// int dsp_audio_pin 	= D6 
 			// );
 	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
-  updateMqttTimer.attach(600, sendMQTTsetFlag);     //update mqtt every 10 minutes. Mqtt will also be updated on every state change
-  updateWSTimer.attach(2.0, sendWSsetFlag);         //update webpage every 2 secs plus state changes
-  periodicTimer.attach(60, periodicTimerCallback);  //things to do once in a while
-  LittleFS.begin(); // needs to be loaded here for reading the wifi.json
+
+  // check things in a cycle
+  periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
+  
+  // update webpage every 2 seconds. (will also be updated on state changes)
+  updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
+
+  // update MQTT every 10 minutes. (will also be updated on state changes)
+  updateMqttTimer.attach(600, []{ sendMQTTFlag = true; });
+
+  // needs to be loaded here for reading the wifi.json
+  LittleFS.begin();
   loadWifi();
   startWiFi();
   startNTP();
   startOTA();
-  startServer();
+  startHttpServer();
   startWebSocket();
   startMQTT();
+
   bwc.print(WiFi.localIP().toString());
-  Serial.println(F("\nEnd of setup()"));
+  Serial.println(F("End of setup()"));
 }
 
-void loop() {
-  bwc.loop();                     // Fiddle with the pump computer
-  if(WiFi.status() == WL_CONNECTED){
-    webSocket.loop();             // check for websocket events
-    server.handleClient();        // run the server
-    ArduinoOTA.handle();          // listen for OTA events
-      
-    if (enableMqtt){
-      if(!MQTTclient.loop()){
+void loop()
+{
+  // Fiddle with the pump computer
+  bwc.loop();
+
+  // run only when a wifi connection is established
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    // listen for websocket events
+    webSocket.loop();
+    // listen for webserver events
+    server.handleClient();
+    // listen for OTA events
+    ArduinoOTA.handle();
+    
+    // MQTT
+    if (enableMqtt)
+    {
+      if (!mqttClient.loop())
+      {
         MQTT_Connect();
-      } else {
+      }
+      else
+      {
         String msg = bwc.getButtonName();
-        //publish pretty button name if display button is pressed (or NOBTN if released)
-        if(!msg.equals(prevButtonName)) {
-          MQTTclient.publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
+        // publish pretty button name if display button is pressed (or NOBTN if released)
+        if (!msg.equals(prevButtonName))
+        {
+          mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
           prevButtonName = msg;
         }
-        if (bwc.newData()) sendMQTT();
+
+        if (bwc.newData())
+        {
+          sendMQTT();
+        }
+        else if (sendMQTTFlag)
+        {
+          sendMQTTFlag = false;
+          sendMQTT();
+        }
       }
     }
     
-    if (bwc.newData()) {
+    // web socket
+    if (bwc.newData())
+    {
       sendWS();
     }
-    if (sendWSFlag) {
+    else if (sendWSFlag)
+    {
       sendWSFlag = false;
       sendWS();
     }
-    if (sendMQTTFlag && enableMqtt) {
-      sendMQTTFlag = false;
-      sendMQTT();
+
+    // run once after connection was established
+    if (!wifiConnected)
+    {
+      Serial.println("WiFi > Connected");
+      Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
+      Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
     }
+    // reset marker
+    wifiConnected = true;
   }
 
-  if(periodicTimerFlag){
-    periodicTimerFlag = false;
-    if (WiFi.status() != WL_CONNECTED) {
-      bwc.print(F("check net"));
-      Serial.println(F("WiFi not connected"));
+  // run only when the wifi connection got lost
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    // run once after connection was lost
+    if (wifiConnected)
+    {
+      Serial.println("WiFi > Lost connection. Trying to reconnect ...");
     }
-    if (WiFi.status() == WL_CONNECTED) {
-      if (!DateTime.isTimeValid()) {
-        Serial.println(F("Syncing NTP."));
+    // set marker
+    wifiConnected = false;
+  }
+
+  // run every X seconds
+  if (periodicTimerFlag)
+  {
+    periodicTimerFlag = false;
+
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      bwc.print(F("check network"));
+      Serial.println(F("WiFi > Trying to reconnect ..."));
+    }
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      // could be interesting to display the IP
+      //bwc.print(WiFi.localIP().toString());
+
+      if (!DateTime.isTimeValid())
+      {
+        Serial.println(F("NTP > Start synchronisation"));
         DateTime.begin();
       }
     }
   }
+
   //handleAUX();
-  //You can add own code here, but don't stall! If CPU is choking you can try to run @ 160 MHz, but that's cheating!
+
+  // You can add own code here, but don't stall!
+  // If CPU is choking you can try to run @ 160 MHz, but that's cheating!
 }
 
-//instead of checking NTP etc every loop() we do it every 30 seconds to keep up
-void periodicTimerCallback() {
-  periodicTimerFlag = true;
-}
 
-void handleAUX() {
+
+void handleAUX()
+{
    //Usage example. Solar panels are giving a (3.3V) signal to start dumping electricity into the pool heater.
    //Rapid changes on this pin will fill up the command queue and stop you from adding other commands
    //It will also cause the heater to turn on and off as fast as it can
@@ -115,36 +178,47 @@ void handleAUX() {
    }
 }
 
-// This function is called by the mqtt timer
-void sendMQTTsetFlag() {
-  sendMQTTFlag = true;
-}
-void sendWSsetFlag() {
-  sendWSFlag = true;
-}
 
-// Send status data to web client in JSON format (because it is easy to decode on the other side)
-void sendWS() {
-  //send states to web sockets
-  String jsonmsg = bwc.getJSONStates();
-  webSocket.broadcastTXT(jsonmsg);
 
-  //send times
-  jsonmsg = bwc.getJSONTimes();
-  webSocket.broadcastTXT(jsonmsg);
+/**
+ * Send status data to web client in JSON format (because it is easy to decode on the other side)
+ */
+void sendWS()
+{
+  String json;
 
-  //send other info
-  String other = String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(MQTTclient.state()) + 
-                          String(",\"PressedButton\":\"") + bwc.getPressedButton() +
-                          String("\",\"HASJETS\":") + String(HASJETS) +
-                          String("}");
+  // send states
+  json = bwc.getJSONStates();
+  webSocket.broadcastTXT(json);
+
+  // send times
+  json = bwc.getJSONTimes();
+  webSocket.broadcastTXT(json);
+
+  // send other info
+  String other = 
+    String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(mqttClient.state()) + 
+    String(",\"PressedButton\":\"") + bwc.getPressedButton() + 
+    String("\",\"HASJETS\":") + String(HASJETS) + String("}");
+  
   webSocket.broadcastTXT(other);
 }
 
-void sendMQTT(){
-  //Send STATES
-  String jsonmsg = bwc.getJSONStates();
-  if (MQTTclient.publish((String(mqttBaseTopic) + "/message").c_str(), String(jsonmsg).c_str(), true))
+/**
+ * Send STATES and TIMES to MQTT
+ * It would be more elegant to send both states and times on the "message" topic
+ * and use the "CONTENT" field to distinguish between them
+ * but it might break peoples home automation setups, so to keep it backwards
+ * compatible I choose to start a new topic "/times"
+ * @author 877dev
+ */
+void sendMQTT()
+{
+  String json;
+
+  // send states
+  json = bwc.getJSONStates();
+  if (mqttClient.publish((String(mqttBaseTopic) + "/message").c_str(), String(json).c_str(), true))
   {
     //Serial.println(F("MQTT published"));
   }
@@ -153,9 +227,9 @@ void sendMQTT(){
     //Serial.println(F("MQTT not published"));
   }
 
-  //send times
-  jsonmsg = bwc.getJSONTimes();
-  if (MQTTclient.publish((String(mqttBaseTopic) + "/times").c_str(), String(jsonmsg).c_str(), true))
+  // send times
+  json = bwc.getJSONTimes();
+  if (mqttClient.publish((String(mqttBaseTopic) + "/times").c_str(), String(json).c_str(), true))
   {
     //Serial.println(F("MQTT published"));
   }
@@ -167,7 +241,113 @@ void sendMQTT(){
 
 
 
-void startOTA() { // Start the OTA service
+/**
+ * Start a Wi-Fi access point, and try to connect to some given access points.
+ * Then wait for either an AP or STA connection
+ */
+void startWiFi()
+{
+  //WiFi.mode(WIFI_STA);
+  WiFi.setAutoReconnect(true);
+  WiFi.persistent(true);
+  WiFi.hostname(netHostname);
+
+  if (enableStaticIp4)
+  {
+    Serial.println("WiFi > using static IP \"" + ip4Address.toString() + "\" on gateway \"" + ip4Gateway.toString() + "\"");
+    WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
+  }
+
+  if (enableAp)
+  {
+    Serial.println("WiFi > using WiFi configuration with SSID \"" + apSsid + "\"");
+
+    WiFi.begin(apSsid, apPwd);
+
+    Serial.print("WiFi > Trying to connect ...");
+    int maxTries = 10;
+    int tryCount = 0;
+
+    while (WiFi.status() != WL_CONNECTED)
+    {
+      delay(1000);
+      Serial.print(".");
+      tryCount++;
+
+      if (tryCount >= maxTries)
+      {
+        Serial.println("");
+        Serial.println("WiFi > NOT connected!");
+        if (enableWmApFallback)
+        {
+          // disable specific WiFi config
+          enableAp = false;
+          enableStaticIp4 = false;
+          // fallback to WiFi config portal
+          startWiFiConfigPortal();
+        }
+        break;
+      }
+      Serial.println("");
+    }
+  }
+  else
+  {
+    startWiFiConfigPortal();
+  }
+
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    enableAp = true;
+    apSsid = WiFi.SSID();
+    apPwd = WiFi.psk();
+    saveWifi();
+
+    wifiConnected = true;
+
+    Serial.println("WiFi > Connected.");
+    Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
+    Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
+  }
+  else
+  {
+    Serial.println("WiFi > Connection failed. Retrying in a while ...");
+  }
+}
+
+/**
+ * start WiFiManager configuration portal
+ */
+void startWiFiConfigPortal()
+{
+  Serial.println("WiFi > Using WiFiManager Config Portal");
+  wm.autoConnect(wmApName, wmApPassword);
+  Serial.print("WiFi > Trying to connect ...");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+}
+
+
+
+/**
+ * start NTP sync
+ */
+void startNTP()
+{
+  DateTime.setServer("pool.ntp.org");
+  DateTime.begin(3000);
+}
+
+
+
+/**
+ * Start the OTA service
+ */
+void startOTA()
+{
   ArduinoOTA.setHostname(OTAName);
   ArduinoOTA.setPassword(OTAPassword);
 
@@ -190,8 +370,9 @@ void startOTA() { // Start the OTA service
     else if (error == OTA_END_ERROR) Serial.println(F("End Failed"));
   });
   ArduinoOTA.begin();
-  Serial.println(F("OTA ready\r\n"));
+  Serial.println(F("OTA > ready"));
 }
+
 
 
 /**
@@ -201,7 +382,7 @@ void startWebSocket()
 {
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
-  Serial.println(F("WebSocket server started."));
+  Serial.println(F("WebSocket > server started"));
 }
 
 /**
@@ -214,14 +395,14 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
   {
     // if the websocket is disconnected
     case WStype_DISCONNECTED:
-      Serial.printf("[%u] Disconnected!\n", num);
+      Serial.printf("WebSocket > [%u] Disconnected!\n", num);
       break;
 
     // if a new websocket connection is established
     case WStype_CONNECTED:
       {
         IPAddress ip = webSocket.remoteIP(num);
-        Serial.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+        Serial.printf("WebSocket > [%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
         sendWS();
       }
       break;
@@ -229,12 +410,12 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
     // if new text data is received
     case WStype_TEXT:
       {
-        Serial.printf("[%u] get Text: %s\n", num, payload);
+        Serial.printf("WebSocket > [%u] get Text: %s\n", num, payload);
         DynamicJsonDocument doc(256);
         DeserializationError error = deserializeJson(doc, payload);
         if (error)
         {
-          Serial.println(F("JSON command failed"));
+          Serial.println(F("WebSocket > JSON command failed"));
           return;
         }
 
@@ -258,7 +439,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
 /**
  * start a HTTP server with a file read and upload handler
  */
-void startServer()
+void startHttpServer()
 {
   server.on(F("/getconfig/"), handleGetConfig);
   server.on(F("/setconfig/"), handleSetConfig);
@@ -280,7 +461,7 @@ void startServer()
   server.onNotFound(handleNotFound);
   // start the HTTP server
   server.begin();
-  Serial.println(F("HTTP server started."));
+  Serial.println(F("HTTP > server started"));
 }
 
 /**
@@ -317,24 +498,25 @@ bool handleFileRead(String path)
   // ask for web authentication
   if (enableWebAuth)
   {
-    if (!server.authenticate(authUsername, authPassword))
+    if (!server.authenticate(authUsername.c_str(), authPassword.c_str()))
     {
       server.requestAuthentication();
     }
   }
   
-  Serial.println("handleFileRead: " + path);
+  Serial.println("HTTP > request: " + path);
   // If a folder is requested, send the index file
   if (path.endsWith("/"))
   {
     path += F("index.html");
   }
   // deny reading credentials
-  //if (path.equalsIgnoreCase("/mqtt.json") || path.equalsIgnoreCase("/wifi.json"))
-  //{
-  //  Serial.println(String("\tFile reading denied (credentials)."));
-  //  return false;
-  //}
+  if (path.equalsIgnoreCase("/mqtt.json") || path.equalsIgnoreCase("/wifi.json"))
+  {
+    server.send(403, "text/plain", "Permission denied.");
+    Serial.println(F("HTTP > file reading denied (credentials)."));
+    return false;
+  }
   String contentType = getContentType(path);             // Get the MIME type
   String pathWithGz = path + ".gz";
   if (LittleFS.exists(pathWithGz) || LittleFS.exists(path)) { // If the file exists, either as a compressed archive, or normal
@@ -343,11 +525,10 @@ bool handleFileRead(String path)
     File file = LittleFS.open(path, "r");                    // Open the file
     size_t sent = server.streamFile(file, contentType);    // Send it to the client
     file.close();                                          // Close the file again
-    Serial.println(String("\tSent file: ") + path);
-    Serial.println(String("\tFile size: ") + String(sent));
+    Serial.println("HTTP > file sent: " + path + " (" + sent + " bytes)");
     return true;
   }
-  Serial.println(String("\tFile Not Found: ") + path);   // If the file doesn't exist, return false
+  Serial.println("HTTP > file not found: " + path);   // If the file doesn't exist, return false
   return false;
 }
 
@@ -358,7 +539,7 @@ bool checkHttpPost(HTTPMethod method)
 {
   if (method != HTTP_POST)
   {
-    server.send(405, "text/plain", "Method Not Allowed");
+    server.send(405, "text/plain", "Method not allowed.");
     return false;
   }
   return true;
@@ -387,7 +568,7 @@ void handleSetConfig()
   String message = server.arg(0);
   bwc.setJSONSettings(message);
 
-  server.send(200, "plain/text", "");
+  server.send(200, "text/plain", "");
 }
 
 /**
@@ -399,7 +580,7 @@ void handleGetCommandQueue()
   if (!checkHttpPost(server.method())) return;
 
   String json = bwc.getJSONCommandQueue();
-  server.send(200, "text/plain", json);
+  server.send(200, "application/json", json);
 }
 
 /**
@@ -415,7 +596,7 @@ void handleAddCommand()
   DeserializationError error = deserializeJson(doc, message);
   if (error)
   {
-    server.send(400, "plain/text", "Error deserializing message");
+    server.send(400, "text/plain", "Error deserializing message");
     return;
   }
 
@@ -454,7 +635,6 @@ void loadWifi()
   enableAp = doc["enableAp"];
   apSsid = doc["apSsid"].as<String>();
   apPwd = doc["apPwd"].as<String>();
-  Serial.println("loading pwd:   " + apPwd);
 
   enableStaticIp4 = doc["enableStaticIp4"];
   ip4Address[0] = doc["ip4Address"][0];
@@ -477,99 +657,6 @@ void loadWifi()
   ip4DnsSecondary[1] = doc["ip4DnsSecondary"][1];
   ip4DnsSecondary[2] = doc["ip4DnsSecondary"][2];
   ip4DnsSecondary[3] = doc["ip4DnsSecondary"][3];
-}
-
-
-void startWiFi() 
-{ // Start a Wi-Fi access point, and try to connect to some given access points. Then wait for either an AP or STA connection
-  //WiFi.mode(WIFI_STA);
-  Serial.println(F("Connecting to WiFi"));
-  WiFi.setAutoReconnect(true);
-  WiFi.persistent(true);
-  String hn = "SPA-" + String(ESP.getChipId());
-  WiFi.hostname(hn.c_str());
-  if(WiFi.SSID() == "" || WiFi.psk() == "")
-  {
-    //start autoportal if no credentials are available
-    //calling this with no wifi will need a restart to reconnect.
-    // wm.setConfigPortalTimeout(30);
-    Serial.println("Start autoportal");
-    wm.autoConnect("Spa autoportal", wm_password);
-  } 
-  else 
-  {
-    if (enableStaticIp4)
-    {
-      Serial.println(F("Using static IP"));
-      WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
-    }
-
-    // if (enableAp)
-    // {
-    //   String oldSSID = WiFi.SSID();
-    //   String oldpsk = WiFi.psk();
-    //   Serial.println("WiFi > using WiFi configuration with SSID \"" + apSsid + "\"" + " " + apPwd);
-    //   WiFi.begin(apSsid.c_str(), apPwd.c_str());
-
-    //   Serial.print("WiFi > Trying to connect ...");
-    //   int maxTries = 5;
-    //   int tryCount = 0;
-
-    //   while (WiFi.status() != WL_CONNECTED)
-    //   {
-    //     delay(3000);
-    //     Serial.print(".");
-    //     tryCount++;
-
-    //     if (tryCount >= maxTries)
-    //     {
-    //       Serial.println("");
-    //       Serial.println("WiFi > NOT Connected!");
-    //       // disable specific WiFi config
-    //       enableAp = false;
-    //       enableStaticIp4 = false;
-    //       // fallback to last WiFi
-    //       Serial.println("WiFi > Using last working SSID");
-    //       apSsid = oldSSID;
-    //       apPwd = oldpsk.c_str();
-    //       WiFi.disconnect();
-    //       WiFi.begin(oldSSID.c_str(), oldpsk.c_str()); //this breaks things. Memory issue? apPwd is random after this
-    //       break;
-    //     }
-    //   }
-    // }
-    // else
-    // {
-    //   //just connect the usual way.
-    //   //if starting with no wifi, the device will reconnect when wifi is up.
-    //   Serial.println("WiFi > no special AP");
-    //   WiFi.begin();
-    // }
-
-    // Serial.println("saving SSID "+apSsid);
-    // apSsid = WiFi.SSID();
-    // apPwd = WiFi.psk();
-    // saveWifi();
-      Serial.println(F("Start WiFi"));
-      WiFi.begin();
-
-  }
- 
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println(F("Connection failed. Retrying in a while"));
-  } else {
-    Serial.println("\r\n");
-    Serial.print(F("Connected to "));
-    Serial.println(WiFi.SSID());             // Tell us what network we're connected to
-    Serial.print(F("IP address:\t"));
-    Serial.print(WiFi.localIP());            // Send the IP address of the ESP8266 to the computer
-    Serial.println("\r\n");
-  }
-}
-
-void startNTP(){
-  DateTime.setServer("pool.ntp.org");
-  DateTime.begin(3000); //timeout 3s
 }
 
 /**
@@ -627,14 +714,16 @@ void handleGetWifi()
 {
   if (!checkHttpPost(server.method())) return;
   
-  DynamicJsonDocument doc(1536);
+  DynamicJsonDocument doc(1024);
 
   doc["enableAp"] = enableAp;
   doc["apSsid"] = apSsid;
-  // print credentials
-  //doc["apPwd"] = apPwd;
-  // do not print credentials
-  doc["apPwd"] = "password";
+  doc["apPwd"] = "<enter password>";
+  if (!hidePasswords)
+  {
+    doc["apPwd"] = apPwd;
+  }
+  
   doc["enableStaticIp4"] = enableStaticIp4;
   doc["ip4Address"][0] = ip4Address[0];
   doc["ip4Address"][1] = ip4Address[1];
@@ -662,7 +751,7 @@ void handleGetWifi()
   {
     json = "{\"error\": \"Failed to serialize message\"}";
   }
-  server.send(200, "text/plain", json);
+  server.send(200, "application/json", json);
 }
 
 /**
@@ -679,7 +768,7 @@ void handleSetWifi()
   if (error)
   {
     Serial.println(F("Failed to read config file"));
-    server.send(400, "plain/text", "Error deserializing message");
+    server.send(400, "text/plain", "Error deserializing message");
     return;
   }
 
@@ -711,8 +800,45 @@ void handleSetWifi()
 
   saveWifi();
 
-  server.send(200, "plain/text", "");
+  server.send(200, "text/plain", "");
 }
+
+/**
+ * response for /resetwifi/
+ * do this before giving away the device (be aware of other credentials e.g. MQTT)
+ * a complete flash erase should do the job but remember to upload the filesystem as well.
+ */
+void handleResetWifi()
+{
+  server.send(200, F("text/html"), F("WiFi connection reset (erase) ..."));
+  Serial.println(F("WiFi connection reset (erase) ..."));
+
+  periodicTimer.detach();
+  updateMqttTimer.detach();
+  updateWSTimer.detach();
+  bwc.stop();
+  bwc.saveSettings();
+  delay(1000);
+
+  ESP.eraseConfig();
+  delay(1000);
+
+  enableAp = false;
+  apSsid = "empty";
+  apPwd = "empty";
+  saveWifi();
+  delay(1000);
+
+  wm.resetSettings();
+  //WiFi.disconnect();
+  delay(1000);
+
+  server.send(200, F("text/html"), F("WiFi connection reset (erase) ... done."));
+  Serial.println(F("WiFi connection reset (erase) ... done."));
+  Serial.println(F("ESP reset ..."));
+  ESP.reset();
+}
+
 
 
 /**
@@ -797,12 +923,10 @@ void handleGetMqtt()
   doc["mqttIpAddress"][2] = mqttIpAddress[2];
   doc["mqttIpAddress"][3] = mqttIpAddress[3];
   doc["mqttPort"] = mqttPort;
-  doc["mqttUsername"] = "<enter username>";
+  doc["mqttUsername"] = mqttUsername;
   doc["mqttPassword"] = "<enter password>";
-  // print credentials
-  if (true)
+  if (!hidePasswords)
   {
-    doc["mqttUsername"] = mqttUsername;
     doc["mqttPassword"] = mqttPassword;
   }
   doc["mqttClientId"] = mqttClientId;
@@ -830,7 +954,7 @@ void handleSetMqtt()
   if (error)
   {
     Serial.println(F("Failed to read config file"));
-    server.send(400, "plain/text", "Error deserializing message");
+    server.send(400, "text/plain", "Error deserializing message");
     return;
   }
 
@@ -844,31 +968,10 @@ void handleSetMqtt()
   mqttPassword = doc["mqttPassword"].as<String>();
   mqttClientId = doc["mqttClientId"].as<String>();
   mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
-
+	
   saveMqtt();
 
-  server.send(200, "plain/text", "");
-}
-
-//Do this before giving away the device
-//If this doesn't work you need to erase flash (from tool in pio-menu). Then it should work again.
-void handleResetWifi()
-{
-  server.send(200, F("text/html"), F("Restart device. If credentials is not forgotten you need to erase flash memory."));
-  Serial.println(F("Deleting credentials. Resetting in 9 s"));
-  delay(1000);
-  periodicTimer.detach();
-  updateMqttTimer.detach();
-  updateWSTimer.detach();
-  bwc.stop();
-  bwc.saveSettings();
-  ESP.eraseConfig();
-  delay(4000);
-  wm.resetSettings();
-  //WiFi.disconnect();
-  delay(5000);
-  ESP.reset();
-  delay(5000);
+  server.send(200, "text/plain", "");
 }
 
 /**
@@ -994,7 +1097,12 @@ void handleFileRemove()
  */
 void handleRestart()
 {
-  server.send(200, F("text/html"), F("Restarting device."));
+  server.send(200, F("text/html"), F("ESP restart ..."));
+  Serial.println(F("ESP restart ..."));
+
+  server.sendHeader("Location", "/");
+  server.send(303);
+
   delay(1000);
   periodicTimer.detach();
   updateMqttTimer.detach();
@@ -1007,55 +1115,70 @@ void handleRestart()
 }
 
 
-/*
-   MQTT functions
-*/
 
-void startMQTT() { //MQTT setup and connect - 877dev
-  //load mqtt credential file if it exists, and update default strings  ********************
+/**
+ * MQTT setup and connect
+ * @author 877dev
+ */
+void startMQTT()
+{
+  // load mqtt credential file if it exists, and update default strings
   loadMqtt();
 
-  MQTTclient.setServer(mqttIpAddress, mqttPort); //setup MQTT broker information as defined earlier
-  if (MQTTclient.setBufferSize (1024))      //set buffer for larger messages, new to library 2.8.0
+  // setup MQTT broker information as defined earlier
+  mqttClient.setServer(mqttIpAddress, mqttPort);
+  // set buffer for larger messages, new to library 2.8.0
+  if (mqttClient.setBufferSize(1024))
   {
     Serial.println(F("MQTT buffer size successfully increased"));
   }
-  MQTTclient.setKeepAlive(60);
-  MQTTclient.setSocketTimeout(30);
-  MQTTclient.setCallback(MQTTcallback);          // set callback details - this function is called automatically whenever a message arrives on a subscribed topic.
-  if(enableMqtt){
-    MQTT_Connect();                                //Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
+  mqttClient.setKeepAlive(60);
+  mqttClient.setSocketTimeout(30);
+  // set callback details
+  // this function is called automatically whenever a message arrives on a subscribed topic.
+  mqttClient.setCallback(MQTTcallback);
+  // Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
+  if (enableMqtt)
+  {
+    MQTT_Connect();
   }
 }
 
-
-void MQTTcallback(char* topic, byte* payload, unsigned int length) {  //877dev
-
+/**
+ * MQTT callback function
+ * @author 877dev
+ */
+void MQTTcallback(char* topic, byte* payload, unsigned int length)
+{
   Serial.print(F("Message arrived ["));
   Serial.print(topic);
   Serial.print("] ");
-  for (unsigned int i = 0; i < length; i++) {
+  for (unsigned int i = 0; i < length; i++)
+  {
     Serial.print((char)payload[i]);
   }
   Serial.println();
-  if (String(topic).equals(String(mqttBaseTopic) + "/command")) {
+  if (String(topic).equals(String(mqttBaseTopic) + "/command"))
+  {
     DynamicJsonDocument doc(256);
-    // Deserialize the JSON document
     String message = (const char *) &payload[0];
     DeserializationError error = deserializeJson(doc, message);
-    if (error) {
+    if (error)
+    {
       return;
     }
 
-    // Copy values from the JsonDocument to the Config
     uint32_t command = doc["CMD"];
     uint32_t value = doc["VALUE"];
     uint32_t xtime = doc["XTIME"];
     uint32_t interval = doc["INTERVAL"];
     bwc.qCommand(command, value, xtime, interval);
   }
-} // End of void MQTTcallback
+}
 
+/**
+ * Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
+ */
 void MQTT_Connect()
 {
   Serial.print(F("Connecting to MQTT...  "));
@@ -1077,7 +1200,7 @@ void MQTT_Connect()
     false - connection failed.
     true - connection succeeded
   */
-  if (MQTTclient.connect(mqttClientId.c_str(), mqttUsername.c_str(), mqttPassword.c_str(), (String(mqttBaseTopic) + "/Status").c_str(), 0, 1, "Dead"))
+  if (mqttClient.connect(mqttClientId.c_str(), mqttUsername.c_str(), mqttPassword.c_str(), (String(mqttBaseTopic) + "/Status").c_str(), 0, 1, "Dead"))
   {
     // We get here if the connection was successful...
     mqtt_connect_count++;
@@ -1085,25 +1208,24 @@ void MQTT_Connect()
     // Once connected, publish some announcements...
     // These all have the Retained flag set to true, so that the value is stored on the server and can be retrieved at any point
     // Check the .../Status topic to see that the device is still online before relying on the data from these retained topics
-    MQTTclient.publish((String(mqttBaseTopic) + "/Status").c_str(), "Alive", true);
-    MQTTclient.publish((String(mqttBaseTopic) + "/MAC_Address").c_str(), WiFi.macAddress().c_str(), true);                 // Device MAC Address
-    MQTTclient.publish((String(mqttBaseTopic) + "/MQTT_Connect_Count").c_str(), String(mqtt_connect_count).c_str(), true); // MQTT Connect Count
-    MQTTclient.loop();
-
+    mqttClient.publish((String(mqttBaseTopic) + "/Status").c_str(), "Alive", true);
+    mqttClient.publish((String(mqttBaseTopic) + "/MAC_Address").c_str(), WiFi.macAddress().c_str(), true);                 // Device MAC Address
+    mqttClient.publish((String(mqttBaseTopic) + "/MQTT_Connect_Count").c_str(), String(mqtt_connect_count).c_str(), true); // MQTT Connect Count
+    mqttClient.loop();
 
     // ... and then re/subscribe to the watched topics
-    MQTTclient.subscribe((String(mqttBaseTopic) + "/command").c_str());   // Watch the .../command topic for incoming MQTT messages
-    MQTTclient.loop();
+    mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());   // Watch the .../command topic for incoming MQTT messages
+    mqttClient.loop();
     // Add other watched topics in here...
   }
   else
   {
     // We get here if the connection failed...
     Serial.print(F("MQTT Connection FAILED, Return Code = "));
-    Serial.println(MQTTclient.state());
+    Serial.println(mqttClient.state());
     Serial.println();
     /*
-      MQTTclient.state return code meanings...
+      mqttClient.state return code meanings...
       -4 : MQTT_CONNECTION_TIMEOUT - the server didn't respond within the keepalive time
       -3 : MQTT_CONNECTION_LOST - the network connection was broken
       -2 : MQTT_CONNECT_FAILED - the network connection failed
@@ -1116,4 +1238,4 @@ void MQTT_Connect()
       5 : MQTT_CONNECT_UNAUTHORIZED - the client was not authorized to connect *
     */
   }
-} // End of void MQTT_Connect
+}
