@@ -18,7 +18,10 @@ ESP8266 hack to use as WiFi remote control for Bestway Lay-Z-Spa Whirlpools (inc
 > As mentioned, this is a hack. If anything breaks it is your fault.
 
 > #### Caution
-> Pull out the mains plug before before modifying hardware, or you can die!
+> Pull out the mains plug before modifying hardware, or you can die!
+
+> #### Donate
+> If you like this project, please consider a donation. [Buy me a coffee](https://paypal.me/TLandahl), thanks!
 
 #### Features
 - Control buttons, watch the temperature and get current states from your browser.
@@ -38,9 +41,6 @@ ESP8266 hack to use as WiFi remote control for Bestway Lay-Z-Spa Whirlpools (inc
 - 6 or 4 pin male header (0.1 in spacing) or better: JST-SM Housing Connector
 - 6 or 4 pin female header (JST-SM Housing Connector)
 see build instructions for more info.
-
-> #### Donate
-> If you like this project, please consider a donation. [Buy me a coffee](https://paypal.me/TLandahl), thanks!
 
 #### Web Interface
 <img src="./pics/web01_overview.png" width="300"><br />
