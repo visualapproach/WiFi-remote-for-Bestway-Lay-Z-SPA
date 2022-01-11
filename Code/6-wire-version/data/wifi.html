@@ -175,6 +175,8 @@ function loadConfig()
 
 function saveConfig()
 {
+	if (!validatePassword('apPwd')) return;
+
 	const Http = new XMLHttpRequest();
 	const url='/setwifi/';
 	Http.open("POST", url);

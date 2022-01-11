@@ -102,6 +102,8 @@ function loadConfig()
 
 function saveConfig()
 {
+	if (!validatePassword('mqttPassword')) return;
+	
 	const Http = new XMLHttpRequest();
 	const url='/setmqtt/';
 	Http.open("POST", url);

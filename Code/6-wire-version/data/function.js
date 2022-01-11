@@ -16,3 +16,12 @@ function togglePlainText(id) {
         x.type = "password";
     }
 }
+
+function validatePassword(id) {
+    var x = document.getElementById(id);
+    if (x.value == "<enter password>") {
+        alert("Please enter a password to continue.");
+		return false;
+    }
+    return true;
+}

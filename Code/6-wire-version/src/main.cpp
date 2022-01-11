@@ -34,6 +34,7 @@ void setup()
   // needs to be loaded here for reading the wifi.json
   LittleFS.begin();
   loadWifi();
+  
   startWiFi();
   startNTP();
   startOTA();
@@ -838,8 +839,6 @@ void handleResetWifi()
   Serial.println(F("ESP reset ..."));
   ESP.reset();
 }
-
-
 
 /**
  * load MQTT json configuration from "mqtt.json"
