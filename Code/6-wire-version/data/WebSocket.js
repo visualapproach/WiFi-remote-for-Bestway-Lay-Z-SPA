@@ -1,6 +1,5 @@
 //
 var connection;
-var initTargetSlider = true;
 const settarget = 0;
 const setunit = 1;
 const setbubbles = 2;
@@ -15,10 +14,13 @@ const resetftimer = 10;
 const setjets = 11;
 const setbrightness = 12;
 
+// to be used for setting the slider position once after loading to original values
+var initSlider = true;
+
 // display brightness multiplier. lower value results lower brightness levels (1-30)
-const dspBrtMultiplier = 10;
+const dspBrtMultiplier = 16;
 
-
+// initial connect to the web socket
 connect();
 
 function connect()
@@ -28,6 +30,7 @@ function connect()
 	connection.onopen = function()
 	{
 		document.getElementById('header').style = "background-color: #00508F";
+		initSlider = true;
 	};
 
 	connection.onerror = function(error)
@@ -64,23 +67,22 @@ String.prototype.pad = function(String, len)
 function handlemsg(e)
 {
 	var msgobj = JSON.parse(e.data);
-	var mycolor;
 	console.log(msgobj);
 
 /*
 	for my memory
 	doc["LCK"] = _cio.states[LOCKEDSTATE];
-    doc["PWR"] = _cio.states[POWERSTATE];
-    doc["UNT"] = _cio.states[UNITSTATE];
-    doc["AIR"] = _cio.states[BUBBLESSTATE];
-    doc["GRN"] = _cio.states[HEATGRNSTATE];
-    doc["RED"] = _cio.states[HEATREDSTATE];
-    doc["FLT"] = _cio.states[PUMPSTATE];
-    doc["TGT"] = _cio.states[TARGET];
-    doc["TMP"] = _cio.states[TEMPERATURE];
-    doc["CH1"] = _cio.states[CHAR1];
-    doc["CH2"] = _cio.states[CHAR2];
-    doc["CH3"] = _cio.states[CHAR3];
+	doc["PWR"] = _cio.states[POWERSTATE];
+	doc["UNT"] = _cio.states[UNITSTATE];
+	doc["AIR"] = _cio.states[BUBBLESSTATE];
+	doc["GRN"] = _cio.states[HEATGRNSTATE];
+	doc["RED"] = _cio.states[HEATREDSTATE];
+	doc["FLT"] = _cio.states[PUMPSTATE];
+	doc["TGT"] = _cio.states[TARGET];
+	doc["TMP"] = _cio.states[TEMPERATURE];
+	doc["CH1"] = _cio.states[CHAR1];
+	doc["CH2"] = _cio.states[CHAR2];
+	doc["CH3"] = _cio.states[CHAR3];
 	doc["HJT"] = _cio.states[JETSSTATE];
 */
 
@@ -112,13 +114,6 @@ function handlemsg(e)
 	{
 		document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
 		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
-		var element = document.getElementById('temp');
-		if (initTargetSlider)
-		{
-			element.value = msgobj.TGT;
-		}
-		initTargetSlider = false;
-		document.getElementById('sliderTempVal').innerHTML = element.value.toString();
 		document.getElementById('AIR').checked = msgobj.AIR;
 		document.getElementById('UNT').checked = msgobj.UNT;
 		document.getElementById('HTR').checked = msgobj.RED || msgobj.GRN;
@@ -134,9 +129,17 @@ function handlemsg(e)
 			document.getElementById('temp').max = 104;
 		}
 		document.getElementById('dsp').innerHTML = "[" + String.fromCharCode(msgobj.CH1,msgobj.CH2,msgobj.CH3)+ "]";
-		document.getElementById('brt').value = msgobj.BRT;
-		document.getElementById('sliderBrtVal').value = msgobj.BRT.toString();
-		document.getElementById("dsp").style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(parseInt(msgobj.BRT)+1)), 0, 0);
+		document.getElementById('dsp').style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(parseInt(msgobj.BRT)+1)), 0, 0);
+
+		// set slider values (once)
+		if (initSlider)
+		{
+			document.getElementById('temp').value = msgobj.TGT;
+			document.getElementById('brt').value = msgobj.BRT;
+			initSlider = false;
+		}
+		document.getElementById('sliderTempVal').innerHTML = document.getElementById('temp').value.toString();
+		document.getElementById('sliderBrtVal').innerHTML = document.getElementById('brt').value.toString();
 	}
 
 	if (msgobj.CONTENT == "TIMES")
