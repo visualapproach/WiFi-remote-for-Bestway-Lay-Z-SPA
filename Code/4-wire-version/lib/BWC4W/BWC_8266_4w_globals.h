@@ -208,4 +208,43 @@ const uint8_t HEATBITMASK2 = 	B00001000;	//(1 << 3) "stage 2" (thanks @dietmar-1
 const uint8_t POWERBITMASK = 	B00000001;	//1;
 #endif
 
+#ifdef NO54154
+//WARNING: THIS DEVICE HAS DIFFERENT PINOUTS!!! CHECK BEFORE USING
+//Requested by @chunkysteveo
+const uint8_t JUMPTABLE[][4] = {
+	{3,0,1,2},
+	{4,1,0,2},
+	{5,2,0,1},
+	{0,3,4,5},
+	{1,4,3,5},
+	{2,5,3,4}
+};
+//Bubbles, Jets, Pump, Heat
+const uint8_t ALLOWEDSTATES[][4] = {
+	{0,0,0,0},
+	{0,0,1,0},
+	{0,0,1,2},
+	{1,0,0,0},	//the "2" means both heater elements
+	{1,0,1,0},
+	{1,0,1,1}
+};
+
+//cio
+const uint8_t TEMPINDEX = 2;
+const uint8_t ERRORINDEX = 3;
+const uint8_t CIO_CHECKSUMINDEX = 5;
+//dsp
+const uint8_t COMMANDINDEX = 2;
+const uint8_t DSP_CHECKSUMINDEX = 5;
+
+const uint8_t PAYLOADSIZE = 7;
+
+const uint8_t PUMPBITMASK =		B00010000;	//1 << 4;
+const uint8_t BUBBLESBITMASK =	B00100000;	//1 << 5;
+const uint8_t JETSBITMASK = 	B00000000;	//0;  //no jets on this machine.
+const uint8_t HEATBITMASK1 = 	B00000010;	//(1 << 1) "stage 1"
+const uint8_t HEATBITMASK2 = 	B00001000;	//(1 << 3) "stage 2" (thanks @dietmar-1 for testing and reporting this)
+const uint8_t POWERBITMASK = 	B00000001;	//1;
+#endif
+
 #endif
