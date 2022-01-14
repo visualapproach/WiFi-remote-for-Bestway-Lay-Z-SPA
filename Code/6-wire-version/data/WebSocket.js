@@ -135,7 +135,7 @@ function handlemsg(e)
 		}
 		document.getElementById('dsp').innerHTML = "[" + String.fromCharCode(msgobj.CH1,msgobj.CH2,msgobj.CH3)+ "]";
 		document.getElementById('brt').value = msgobj.BRT;
-		document.getElementById('sliderBrtVal').value = msgobj.BRT.toString();
+		document.getElementById('sliderBrtVal').innerHTML = msgobj.BRT.toString();
 		document.getElementById("dsp").style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(parseInt(msgobj.BRT)+1)), 0, 0);
 	}
 
