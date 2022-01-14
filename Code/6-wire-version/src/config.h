@@ -3,6 +3,9 @@
 
 #define LEGACY_NAME "layzspa"
 
+//uncomment this define if you have model Paris airjet 54149E
+//#define MODEL54149E
+
 /*
  * Miscellaneous
  */
