@@ -1,0 +1,51 @@
+- platform: mqtt
+  name: spa lock
+  state_topic: "BW_2.0.0/message"
+  value_template: |- #"{{ value_json.LCK }}"
+    {% if value_json.LCK == 1 %}
+      ON
+    {% else %}
+      OFF
+    {% endif %}
+  expire_after: 700
+  icon: mdi:lock
+  availability_topic: "BW_2.0.0/Status"
+  payload_available: "Alive"
+  payload_not_available: "Dead"
+  device_class: lock
+
+- platform: mqtt
+  name: spa heater element
+  state_topic: "BW_2.0.0/message"
+  value_template: |- #"{{ value_json.RED }}"
+    {% if value_json.RED == 1 %}
+      ON
+    {% else %}
+      OFF
+    {% endif %}
+  icon: mdi:fire
+  availability_topic: "BW_2.0.0/Status"
+  payload_available: "Alive"
+  payload_not_available: "Dead"
+  expire_after: 700
+
+- platform: mqtt
+  name: spa ready
+  state_topic: "BW_2.0.0/message"
+  value_template: |- #"{{ value_json.RED }}"
+    {% if value_json.TMP > 30 %}
+      {% if value_json.TMP >= value_json.TGT-1 %}
+        ON
+      {% else %}
+        OFF
+      {% endif %}
+
+    {% else %}
+      OFF
+    {% endif %}
+  icon: mdi:hot-tub
+  availability_topic: "BW_2.0.0/Status"
+  payload_available: "Alive"
+  payload_not_available: "Dead"
+  expire_after: 700
+

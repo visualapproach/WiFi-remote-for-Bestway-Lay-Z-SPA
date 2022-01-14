@@ -1,25 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>HTML Remover</title>
-    <link href='main.css' rel='stylesheet' type='text/css'>
-     <link rel="icon" type="image/png" sizes="128x128" href="/favicon128.png">
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#00878f">
-    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport'>
+    <title>Lay-Z-Spa Module | File Remover</title>
+	<link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
+	<link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="main.css">
+    <meta name="theme-color" content="#0066BF">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <script src="function.js" type="text/javascript"></script>
 </head>
+
 <body>
-	<center>
-        <header>
-            <h1>HTML Remove</h1>
-        </header>
-        <div>
+	<div id="site">
+		<header>
+			<span>File Remover</span>
+			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
+		</header>
+
+		<div class="topnav" id="topnav">
+			<a href="./">Home</a>
+			<a href="config.html">SPA Config</a>
+			<a href="wifi.html">Network Config</a>
+			<a href="mqtt.html">MQTT Config</a>
+			<a href="/dir/">Directory</a>
+			<a href="upload.html">File Uploader</a>
+			<a href="remove.html" class="active">File Remover</a>
+			<!--<a href="/restart/" class="bgred">Restart ESP</a>
+			<a href="javascript:void(0);" class="bgred" onclick="reboot()">Restart ESP</a>-->
+		</div>
+
+        <section>
             <p style="text-align: left">Use this page to remove a file from the ESP8266.</p>
             <form method="post" enctype="application/x-www-form-urlencoded" style="margin: 0px auto 8px auto" >
                 <input type="text" name="FileToRemove" value="">
                 <input class="button" type="submit" value="Delete" name="submit">
-            </form>            
-        </div>
-	</center>
+            </form>    
+        </section>
 </body>
 </html>

@@ -1,5 +1,5 @@
-#ifndef BWC_8266_H
-#define BWC_8266_H
+#ifndef BWC54149E_8266_H
+#define BWC54149E_8266_H
 
 #ifndef ESP8266
 #error "This library supports 8266 only"
@@ -7,8 +7,8 @@
 
 #include "Arduino.h"
 
-#ifndef BWC_8266_globals_h
-#include "BWC_8266_globals.h"
+#ifndef BWC54149E_8266_globals_h
+#include "BWC54149E_8266_globals.h"
 #endif
 
 //long long needed in arduino core v3+
@@ -27,15 +27,15 @@ class CIO {
     void begin(int cio_cs_pin, int cio_data_pin, int cio_clk_pin);
 	void loop(void);
     void eopHandler(void);
-    void packetHandler(void);
+    void LEDdataHandler(void);
     void clkHandler(void);
 	void stop(void);
 
     volatile bool newData = false;
 	bool dataAvailable = false;
 	bool stateChanged = false; //save states when true
-    volatile uint16_t button = 0x1B1B; //no button
-    uint8_t payload[11];
+    volatile uint16_t button = NOBTN;
+    uint8_t payload[5];
 	uint8_t states[14];
 	uint8_t brightness;
 	bool targetIsDisplayed = false;
@@ -43,32 +43,29 @@ class CIO {
 
 
   private:
-    //add anti glitch method
     volatile int _byteCount = 0;
 	volatile int _bitCount = 0;
-    volatile bool _dataIsOutput = false;
     volatile byte _receivedByte;
-    volatile int _CIO_cmd_matches = 0;
     volatile bool _packet = false;
     volatile int _sendBit = 8;
     volatile uint8_t _brightness;
-    volatile uint8_t _payload[11];
-    int _CS_PIN;
-    int _CLK_PIN;
-    int _DATA_PIN;
-	uint8_t _prevPayload[11];
+    volatile uint8_t _payload[5];
+    int _CIO_TD_PIN;
+    int _CIO_CLK_PIN;
+    int _CIO_LD_PIN;
+	uint8_t _prevPayload[5];
 	bool _prevUNT;
 	bool _prevHTR;
 	bool _prevFLT;
-	
+	uint8_t _received_cmd = 0;	//temporary storage of command message
+
 	char _getChar(uint8_t value);
 };
 
 class DSP {
 
   public:
-    //uint8_t payload[11] = {0xC0, 0xFB, 0xFF, 0xDB, 0xFF, 0xCD, 0xFF, B10001001, 0xFF, 0x01, 0xFF};
-    uint8_t payload[11] = {0xC0, 0x01, 0xFF, 0x01, 0xFF, 0x01, 0xFF, B00000001, 0xFF, 0x01, 0xFF};
+    uint8_t payload[5];
 
     void begin(int dsp_cs_pin, int dsp_data_pin, int dsp_clk_pin, int dsp_audio_pin);
 	uint16_t getButton(void);
@@ -87,11 +84,12 @@ class DSP {
 	unsigned long _dspLastRefreshTime = 0;
 	unsigned long _dspLastGetButton = 0;
 	uint16_t _oldButton = ButtonCodes[NOBTN];
+	uint16_t _prevButton = ButtonCodes[NOBTN];
 	//Pins
-	int _CS_PIN;
-	int _CLK_PIN;
-	int _DATA_PIN;
-	int _AUDIO_PIN;
+	int _DSP_LD_PIN;
+	int _DSP_TD_PIN;
+	int _DSP_CLK_PIN;
+	int _DSP_AUDIO_PIN;
 };
 
 class BWC {

@@ -1,4 +1,4 @@
-#include "BWC_8266.h"
+#include "BWC54149E_8266.h"
 
 CIO *pointerToClass;
 //BWC *pointerToBWC;
@@ -8,29 +8,31 @@ CIO *pointerToClass;
 	// pointerToBWC->saveSettingsFlag();
 // }
 
-static void IRAM_ATTR chipselectpin(void) {
-  pointerToClass->packetHandler();
+static void IRAM_ATTR LEDdatapin(void) {
+  pointerToClass->LEDdataHandler();
 }
 static void IRAM_ATTR clockpin(void) {
   pointerToClass->clkHandler();
 }
 
-void CIO::begin(int cio_cs_pin, int cio_data_pin, int cio_clk_pin) {
+void CIO::begin(int cio_td_pin, int cio_clk_pin, int cio_ld_pin) {
   pointerToClass = this;
-  _CS_PIN = cio_cs_pin;
-  _DATA_PIN = cio_data_pin;
-  _CLK_PIN = cio_clk_pin;
-  pinMode(_CS_PIN, INPUT);
-  pinMode(_DATA_PIN, INPUT);
-  pinMode(_CLK_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(_CS_PIN), chipselectpin, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(_CLK_PIN), clockpin, CHANGE); //Write on falling edge and read on rising edge
+  _CIO_TD_PIN = cio_td_pin;
+  _CIO_CLK_PIN = cio_clk_pin;
+  _CIO_LD_PIN = cio_ld_pin;
+  pinMode(_CIO_LD_PIN, INPUT);
+  pinMode(_CIO_TD_PIN, OUTPUT);
+  pinMode(_CIO_CLK_PIN, INPUT);
+  digitalWrite(_CIO_TD_PIN, 1); //idle high
+  attachInterrupt(digitalPinToInterrupt(_CIO_LD_PIN), LEDdatapin, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(_CIO_CLK_PIN), clockpin, CHANGE); //Write on falling edge and read on rising edge
 }
 
 void CIO::stop(){
-  detachInterrupt(digitalPinToInterrupt(_CS_PIN));
-  detachInterrupt(digitalPinToInterrupt(_CLK_PIN));
+  detachInterrupt(digitalPinToInterrupt(_CIO_LD_PIN));
+  detachInterrupt(digitalPinToInterrupt(_CIO_CLK_PIN));
 }
+
 
 //match 7 segment pattern to a real digit
 char CIO::_getChar(uint8_t value) {
@@ -49,10 +51,15 @@ void CIO::loop(void) {
 		static int capturePhase = 0;
 		static uint32_t buttonReleaseTime;
 		static uint16_t prevButton = ButtonCodes[NOBTN];
+    /*
+     * This model is only sending messages when something updated
+     * so this section is not useful
+     */
+    /*
     //require two consecutive messages to be equal before registering
 		static uint8_t prev_checksum = 0;
     uint8_t checksum = 0;
-    for(int i = 0; i < 11; i++){
+    for(unsigned int i = 0; i < sizeof(payload); i++){
 			checksum += _payload[i];
 		}
     if(checksum != prev_checksum) {
@@ -60,22 +67,23 @@ void CIO::loop(void) {
       return;
     }
     prev_checksum = checksum;
-    
+     */
+
 		//copy private array to public array
-		for(int i = 0; i < 11; i++){
+		for(unsigned int i = 0; i < sizeof(payload); i++){
 			payload[i] = _payload[i];
 		}
 
 	  //determine if anything changed, so we can update webclients
-		for(int i = 0; i < 11; i++){
+		for(unsigned int i = 0; i < sizeof(payload); i++){
 			if (payload[i] != _prevPayload[i]) dataAvailable = true;
 			_prevPayload[i] = payload[i];
 		}
 
-		brightness = _brightness & 7; //extract only the brightness bits (0-7)
+		//brightness = _brightness & 7; //extract only the brightness bits (0-7)
 		//extract information from payload to a better format
 		states[LOCKEDSTATE] = (payload[LCK_IDX] & (1 << LCK_BIT)) > 0;
-		states[POWERSTATE] = (payload[PWR_IDX] & (1 << PWR_BIT)) > 0;
+		states[POWERSTATE] = 1;  //(payload[PWR_IDX] & (1 << PWR_BIT)) > 0;
 		states[UNITSTATE] = (payload[C_IDX] & (1 << C_BIT)) > 0;
 		states[BUBBLESSTATE] = (payload[AIR_IDX] & (1 << AIR_BIT)) > 0;
 		states[HEATGRNSTATE] = (payload[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
@@ -114,148 +122,97 @@ void CIO::loop(void) {
 	}
 }
 
-//end of packet
-void IRAM_ATTR CIO::eopHandler(void) {
-  //process latest data and enter corresponding mode (like listen for DSP_STS or send BTN_OUT)
-  //pinMode(_DATA_PIN, INPUT);
-  WRITE_PERI_REG( PIN_DIR_INPUT, 1 << _DATA_PIN);
-  _byteCount = 0;
-  _bitCount = 0;
-  uint8_t msg = _receivedByte;
-
-  switch (msg) {
-    case DSP_CMD1_MODE6_11_7:
-      _CIO_cmd_matches = 1;
-      break;
-    case DSP_CMD2_DATAWRITE:
-      if (_CIO_cmd_matches == 1) {
-        _CIO_cmd_matches = 2;
-      } else {
-        _CIO_cmd_matches = 0; //reset - DSP_CMD1_MODE6_11_7 must be followed by DSP_CMD2_DATAWRITE to activate command
-      }
-      break;
-    default:
-      if (_CIO_cmd_matches == 3) {
-        _brightness = msg;
-        _CIO_cmd_matches = 0;
-        newData = true;
-	  }
-      if (_CIO_cmd_matches == 2) {
-        _CIO_cmd_matches = 3;
-      }
-      break;
+//CIO comm
+//packet start/stop
+void IRAM_ATTR CIO::LEDdataHandler(void) {
+  //Check START/END condition: _LD_PIN change when _CLK_PIN is high.
+  if (READ_PERI_REG(PIN_IN) & (1 << _CIO_CLK_PIN)) {
+    _byteCount = 0;
+    _bitCount = 0;
+    _received_cmd = 0;
+    newData = READ_PERI_REG(PIN_IN) & (1 << _CIO_LD_PIN);
   }
 }
 
-//CIO comm
-//packet start
-//arduino core 3.0.1+ should work with digitalWrite() now.
-void IRAM_ATTR CIO::packetHandler(void) {
-  if (!(READ_PERI_REG(PIN_IN) & (1 << _CS_PIN))) {
-    //packet start
-    _packet = true;
-  }
-  else {
-    //end of packet
-    _packet = false;
-    _dataIsOutput = false;
-    eopHandler();
-  }
-}
-
-//CIO comm
-//Read incoming bits, and take action after a complete byte
 void IRAM_ATTR CIO::clkHandler(void) {
+  //read data on _cio_ld_pin and write to _cio_td_pin (LSBF)
 
-  if (!_packet) return;
-  //CS line is active, so send/receive bits on DATA line
+  uint16_t td_bitnumber = _bitCount % 10;
+  uint16_t ld_bitnumber = _bitCount % 8;
+  uint16_t buttonwrapper = (B11111110 << 8) | (button<<1); //startbit @ bit0, stopbit @ bit9
 
-  bool clockstate = READ_PERI_REG(PIN_IN) & (1 << _CLK_PIN);
-
-  //shift out bits on low clock (falling edge)
-  if (!clockstate & _dataIsOutput) {
-    //send BTN_OUT
-    if (button & (1 << _sendBit)) {
-      //digitalWrite(_DATA_PIN, HIGH);
-      WRITE_PERI_REG( PIN_OUT_SET, 1 << _DATA_PIN);
+  //rising or falling edge?
+  bool risingedge = READ_PERI_REG(PIN_IN) & (1 << _CIO_CLK_PIN);
+  if(risingedge){
+    //clk rising edge
+    _byteCount = _bitCount / 8;
+    if(_byteCount == 0){
+      _received_cmd |= ((READ_PERI_REG(PIN_IN) & (1 << _CIO_LD_PIN))>0) << ld_bitnumber;
     }
-    else {
-      //digitalWrite(_DATA_PIN, LOW);
-      WRITE_PERI_REG( PIN_OUT_CLEAR, 1 << _DATA_PIN);
+    else if( (_byteCount<6) && (_received_cmd == CMD2) ){ //only write to payload after CMD2. Also protect from buffer overflow
+      //overwrite the old payload bit with new bit
+      _payload[_byteCount-1] = (_payload[_byteCount-1] & ~(1 << ld_bitnumber)) | ((READ_PERI_REG(PIN_IN) & (1 << _CIO_LD_PIN))>0) << ld_bitnumber;
     }
-    _sendBit++;
-	if(_sendBit > 15) _sendBit = 0;
-  }
-
-  //read bits on high clock (rising edge)
-  if (clockstate & !_dataIsOutput) {
-    //read data pin to a byte
-    //_receivedByte = (_receivedByte << 1) | digitalRead(_DATA_PIN);
-    //_receivedByte = (_receivedByte << 1) | ( ( (READ_PERI_REG(PIN_IN) & (1 << _DATA_PIN)) ) > 0);
-    //_receivedByte = (_receivedByte >> 1) | digitalRead(_DATA_PIN) << 7;
-    _receivedByte = (_receivedByte >> 1) | ( ( (READ_PERI_REG(PIN_IN) & (1 << _DATA_PIN)) ) > 0) << 7;
+    //store brightness in _cio local variable. It is not used, but put here in case we want to obey the pump.
+    if(_bitCount == 7 && (_received_cmd & B11000000) == B10000000) _brightness = _received_cmd;
     _bitCount++;
-    if (_bitCount == 8) {
-      _bitCount = 0;
-      if (_CIO_cmd_matches == 2) { //meaning we have received the header for 11 data bytes to come
-        _payload[_byteCount] = _receivedByte;
-        _byteCount++;
-      }
-      else if (_receivedByte == DSP_CMD2_DATAREAD) {
-        _sendBit = 8;
-        _dataIsOutput = true;
-        //pinMode(_DATA_PIN, OUTPUT);
-        WRITE_PERI_REG( PIN_DIR_OUTPUT, 1 << _DATA_PIN);
-      }
+  } else {
+    //clk falling edge
+    //first and last bit is a dummy start/stop bit (0/1), then 8 data bits in btwn
+    if (buttonwrapper & (1 << td_bitnumber)) {
+      WRITE_PERI_REG( PIN_OUT_SET, 1 << _CIO_TD_PIN);
+    } else {
+      WRITE_PERI_REG( PIN_OUT_CLEAR, 1 << _CIO_TD_PIN);
     }
   }
 }
 
 uint16_t DSP::getButton(void) {
-  if(millis() - _dspLastGetButton > 50){
+  if(millis() - _dspLastGetButton > 20){
 	  uint16_t newButton = 0;
 	  _dspLastGetButton = millis();
-	  //send request
-	  //pinMode(_DATA_PIN, OUTPUT);
-	  digitalWrite(_CS_PIN, LOW); //start of packet
-	  delayMicroseconds(50);
-	  _sendBitsToDSP(DSP_CMD2_DATAREAD, 8); //request button presses
-	  newButton = _receiveBitsFromDSP();
-	  digitalWrite(_CS_PIN, HIGH); //end of packet
-	  delayMicroseconds(30);
-	  _oldButton = newButton;
-	  return (newButton);
-  } else return (_oldButton);
+    //startbit
+    digitalWrite(_DSP_CLK_PIN, LOW);
+    delayMicroseconds(CLKPW);
+    digitalWrite(_DSP_CLK_PIN, HIGH);
+    delayMicroseconds(CLKPW);
+    //clock in 8 data bits
+    for(int i = 0; i < 8; i++){
+      digitalWrite(_DSP_CLK_PIN, LOW);
+      delayMicroseconds(CLKPW);
+      digitalWrite(_DSP_CLK_PIN, HIGH);
+      newButton |= digitalRead(_DSP_TD_PIN)<<i;
+      delayMicroseconds(CLKPW);
+    }
+    //stop bit
+    digitalWrite(_DSP_CLK_PIN, LOW);
+    delayMicroseconds(CLKPW);
+    digitalWrite(_DSP_CLK_PIN, HIGH);
+    //work around for glitches. Only register change after two consecutive and equal values
+    if(newButton == _prevButton){
+      _oldButton = newButton;
+    } else {
+      _prevButton = newButton;
+    }
+  }
+  return (_oldButton);
 }
 
 
 //bitsToSend can only be 8 with this solution of LSB first
 void DSP::_sendBitsToDSP(uint32_t outBits, int bitsToSend) {
-  pinMode(_DATA_PIN, OUTPUT);
-  delayMicroseconds(20);
   for (int i = 0; i < bitsToSend; i++) {
-    digitalWrite(_CLK_PIN, LOW);
-    digitalWrite(_DATA_PIN, outBits & (1 << i));
-    delayMicroseconds(20);
-    digitalWrite(_CLK_PIN, HIGH);
-    delayMicroseconds(20);
+    digitalWrite(_DSP_CLK_PIN, LOW);
+    delayMicroseconds(5);
+    digitalWrite(_DSP_LD_PIN, outBits & (1 << i));
+    delayMicroseconds(CLKPW-5);
+    digitalWrite(_DSP_CLK_PIN, HIGH);
+    delayMicroseconds(CLKPW);
   }
 }
 
 uint16_t DSP::_receiveBitsFromDSP() {
-  //bitbanging the answer from Display
-  uint16_t result = 0;
-  pinMode(_DATA_PIN, INPUT);
-
-  for (int i = 0; i < 16; i++) {
-    digitalWrite(_CLK_PIN, LOW);  //clock leading edge
-    delayMicroseconds(20);
-    digitalWrite(_CLK_PIN, HIGH); //clock trailing edge
-    delayMicroseconds(20);
-	int j = (i+8)%16;  //bit 8-16 then 0-7
-    result |= digitalRead(_DATA_PIN) << j;
-  }
-  return result;
+  return 0;
 }
 
 char DSP::_getCode(char value) {
@@ -271,28 +228,44 @@ void DSP::updateDSP(uint8_t brightness) {
 	 //refresh display with ~10Hz
 	if(millis() -_dspLastRefreshTime > 99){
 		_dspLastRefreshTime = millis();
-		  delayMicroseconds(30);
-		  digitalWrite(_CS_PIN, LOW); //start of packet
-		  _sendBitsToDSP(DSP_CMD1_MODE6_11_7, 8);
-		  digitalWrite(_CS_PIN, HIGH); //end of packet
+		  digitalWrite(_DSP_LD_PIN, LOW); //start of packet
+      delayMicroseconds(CLKPW);
+		  _sendBitsToDSP(CMD1, 8);
+      //end of packet: clock low, make sure LD is low before rising clock then LD
+      digitalWrite(_DSP_CLK_PIN, LOW);
+		  digitalWrite(_DSP_LD_PIN, LOW);
+      delayMicroseconds(CLKPW);
+      digitalWrite(_DSP_CLK_PIN, HIGH);
+      delayMicroseconds(CLKPW);
+		  digitalWrite(_DSP_LD_PIN, HIGH);
+      delayMicroseconds(CLKPW);
 
-		  delayMicroseconds(50);
-		  digitalWrite(_CS_PIN, LOW);//start of packet
-		  _sendBitsToDSP(DSP_CMD2_DATAWRITE, 8);
-		  digitalWrite(_CS_PIN, HIGH);//end of packet
-
-		  //payload
-		  delayMicroseconds(50);
-		  digitalWrite(_CS_PIN, LOW);//start of packet
-		  for (int i = 0; i < 11; i++)
-			_sendBitsToDSP(payload[i], 8);
-		  digitalWrite(_CS_PIN, HIGH);//end of packet
-
-		  delayMicroseconds(50);
-		  digitalWrite(_CS_PIN, LOW);//start of packet
-		  _sendBitsToDSP(DSP_DIM_BASE+DSP_DIM_ON+brightness, 8);
-		  digitalWrite(_CS_PIN, HIGH);//end of packet
-		  delayMicroseconds(50);
+		  digitalWrite(_DSP_LD_PIN, LOW); //start of packet
+      delayMicroseconds(CLKPW);
+		  _sendBitsToDSP(CMD2, 8);
+      for(unsigned int i=0; i<sizeof(payload); i++){
+        _sendBitsToDSP(payload[i], 8);
+      }
+      //end of packet: clock low, make sure LD is low before rising clock then LD
+      digitalWrite(_DSP_CLK_PIN, LOW);
+		  digitalWrite(_DSP_LD_PIN, LOW);
+      delayMicroseconds(CLKPW);
+      digitalWrite(_DSP_CLK_PIN, HIGH);
+      delayMicroseconds(CLKPW);
+		  digitalWrite(_DSP_LD_PIN, HIGH);
+      delayMicroseconds(CLKPW);
+      
+		  digitalWrite(_DSP_LD_PIN, LOW); //start of packet
+      delayMicroseconds(CLKPW);
+		  _sendBitsToDSP((CMD3 & 0xF8) | brightness, 8);
+      //end of packet: clock low, make sure LD is low before rising clock then LD
+      digitalWrite(_DSP_CLK_PIN, LOW);
+		  digitalWrite(_DSP_LD_PIN, LOW);
+      delayMicroseconds(CLKPW);
+      digitalWrite(_DSP_CLK_PIN, HIGH);
+      delayMicroseconds(CLKPW);
+		  digitalWrite(_DSP_LD_PIN, HIGH);
+      delayMicroseconds(CLKPW);
 	}
 }
 
@@ -322,51 +295,52 @@ void DSP::textOut(String txt) {
 }
 
 void DSP::LEDshow() {
-  for(int y = 7; y < 11; y++){
-    for(int x = 1; x < 9; x++){
-      payload[y] = (1 << x) + 1;
+  //todo: clear payload first...
+  for(unsigned int y = 0; y < sizeof(payload); y++){
+    for(int x = 0; x < 9; x++){
+      payload[y] = (1 << x);
       updateDSP(7);
       delay(200);
     }
   }
 }
 
-void DSP::begin(int dsp_cs_pin, int dsp_data_pin, int dsp_clk_pin, int dsp_audio_pin) {
-	_CS_PIN = dsp_cs_pin;
-	_DATA_PIN = dsp_data_pin;
-	_CLK_PIN = dsp_clk_pin;
-	_AUDIO_PIN = dsp_audio_pin;
+void DSP::begin(int dsp_td_pin, int dsp_clk_pin, int dsp_ld_pin, int dsp_audio_pin) {
+	_DSP_TD_PIN = dsp_td_pin;
+	_DSP_CLK_PIN = dsp_clk_pin;
+	_DSP_LD_PIN = dsp_ld_pin;
+	_DSP_AUDIO_PIN = dsp_audio_pin;
 
-	pinMode(_CS_PIN, OUTPUT);
-	pinMode(_DATA_PIN, INPUT);
-	pinMode(_CLK_PIN, OUTPUT);
-	pinMode(_AUDIO_PIN, OUTPUT);
-	digitalWrite(_CS_PIN, HIGH); 	//Active LOW
-	digitalWrite(_CLK_PIN, HIGH); 	//shift on falling, latch on rising
-	digitalWrite(_AUDIO_PIN, LOW);
+	pinMode(_DSP_LD_PIN, OUTPUT);
+	pinMode(_DSP_TD_PIN, INPUT);
+	pinMode(_DSP_CLK_PIN, OUTPUT);
+	pinMode(_DSP_AUDIO_PIN, OUTPUT);
+	digitalWrite(_DSP_LD_PIN, HIGH); 	//idle high
+	digitalWrite(_DSP_CLK_PIN, HIGH); //shift on falling, latch on rising
+	digitalWrite(_DSP_AUDIO_PIN, LOW);
 }
 
 void DSP::playIntro() {
   int longnote = 125;
   int shortnote = 63;
 
-  tone(_AUDIO_PIN, NOTE_C7, longnote);
+  tone(_DSP_AUDIO_PIN, NOTE_C7, longnote);
   delay(2 * longnote);
-  tone(_AUDIO_PIN, NOTE_G6, shortnote);
+  tone(_DSP_AUDIO_PIN, NOTE_G6, shortnote);
   delay(2 * shortnote);
-  tone(_AUDIO_PIN, NOTE_G6, shortnote);
+  tone(_DSP_AUDIO_PIN, NOTE_G6, shortnote);
   delay(2 * shortnote);
-  tone(_AUDIO_PIN, NOTE_A6, longnote);
+  tone(_DSP_AUDIO_PIN, NOTE_A6, longnote);
   delay(2 * longnote);
-  tone(_AUDIO_PIN, NOTE_G6, longnote);
+  tone(_DSP_AUDIO_PIN, NOTE_G6, longnote);
   delay(2 * longnote);
   //paus
   delay(2 * longnote);
-  tone(_AUDIO_PIN, NOTE_B6, longnote);
+  tone(_DSP_AUDIO_PIN, NOTE_B6, longnote);
   delay(2 * longnote);
-  tone(_AUDIO_PIN, NOTE_C7, longnote);
+  tone(_DSP_AUDIO_PIN, NOTE_C7, longnote);
   delay(2 * longnote);
-  noTone(_AUDIO_PIN);
+  noTone(_DSP_AUDIO_PIN);
 }
 
 //silent beep instead of annoying beeps every time something changes
@@ -384,36 +358,36 @@ void DSP::beep() {
 void DSP::beep2() {
   //int longnote = 125;
   int shortnote = 40;
-  tone(_AUDIO_PIN, NOTE_D6, shortnote);
+  tone(_DSP_AUDIO_PIN, NOTE_D6, shortnote);
   delay(shortnote);
-  tone(_AUDIO_PIN, NOTE_D7, shortnote);
+  tone(_DSP_AUDIO_PIN, NOTE_D7, shortnote);
   delay(shortnote);
-  tone(_AUDIO_PIN, NOTE_D8, shortnote);
+  tone(_DSP_AUDIO_PIN, NOTE_D8, shortnote);
   delay(shortnote);
-  noTone(_AUDIO_PIN);
+  noTone(_DSP_AUDIO_PIN);
 }
 
 BWC::BWC(){}
 
 void BWC::begin(void){
-	_cio.begin(D1, D7, D2);
-	_dsp.begin(D3, D5, D4, D6);
+	_cio.begin(D7, D2, D1);
+	_dsp.begin(D5, D4, D3, D6);
 	begin2();
 }
 
 void BWC::begin(
-			int cio_cs_pin,
-			int cio_data_pin,
+			int cio_td_pin,
 			int cio_clk_pin,
-			int dsp_cs_pin,
-			int dsp_data_pin,
+			int cio_ld_pin,
+			int dsp_td_pin,
 			int dsp_clk_pin,
+			int dsp_ld_pin,
 			int dsp_audio_pin
 			)
 			{
 	//start CIO and DSP modules
-	_cio.begin(cio_cs_pin, cio_data_pin, cio_clk_pin);
-	_dsp.begin(dsp_cs_pin, dsp_data_pin, dsp_clk_pin, dsp_audio_pin);
+	_cio.begin(cio_td_pin, cio_clk_pin, cio_ld_pin);
+	_dsp.begin(dsp_td_pin, dsp_clk_pin, dsp_ld_pin, dsp_audio_pin);
 	begin2();
 }
 
@@ -434,7 +408,7 @@ void BWC::begin2(){
   _audio = true;
   _restoreStatesOnStart = false;
 	_dsp.textOut(F("   hello   "));
-//_startNTP();
+	//_startNTP();
 	LittleFS.begin();
 	_loadSettings();
 	_loadCommandQueue();
@@ -460,11 +434,15 @@ void BWC::loop(){
   ESP.wdtFeed();
   ESP.wdtDisable();
 
+	if (!DateTime.isTimeValid()) {
+      //Serial.println("Failed to get time from server, retry.");
+      DateTime.begin();
+    }
 	_timestamp = DateTime.now();
 
   //update DSP payload (memcpy(dest*, source*, len))
   //memcpy(&_dsp.payload[0], &_cio.payload[0], 11);
-  for(int i = 0; i < 11; i++){
+  for(unsigned int i = 0; i < sizeof(_dsp.payload); i++){
 	  _dsp.payload[i] = _cio.payload[i];
   }
   _dsp.updateDSP(_dspBrightness);
@@ -949,8 +927,10 @@ void BWC::saveSettings(){
     Serial.println(F("Failed to write json to settings.txt"));
   }
   file.close();
+  DateTime.begin();
   //revive the dog
   ESP.wdtEnable(0);
+
 }
 
 void BWC::_loadCommandQueue(){
@@ -1080,8 +1060,7 @@ void BWC::_restoreStates() {
   qCommand(SETUNIT, unt, DateTime.now()+10, 0);
   qCommand(SETPUMP, flt, DateTime.now()+12, 0);
   qCommand(SETHEATER, htr, DateTime.now()+14, 0);
-Serial.println("restoring states");
-Serial.println(DateTime.now());
+
   file.close();
 }
 

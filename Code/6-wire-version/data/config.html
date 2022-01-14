@@ -1,73 +1,120 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SPA Config</title>
-    <link href='main.css' rel='stylesheet' type='text/css'>
-    <link rel="icon" type="image/png" sizes="128x128"  href="favicon128.png">
-    <link rel="manifest" href="manifest.json">
+    <title>Lay-Z-Spa Module | SPA Config</title>
+	<link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
+	<link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="main.css">
     <meta name="theme-color" content="#0066BF">
     <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <script src="function.js" type="text/javascript"></script>
 </head>
 
 <body onload="loadconfig()">
-    <center>
-        <header>
-            <h1>SPA Config</h1>
-        </header>
-		<div style="text-align: left">
-			<!--<input type="text" id="timezone" value="0" maxlength="2" size="2">
-			<label for="timezone">Not used</label><br>-->
-			<input type="text" id="price" value="1.50" maxlength="4" size="4">
-			<label for="price">Price per kWh</label><br>
-<input type="text" id="clinterval" value="7" maxlength="3" size="3">
-			<label for="clinterval">Chlorine add Interval</label><br>
-<input type="text" id="finterval" value="30" maxlength="3" size="3">
-			<label for="finterval">Filterchange Interval</label><br>
-			<input type="checkbox" id="audio" style="background-color:#999">
-			<label for="audio">Audio</label><br>
-			<select name="Startup behaviour" id="restore">
-				<option value="0">Default (off)</option>
-				<option value="1">Last saved states</option>
-			</select>
-			<label for="restore">Start behaviour</label>
-			<br>
-			<button id="save" class="button" style="background-color:#DDD" onclick="saveconfig()">Save config</button>
+	<div id="site">
+		<header>
+			<span>SPA Config</span>
+			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
+		</header>
+
+		<div class="topnav" id="topnav">
+			<a href="./">Home</a>
+			<a href="config.html" class="active">SPA Config</a>
+			<a href="wifi.html">Network Config</a>
+			<a href="mqtt.html">MQTT Config</a>
+			<a href="/dir/">Directory</a>
+			<a href="upload.html">File Uploader</a>
+			<a href="remove.html">File Remover</a>
+			<!--<a href="/restart/" class="bgred">Restart ESP</a>
+			<a href="javascript:void(0);" class="bgred" onclick="reboot()">Restart ESP</a>-->
 		</div>
-		<div style="text-align: left">
-			<select name="commands" id="commands">
-				<option value="0">Set target temp</option>
-				<option value="1">Set unit</option>
-				<option value="2">Set air bubbles</option>
-				<option value="3">Set heater</option>
-				<option value="4">Set filter pump</option>
-				<option value="11">Set hydrojets</option>
-				<option value="6">Reboot ESP</option>
-			</select>
-			<label for="commands">Command</label>
-			<br>
-			<input type="text" id="val" value="1" maxlength="3" size="3">
-			<label for="val">Value</label>
-			<br>
-			<input type="datetime-local" id="xtime" name="xtime" onchange="totimestamp()">
-			<label for="xtime">Execute time</label>
-			<br>
-			<input type="text" id="interval" value="0" maxlength="8" size="8">
-			<label for="interval">Repeat interval (seconds). 0=once</label>
-			<br>
-			<h4>1h=3600, 1d=86400, 1w=604800</h4>
-			<button id="addcmd" class="button" style="background-color:#DDD" onclick="addcommand()">Add command to queue</button>
-		</div>
-		<div style="text-align: left">
-			<h4>Command queue</h4>
+
+    <section>
+			<table>
+				<!--tr>
+					<td><label for="timezone">Not used:</label></td>
+					<td><input type="text" id="timezone" value="0" maxlength="2" size="2"></td>
+				</tr-->
+				<tr>
+					<td><label for="price">Price per kWh:</label></td>
+					<td><input type="text" id="price" value="1.50" maxlength="4" size="4"></td>
+				</tr>
+				<tr>
+					<td><label for="clinterval">Chlorine add (Interval):</label></td>
+					<td><input type="text" id="clinterval" value="7" maxlength="3" size="3"></td>
+				</tr>
+				<tr>
+					<td><label for="finterval">Filter change (Interval):</label></td>
+					<td><input type="text" id="finterval" value="30" maxlength="3" size="3"></td>
+				</tr>
+				<tr>
+					<td><label for="audio">Audio:</label></td>
+					<td><input type="checkbox" id="audio"></td>
+				</tr>
+				<tr>
+					<td><label for="restore">Startup behaviour:</label></td>
+					<td>
+						<select id="restore">
+							<option value="0">Default (off)</option>
+							<option value="1">Last saved states</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2" style="text-align:center"><button id="save" class="button" onclick="saveconfig()">save</button></td>
+				</tr>
+			</table>
+		</section>
+
+		<section>
+			<table>
+				<tr>
+					<td><label for="commands">Command:</label></td>
+					<td>
+						<select name="commands" id="commands">
+							<option value="0">Set target temp</option>
+							<option value="1">Set unit</option>
+							<option value="2">Set air bubbles</option>
+							<option value="3">Set heater</option>
+							<option value="4">Set filter pump</option>
+							<option value="11">Set hydrojets</option>
+							<option value="6">Reboot ESP</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td><label for="val">Value:</label></td>
+					<td><input type="text" id="val" value="1" maxlength="3" size="3"></td>
+				</tr>
+				<tr>
+					<td><label for="xtime">Execute time:</label><br /></td>
+					<td><input type="datetime-local" id="xtime" name="xtime" onchange="totimestamp()" step="1"></td>
+				</tr>
+				<tr>
+					<td><label for="interval">Repeat interval</label></td>
+					<td><input type="text" id="interval" value="0" maxlength="8" size="8"> seconds</td>
+				</tr>
+				<tr>
+					<td colspan="2"><p>(0=once, 1h=3600, 1d=86400, 1w=604800)</p></td>
+				</tr>
+				<tr>
+					<td colspan="2" style="text-align:center"><button id="addcmd" class="button" onclick="addcommand()">add command</button></td>
+				</tr>
+			</table>
+		</section>
+
+		<section style="text-align: left">
+			<h2>Command queue</h2>
 			<p id="cmdq"><p>
-			<button id="resetq" class="button" style="background-color:#DDD" onclick="resetqueue()">Clear queue</button>
-		</div>
-		<div id="reboot" style="font-size: 10px">last boot: </div>
-	</center>
+			<p class="center"><button id="resetq" class="button" onclick="resetqueue()">clear queue</button></p>
+		</section>
 
-	
+		<footer>
+			<p class="center" id="lastboot">Last boot: loading...</p>
+		</footer>
+	</div>
+
 <script>
-
 const settarget = 0;
 const setunit = 1;
 const setbubbles = 2;
@@ -95,11 +142,10 @@ function loadconfig(){
 		  document.getElementById("restore").value = Number(msgobj.RESTORE);
 		  document.getElementById("audio").checked = msgobj.AUDIO;
 		  var date = new Date(msgobj.REBOOTTIME * 1000);
-		  document.getElementById('reboot').innerHTML = "Last boot: " + date.toLocaleString() + " " + msgobj.REBOOTINFO;
+		  document.getElementById('lastboot').innerHTML = "Last boot: " + date.toLocaleString() + " " + msgobj.REBOOTINFO;
 		}
 	}
 	setInterval(loadcmd,4000);
-
 
 	var now = new Date();
     var offset = now.getTimezoneOffset() * 60000;
@@ -130,7 +176,6 @@ function loadcmd(){
 		}
 	}
 }
-
 
 function saveconfig(){
 	const Http = new XMLHttpRequest();
@@ -171,7 +216,6 @@ function addcommand(){
 	Http.send(JSON.stringify(msgobj));
 
 	console.log(msgobj);
-	
 }
 
 function resetqueue(){
@@ -189,8 +233,6 @@ function resetqueue(){
 	console.log(msgobj);
 	loadcmd();
 }
-
-
 </script>	
 </body>
 </html>
