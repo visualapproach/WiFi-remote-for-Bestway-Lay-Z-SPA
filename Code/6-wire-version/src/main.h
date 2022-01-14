@@ -1,7 +1,13 @@
 #include <Arduino.h>
 #include <ArduinoOTA.h>
-#include "BWC_8266.h"
 #include "config.h"
+
+#ifdef MODEL54149E
+#include "BWC54149E_8266.h"
+#else
+#include "BWC_8266.h"
+#endif
+
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
