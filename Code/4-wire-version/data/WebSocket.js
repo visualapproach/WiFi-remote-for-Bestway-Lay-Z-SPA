@@ -50,9 +50,20 @@ function handlemsg(e) {
     doc["CH2"] = _cio.states[CHAR2];
     doc["CH3"] = _cio.states[CHAR3]; */
 	if(msgobj.CONTENT == "OTHER"){
-		//if(msgobj.MQTT){
-			document.getElementById('mqtt').innerHTML = "MQTT:" + msgobj.MQTT.toString();
-		//}
+		// MQTT status
+		mqtt_states = [
+			"CONNECTION_TIMEOUT", // -4 / the server didn't respond within the keepalive time
+			"CONNECTION_LOST", // -3 / the network connection was broken
+			"CONNECT_FAILED", // -2 / the network connection failed
+			"DISCONNECTED", // -1 / the client is disconnected cleanly
+			"CONNECTED", // 0 / the client is connected
+			"CONNECT_BAD_PROTOCOL", // 1 / the server doesn't support the requested version of MQTT
+			"CONNECT_BAD_CLIENT_ID", // 2 / the server rejected the client identifier
+			"CONNECT_UNAVAILABLE", // 3 / the server was unable to accept the connection
+			"CONNECT_BAD_CREDENTIALS", // 4 / the username/password were rejected
+			"CONNECT_UNAUTHORIZED" // 5 / e client was not authorized to connect
+		]
+		document.getElementById('mqtt').innerHTML = "MQTT: " + mqtt_states[msgobj.MQTT + 4];
 	}
 	if(msgobj.CONTENT == "STATES"){
 		var element = document.getElementById('temp');
