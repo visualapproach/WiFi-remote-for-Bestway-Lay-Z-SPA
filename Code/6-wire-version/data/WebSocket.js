@@ -1,5 +1,7 @@
-//
+// the web socket connection
 var connection;
+
+// 
 const settarget = 0;
 const setunit = 1;
 const setbubbles = 2;
@@ -52,7 +54,6 @@ function connect()
 		handlemsg(e);
 	}
 }
-
 
 String.prototype.pad = function(String, len)
 {
@@ -116,9 +117,10 @@ function handlemsg(e)
 		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
 		document.getElementById('AIR').checked = msgobj.AIR;
 		document.getElementById('UNT').checked = msgobj.UNT;
+		document.getElementById('FLT').checked = msgobj.FLT;
+		document.getElementById('HJT').checked = msgobj.HJT;
 		document.getElementById('HTR').checked = msgobj.RED || msgobj.GRN;
 		document.getElementById('htrspan').style = "background-color: #" + ((msgobj.RED) ? 'FF0000' : ((msgobj.GRN) ? '00FF00' : 'CCC'));
-		document.getElementById('FLT').checked = msgobj.FLT;
 		if (document.getElementById('UNT').checked)
 		{
 			document.getElementById('temp').min = 20;
