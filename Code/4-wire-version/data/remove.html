@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Lay-Z-Spa Module | Success!</title>
+	<title>Lay-Z-Spa Module | File Remover</title>
 	<meta charset="utf-8">
 	<link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
 	<link rel="manifest" href="manifest.json">
@@ -14,7 +14,7 @@
 <body>
 	<div id="site">
 		<header>
-			<span>Success!</span>
+			<span>File Remover</span>
 			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
 		</header>
 
@@ -25,19 +25,17 @@
 			<a href="mqtt.html">MQTT Config</a>
 			<a href="/dir/">Directory</a>
 			<a href="upload.html">File Uploader</a>
-			<a href="remove.html">File Remover</a>
+			<a href="remove.html" class="active">File Remover</a>
 			<!--<a href="/restart/" class="bgred">Restart ESP</a>
 			<a href="javascript:void(0);" class="bgred" onclick="reboot()">Restart ESP</a>-->
 		</div>
 
 		<section>
-			<p>The operation was successful.</p>
-		</section>
-
-		<section>
-			<p class="center"><a class="button" href="/">Home</a></p>
-			<p class="center"><a class="button" href="/upload.html">Upload a file</a></p>
-			<p class="center"><a class="button" href="/remove.html">Remove a file</a></p>
+			<p style="text-align: left">Use this page to remove a file from the ESP8266.</p>
+			<form method="post" enctype="application/x-www-form-urlencoded" style="margin: 0px auto 8px auto" >
+				<input type="text" name="FileToRemove" value="">
+				<input class="button" type="submit" value="Delete" name="submit">
+			</form>
 		</section>
 </body>
 </html>
