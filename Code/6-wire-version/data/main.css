@@ -110,40 +110,13 @@ div.visualapproach {
 input[type=range] {
     -webkit-appearance: none;
     outline: none;
+    border: 0;
     width: 100%;
     margin: 6px;
-}
-
-input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    border: 0px;
-    height: 20px;
-    width: 15px;
-    margin-top: -6px;
-    border-radius: 5px;
-}
-
-input.disabled[type=range]::-webkit-slider-thumb {
-    background: #999;
-}
-
-input.enabled[type=range]::-webkit-slider-thumb {
-    background: #FF878F;
-    cursor: pointer;
-    box-shadow: 1px 1px 2px #777, 0px 0px 1px #777;
-}
-
-input[type=range]::-webkit-slider-runnable-track {
-    width: inherit;
-    height: 10px;
     background: #ccc;
     border-radius: 10px;
-}
-
-input.enabled[type=range]::-webkit-slider-runnable-track {
     cursor: pointer;
 }
-
 
 /*             SWITCH styles                 */
 

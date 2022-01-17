@@ -28,7 +28,7 @@
 			<a href="upload.html">File Uploader</a>
 			<a href="remove.html">File Remover</a>
 			<!--<a href="/restart/">Restart ESP</a>-->
-			<a href="javascript:void(0);" class="bgred" onclick="reboot()">Restart ESP</a>
+			<a href="javascript:void(0);" class="bgred" onclick="sendCommand('restartEsp')">Restart ESP</a>
 		</div>
 
 		<section style="position:relative">
@@ -61,14 +61,14 @@
 			<table>
 				<tr>
 					<td style="width:40%;white-space:nowrap;">Set temperature:</td>
-					<td style="width:40%"><input class="enabled" id="temp" type="range" min="20" max="40" step="1" value="20" onmouseup="tempchange()" ontouchend="tempchange()" ontouchmove="tempchange()" oninput="tempchange()"></td>
+					<td style="width:40%"><input type="range" id="temp" min="20" max="40" step="1" value="20" onmouseup="sendCommand('setTarget')" ontouchend="sendCommand('setTarget')" ontouchmove="sendCommand('setTarget')" oninput="sendCommand('setTarget')"></td>
 					<td style="width:20%;text-align:right" id="sliderTempVal">0</td>
 				</tr>
 			</table>
 			<table>
 				<tr>
 					<td style="width:40%;white-space:nowrap;">Set brightness:</td>
-					<td style="width:40%"><input class="enabled" id="brt" type="range" min="0" max="7" step="1" value="7" onmouseup="brtchange()" ontouchend="brtchange()" ontouchmove="brtchange()" oninput="brtchange()"></td>
+					<td style="width:40%"><input type="range" id="brt" min="0" max="7" step="1" value="7" onmouseup="sendCommand('setBrightness')" ontouchend="sendCommand('setBrightness')" ontouchmove="sendCommand('setBrightness')" oninput="sendCommand('setBrightness')"></td>
 					<td style="width:20%;text-align:right" id="sliderBrtVal">0</td>
 				</tr>
 			</table>
@@ -77,14 +77,14 @@
 					<td>Bubbles</td>
 					<td>
 						<label class="switch">
-						<input type="checkbox" id="AIR" onchange="air()">
+						<input type="checkbox" id="AIR" onchange="sendCommand('toggleBubbles')">
 						<span class="slider round"></span>
 						</label>
 					</td>
 					<td>Heater</td>
 					<td>
 						<label class="switch">
-						<input type="checkbox" id="HTR" onchange="htr()">
+						<input type="checkbox" id="HTR" onchange="sendCommand('toggleHeater')">
 						<span id="htrspan" class="slider round"></span>
 						</label>
 					</td>
@@ -93,14 +93,14 @@
 					<td>Pump</td>
 					<td>
 						<label class="switch">
-						<input type="checkbox" id="FLT" onchange="flt()">
+						<input type="checkbox" id="FLT" onchange="sendCommand('togglePump')">
 						<span class="slider round"></span>
 						</label>
 					</td>
 					<td>Unit (F/C)</td>
 					<td>
 						<label class="switch">
-						<input type="checkbox" id="UNT" onchange="unt()">
+						<input type="checkbox" id="UNT" onchange="sendCommand('toggleUnit')">
 						<span class="slider round"></span>
 						</label>
 					</td>
@@ -109,7 +109,7 @@
 					<td>Hydrojets</td>
 					<td>
 						<label class="switch">
-						<input type="checkbox" id="HJT" onchange="hjt()">
+						<input type="checkbox" id="HJT" onchange="sendCommand('toggleHydroJets')">
 						<span class="slider round"></span>
 						</label>
 					</td>
@@ -123,12 +123,12 @@
 			<h2>Timer:</h2>
 			<table>
 				<tr>
-					<td>Last chlorine add was <span id="cltimer">1000000</span> ago.</td>
-					<td><button id="cltimerbtn" class="button" onclick="clTimer()">Reset</button></td>
+					<td>Last chlorine add was <span id="cltimer">n/a</span> day(s) ago.</td>
+					<td><button id="cltimerbtn" class="button" onclick="sendCommand('resetTimerChlorine')">Reset</button></td>
 				</tr>
 				<tr>
-					<td>Last filter change was <span id="ftimer">1000000</span> ago.</td>
-					<td><button id="ftimerbtn" class="button" onclick="fTimer()">Reset</button></td>
+					<td>Last filter change was <span id="ftimer">n/a</span> day(s) ago.</td>
+					<td><button id="ftimerbtn" class="button" onclick="sendCommand('resetTimerFilter')">Reset</button></td>
 				</tr>
 			</table>
 		</section>
@@ -169,7 +169,7 @@
 					<td><span id="cost">00:00:00</span></td>
 				</tr>
 				<tr>
-					<td colspan="2" class="center"><button id="reset" class="button" onclick="zero()">Reset</button></td>
+					<td colspan="2" class="center"><button id="reset" class="button" onclick="sendCommand('resetTotals')">Reset</button></td>
 				</tr>
 			</table>
 		</section>
