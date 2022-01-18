@@ -100,8 +100,14 @@ function handlemsg(e)
 		document.getElementById('mqtt').innerHTML = "MQTT: " + mqtt_states[msgobj.MQTT + 4];
 
 		// hydro jets available
-		document.getElementById('jets').style.display = (msgobj.HASJETS ? 'inherit' : 'none');
-		//document.getElementById('jetstotals').style.display = (msgobj.HASJETS ? 'inherit' : 'none');
+		var jetsAvailable = false;
+		if (typeof(msgobj.HASJETS) != 'undefined') // TODO: figure out..
+		{
+			jetsAvailable = true;
+		}
+		document.getElementById('jetstitle').style.display = (jetsAvailable ? 'inherit' : 'none');
+		document.getElementById('jetsbutton').style.display = (jetsAvailable ? 'inherit' : 'none');
+		document.getElementById('jetstotals').style.display = (jetsAvailable ? 'inherit' : 'none');
 	}
 
 	if (msgobj.CONTENT == "STATES")
