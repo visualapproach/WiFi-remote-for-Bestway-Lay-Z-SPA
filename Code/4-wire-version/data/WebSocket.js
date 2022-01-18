@@ -24,7 +24,7 @@ const eid = {
 	toggleBubbles: 'AIR',
 	toggleHeater: 'HTR',
 	togglePump: 'FLT',
-	toggleHydroJets: 'HJT',
+	toggleHydroJets: 'JET',
 	toggleGodMode: 'GOD'
 };
 
@@ -117,7 +117,7 @@ function handlemsg(e)
 		document.getElementById('AIR').checked = msgobj.AIR;
 		document.getElementById('UNT').checked = msgobj.UNT;
 		document.getElementById('FLT').checked = msgobj.FLT;
-		document.getElementById('HJT').checked = msgobj.JET;
+		document.getElementById('JET').checked = msgobj.JET;
 		document.getElementById('GOD').checked = msgobj.GOD;
 		document.getElementById('HTR').checked = msgobj.RED || msgobj.GRN;
 		document.getElementById('htrspan').style = "background-color: #" + ((msgobj.RED) ? 'FF0000' : ((msgobj.GRN) ? '00FF00' : 'CCC'));
