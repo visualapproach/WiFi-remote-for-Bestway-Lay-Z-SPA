@@ -551,7 +551,13 @@ void BWC::_handleButtonQ(void) {
 		//prioritize manual temp setting by not competing with the set target command
 		if (pressedButton == ButtonCodes[UP] || pressedButton == ButtonCodes[DOWN]) _sliderPrio = false;
     //make noise
-    if((index*EnabledButtons[index]) & (prevbtn == ButtonCodes[NOBTN])) _dsp.beep2();
+    if(_audio)
+    {
+      if((index*EnabledButtons[index]) & (prevbtn == ButtonCodes[NOBTN]))
+      {
+        _dsp.beep2();
+      } 
+    }
     prevbtn = pressedButton;
 	}
 
