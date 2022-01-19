@@ -231,11 +231,13 @@ void BWC::_handleCommandQ(void) {
 
 				case SETTARGET:
 					_cio.states[TARGET] = _commandQ[0][1];
+          _cio.newData = true;
           if(_cio.states[TARGET] > 40) _cio.states[TARGET] = 40;  //don't cook anyone
 					break;
 
 				case SETUNIT:
           _cio.states[UNITSTATE] = _commandQ[0][1];
+          _cio.newData = true;
 					break;
 
 				case SETBUBBLES:
@@ -372,6 +374,7 @@ void BWC::_handleCommandQ(void) {
           _cio.states[HEATGRNSTATE] = 0;
           _cio.states[HEATREDSTATE] = 0;
           _cio.states[HEATSTATE] = 0;
+          _cio.newData = true;
           break;
         
         case SETFULLPOWER:
