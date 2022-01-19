@@ -112,29 +112,28 @@ function handlemsg(e)
 
 	if (msgobj.CONTENT == "STATES")
 	{
-		document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
-		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
+		// temperature
+		document.getElementById('atlabel').innerHTML = (msgobj.UNT ? msgobj.TMP.toString() : String(msgobj.TMP * 1.8 + 32));
+		document.getElementById('ttlabel').innerHTML = (msgobj.UNT ? msgobj.TGT.toString() : String(msgobj.TGT * 1.8 + 32));
+		document.getElementById('temp').min = (msgobj.UNT ? 20 : 68);
+		document.getElementById('temp').max = (msgobj.UNT ? 40 : 104);
+
+		// buttons
 		document.getElementById('AIR').checked = msgobj.AIR;
 		document.getElementById('UNT').checked = msgobj.UNT;
 		document.getElementById('FLT').checked = msgobj.FLT;
 		document.getElementById('JET').checked = msgobj.JET;
 		document.getElementById('GOD').checked = msgobj.GOD;
 		document.getElementById('HTR').checked = msgobj.RED || msgobj.GRN;
-		document.getElementById('htrspan').style = "background-color: #" + ((msgobj.RED) ? 'FF0000' : ((msgobj.GRN) ? '00FF00' : 'CCC'));
+
+		// heater button color
+		var heaterColor = "CCC";
+		if (msgobj.GRN == 2) heaterColor = "000";
+		else if (msgobj.RED == 1) heaterColor = "FF0000";
+		else if (msgobj.GRN == 1) heaterColor = "00FF00";
+		document.getElementById('htrspan').style = "background-color: #" + heaterColor;
 		
-		// TODO: this is 4-wire only(?)
-		// 2 is unknown (shown as black)
-		//if(msgobj.GRN == 2) mycolor = "background-color: #000";
-		
-		if (document.getElementById('UNT').checked)
-		{
-			document.getElementById('temp').min = 20;
-			document.getElementById('temp').max = 40;
-		}
-		else {
-			document.getElementById('temp').min = 68;
-			document.getElementById('temp').max = 104;
-		}
+		// display
 		document.getElementById('dsp').innerHTML = "[" + String.fromCharCode(msgobj.CH1,msgobj.CH2,msgobj.CH3)+ "]";
 		//document.getElementById('dsp').style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(parseInt(msgobj.BRT)+1)), 0, 0);
 
