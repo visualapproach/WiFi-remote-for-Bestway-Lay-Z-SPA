@@ -113,10 +113,10 @@ function handlemsg(e)
 	if (msgobj.CONTENT == "STATES")
 	{
 		// temperature
-		document.getElementById('atlabel').innerHTML = (msgobj.UNT ? msgobj.TMP.toString() : String(msgobj.TMP * 1.8 + 32));
-		document.getElementById('ttlabel').innerHTML = (msgobj.UNT ? msgobj.TGT.toString() : String(msgobj.TGT * 1.8 + 32));
 		document.getElementById('temp').min = (msgobj.UNT ? 20 : 68);
 		document.getElementById('temp').max = (msgobj.UNT ? 40 : 104);
+		document.getElementById('atlabel').innerHTML = (msgobj.UNT ? msgobj.TMP.toString() : String(msgobj.TMP * 1.8 + 32));
+		document.getElementById('ttlabel').innerHTML = (msgobj.UNT ? msgobj.TGT.toString() : String(msgobj.TGT * 1.8 + 32));
 
 		// buttons
 		document.getElementById('AIR').checked = msgobj.AIR;
@@ -203,8 +203,22 @@ function sendCommand(val)
 	var value = 0;
 	if (val == 'setTarget')
 	{
+		var unt = document.getElementById('UNT').checked;
 		value = parseInt(document.getElementById('temp').value);
 		document.getElementById("sliderTempVal").innerHTML = value.toString();
+		document.getElementById('ttlabel').innerHTML = value.toString();
+	}
+	else if (val == 'toggleUnit')
+	{
+		var tmp;
+		value = document.getElementById('UNT').checked;
+		tmp = parseInt(document.getElementById('temp').value);
+		tmp = Math.floor(value ? String((tmp - 32) / 1.8) : String(tmp * 1.8 + 32));
+		document.getElementById('temp').min = (value ? 20 : 68);
+		document.getElementById('temp').max = (value ? 40 : 104);
+		document.getElementById('temp').value = tmp;
+		document.getElementById('ttlabel').innerHTML = tmp;
+		document.getElementById("sliderTempVal").innerHTML = tmp;
 	}
 //	else if (val == 'setBrightness')
 //	{
@@ -212,7 +226,7 @@ function sendCommand(val)
 //		document.getElementById("sliderBrtVal").innerHTML = value.toString();
 //		document.getElementById("dsp").style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(value+1)), 0, 0);
 //	}
-	else if (eid[val] && (val == 'toggleUnit' || val == 'toggleBubbles' || val == 'toggleHeater' || val == 'togglePump' || val == 'toggleHydroJets' || val == 'toggleGodMode'))
+	else if (eid[val] && (val == 'toggleBubbles' || val == 'toggleHeater' || val == 'togglePump' || val == 'toggleHydroJets' || val == 'toggleGodMode'))
 	{
 		value = document.getElementById(eid[val]).checked;
 	}
