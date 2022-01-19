@@ -105,23 +105,23 @@ function handlemsg(e)
 
 	if (msgobj.CONTENT == "STATES")
 	{
+		// temperature
 		document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
 		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
+		document.getElementById('temp').min = (msgobj.UNT ? 20 : 68);
+		document.getElementById('temp').max = (msgobj.UNT ? 40 : 104);
+
+		// buttons
 		document.getElementById('AIR').checked = msgobj.AIR;
 		document.getElementById('UNT').checked = msgobj.UNT;
 		document.getElementById('FLT').checked = msgobj.FLT;
 		document.getElementById('HJT').checked = msgobj.HJT;
 		document.getElementById('HTR').checked = msgobj.RED || msgobj.GRN;
+
+		// heater button color
 		document.getElementById('htrspan').style = "background-color: #" + ((msgobj.RED) ? 'FF0000' : ((msgobj.GRN) ? '00FF00' : 'CCC'));
-		if (document.getElementById('UNT').checked)
-		{
-			document.getElementById('temp').min = 20;
-			document.getElementById('temp').max = 40;
-		}
-		else {
-			document.getElementById('temp').min = 68;
-			document.getElementById('temp').max = 104;
-		}
+		
+		// display
 		document.getElementById('dsp').innerHTML = "[" + String.fromCharCode(msgobj.CH1,msgobj.CH2,msgobj.CH3)+ "]";
 		document.getElementById('dsp').style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(parseInt(msgobj.BRT)+1)), 0, 0);
 
