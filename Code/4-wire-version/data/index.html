@@ -37,11 +37,11 @@
 			<table class="fixed">
 				<tr>
 					<td>Actual:</td>
-					<td><span id="atlabel">0</span></td>
+					<td><span id="atlabel">n/a</span></td>
 				</tr>
 				<tr>
 					<td>Target:</td>
-					<td><span id="ttlabel">0</span></td>
+					<td><span id="ttlabel">n/a</span></td>
 				</tr>
 			</table>
 		</section>
@@ -62,7 +62,7 @@
 				<tr>
 					<td style="width:40%;white-space:nowrap;">Set temperature:</td>
 					<td style="width:40%"><input type="range" id="temp" min="20" max="40" step="1" value="20" onmouseup="sendCommand('setTarget')" ontouchend="sendCommand('setTarget')"></td>
-					<td style="width:20%;text-align:right" id="sliderTempVal">0</td>
+					<td style="width:20%;text-align:right" id="sliderTempVal">n/a</td>
 				</tr>
 			</table>
 			<table class="fixed">
@@ -138,37 +138,35 @@
 			<table class="fixed">
 				<tr>
 					<td>Time:</td>
-					<td><span id="time">00:00:00</span></td>
+					<td><span id="time">n/a</span></td>
 				</tr>
-				<!--
 				<tr>
 					<td>Heating Est.:</td>
-					<td><span id="tttt">00:00:00</span></td>
+					<td><span id="tttt">n/a</span></td>
 				</tr>
-				-->
 				<tr>
 					<td>Uptime:</td>
-					<td><span id="uptime">00:00:00</span></td>
+					<td><span id="uptime">n/a</span></td>
 				</tr>
 				<tr>
 					<td>Pump:</td>
-					<td><span id="filtertime">00:00:00</span></td>
+					<td><span id="filtertime">n/a</span></td>
 				</tr>
 				<tr>
 					<td>Heating:</td>
-					<td><span id="heatingtime">00:00:00</span></td>
+					<td><span id="heatingtime">n/a</span></td>
 				</tr>
 				<tr>
 					<td>Air:</td>
-					<td><span id="airtime">00:00:00</span></td>
+					<td><span id="airtime">n/a</span></td>
 				</tr>
 				<tr id="jetstotals">
 					<td>Hydrojets:</td>
-					<td><span id="jettime">00:00:00</span></td>
+					<td><span id="jettime">n/a</span></td>
 				</tr>
 				<tr>
 					<td>Estimated cost:</td>
-					<td><span id="cost">00:00:00</span></td>
+					<td><span id="cost">n/a</span></td>
 				</tr>
 				<tr>
 					<td colspan="2" class="center"><button id="reset" class="button" onclick="sendCommand('resetTotals')">Reset</button></td>

@@ -170,7 +170,7 @@ function handlemsg(e)
 		document.getElementById('filtertime').innerHTML = s2dhms(msgobj.PUMPTIME);
 		document.getElementById('jettime').innerHTML = s2dhms(msgobj.JETTIME);
 		document.getElementById('cost').innerHTML = (msgobj.COST).toFixed(2);
-		//document.getElementById('tttt').innerHTML = (msgobj.TTTT/3600).toFixed(2) + "h<br>(" + new Date(msgobj.TIME * 1000 + msgobj.TTTT * 1000).toLocaleString() + ")";
+		document.getElementById('tttt').innerHTML = (msgobj.TTTT/3600).toFixed(2) + "h<br>(" + new Date(msgobj.TIME * 1000 + msgobj.TTTT * 1000).toLocaleString() + ")";
 	}
 };
 
@@ -203,7 +203,6 @@ function sendCommand(val)
 	var value = 0;
 	if (val == 'setTarget')
 	{
-		var unt = document.getElementById('UNT').checked;
 		value = parseInt(document.getElementById('temp').value);
 		document.getElementById("sliderTempVal").innerHTML = value.toString();
 		document.getElementById('ttlabel').innerHTML = value.toString();
