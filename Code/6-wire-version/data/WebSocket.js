@@ -106,10 +106,10 @@ function handlemsg(e)
 	if (msgobj.CONTENT == "STATES")
 	{
 		// temperature
-		document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
-		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
 		document.getElementById('temp').min = (msgobj.UNT ? 20 : 68);
 		document.getElementById('temp').max = (msgobj.UNT ? 40 : 104);
+		document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
+		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
 
 		// buttons
 		document.getElementById('AIR').checked = msgobj.AIR;
