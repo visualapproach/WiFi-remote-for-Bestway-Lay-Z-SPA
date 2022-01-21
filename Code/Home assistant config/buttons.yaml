@@ -2,7 +2,7 @@
   name: spa reset CL timer
   command_topic: "BW_2.0.0/command"
   icon: mdi:restart
-  payload_press: '{CMD:8,VALUE:true,XTIME:0,INTERVAL:0}'
+  payload_press: '{CMD:9,VALUE:true,XTIME:0,INTERVAL:0}'
   availability_topic: "BW_2.0.0/Status"
   payload_available: "Alive"
   payload_not_available: "Dead"
@@ -11,7 +11,7 @@
   name: spa reset filter timer
   command_topic: "BW_2.0.0/command"
   icon: mdi:restart
-  payload_press: '{CMD:9,VALUE:true,XTIME:0,INTERVAL:0}'
+  payload_press: '{CMD:10,VALUE:true,XTIME:0,INTERVAL:0}'
   availability_topic: "BW_2.0.0/Status"
   payload_available: "Alive"
   payload_not_available: "Dead"
