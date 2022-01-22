@@ -50,6 +50,8 @@ void setup()
 
 void loop()
 {
+  // We need this self-destructing info several times, so save it locally
+  bool newData = bwc.newData();
   // Fiddle with the pump computer
   bwc.loop();
 
@@ -72,7 +74,7 @@ void loop()
       }
       else
       {
-        if (bwc.newData())
+        if (newData)
         {
           sendMQTT();
         }
@@ -85,7 +87,7 @@ void loop()
     }
     
     // web socket
-    if (bwc.newData())
+    if (newData)
     {
       sendWS();
     }
@@ -1125,7 +1127,7 @@ void startMQTT()
   // set buffer for larger messages, new to library 2.8.0
   if (mqttClient.setBufferSize(1024))
   {
-    Serial.println(F("MQTT buffer size successfully increased"));
+    Serial.println(F("MQTT > Buffer size successfully increased"));
   }
   mqttClient.setKeepAlive(60);
   mqttClient.setSocketTimeout(30);
