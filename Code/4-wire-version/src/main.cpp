@@ -66,23 +66,16 @@ void loop()
     ArduinoOTA.handle();
 
     // MQTT
-    if (enableMqtt)
+    if (enableMqtt && mqttClient.loop())
     {
-      if (!mqttClient.loop())
+      if (newData)
       {
-        MQTT_Connect();
+        sendMQTT();
       }
-      else
+      else if (sendMQTTFlag)
       {
-        if (newData)
-        {
-          sendMQTT();
-        }
-        else if (sendMQTTFlag)
-        {
-          sendMQTTFlag = false;
-          sendMQTT();
-        }
+        sendMQTTFlag = false;
+        sendMQTT();
       }
     }
     
@@ -139,6 +132,12 @@ void loop()
       {
         Serial.println(F("NTP > Start synchronisation"));
         DateTime.begin();
+      }
+
+      if (!mqttClient.loop())
+      {
+        Serial.println(F("MQTT > Reconnecting"));
+        MQTT_Connect();
       }
     }
   }
@@ -964,10 +963,12 @@ void handleSetMqtt()
   mqttPassword = doc["mqttPassword"].as<String>();
   mqttClientId = doc["mqttClientId"].as<String>();
   mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
-	
-  saveMqtt();
 
   server.send(200, "text/plain", "");
+
+  saveMqtt();
+  startMQTT();
+
 }
 
 /**
@@ -1122,6 +1123,8 @@ void startMQTT()
   // load mqtt credential file if it exists, and update default strings
   loadMqtt();
 
+  // disconnect in case we are already connected
+  mqttClient.disconnect();
   // setup MQTT broker information as defined earlier
   mqttClient.setServer(mqttIpAddress, mqttPort);
   // set buffer for larger messages, new to library 2.8.0
