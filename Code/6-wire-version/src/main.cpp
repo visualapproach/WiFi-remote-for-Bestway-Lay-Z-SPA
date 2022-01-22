@@ -48,6 +48,8 @@ void setup()
 
 void loop()
 {
+  // We need this self-destructing info several times, so save it locally
+  bool newData = bwc.newData();
   // Fiddle with the pump computer
   bwc.loop();
 
@@ -62,36 +64,29 @@ void loop()
     ArduinoOTA.handle();
     
     // MQTT
-    if (enableMqtt)
+    if (enableMqtt && mqttClient.loop())
     {
-      if (!mqttClient.loop())
+      String msg = bwc.getButtonName();
+      // publish pretty button name if display button is pressed (or NOBTN if released)
+      if (!msg.equals(prevButtonName))
       {
-        MQTT_Connect();
+        mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
+        prevButtonName = msg;
       }
-      else
-      {
-        String msg = bwc.getButtonName();
-        // publish pretty button name if display button is pressed (or NOBTN if released)
-        if (!msg.equals(prevButtonName))
-        {
-          mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
-          prevButtonName = msg;
-        }
 
-        if (bwc.newData())
-        {
-          sendMQTT();
-        }
-        else if (sendMQTTFlag)
-        {
-          sendMQTTFlag = false;
-          sendMQTT();
-        }
+      if (newData)
+      {
+        sendMQTT();
+      }
+      else if (sendMQTTFlag)
+      {
+        sendMQTTFlag = false;
+        sendMQTT();
       }
     }
     
     // web socket
-    if (bwc.newData())
+    if (newData)
     {
       sendWS();
     }
@@ -143,6 +138,12 @@ void loop()
       {
         Serial.println(F("NTP > Start synchronisation"));
         DateTime.begin();
+      }
+
+      if (!mqttClient.loop())
+      {
+        Serial.println(F("MQTT > Reconnecting"));
+        MQTT_Connect();
       }
     }
   }
@@ -967,10 +968,11 @@ void handleSetMqtt()
   mqttPassword = doc["mqttPassword"].as<String>();
   mqttClientId = doc["mqttClientId"].as<String>();
   mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
-	
-  saveMqtt();
 
   server.send(200, "text/plain", "");
+	
+  saveMqtt();
+  startMQTT();
 }
 
 /**
@@ -1123,6 +1125,8 @@ void startMQTT()
 {
   // load mqtt credential file if it exists, and update default strings
   loadMqtt();
+  // In case we're already connected
+  mqttClient.disconnect();
 
   // setup MQTT broker information as defined earlier
   mqttClient.setServer(mqttIpAddress, mqttPort);

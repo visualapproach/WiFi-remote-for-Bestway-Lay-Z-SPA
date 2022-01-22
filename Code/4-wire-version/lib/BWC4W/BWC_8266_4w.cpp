@@ -154,6 +154,12 @@ void BWC::begin(void){
   _finterval = 30;
   _clinterval = 14;
   _audio = 1;
+  _tttt = 0;
+  _tttt_calculated = 0;
+  _tttt_time0 = DateTime.now()-3600;
+  _tttt_time1 = DateTime.now();
+  _tttt_temp0 = 20;
+  _tttt_temp1 = 20;
 }
 
 void BWC::loop(){
@@ -231,15 +237,18 @@ void BWC::_handleCommandQ(void) {
 
 				case SETTARGET:
 					_cio.states[TARGET] = _commandQ[0][1];
+          _cio.dataAvailable = true;
           if(_cio.states[TARGET] > 40) _cio.states[TARGET] = 40;  //don't cook anyone
 					break;
 
 				case SETUNIT:
           _cio.states[UNITSTATE] = _commandQ[0][1];
+          _cio.dataAvailable = true;
 					break;
 
 				case SETBUBBLES:
           if(_cio.states[BUBBLESSTATE] == _commandQ[0][1]) break;  //no change required
+          _cio.dataAvailable = true;
           _currentStateIndex = JUMPTABLE[_currentStateIndex][BUBBLETOGGLE];
           _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][BUBBLETOGGLE];
           _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][JETSTOGGLE];
@@ -267,6 +276,7 @@ void BWC::_handleCommandQ(void) {
 
 				case SETHEATER:
           if(_cio.states[HEATSTATE] == _commandQ[0][1]) break;  //no change required
+          _cio.dataAvailable = true;
           _currentStateIndex = JUMPTABLE[_currentStateIndex][HEATTOGGLE];
           _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][BUBBLETOGGLE];
           _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][JETSTOGGLE];
@@ -304,6 +314,7 @@ void BWC::_handleCommandQ(void) {
 				case SETPUMP:
           if(_cio.states[PUMPSTATE] == _commandQ[0][1]) break;  //no change required
           //let pump run a bit to cool element
+          _cio.dataAvailable = true;
           if(_cio.states[HEATSTATE] && !_commandQ[0][1]) {
             qCommand(SETHEATER, 0, 0, 0);
             qCommand(SETPUMP, 0, _timestamp + 10, 0);
@@ -342,20 +353,24 @@ void BWC::_handleCommandQ(void) {
 					_cost = 0;
           _kwh = 0;
 					_saveSettingsNeeded = true;		
+          _cio.dataAvailable = true;
 					break;
 
 				case RESETCLTIMER:
 					_cltime = _timestamp;
 					_saveSettingsNeeded = true;
+          _cio.dataAvailable = true;
 					break;
 
 				case RESETFTIMER:
 					_ftime = _timestamp;
 					_saveSettingsNeeded = true;
+          _cio.dataAvailable = true;
 					break;
 
         case SETJETS:
           if(_cio.states[JETSSTATE] == _commandQ[0][1]) break;  //no change required
+          _cio.dataAvailable = true;
           _currentStateIndex = JUMPTABLE[_currentStateIndex][JETSTOGGLE];
           _cio.states[BUBBLESSTATE] = ALLOWEDSTATES[_currentStateIndex][BUBBLETOGGLE];
           _cio.states[JETSSTATE] = ALLOWEDSTATES[_currentStateIndex][JETSTOGGLE];
@@ -372,6 +387,7 @@ void BWC::_handleCommandQ(void) {
           _cio.states[HEATGRNSTATE] = 0;
           _cio.states[HEATREDSTATE] = 0;
           _cio.states[HEATSTATE] = 0;
+          _cio.dataAvailable = true;
           break;
         
         case SETFULLPOWER:
@@ -459,6 +475,7 @@ String BWC::getJSONTimes() {
     doc["COST"] = _cost;
     doc["FINT"] = _finterval;
     doc["CLINT"] = _clinterval;
+    doc["TTTT"] = _tttt;
 
     // Serialize JSON to string
     String jsonmsg;

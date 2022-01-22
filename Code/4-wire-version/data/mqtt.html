@@ -1,80 +1,132 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>MQTT Config</title>
-    <link href='main.css' rel='stylesheet' type='text/css'>
-    <link rel="icon" type="image/png" sizes="128x128"  href="favicon128.png">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0066BF">
-    <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport'>
+	<title>Lay-Z-Spa Module | MQTT Config</title>
+	<meta charset="utf-8">
+	<link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
+	<link rel="manifest" href="manifest.json">
+	<link rel="stylesheet" href="main.css">
+	<meta name="theme-color" content="#0066BF">
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+	<script src="function.js" type="text/javascript"></script>
 </head>
 
-<body onload="loadconfig()">
-    <center>
-        <header>
-            <h1>MQTT Config</h1>
-        </header>
-        <div>
-			<p align="left">MQTT server IP <input type="text" id="ip1" size="3"> . <input type="text" id="ip2" size="3"> . <input type="text" id="ip3" size="3"> . <input type="text" id="ip4" size="3"></p>
-			<p align="left">MQTT port <input type="text" id="port"></p>
- 			<p align="left">MQTT user name <input type="text" id="name"></p>
-			<p align="left">MQTT password <input type="text" id="pwd"></p>
- 			<p align="left">MQTT client ID <input type="text" id="clientID"></p>
-			<p align="left">MQTT base topic <input type="text" id="topic"></p>
-        </div>
-		<div><input type="checkbox" id="enableMQTT" style="background-color:#999">
-			<label for="enableMQTT">Enable MQTT</label><br></div>
- 		<div>If you save, these credentials will be used instead of the default.<br><button id="save" class="button" style="background-color:#DDD" onclick="saveconfig()">Save</button></div>
-	</center>
+<body onload="loadConfig()">
+	<div id="site">
+		<header>
+			<span>MQTT Config</span>
+			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
+		</header>
 
-	
+		<div class="topnav" id="topnav">
+			<a href="./">Home</a>
+			<a href="config.html">SPA Config</a>
+			<a href="wifi.html">Network Config</a>
+			<a href="mqtt.html" class="active">MQTT Config</a>
+			<a href="/dir/">Directory</a>
+			<a href="upload.html">File Uploader</a>
+			<a href="remove.html">File Remover</a>
+			<!--<a href="/restart/" class="bgred">Restart ESP</a>
+			<a href="javascript:void(0);" class="bgred" onclick="reboot()">Restart ESP</a>-->
+		</div>
+
+		<section>
+			<table>
+				<tr>
+					<td><label for="enableMqtt">Enable MQTT:</label></td>
+					<td><input type="checkbox" id="enableMqtt"></td>
+				</tr>
+				<tr>
+					<td>IP Address:</td>
+					<td>
+						<input type="text" id="mqttIpAddress1" maxlength="3" style="width:30px">
+						. <input type="text" id="mqttIpAddress2" maxlength="3" style="width:30px">
+						. <input type="text" id="mqttIpAddress3" maxlength="3" style="width:30px">
+						. <input type="text" id="mqttIpAddress4" maxlength="3" style="width:30px">
+					</td>
+				</tr>
+				<tr>
+					<td>Port:</td>
+					<td><input type="text" id="mqttPort"></td>
+				</tr>
+				<tr>
+					<td>Username:</td>
+					<td><input type="text" id="mqttUsername"></td>
+				</tr>
+				<tr>
+					<td>Password:</td>
+					<td><input type="text" id="mqttPassword"></td>
+					<!--<td><input type="password" id="mqttPassword"><input type="checkbox" onclick="togglePlainText('mqttPassword')"></td>-->
+				</tr>
+				<tr>
+					<td>Client ID:</td>
+					<td><input type="text" id="mqttClientId"></td>
+				</tr>
+				<tr>
+					<td>Base Topic:</td>
+					<td><input type="text" id="mqttBaseTopic"></td>
+				</tr>
+				<tr>
+					<td colspan="2" style="text-align:center"><button id="save" class="button" onclick="saveConfig()">save</button></td>
+				</tr>
+			</table>
+		</section>
+	</div>
+
 <script>
-
-function loadconfig(){
+function loadConfig()
+{
 	const Http = new XMLHttpRequest();
 	const url='/getmqtt/';
 	Http.open("POST", url);
 	Http.send();
+	Http.onreadystatechange = function()
+	{
+		if (this.readyState == 4 && this.status == 200)
+		{
+			console.log(Http.responseText);
+			var json = JSON.parse(Http.responseText);
 
-	Http.onreadystatechange = function(){
-		if(this.readyState==4 && this.status==200){
-		  console.log(Http.responseText);
-		  var msgobj = JSON.parse(Http.responseText);
-		  document.getElementById("ip1").value = msgobj.mqtt_server_ip[0];
-		  document.getElementById("ip2").value = msgobj.mqtt_server_ip[1];
-		  document.getElementById("ip3").value = msgobj.mqtt_server_ip[2];
-		  document.getElementById("ip4").value = msgobj.mqtt_server_ip[3];
-		  document.getElementById("port").value = msgobj.mqtt_port;
-		  document.getElementById("name").value = msgobj.mqtt_username;
-		  document.getElementById("pwd").value = msgobj.mqtt_password;
-		  document.getElementById("clientID").value = msgobj.mqtt_client_id;
-		  document.getElementById("topic").value = msgobj.base_mqtt_topic;
-		  document.getElementById("enableMQTT").checked = msgobj.enableMQTT;
+			document.getElementById("enableMqtt").checked = json.enableMqtt;
+			document.getElementById("mqttIpAddress1").value = json.mqttIpAddress[0];
+			document.getElementById("mqttIpAddress2").value = json.mqttIpAddress[1];
+			document.getElementById("mqttIpAddress3").value = json.mqttIpAddress[2];
+			document.getElementById("mqttIpAddress4").value = json.mqttIpAddress[3];
+			document.getElementById("mqttPort").value = json.mqttPort;
+			document.getElementById("mqttUsername").value = json.mqttUsername;
+			document.getElementById("mqttPassword").value = json.mqttPassword;
+			document.getElementById("mqttClientId").value = json.mqttClientId;
+			document.getElementById("mqttBaseTopic").value = json.mqttBaseTopic;
 		}
 	}
 }
 
-function saveconfig(){
+function saveConfig()
+{
+	if (!validatePassword('mqttPassword')) return;
+	
 	const Http = new XMLHttpRequest();
 	const url='/setmqtt/';
 	Http.open("POST", url);
 
-	var msgobj = {
-		"mqtt_server_ip":[parseInt(document.getElementById("ip1").value),
-						parseInt(document.getElementById("ip2").value),
-						parseInt(document.getElementById("ip3").value),
-						parseInt(document.getElementById("ip4").value)],
-		"mqtt_port":parseInt(document.getElementById("port").value),
-		"mqtt_username":(document.getElementById("name").value),
-		"mqtt_password":(document.getElementById("pwd").value),
-		"mqtt_client_id":(document.getElementById("clientID").value),
-		"base_mqtt_topic":(document.getElementById("topic").value),
-		"enableMQTT":(document.getElementById("enableMQTT").checked)
+	var json = {
+		"enableMqtt":(document.getElementById("enableMqtt").checked),
+		"mqttIpAddress":[
+			parseInt(document.getElementById("mqttIpAddress1").value),
+			parseInt(document.getElementById("mqttIpAddress2").value),
+			parseInt(document.getElementById("mqttIpAddress3").value),
+			parseInt(document.getElementById("mqttIpAddress4").value)
+		],
+		"mqttPort":parseInt(document.getElementById("mqttPort").value),
+		"mqttUsername":(document.getElementById("mqttUsername").value),
+		"mqttPassword":(document.getElementById("mqttPassword").value),
+		"mqttClientId":(document.getElementById("mqttClientId").value),
+		"mqttBaseTopic":(document.getElementById("mqttBaseTopic").value)
 	};
-	Http.send(JSON.stringify(msgobj));
-	console.log(msgobj);
+	console.log(json);
+	Http.send(JSON.stringify(json));
 	alert("Saved.");
-	window.location.replace("/");
+	window.location.replace("/mqtt.html");
 }
 </script>	
 </body>

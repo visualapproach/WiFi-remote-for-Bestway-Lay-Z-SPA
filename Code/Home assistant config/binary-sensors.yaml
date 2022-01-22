@@ -49,3 +49,13 @@
   payload_not_available: "Dead"
   expire_after: 700
 
+- platform: mqtt 
+  name: Spa Status
+  device_class: connectivity
+  entity_category: diagnostic
+  state_topic: "BW_2.0.0/Status" 
+  availability_topic: "BW_2.0.0/Status"
+  payload_available: "Alive" 
+  payload_not_available: "Dead"
+  payload_on: "Alive" 
+  payload_off: "Dead"
