@@ -1,9 +1,9 @@
 {
- "name": "SPA Control",
+ "name": "Lay-Z-Spa Module",
  "icons": [
   {
-   "src": "\/favicon128.png",
-   "sizes": "128x128",
+   "src": "\/favicon.png",
+   "sizes": "48x48",
    "type": "image\/png",
    "density": "3.0"
   }
