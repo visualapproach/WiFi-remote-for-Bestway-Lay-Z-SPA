@@ -50,6 +50,8 @@ void setup()
 
 void loop()
 {
+  // We need this self-destructing info several times, so save it locally
+  bool newData = bwc.newData();
   // Fiddle with the pump computer
   bwc.loop();
 
@@ -64,28 +66,21 @@ void loop()
     ArduinoOTA.handle();
 
     // MQTT
-    if (enableMqtt)
+    if (enableMqtt && mqttClient.loop())
     {
-      if (!mqttClient.loop())
+      if (newData)
       {
-        MQTT_Connect();
+        sendMQTT();
       }
-      else
+      else if (sendMQTTFlag)
       {
-        if (bwc.newData())
-        {
-          sendMQTT();
-        }
-        else if (sendMQTTFlag)
-        {
-          sendMQTTFlag = false;
-          sendMQTT();
-        }
+        sendMQTTFlag = false;
+        sendMQTT();
       }
     }
     
     // web socket
-    if (bwc.newData())
+    if (newData)
     {
       sendWS();
     }
@@ -137,6 +132,12 @@ void loop()
       {
         Serial.println(F("NTP > Start synchronisation"));
         DateTime.begin();
+      }
+
+      if (!mqttClient.loop())
+      {
+        Serial.println(F("MQTT > Reconnecting"));
+        MQTT_Connect();
       }
     }
   }
@@ -962,10 +963,12 @@ void handleSetMqtt()
   mqttPassword = doc["mqttPassword"].as<String>();
   mqttClientId = doc["mqttClientId"].as<String>();
   mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
-	
-  saveMqtt();
 
   server.send(200, "text/plain", "");
+
+  saveMqtt();
+  startMQTT();
+
 }
 
 /**
@@ -1120,12 +1123,14 @@ void startMQTT()
   // load mqtt credential file if it exists, and update default strings
   loadMqtt();
 
+  // disconnect in case we are already connected
+  mqttClient.disconnect();
   // setup MQTT broker information as defined earlier
   mqttClient.setServer(mqttIpAddress, mqttPort);
   // set buffer for larger messages, new to library 2.8.0
   if (mqttClient.setBufferSize(1024))
   {
-    Serial.println(F("MQTT buffer size successfully increased"));
+    Serial.println(F("MQTT > Buffer size successfully increased"));
   }
   mqttClient.setKeepAlive(60);
   mqttClient.setSocketTimeout(30);

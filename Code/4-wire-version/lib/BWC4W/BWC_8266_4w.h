@@ -27,7 +27,6 @@ class CIO {
 	void updatePayload();
 	void updateStates();
 
-    bool newData = false;
 	bool dataAvailable = false;
 	bool GODMODE = false;
 	uint8_t states[15];
