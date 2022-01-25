@@ -57,6 +57,6 @@
   action:
   - service: mqtt.publish
     data:
-      topic: BW_2.0.0/command
+      topic: layzspa/command
       payload_template: '{CMD:0,VALUE:{{states(''input_number.spa_target_temp'')|int}},XTIME:0,INTERVAL:0}'
   mode: single

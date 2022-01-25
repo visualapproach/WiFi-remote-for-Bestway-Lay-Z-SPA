@@ -1,27 +1,27 @@
 - platform: mqtt
   name: spa reset CL timer
-  command_topic: "BW_2.0.0/command"
+  command_topic: "layzspa/command"
   icon: mdi:restart
   payload_press: '{CMD:9,VALUE:true,XTIME:0,INTERVAL:0}'
-  availability_topic: "BW_2.0.0/Status"
+  availability_topic: "layzspa/Status"
   payload_available: "Alive"
   payload_not_available: "Dead"
 
 - platform: mqtt
   name: spa reset filter timer
-  command_topic: "BW_2.0.0/command"
+  command_topic: "layzspa/command"
   icon: mdi:restart
   payload_press: '{CMD:10,VALUE:true,XTIME:0,INTERVAL:0}'
-  availability_topic: "BW_2.0.0/Status"
+  availability_topic: "layzspa/Status"
   payload_available: "Alive"
   payload_not_available: "Dead"
 
 - platform: mqtt
   name: "Spa Restart ESP"
   device_class: restart
-  command_topic: "BW_2.0.0/command"
+  command_topic: "layzspa/command"
   icon: mdi:restart
   payload_press: '{CMD:6,VALUE:true,XTIME:0,INTERVAL:0}'
-  availability_topic: "BW_2.0.0/Status"
+  availability_topic: "layzspa/Status"
   payload_available: "Alive"
   payload_not_available: "Dead"
