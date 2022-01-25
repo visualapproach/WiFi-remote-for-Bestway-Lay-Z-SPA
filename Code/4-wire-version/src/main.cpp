@@ -96,6 +96,9 @@ void loop()
       Serial.println("WiFi > Connected");
       Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
       Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
+      startOTA();
+      startHttpServer();
+      startWebSocket();
     }
     // reset marker
     wifiConnected = true;
@@ -376,6 +379,8 @@ void startOTA()
  */
 void startWebSocket()
 {
+  // In case we are already running
+  webSocket.close();
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
   Serial.println(F("WebSocket > server started"));
@@ -437,6 +442,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
  */
 void startHttpServer()
 {
+  // In case we are already running
+  server.stop();
   server.on(F("/getconfig/"), handleGetConfig);
   server.on(F("/setconfig/"), handleSetConfig);
   server.on(F("/getcommands/"), handleGetCommandQueue);
