@@ -111,3 +111,5 @@ String mqttPassword = "password";
 String mqttClientId = LEGACY_NAME;
 /** get or set the MQTT topic name */
 String mqttBaseTopic = LEGACY_NAME;
+/** get or set the MQTT telemetry interval */
+int mqttTelemetryInterval = 600;
