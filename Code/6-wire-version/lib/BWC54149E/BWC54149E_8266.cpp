@@ -698,6 +698,7 @@ String BWC::getJSONStates() {
 
     // Set the values in the document
     doc["CONTENT"] = "STATES";
+    doc["TIME"] = _timestamp;
     doc["LCK"] = _cio.states[LOCKEDSTATE];
     doc["PWR"] = _cio.states[POWERSTATE];
     doc["UNT"] = _cio.states[UNITSTATE];

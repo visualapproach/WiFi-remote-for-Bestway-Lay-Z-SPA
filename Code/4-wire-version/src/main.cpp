@@ -28,9 +28,6 @@ void setup()
   // update webpage every 2 seconds. (will also be updated on state changes)
   updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
 
-  // update MQTT every 10 minutes. (will also be updated on state changes)
-  updateMqttTimer.attach(600, []{ sendMQTTFlag = true; });
-
   // needs to be loaded here for reading the wifi.json
   LittleFS.begin();
   loadWifi();
@@ -197,8 +194,8 @@ void sendWS()
   // send other info
   String other = 
     String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(mqttClient.state()) + 
-    String(",\"CIOTX\":\"") + String(bwc.cio_tx) + 
-    String("\",\"DSPTX\":") + String(bwc.dsp_tx) + String("}");
+    String(",\"CIOTX\":") + String(bwc.cio_tx) + 
+    String(",\"DSPTX\":") + String(bwc.dsp_tx) + String("}");
   
   webSocket.broadcastTXT(other);
 }
@@ -875,6 +872,7 @@ void loadMqtt()
 	mqttPassword = doc["mqttPassword"].as<String>();
 	mqttClientId = doc["mqttClientId"].as<String>();
 	mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
+  mqttTelemetryInterval = doc["mqttTelemetryInterval"];
 }
 
 /**
@@ -901,6 +899,7 @@ void saveMqtt()
   doc["mqttPassword"] = mqttPassword;
   doc["mqttClientId"] = mqttClientId;
   doc["mqttBaseTopic"] = mqttBaseTopic;
+  doc["mqttTelemetryInterval"] = mqttTelemetryInterval;
 
   if (serializeJson(doc, file) == 0)
   {
@@ -933,6 +932,7 @@ void handleGetMqtt()
   }
   doc["mqttClientId"] = mqttClientId;
   doc["mqttBaseTopic"] = mqttBaseTopic;
+  doc["mqttTelemetryInterval"] = mqttTelemetryInterval;
 
   String json;
   if (serializeJson(doc, json) == 0)
@@ -970,6 +970,7 @@ void handleSetMqtt()
   mqttPassword = doc["mqttPassword"].as<String>();
   mqttClientId = doc["mqttClientId"].as<String>();
   mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
+  mqttTelemetryInterval = doc["mqttTelemetryInterval"];
 
   server.send(200, "text/plain", "");
 
@@ -1212,6 +1213,8 @@ void MQTT_Connect()
     // We get here if the connection was successful...
     mqtt_connect_count++;
     Serial.println(F("CONNECTED!"));
+    // update MQTT every X seconds. (will also be updated on state changes)
+    updateMqttTimer.attach(mqttTelemetryInterval, []{ sendMQTTFlag = true; });
     // Once connected, publish some announcements...
     // These all have the Retained flag set to true, so that the value is stored on the server and can be retrieved at any point
     // Check the .../Status topic to see that the device is still online before relying on the data from these retained topics

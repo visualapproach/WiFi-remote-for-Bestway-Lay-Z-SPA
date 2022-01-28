@@ -18,7 +18,7 @@ void CIO::begin() {
   //Not used. Here for compatibility reasons
   states[LOCKEDSTATE] = false;
   states[POWERSTATE] = true;
-  states[UNITSTATE] = true;   //Celsius
+  states[UNITSTATE] = true;   //Celsius. can be changed by web gui
   states[CHAR1] = ' ';
   states[CHAR2] = ' ';
   states[CHAR3] = ' ';
@@ -430,6 +430,7 @@ String BWC::getJSONStates() {
 
     // Set the values in the document
     doc["CONTENT"] = "STATES";
+    doc["TIME"] = _timestamp;
     doc["LCK"] = _cio.states[LOCKEDSTATE];
     doc["PWR"] = _cio.states[POWERSTATE];
     doc["UNT"] = _cio.states[UNITSTATE];
@@ -443,6 +444,7 @@ String BWC::getJSONStates() {
     doc["CH2"] = _cio.states[CHAR2];
     doc["CH3"] = _cio.states[CHAR3];
     doc["JET"] = _cio.states[JETSSTATE];
+    doc["ERR"] = _cio.states[ERROR];
     doc["GOD"] = _cio.GODMODE;
 
     // Serialize JSON to string

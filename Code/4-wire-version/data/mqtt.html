@@ -67,6 +67,10 @@
 					<td><input type="text" id="mqttBaseTopic"></td>
 				</tr>
 				<tr>
+					<td>Telemetry Interval (s):</td>
+					<td><input type="text" id="mqttTelemetryInterval"></td>
+				</tr>
+				<tr>
 					<td colspan="2" style="text-align:center"><button id="save" class="button" onclick="saveConfig()">save</button></td>
 				</tr>
 			</table>
@@ -97,6 +101,7 @@ function loadConfig()
 			document.getElementById("mqttPassword").value = json.mqttPassword;
 			document.getElementById("mqttClientId").value = json.mqttClientId;
 			document.getElementById("mqttBaseTopic").value = json.mqttBaseTopic;
+			document.getElementById("mqttTelemetryInterval").value = json.mqttTelemetryInterval;
 		}
 	}
 }
@@ -121,7 +126,8 @@ function saveConfig()
 		"mqttUsername":(document.getElementById("mqttUsername").value),
 		"mqttPassword":(document.getElementById("mqttPassword").value),
 		"mqttClientId":(document.getElementById("mqttClientId").value),
-		"mqttBaseTopic":(document.getElementById("mqttBaseTopic").value)
+		"mqttBaseTopic":(document.getElementById("mqttBaseTopic").value),
+		"mqttTelemetryInterval":(document.getElementById("mqttTelemetryInterval").value)
 	};
 	console.log(json);
 	Http.send(JSON.stringify(json));

@@ -108,6 +108,9 @@ function handlemsg(e)
 		document.getElementById('jetstitle').style.display = (jetsAvailable ? 'inherit' : 'none');
 		document.getElementById('jetsbutton').style.display = (jetsAvailable ? 'inherit' : 'none');
 		document.getElementById('jetstotals').style.display = (jetsAvailable ? 'inherit' : 'none');
+
+		document.getElementById('ciotx').innerHTML = 'CIO TX: ' + (msgobj.CIOTX ? 'Active' : 'Dead');
+		document.getElementById('dsptx').innerHTML = 'DSP TX: ' + (msgobj.DSPTX ? 'Active' : 'Dead');
 	}
 
 	if (msgobj.CONTENT == "STATES")

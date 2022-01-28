@@ -9,3 +9,4 @@ scene: !include scenes.yaml
 sensor: !include sensors.yaml
 binary_sensor: !include binary-sensors.yaml
 switch: !include switches.yaml
+button: !include buttons.yaml
