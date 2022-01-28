@@ -56,8 +56,9 @@ const char *OTAPassword = "esp8266";
 const bool enableWmApFallback = true;
 /** get the name for the WiFi configuration manager access point */
 const char *wmApName = "Lay-Z-Spa Module";
-/** get the password for the WiFi configuration manager (min. 8, max. 63 chars) */
+/** get the password for the WiFi configuration manager (min. 8, max. 63 chars; NULL to disable) */
 const char *wmApPassword = "layzspam0dule";
+//const char *wmApPassword = NULL;
 
 /*
  * WiFi Access Point
