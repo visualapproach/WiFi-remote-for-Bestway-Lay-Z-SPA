@@ -140,9 +140,9 @@ void loop()
         DateTime.begin();
       }
 
-      if (!mqttClient.loop())
+      if (enableMqtt && !mqttClient.loop())
       {
-        Serial.println(F("MQTT > Reconnecting"));
+        Serial.println(F("MQTT > Not connected"));
         mqttConnect();
       }
     }
@@ -1149,10 +1149,7 @@ void startMqtt()
   // this function is called automatically whenever a message arrives on a subscribed topic.
   mqttClient.setCallback(mqttCallback);
   // Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
-  if (enableMqtt)
-  {
-    mqttConnect();
-  }
+  mqttConnect();
 }
 
 /**
@@ -1192,6 +1189,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
  */
 void mqttConnect()
 {
+  // do not connect if MQTT is not enabled
+  if (!enableMqtt)
+  {
+    return;
+  }
+
   Serial.print(F("MQTT > Connecting ... "));
   // We'll connect with a Retained Last Will that updates the 'Status' topic with "Dead" when the device goes offline...
   if (mqttClient.connect(
