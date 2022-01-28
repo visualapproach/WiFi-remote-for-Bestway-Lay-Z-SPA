@@ -95,7 +95,7 @@ function handlemsg(e)
 			"CONNECT_BAD_CLIENT_ID", // 2 / the server rejected the client identifier
 			"CONNECT_UNAVAILABLE", // 3 / the server was unable to accept the connection
 			"CONNECT_BAD_CREDENTIALS", // 4 / the username/password were rejected
-			"CONNECT_UNAUTHORIZED" // 5 / e client was not authorized to connect
+			"CONNECT_UNAUTHORIZED" // 5 / the client was not authorized to connect
 		]
 		document.getElementById('mqtt').innerHTML = "MQTT: " + mqtt_states[msgobj.MQTT + 4];
 
