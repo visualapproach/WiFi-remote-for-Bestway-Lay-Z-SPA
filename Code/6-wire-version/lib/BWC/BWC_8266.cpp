@@ -298,6 +298,8 @@ void DSP::updateDSP(uint8_t brightness) {
 
 void DSP::textOut(String txt) {
   int len = txt.length();
+  //Set CMD3 (address 00H)
+  payload[0] = 0xC0;
   if (len >= 3) {
     for (int i = 0; i < len - 2; i++) {
       payload[DGT1_IDX] = _getCode(txt.charAt(i));
@@ -433,16 +435,16 @@ void BWC::begin2(){
   _clinterval = 14;
   _audio = true;
   _restoreStatesOnStart = false;
-	_dsp.textOut(F("   hello   "));
-//_startNTP();
-	LittleFS.begin();
-	_loadSettings();
-	_loadCommandQueue();
-	_saveRebootInfo();
+  _dsp.textOut(F("   hello   "));
+  //_startNTP();
+  LittleFS.begin();
+  _loadSettings();
+  _loadCommandQueue();
+  _saveRebootInfo();
   _restoreStates();
-	if(_audio) _dsp.playIntro();
-  _dsp.LEDshow();
-	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
+  if(_audio) _dsp.playIntro();
+  //_dsp.LEDshow();
+  saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
   _tttt = 0;
   _tttt_calculated = 0;
   _tttt_time0 = DateTime.now()-3600;
@@ -460,12 +462,12 @@ void BWC::loop(){
   ESP.wdtFeed();
   ESP.wdtDisable();
 
-	_timestamp = DateTime.now();
+  _timestamp = DateTime.now();
 
   //update DSP payload (memcpy(dest*, source*, len))
   //memcpy(&_dsp.payload[0], &_cio.payload[0], 11);
   for(int i = 0; i < 11; i++){
-	  _dsp.payload[i] = _cio.payload[i];
+    _dsp.payload[i] = _cio.payload[i];
   }
   _dsp.updateDSP(_dspBrightness);
   _updateTimes();
