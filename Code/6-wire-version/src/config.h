@@ -3,8 +3,11 @@
 
 #define LEGACY_NAME "layzspa"
 
-//uncomment this define if you have model Paris airjet 54149E
-//#define MODEL54149E
+//uncomment your model and comment out the rest
+//#define MODEL54149E   //Paris airjet 54149E
+#define PRE2021			//the older one, no hydrojets
+//#define MIAMI2021		//no hydrojets
+//#define MALDIVES2021	//hydrojets
 
 /*
  * Miscellaneous

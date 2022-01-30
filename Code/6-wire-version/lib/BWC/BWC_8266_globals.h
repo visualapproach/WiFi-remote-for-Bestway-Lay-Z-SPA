@@ -4,12 +4,6 @@
 #ifndef BWC_8266_globals_H
 #define BWC_8266_globals_H
 
-//uncomment your model and comment out the rest
-#define PRE2021			//the older one, no hydrojets
-//#define MIAMI2021		//no hydrojets
-//#define MALDIVES2021	//hydrojets
-
-
 //LSB
 const uint8_t DSP_CMD2_DATAREAD = 0x42;
 const uint8_t DSP_CMD1_MODE6_11_7 = 0x01; //real CIO is sending 0x01 which is illegal according to datasheet
