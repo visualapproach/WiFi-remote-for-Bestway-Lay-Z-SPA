@@ -561,6 +561,26 @@ String BWC::getJSONCommandQueue(){
   return jsonmsg;
 }
 
+String BWC::getSerialBuffers(){
+  ESP.wdtFeed();
+    DynamicJsonDocument doc(512);
+
+    // Set the values in the document
+    doc["CONTENT"] = "DEBUG";
+    doc["TIME"] = _timestamp;
+    doc["TODSP"] = _cio.to_DSP_buf;
+    doc["TOCIO"] = _cio.to_CIO_buf;
+    doc["FROMDSP"] = _cio.from_DSP_buf;
+    doc["FROMCIO"] = _cio.from_DSP_buf;
+
+    // Serialize JSON to string
+    String json;
+    if (serializeJson(doc, json) == 0) {
+      json = "{\"error\": \"Failed to serialize message\"}";
+	}
+	return json;
+}
+
 bool BWC::newData(){
   bool result = _cio.dataAvailable;
   _cio.dataAvailable = false;

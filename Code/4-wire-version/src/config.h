@@ -111,3 +111,8 @@ String mqttClientId = LEGACY_NAME;
 String mqttBaseTopic = LEGACY_NAME;
 /** get or set the MQTT telemetry interval */
 int mqttTelemetryInterval = 600;
+
+/* only enable this when debugging communication
+ * This feature has not been tested yet
+ */
+bool DEBUGSERIAL = false;

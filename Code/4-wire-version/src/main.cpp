@@ -191,6 +191,12 @@ void sendWS()
   json = bwc.getJSONTimes();
   webSocket.broadcastTXT(json);
 
+  if(DEBUGSERIAL)
+  {
+    json = bwc.getSerialBuffers();
+    webSocket.broadcastTXT(json);
+  }
+
   // send other info
   String other = 
     String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(mqttClient.state()) + 

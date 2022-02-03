@@ -67,6 +67,7 @@ class BWC {
 	bool cio_tx;
 	bool dsp_tx;
 	void reloadCommandQueue();
+	String getSerialBuffers();
 
   private:
     CIO _cio;
