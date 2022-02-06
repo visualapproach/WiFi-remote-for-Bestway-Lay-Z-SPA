@@ -67,6 +67,7 @@ class BWC {
 	bool cio_tx;
 	bool dsp_tx;
 	void reloadCommandQueue();
+	String encodeBufferToString(uint8_t buf[7]);
 	String getSerialBuffers();
 
   private:
