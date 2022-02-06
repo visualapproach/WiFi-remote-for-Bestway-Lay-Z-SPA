@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 #include "config.h"
+#include "model.h"
 
 #ifdef MODEL54149E
 #include "BWC54149E_8266.h"

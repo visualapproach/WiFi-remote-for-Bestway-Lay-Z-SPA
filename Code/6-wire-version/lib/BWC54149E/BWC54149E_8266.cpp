@@ -518,14 +518,21 @@ void BWC::_qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxdur
 	_buttonQ[_qButtonLen][0] = btn;
 	_buttonQ[_qButtonLen][1] = state;
 	_buttonQ[_qButtonLen][2] = value;
-	_buttonQ[_qButtonLen][3] = maxduration + millis();
+	_buttonQ[_qButtonLen][3] = maxduration;
 	_qButtonLen++;
 }
 
 void BWC::_handleButtonQ(void) {
+  static uint32_t prevMillis = millis();
+  static uint32_t elapsedTime = 0;
+
+  elapsedTime = millis() - prevMillis;
+  prevMillis = millis();
 	if(_qButtonLen > 0){
+    // First subtract elapsed time from maxduration
+    _buttonQ[0][3] -= elapsedTime;
 		//check if state is as desired, or duration is up. If so - remove row. Else set BTNCODE
-		if( (_cio.states[_buttonQ[0][1]] == _buttonQ[0][2]) || (millis() > _buttonQ[0][3]) ){
+		if( (_cio.states[_buttonQ[0][1]] == _buttonQ[0][2]) || (_buttonQ[0][3] <= 0) ){
 			if(_buttonQ[0][0] == UP || _buttonQ[0][0] == DOWN) maxeffort = false;
 			//remove row
 			for(int i = 0; i < _qButtonLen-1; i++){
@@ -547,13 +554,13 @@ void BWC::_handleButtonQ(void) {
 		uint16_t pressedButton = _dsp.getButton();
     int index = _CodeToButton(pressedButton);
     //if button is not enabled, NOBTN will result (buttoncodes[0])
-		_cio.button = ButtonCodes[index*EnabledButtons[index]];
+		_cio.button = ButtonCodes[index * EnabledButtons[index]];
 		//prioritize manual temp setting by not competing with the set target command
 		if (pressedButton == ButtonCodes[UP] || pressedButton == ButtonCodes[DOWN]) _sliderPrio = false;
     //make noise
     if(_audio)
     {
-      if((index*EnabledButtons[index]) & (prevbtn == ButtonCodes[NOBTN]))
+      if((index && EnabledButtons[index]) && (prevbtn == ButtonCodes[NOBTN]))
       {
         _dsp.beep2();
       } 
@@ -611,20 +618,35 @@ void BWC::_handleCommandQ(void) {
 			_qButton(LOCK, LOCKEDSTATE, 0, 5000); //press LOCK button until states[LOCKEDSTATE] is 0
 			switch (_commandQ[0][0]) {
 				case SETTARGET:
-					_latestTarget = _commandQ[0][1];
-					//Fiddling with the hardware buttons is ignored while this command executes.
-					_sliderPrio = true;
-					//choose which direction to go (up or down)
-					if(_cio.states[TARGET] == 0 )
-					{
-						_qButton(UP, TARGET, _commandQ[0][1], 10000);
-						_qButton(DOWN, TARGET, _commandQ[0][1], 10000);
-					}
-					if(_cio.states[TARGET] > _commandQ[0][1]) _qButton(DOWN, TARGET, _commandQ[0][1], 10000);
-					if(_cio.states[TARGET] < _commandQ[0][1]) _qButton(UP, TARGET, _commandQ[0][1], 10000);
-					break;
+          {
+            _latestTarget = _commandQ[0][1];
+            //Fiddling with the hardware buttons is ignored while this command executes.
+            _sliderPrio = true;
+            //Press up/down appropriate number of times. We need to time this well.
+            int diff = (int)_commandQ[0][1] - (int)_cio.states[TARGET];
+            //First press will just show current target temp
+            int pushtime = 500;         //how fast can we do this??*******************
+            int releasetime = 300;
+            _qButton(UP, TARGET, _commandQ[0][1], pushtime);
+            _qButton(NOBTN, TARGET, _commandQ[0][1], releasetime);
+            uint32_t updown;
+            diff<0 ? updown = DOWN : updown = UP;
+            for(int i = 0; i < abs(diff); i++)
+            {
+              _qButton(updown, CHAR1, 0xFF, pushtime);
+              _qButton(NOBTN, CHAR1, 0xFF, releasetime);
+            }
+            //Old method overshoots target too often:
+            //choose which direction to go (up or down)
+            // if(_cio.states[TARGET] > _commandQ[0][1]) _qButton(DOWN, TARGET, _commandQ[0][1], 10000);
+            // if(_cio.states[TARGET] < _commandQ[0][1]) _qButton(UP, TARGET, _commandQ[0][1], 10000);
+            break;
+          }
 				case SETUNIT:
 					_qButton(UNIT, UNITSTATE, _commandQ[0][1], 5000);
+					_qButton(NOBTN, CHAR3, 0xFF, 700);
+					_qButton(UP, CHAR3, _commandQ[0][1], 700);
+          _latestTarget = 0;
 					break;
 				case SETBUBBLES:
 					_qButton(BUBBLES, BUBBLESSTATE, _commandQ[0][1], 5000);

@@ -127,7 +127,7 @@ class BWC {
 	uint8_t _dspBrightness;
 	uint32_t _commandQ[MAXCOMMANDS][4];
 	int _qCommandLen = 0;		//length of commandQ
-	uint32_t _buttonQ[MAXBUTTONS][4];
+	int32_t _buttonQ[MAXBUTTONS][4];
 	int _qButtonLen = 0;	//length of buttonQ
 	uint32_t _timestamp;
 	bool _newData = false;

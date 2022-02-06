@@ -1,5 +1,5 @@
 //only declarations here please! Definitions belong in the cpp-file
-
+#include "model.h"
 
 #ifndef BWC_8266_globals_H
 #define BWC_8266_globals_H
@@ -97,12 +97,21 @@ const uint16_t ButtonCodes[] =
 };
 const bool HASJETS = false;
 
-#else
+#elif defined(MALDIVES2021)
 const uint16_t ButtonCodes[] =
 {
 	0x1B1B, 0x0100, 0x0300, 0x1212, 0x0a09, 0x1012, 0x1312, 0x0809, 0x0200, 0x0000, 0x1112
 };
 const bool HASJETS = true;
+
+#else
+//Make compiler happy. Will not be used.
+const uint16_t ButtonCodes[] =
+{
+	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
+};
+const bool HASJETS = false;
+
 #endif
 
 enum States: byte
@@ -144,7 +153,7 @@ enum Commands: byte
 };
 
 const int MAXCOMMANDS = 11;
-const int MAXBUTTONS = 33;
+const int MAXBUTTONS = 200;
 
 
 //direct port manipulation memory adresses.
