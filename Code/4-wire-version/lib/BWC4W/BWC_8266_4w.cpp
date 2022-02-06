@@ -565,6 +565,7 @@ String BWC::encodeBufferToString(uint8_t buf[7]){
   String str = String();
   for (unsigned long i = 0; i < 7; i++) {
     str += String(buf[i], HEX);
+    str += " ";
   }
   return str;
 }
