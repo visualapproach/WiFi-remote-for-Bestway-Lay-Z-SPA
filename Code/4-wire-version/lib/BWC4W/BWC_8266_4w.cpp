@@ -561,6 +561,14 @@ String BWC::getJSONCommandQueue(){
   return jsonmsg;
 }
 
+String BWC::encodeBufferToString(uint8_t buf[7]){
+  String str = String();
+  for (unsigned long i = 0; i < 7; i++) {
+    str += String(buf[i], HEX);
+  }
+  return str;
+}
+
 String BWC::getSerialBuffers(){
   ESP.wdtFeed();
     DynamicJsonDocument doc(512);
@@ -568,10 +576,10 @@ String BWC::getSerialBuffers(){
     // Set the values in the document
     doc["CONTENT"] = "DEBUG";
     doc["TIME"] = _timestamp;
-    doc["TODSP"] = _cio.to_DSP_buf;
-    doc["TOCIO"] = _cio.to_CIO_buf;
-    doc["FROMDSP"] = _cio.from_DSP_buf;
-    doc["FROMCIO"] = _cio.from_DSP_buf;
+    doc["TODSP"] = encodeBufferToString(_cio.to_DSP_buf);
+    doc["TOCIO"] = encodeBufferToString(_cio.to_CIO_buf);
+    doc["FROMDSP"] = encodeBufferToString(_cio.from_DSP_buf);
+    doc["FROMCIO"] = encodeBufferToString(_cio.from_CIO_buf);
 
     // Serialize JSON to string
     String json;
