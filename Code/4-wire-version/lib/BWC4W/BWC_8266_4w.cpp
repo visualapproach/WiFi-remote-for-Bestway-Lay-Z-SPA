@@ -10,9 +10,9 @@ void CIO::begin() {
     Devices are sending on their TX lines, so we read that with RX pins on the ESP
   */
   cio_serial.begin(9600, SWSERIAL_8N1, D2, D3, false, 64);
-  cio_serial.setTimeout(50);
+  cio_serial.setTimeout(100);
   dsp_serial.begin(9600, SWSERIAL_8N1, D6, D7, false, 64);
-  dsp_serial.setTimeout(50);
+  dsp_serial.setTimeout(100);
 
   states[TARGET] = 20;
   //Not used. Here for compatibility reasons
@@ -32,7 +32,7 @@ void CIO::loop(void) {
   if(cio_serial.available()){
     msglen = cio_serial.readBytes(from_CIO_buf, PAYLOADSIZE);
   }
-  //pass message to display
+  //copy from_CIO_buf -> to_DSP_buf
   if(msglen == PAYLOADSIZE){
     //discard message if checksum is wrong
     uint8_t calculatedChecksum;
@@ -49,41 +49,44 @@ void CIO::loop(void) {
     dsp_serial.write(to_DSP_buf, PAYLOADSIZE);
     digitalWrite(D4, !digitalRead(D4));  //blink  
     cio_tx = true;  //show the user that this line works (appears to work)
-  }
-  //check if cio send error msg
-  states[CHAR1] = ' ';
-  states[CHAR2] = ' ';
-  states[CHAR3] = ' ';
-  if(states[ERROR]){
-    to_CIO_buf[COMMANDINDEX] = 0; //clear any commands
-    GODMODE = false;
-    states[CHAR1] = 'E';
-    states[CHAR2] = 48+(to_CIO_buf[ERRORINDEX]/10);
-    states[CHAR3] = 48+(to_CIO_buf[ERRORINDEX]%10);
+    //check if cio send error msg
+    states[CHAR1] = ' ';
+    states[CHAR2] = ' ';
+    states[CHAR3] = ' ';
+    if(states[ERROR]){
+      to_CIO_buf[COMMANDINDEX] = 0; //clear any commands
+      GODMODE = false;
+      states[CHAR1] = 'E';
+      states[CHAR2] = (char)(48+(to_CIO_buf[ERRORINDEX]/10));
+      states[CHAR3] = (char)(48+(to_CIO_buf[ERRORINDEX]%10));
+    }
   }
   //check if display sent a message
   msglen = 0;
-  if(dsp_serial.available()){
+  if(dsp_serial.available())
+  {
     msglen = dsp_serial.readBytes(from_DSP_buf, PAYLOADSIZE);
   }
-  //pass message to CIO
+  //copy from_DSP_buf -> to_CIO_buf
   if(msglen == PAYLOADSIZE){
     //discard message if checksum is wrong
     uint8_t calculatedChecksum;
     calculatedChecksum = from_DSP_buf[1]+from_DSP_buf[2]+from_DSP_buf[3]+from_DSP_buf[4];
-    if(from_DSP_buf[DSP_CHECKSUMINDEX] == calculatedChecksum){
-      for(int i = 0; i < PAYLOADSIZE; i++){
+    if(from_DSP_buf[DSP_CHECKSUMINDEX] == calculatedChecksum)
+    {
+      for(int i = 0; i < PAYLOADSIZE; i++)
+      {
         to_CIO_buf[i] = from_DSP_buf[i];
       }
+      //Do stuff here to command the CIO
+      if(GODMODE){
+        updatePayload();
+      } else {
+        updateStates();
+      }
+      cio_serial.write(to_CIO_buf, PAYLOADSIZE);
+      dsp_tx = true;  //show the user that this line works (appears to work)
     }
-    //Do stuff here to command the CIO
-    if(GODMODE){
-      updatePayload();
-    } else {
-      updateStates();
-    }
-    cio_serial.write(to_CIO_buf, PAYLOADSIZE);
-    dsp_tx = true;  //show the user that this line works (appears to work)
   }
 }
 
@@ -126,9 +129,9 @@ void CIO::updatePayload(){
 
   //calc checksum -> byte5
   //THIS NEEDS TO BE IMPROVED IF OTHER CHECKSUMS IS USED (FOR OTHER BYTES in different models)
-  to_CIO_buf[DSP_CHECKSUMINDEX] = to_CIO_buf[1] + to_CIO_buf[2] + to_CIO_buf[3] + to_CIO_buf[4];
-  if(to_CIO_buf[DSP_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
-  prevchksum = to_CIO_buf[DSP_CHECKSUMINDEX];
+  to_CIO_buf[CIO_CHECKSUMINDEX] = to_CIO_buf[1] + to_CIO_buf[2] + to_CIO_buf[3] + to_CIO_buf[4];
+  if(to_CIO_buf[CIO_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
+  prevchksum = to_CIO_buf[CIO_CHECKSUMINDEX];
 }
 
 
