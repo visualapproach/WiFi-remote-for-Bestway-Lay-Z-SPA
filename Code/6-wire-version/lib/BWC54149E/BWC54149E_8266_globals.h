@@ -86,13 +86,17 @@ const String ButtonNames[] = {
 };
 
 #ifdef MODEL54149E
-
 const uint16_t ButtonCodes[] =
 {
 	0, 1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0, 1<<8, 1<<9
 };
 const bool HASJETS = false;
-
+#else //keep compiler happy with this dummy
+const uint16_t ButtonCodes[] =
+{
+	0, 1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0, 1<<8, 1<<9
+};
+const bool HASJETS = false;
 #endif
 
 enum States: byte
