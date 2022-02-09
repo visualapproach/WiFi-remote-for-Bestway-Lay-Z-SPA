@@ -9,9 +9,9 @@ void CIO::begin() {
     DSP_RX = D7
     Devices are sending on their TX lines, so we read that with RX pins on the ESP
   */
-  cio_serial.begin(9600, SWSERIAL_8N1, D2, D3, false, 64);
+  cio_serial.begin(11000, SWSERIAL_8N1, D2, D3, false, 64);
   cio_serial.setTimeout(100);
-  dsp_serial.begin(9600, SWSERIAL_8N1, D6, D7, false, 64);
+  dsp_serial.begin(11000, SWSERIAL_8N1, D6, D7, false, 64);
   dsp_serial.setTimeout(100);
 
   states[TARGET] = 20;
@@ -60,6 +60,18 @@ void CIO::loop(void) {
       states[CHAR2] = (char)(48+(to_CIO_buf[ERRORINDEX]/10));
       states[CHAR3] = (char)(48+(to_CIO_buf[ERRORINDEX]%10));
     }
+  } else
+  /* debug */
+  {
+    if(msglen)
+    {
+      dataAvailable = true;
+      for(int i = 0; i < msglen; i++)
+      {
+      dismissed_from_CIO_buf[i] = from_CIO_buf[i];
+      }
+      dismissed_cio_len = msglen;
+    }
   }
   //check if display sent a message
   msglen = 0;
@@ -86,6 +98,18 @@ void CIO::loop(void) {
       }
       cio_serial.write(to_CIO_buf, PAYLOADSIZE);
       dsp_tx = true;  //show the user that this line works (appears to work)
+    }
+  } else
+  /* debug */
+  {
+    if(msglen)
+    {
+        dataAvailable = true;
+        for(int i = 0; i < msglen; i++)
+        {
+        dismissed_from_DSP_buf[i] = from_DSP_buf[i];
+        }
+        dismissed_dsp_len = msglen;
     }
   }
 }
@@ -580,10 +604,14 @@ String BWC::getSerialBuffers(){
     // Set the values in the document
     doc["CONTENT"] = "DEBUG";
     doc["TIME"] = _timestamp;
-    doc["TODSP"] = encodeBufferToString(_cio.to_DSP_buf);
-    doc["TOCIO"] = encodeBufferToString(_cio.to_CIO_buf);
     doc["FROMDSP"] = encodeBufferToString(_cio.from_DSP_buf);
+    doc["TOCIO"] = encodeBufferToString(_cio.to_CIO_buf);
     doc["FROMCIO"] = encodeBufferToString(_cio.from_CIO_buf);
+    doc["TODSP"] = encodeBufferToString(_cio.to_DSP_buf);
+    doc["FROMDSPFAIL"] = encodeBufferToString(_cio.dismissed_from_DSP_buf);
+    doc["LENDSP"] = _cio.dismissed_dsp_len;
+    doc["FROMCIOFAIL"] = encodeBufferToString(_cio.dismissed_from_CIO_buf);
+    doc["LENCIO"] = _cio.dismissed_cio_len;
 
     // Serialize JSON to string
     String json;

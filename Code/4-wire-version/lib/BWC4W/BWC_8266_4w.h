@@ -23,24 +23,30 @@ class CIO {
 
   public:
     void begin();
-	void loop(void);
-	void updatePayload();
-	void updateStates();
+    void loop(void);
+    void updatePayload();
+    void updateStates();
 
-	bool dataAvailable = false;
-	bool GODMODE = false;
-	uint8_t states[15];
-	SoftwareSerial dsp_serial;
-	SoftwareSerial cio_serial;
+    bool dataAvailable = false;
+    bool GODMODE = false;
+    uint8_t states[15];
+    SoftwareSerial dsp_serial;
+    SoftwareSerial cio_serial;
 
-	uint8_t from_CIO_buf[7];  //CIO to ESP. We will copy it straight to display, and getting the temperature
-	uint8_t to_DSP_buf[7];    //ESP to DSP
-	uint8_t from_DSP_buf[7];  //DSP to ESP. We can ignore this message and send our own when ESP is in charge.
-	uint8_t to_CIO_buf[7];    //Otherwise copy here. Buffer to send from ESP to CIO
-	bool cio_tx;			  //set to true when data received. Send to webinterface+serial for debugging
-	bool dsp_tx;			  //set to true when data received. Send to webinterface+serial for debugging
+    uint8_t from_CIO_buf[7];  //CIO to ESP. We will copy it straight to display, and getting the temperature
+    uint8_t to_DSP_buf[7];    //ESP to DSP
+    uint8_t from_DSP_buf[7];  //DSP to ESP. We can ignore this message and send our own when ESP is in charge.
+    uint8_t to_CIO_buf[7];    //Otherwise copy here. Buffer to send from ESP to CIO
+    bool cio_tx;              //set to true when data received. Send to webinterface+serial for debugging
+    bool dsp_tx;              //set to true when data received. Send to webinterface+serial for debugging
 
-	uint8_t heatbitmask;
+    uint8_t heatbitmask;
+
+    /* Debug */
+    uint8_t dismissed_from_CIO_buf[7];  //CIO to ESP. We will copy it straight to display, and getting the temperature
+    uint8_t dismissed_from_DSP_buf[7];  //DSP to ESP. We can ignore this message and send our own when ESP is in charge.
+    uint8_t dismissed_cio_len;
+    uint8_t dismissed_dsp_len;
 
   private:
 
