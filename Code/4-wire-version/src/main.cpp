@@ -201,8 +201,9 @@ void sendWS()
   String other = 
     String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(mqttClient.state()) + 
     String(",\"CIOTX\":") + String(bwc.cio_tx) + 
-    String(",\"DSPTX\":") + String(bwc.dsp_tx) + String("}");
-  
+    String(",\"DSPTX\":") + String(bwc.dsp_tx) + 
+    String(",\"RSSI\":") + String(WiFi.RSSI()) + 
+    String("}");
   webSocket.broadcastTXT(other);
 }
 
