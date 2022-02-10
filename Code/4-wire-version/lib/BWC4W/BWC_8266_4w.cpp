@@ -9,10 +9,10 @@ void CIO::begin() {
     DSP_RX = D7
     Devices are sending on their TX lines, so we read that with RX pins on the ESP
   */
-  cio_serial.begin(11000, SWSERIAL_8N1, D2, D3, false, 64);
-  cio_serial.setTimeout(100);
-  dsp_serial.begin(11000, SWSERIAL_8N1, D6, D7, false, 64);
-  dsp_serial.setTimeout(100);
+  cio_serial.begin(9600, SWSERIAL_8N1, D2, D3, false, 63);
+  cio_serial.setTimeout(20);
+  dsp_serial.begin(9600, SWSERIAL_8N1, D6, D7, false, 63);
+  dsp_serial.setTimeout(20);
 
   states[TARGET] = 20;
   //Not used. Here for compatibility reasons
@@ -60,8 +60,9 @@ void CIO::loop(void) {
       states[CHAR2] = (char)(48+(to_CIO_buf[ERRORINDEX]/10));
       states[CHAR3] = (char)(48+(to_CIO_buf[ERRORINDEX]%10));
     }
-  } else
-  /* debug */
+  } 
+  /* debug 
+  else
   {
     if(msglen)
     {
@@ -73,6 +74,7 @@ void CIO::loop(void) {
       dismissed_cio_len = msglen;
     }
   }
+  */
   //check if display sent a message
   msglen = 0;
   if(dsp_serial.available())
@@ -99,8 +101,9 @@ void CIO::loop(void) {
       cio_serial.write(to_CIO_buf, PAYLOADSIZE);
       dsp_tx = true;  //show the user that this line works (appears to work)
     }
-  } else
-  /* debug */
+  } 
+  /* debug 
+  else
   {
     if(msglen)
     {
@@ -112,6 +115,7 @@ void CIO::loop(void) {
         dismissed_dsp_len = msglen;
     }
   }
+  */
 }
 
 void CIO::updateStates(){
@@ -161,7 +165,7 @@ void CIO::updatePayload(){
 
 void BWC::begin(void){
 	_cio.begin();
-	_startNTP();
+	//_startNTP(); this is done from main.cpp
 	LittleFS.begin();
 	_loadSettings();
 	_loadCommandQueue();
@@ -599,24 +603,25 @@ String BWC::encodeBufferToString(uint8_t buf[7]){
 
 String BWC::getSerialBuffers(){
   ESP.wdtFeed();
-    DynamicJsonDocument doc(512);
+  DynamicJsonDocument doc(512);
 
-    // Set the values in the document
-    doc["CONTENT"] = "DEBUG";
-    doc["TIME"] = _timestamp;
-    doc["FROMDSP"] = encodeBufferToString(_cio.from_DSP_buf);
-    doc["TOCIO"] = encodeBufferToString(_cio.to_CIO_buf);
-    doc["FROMCIO"] = encodeBufferToString(_cio.from_CIO_buf);
-    doc["TODSP"] = encodeBufferToString(_cio.to_DSP_buf);
-    doc["FROMDSPFAIL"] = encodeBufferToString(_cio.dismissed_from_DSP_buf);
-    doc["LENDSP"] = _cio.dismissed_dsp_len;
-    doc["FROMCIOFAIL"] = encodeBufferToString(_cio.dismissed_from_CIO_buf);
-    doc["LENCIO"] = _cio.dismissed_cio_len;
-
-    // Serialize JSON to string
-    String json;
-    if (serializeJson(doc, json) == 0) {
-      json = "{\"error\": \"Failed to serialize message\"}";
+  // Set the values in the document
+  doc["CONTENT"] = "DEBUG";
+  doc["TIME"] = _timestamp;
+  doc["FROMDSP"] = encodeBufferToString(_cio.from_DSP_buf);
+  doc["TOCIO"] = encodeBufferToString(_cio.to_CIO_buf);
+  doc["FROMCIO"] = encodeBufferToString(_cio.from_CIO_buf);
+  doc["TODSP"] = encodeBufferToString(_cio.to_DSP_buf);
+  /* debug
+  doc["FROMDSPFAIL"] = encodeBufferToString(_cio.dismissed_from_DSP_buf);
+  doc["LENDSP"] = _cio.dismissed_dsp_len;
+  doc["FROMCIOFAIL"] = encodeBufferToString(_cio.dismissed_from_CIO_buf);
+  doc["LENCIO"] = _cio.dismissed_cio_len;
+  */
+  // Serialize JSON to string
+  String json;
+  if (serializeJson(doc, json) == 0) {
+    json = "{\"error\": \"Failed to serialize message\"}";
 	}
 	return json;
 }
@@ -693,6 +698,7 @@ void BWC::saveSettingsFlag(){
 
 void BWC::saveSettings(){
   //kill the dog
+  ESP.wdtFeed();
   ESP.wdtDisable();
   _saveSettingsNeeded = false;
   File file = LittleFS.open("settings.txt", "w");
@@ -736,7 +742,7 @@ void BWC::saveSettings(){
   file.close();
   //update clock
   //DateTime.setTimeZone(_timezone); //deprecated
-  DateTime.begin();	
+  //DateTime.begin();   //removed to lower risk of wdt reset.
   //revive the dog
   ESP.wdtEnable(0);
 
@@ -775,6 +781,7 @@ void BWC::_loadCommandQueue(){
 
 void BWC::_saveCommandQueue(){
   //kill the dog
+  ESP.wdtFeed();
   ESP.wdtDisable();
   
   _saveCmdqNeeded = false;
@@ -811,6 +818,7 @@ void BWC::_saveCommandQueue(){
 void BWC::saveEventlog(){
   _saveEventlogNeeded = false;
   //kill the dog
+  ESP.wdtFeed();
   ESP.wdtDisable();
   File file = LittleFS.open("eventlog.txt", "a");
   if (!file) {
