@@ -27,6 +27,7 @@ void CIO::begin() {
 }
 
 void CIO::loop(void) {
+  digitalWrite(D4, LOW);  //LED off 
   //check if CIO has sent a message
   int msglen = 0;
   if(cio_serial.available())
@@ -45,7 +46,6 @@ void CIO::loop(void) {
       }
       states[TEMPERATURE] = from_CIO_buf[TEMPINDEX];
       states[ERROR] =       from_CIO_buf[ERRORINDEX];
-      digitalWrite(D4, !digitalRead(D4));  //blink  
       cio_tx = true;  //show the user that this line works (appears to work)
       //check if cio send error msg
       states[CHAR1] = ' ';
@@ -58,7 +58,10 @@ void CIO::loop(void) {
         states[CHAR2] = (char)(48+(from_CIO_buf[ERRORINDEX]/10));
         states[CHAR3] = (char)(48+(from_CIO_buf[ERRORINDEX]%10));
       }
-    } 
+    } else
+    {
+      digitalWrite(D4, HIGH);  //LED on indicates bad message
+    }
     /* debug 
     else
     {
@@ -101,7 +104,10 @@ void CIO::loop(void) {
         }
         dsp_tx = true;  //show the user that this line works (appears to work)
       }
-    } 
+    }  else
+    {
+      digitalWrite(D4, HIGH);  //LED on indicates bad message
+    }
     /* debug 
     else
     {
