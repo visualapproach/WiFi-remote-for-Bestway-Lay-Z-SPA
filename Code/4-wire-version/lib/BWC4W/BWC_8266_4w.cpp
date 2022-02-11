@@ -57,8 +57,8 @@ void CIO::loop(void) {
       to_CIO_buf[COMMANDINDEX] = 0; //clear any commands
       GODMODE = false;
       states[CHAR1] = 'E';
-      states[CHAR2] = (char)(48+(to_CIO_buf[ERRORINDEX]/10));
-      states[CHAR3] = (char)(48+(to_CIO_buf[ERRORINDEX]%10));
+      states[CHAR2] = (char)(48+(from_CIO_buf[ERRORINDEX]/10));
+      states[CHAR3] = (char)(48+(from_CIO_buf[ERRORINDEX]%10));
     }
   } 
   /* debug 
