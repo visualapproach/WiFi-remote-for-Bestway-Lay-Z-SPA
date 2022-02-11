@@ -29,93 +29,95 @@ void CIO::begin() {
 void CIO::loop(void) {
   //check if CIO has sent a message
   int msglen = 0;
-  if(cio_serial.available()){
-    msglen = cio_serial.readBytes(from_CIO_buf, PAYLOADSIZE);
-  }
-  //copy from_CIO_buf -> to_DSP_buf
-  if(msglen == PAYLOADSIZE){
-    //discard message if checksum is wrong
-    uint8_t calculatedChecksum;
-    calculatedChecksum = from_CIO_buf[1]+from_CIO_buf[2]+from_CIO_buf[3]+from_CIO_buf[4];
-    if(from_CIO_buf[CIO_CHECKSUMINDEX] == calculatedChecksum){
-      for(int i = 0; i < PAYLOADSIZE; i++){
-        if(to_DSP_buf[i] != from_CIO_buf[i]) dataAvailable = true;
-        to_DSP_buf[i] = from_CIO_buf[i];
-      }
-    }
-    states[TEMPERATURE] = from_CIO_buf[TEMPINDEX];
-    states[ERROR] =       from_CIO_buf[ERRORINDEX];
-    //do stuff here if you want to alter the message
-    dsp_serial.write(to_DSP_buf, PAYLOADSIZE);
-    digitalWrite(D4, !digitalRead(D4));  //blink  
-    cio_tx = true;  //show the user that this line works (appears to work)
-    //check if cio send error msg
-    states[CHAR1] = ' ';
-    states[CHAR2] = ' ';
-    states[CHAR3] = ' ';
-    if(states[ERROR]){
-      to_CIO_buf[COMMANDINDEX] = 0; //clear any commands
-      GODMODE = false;
-      states[CHAR1] = 'E';
-      states[CHAR2] = (char)(48+(from_CIO_buf[ERRORINDEX]/10));
-      states[CHAR3] = (char)(48+(from_CIO_buf[ERRORINDEX]%10));
-    }
-  } 
-  /* debug 
-  else
+  if(cio_serial.available())
   {
-    if(msglen)
-    {
-      dataAvailable = true;
-      for(int i = 0; i < msglen; i++)
-      {
-      dismissed_from_CIO_buf[i] = from_CIO_buf[i];
+    msglen = cio_serial.readBytes(from_CIO_buf, PAYLOADSIZE);
+    //copy from_CIO_buf -> to_DSP_buf
+    if(msglen == PAYLOADSIZE){
+      //discard message if checksum is wrong
+      uint8_t calculatedChecksum;
+      calculatedChecksum = from_CIO_buf[1]+from_CIO_buf[2]+from_CIO_buf[3]+from_CIO_buf[4];
+      if(from_CIO_buf[CIO_CHECKSUMINDEX] == calculatedChecksum){
+        for(int i = 0; i < PAYLOADSIZE; i++){
+          if(to_DSP_buf[i] != from_CIO_buf[i]) dataAvailable = true;
+          to_DSP_buf[i] = from_CIO_buf[i];
+        }
       }
-      dismissed_cio_len = msglen;
+      states[TEMPERATURE] = from_CIO_buf[TEMPINDEX];
+      states[ERROR] =       from_CIO_buf[ERRORINDEX];
+      digitalWrite(D4, !digitalRead(D4));  //blink  
+      cio_tx = true;  //show the user that this line works (appears to work)
+      //check if cio send error msg
+      states[CHAR1] = ' ';
+      states[CHAR2] = ' ';
+      states[CHAR3] = ' ';
+      if(states[ERROR]){
+        to_CIO_buf[COMMANDINDEX] = 0; //clear any commands
+        GODMODE = false;
+        states[CHAR1] = 'E';
+        states[CHAR2] = (char)(48+(from_CIO_buf[ERRORINDEX]/10));
+        states[CHAR3] = (char)(48+(from_CIO_buf[ERRORINDEX]%10));
+      }
+    } 
+    /* debug 
+    else
+    {
+      if(msglen)
+      {
+        dataAvailable = true;
+        for(int i = 0; i < msglen; i++)
+        {
+        dismissed_from_CIO_buf[i] = from_CIO_buf[i];
+        }
+        dismissed_cio_len = msglen;
+      }
     }
+    */
+    // Do stuff here if you want to alter the message
+    // Send last good message to DSP
+    dsp_serial.write(to_DSP_buf, PAYLOADSIZE);
   }
-  */
   //check if display sent a message
   msglen = 0;
   if(dsp_serial.available())
   {
     msglen = dsp_serial.readBytes(from_DSP_buf, PAYLOADSIZE);
-  }
-  //copy from_DSP_buf -> to_CIO_buf
-  if(msglen == PAYLOADSIZE){
-    //discard message if checksum is wrong
-    uint8_t calculatedChecksum;
-    calculatedChecksum = from_DSP_buf[1]+from_DSP_buf[2]+from_DSP_buf[3]+from_DSP_buf[4];
-    if(from_DSP_buf[DSP_CHECKSUMINDEX] == calculatedChecksum)
-    {
-      for(int i = 0; i < PAYLOADSIZE; i++)
+    //copy from_DSP_buf -> to_CIO_buf
+    if(msglen == PAYLOADSIZE){
+      //discard message if checksum is wrong
+      uint8_t calculatedChecksum;
+      calculatedChecksum = from_DSP_buf[1]+from_DSP_buf[2]+from_DSP_buf[3]+from_DSP_buf[4];
+      if(from_DSP_buf[DSP_CHECKSUMINDEX] == calculatedChecksum)
       {
-        to_CIO_buf[i] = from_DSP_buf[i];
-      }
-      //Do stuff here to command the CIO
-      if(GODMODE){
-        updatePayload();
-      } else {
-        updateStates();
-      }
-      cio_serial.write(to_CIO_buf, PAYLOADSIZE);
-      dsp_tx = true;  //show the user that this line works (appears to work)
-    }
-  } 
-  /* debug 
-  else
-  {
-    if(msglen)
-    {
-        dataAvailable = true;
-        for(int i = 0; i < msglen; i++)
+        for(int i = 0; i < PAYLOADSIZE; i++)
         {
-        dismissed_from_DSP_buf[i] = from_DSP_buf[i];
+          to_CIO_buf[i] = from_DSP_buf[i];
         }
-        dismissed_dsp_len = msglen;
+        //Do stuff here to command the CIO
+        if(GODMODE){
+          updatePayload();
+        } else {
+          updateStates();
+        }
+        dsp_tx = true;  //show the user that this line works (appears to work)
+      }
+    } 
+    /* debug 
+    else
+    {
+      if(msglen)
+      {
+          dataAvailable = true;
+          for(int i = 0; i < msglen; i++)
+          {
+          dismissed_from_DSP_buf[i] = from_DSP_buf[i];
+          }
+          dismissed_dsp_len = msglen;
+      }
     }
+    */
+    cio_serial.write(to_CIO_buf, PAYLOADSIZE);
   }
-  */
 }
 
 void CIO::updateStates(){
