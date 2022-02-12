@@ -206,12 +206,6 @@ void BWC::loop(){
   ESP.wdtFeed();
   ESP.wdtDisable();
   
-	if (!DateTime.isTimeValid()) {
-      //Serial.println("Failed to get time from server, retry.");
-      DateTime.begin();
-    } 
-	_timestamp = DateTime.now();
-  
    _updateTimes();
   //feed the dog
   //ESP.wdtFeed();

@@ -131,7 +131,7 @@ void loop()
       if (!DateTime.isTimeValid())
       {
         Serial.println(F("NTP > Start synchronisation"));
-        DateTime.begin();
+        DateTime.begin(3000);
       }
 
       if (enableMqtt && !mqttClient.loop())
