@@ -131,7 +131,7 @@ void loop()
       if (!DateTime.isTimeValid())
       {
         Serial.println(F("NTP > Start synchronisation"));
-        DateTime.begin(3000);
+        DateTime.begin(5000);
       }
 
       if (enableMqtt && !mqttClient.loop())
@@ -342,7 +342,7 @@ void startWiFiConfigPortal()
 void startNTP()
 {
   DateTime.setServer("pool.ntp.org");
-  DateTime.begin(3000);
+  DateTime.begin(5000);
 }
 
 

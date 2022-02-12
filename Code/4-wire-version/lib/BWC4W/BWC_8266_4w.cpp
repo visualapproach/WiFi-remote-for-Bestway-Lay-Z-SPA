@@ -205,7 +205,7 @@ void BWC::loop(){
   //feed the dog
   ESP.wdtFeed();
   ESP.wdtDisable();
-  
+  _timestamp = DateTime.now();
    _updateTimes();
   //feed the dog
   //ESP.wdtFeed();
