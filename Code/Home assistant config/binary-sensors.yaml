@@ -71,4 +71,4 @@
   payload_available: "Alive" 
   payload_not_available: "Dead"
   payload_on: 69 
-  payload_off: 48
+  payload_off: 32
