@@ -350,16 +350,16 @@ climate:
 
 ## Helper automation for climate control ##
 automation:
-- id: '1646308503995'
-  alias: Spabad MQTT Relay
-  description: ''
-  trigger:
-  - platform: mqtt
-    topic: layzspa/thermostatcommand
-  condition: []
-  action:
-  - service: mqtt.publish
-    data_template:
-      payload: '{"CMD":0,"VALUE":{{trigger.payload}},"XTIME":0,"INTERVAL":0}'
-      topic: layzspa/command
-  mode: single
+  - id: '1646308503995'
+    alias: Spabad MQTT Relay
+    description: ''
+    trigger:
+    - platform: mqtt
+      topic: layzspa/thermostatcommand
+    condition: []
+    action:
+    - service: mqtt.publish
+      data_template:
+        payload: '{"CMD":0,"VALUE":{{trigger.payload}},"XTIME":0,"INTERVAL":0}'
+        topic: layzspa/command
+    mode: single
