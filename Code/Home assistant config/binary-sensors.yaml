@@ -1,5 +1,6 @@
 - platform: mqtt
-  name: spa lock
+  name: Spa Lock
+  unique_id: binary_sensor.spa_lock
   state_topic: "layzspa/message"
   value_template: |- #"{{ value_json.LCK }}"
     {% if value_json.LCK == 1 %}
@@ -8,14 +9,14 @@
       OFF
     {% endif %}
   expire_after: 700
-  icon: mdi:lock
   availability_topic: "layzspa/Status"
   payload_available: "Alive"
   payload_not_available: "Dead"
   device_class: lock
 
 - platform: mqtt
-  name: spa heater element
+  name: Spa Heater Element
+  unique_id: binary_sensor.spa_heater_element
   state_topic: "layzspa/message"
   value_template: |- #"{{ value_json.RED }}"
     {% if value_json.RED == 1 %}
@@ -23,14 +24,15 @@
     {% else %}
       OFF
     {% endif %}
-  icon: mdi:fire
   availability_topic: "layzspa/Status"
   payload_available: "Alive"
   payload_not_available: "Dead"
   expire_after: 700
+  device_class: heat
 
 - platform: mqtt
-  name: spa ready
+  name: Spa Ready
+  unique_id: binary_sensor.spa_ready
   state_topic: "layzspa/message"
   value_template: |- #"{{ value_json.RED }}"
     {% if value_json.TMP > 30 %}
@@ -51,6 +53,7 @@
 
 - platform: mqtt 
   name: Spa Status
+  unique_id: binary_sensor.spa_status
   device_class: connectivity
   entity_category: diagnostic
   state_topic: "layzspa/Status" 
@@ -63,6 +66,7 @@
   # 4 Wire Error State based on character display [E00]
 - platform: mqtt 
   name: Spa Error
+  unqiue_id: binary_sensor.spa_error
   device_class: problem
   entity_category: diagnostic
   state_topic: "layzspa/message"
