@@ -334,7 +334,7 @@ climate:
         idle
       {% else %}
         off
-      {% endif %}          
+      {% endif %}
     temperature_state_topic: "layzspa/message"
     temperature_state_template: "{{ value_json.TGT }}"
     current_temperature_topic: "layzspa/message"
@@ -352,7 +352,7 @@ climate:
 automation:
   - id: '1646308503995'
     alias: Spabad MQTT Relay
-    description: ''
+    description: 'Helper automation for Layz spa climate control'
     trigger:
     - platform: mqtt
       topic: layzspa/thermostatcommand
