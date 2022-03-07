@@ -1,5 +1,6 @@
 - platform: mqtt
-  name: spa heat regulation
+  name: Spa Heat Regulation
+  unique_id: switch.spa_heat_regulation
   command_topic: "layzspa/command"
   state_topic: "layzspa/message"
   value_template: |-
@@ -20,7 +21,8 @@
   payload_not_available: "Dead"
 
 - platform: mqtt
-  name: spa airbubbles
+  name: Spa Airbubbles
+  unique_id: switch.spa_airbubbles
   command_topic: "layzspa/command"
   state_topic: "layzspa/message"
   value_template: "{{ value_json.AIR }}"
@@ -34,7 +36,8 @@
   payload_not_available: "Dead"
 
 - platform: mqtt
-  name: spa pump
+  name: Spa Pump
+  unique_id: switch.spa_pump
   command_topic: "layzspa/command"
   state_topic: "layzspa/message"
   value_template: "{{ value_json.FLT }}"
@@ -48,7 +51,8 @@
   payload_not_available: "Dead"
 
 - platform: mqtt
-  name: spa temperature unit
+  name: Spa Temperature Unit
+  unique_id: switch.spa_temperature_unit
   command_topic: "layzspa/command"
   state_topic: "layzspa/message"
   value_template: "{{ value_json.UNT }}"
