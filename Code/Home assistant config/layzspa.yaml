@@ -95,6 +95,17 @@ sensor:
     payload_not_available: "Dead"
     expire_after: 700
 
+## Only for use with the 4-wire models to track pump ERROR.
+#  - platform: mqtt
+#    name: Spa Error
+#    unique_id: sensor.spa_error
+#    state_topic: "layzspa/message"
+#    value_template: "{{ value_json.ERR }}"
+#    expire_after: 700
+#    availability_topic: "layzspa/Status"
+#    payload_available: "Alive"
+#    payload_not_available: "Dead"
+
 
 ## Binary sensors ##
 binary_sensor:
@@ -167,18 +178,18 @@ binary_sensor:
     payload_on: "Alive" 
     payload_off: "Dead"
 
-# 4 Wire Error State based on character display [E00]
-  - platform: mqtt 
-    name: Spa Error
-    unique_id: binary_sensor.spa_error
-    device_class: problem
-    state_topic: "layzspa/message"
-    value_template: "{{ value_json.CH1 }}"
-    availability_topic: "layzspa/Status"
-    payload_available: "Alive" 
-    payload_not_available: "Dead"
-    payload_on: 69 
-    payload_off: 32
+## 4 Wire Error State based on character display [E00]
+#  - platform: mqtt 
+#    name: Spa Error
+#    unique_id: binary_sensor.spa_error
+#    device_class: problem
+#    state_topic: "layzspa/message"
+#    value_template: "{{ value_json.CH1 }}"
+#    availability_topic: "layzspa/Status"
+#    payload_available: "Alive" 
+#    payload_not_available: "Dead"
+#    payload_on: 69 
+#    payload_off: 32
 
 
 ## Switches ##
