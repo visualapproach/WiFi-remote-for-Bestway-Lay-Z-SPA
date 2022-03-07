@@ -351,7 +351,7 @@ climate:
 ## Helper automation for climate control ##
 automation:
   - id: '1646308503995'
-    alias: Spabad MQTT Relay
+    alias: Spa MQTT Relay
     description: 'Helper automation for Layz spa climate control'
     trigger:
     - platform: mqtt
