@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 #include "config.h"
+#include "model.h"
 
 #ifdef MODEL54149E
 #include "BWC54149E_8266.h"
@@ -107,6 +108,6 @@ void handleFileUpload();
 void handleFileRemove();
 void handleRestart();
 
-void startMQTT();
-void MQTTcallback(char* topic, byte* payload, unsigned int length);
-void MQTT_Connect();
+void startMqtt();
+void mqttCallback(char* topic, byte* payload, unsigned int length);
+void mqttConnect();

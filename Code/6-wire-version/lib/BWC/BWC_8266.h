@@ -129,7 +129,7 @@ class BWC {
 	uint8_t _dspBrightness;
 	uint32_t _commandQ[MAXCOMMANDS][4];
 	int _qCommandLen = 0;		//length of commandQ
-	uint32_t _buttonQ[MAXBUTTONS][4];
+	int32_t _buttonQ[MAXBUTTONS][4];
 	int _qButtonLen = 0;	//length of buttonQ
 	uint32_t _timestamp;
 	bool _newData = false;
@@ -166,7 +166,7 @@ class BWC {
 	int _tttt;				//time to target temperature after subtracting running time since last calculation
 	int _tttt_calculated;	//constant between calculations
 
-	void _qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration);
+	void _qButton(uint32_t btn, uint32_t state, uint32_t value, int32_t maxduration);
 	void _handleCommandQ(void);
 	void _handleButtonQ(void);
 	void _startNTP();

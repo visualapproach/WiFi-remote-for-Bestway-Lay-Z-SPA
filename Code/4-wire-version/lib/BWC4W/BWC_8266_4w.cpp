@@ -9,16 +9,16 @@ void CIO::begin() {
     DSP_RX = D7
     Devices are sending on their TX lines, so we read that with RX pins on the ESP
   */
-  cio_serial.begin(9600, SWSERIAL_8N1, D2, D3, false, 64);
-  cio_serial.setTimeout(50);
-  dsp_serial.begin(9600, SWSERIAL_8N1, D6, D7, false, 64);
-  dsp_serial.setTimeout(50);
+  cio_serial.begin(9600, SWSERIAL_8N1, D2, D3, false, 63);
+  cio_serial.setTimeout(20);
+  dsp_serial.begin(9600, SWSERIAL_8N1, D6, D7, false, 63);
+  dsp_serial.setTimeout(20);
 
   states[TARGET] = 20;
   //Not used. Here for compatibility reasons
   states[LOCKEDSTATE] = false;
   states[POWERSTATE] = true;
-  states[UNITSTATE] = true;   //Celsius
+  states[UNITSTATE] = true;   //Celsius. can be changed by web gui
   states[CHAR1] = ' ';
   states[CHAR2] = ' ';
   states[CHAR3] = ' ';
@@ -27,63 +27,102 @@ void CIO::begin() {
 }
 
 void CIO::loop(void) {
+  digitalWrite(D4, LOW);  //LED off 
   //check if CIO has sent a message
   int msglen = 0;
-  if(cio_serial.available()){
+  if(cio_serial.available())
+  {
     msglen = cio_serial.readBytes(from_CIO_buf, PAYLOADSIZE);
-  }
-  //pass message to display
-  if(msglen == PAYLOADSIZE){
-    //discard message if checksum is wrong
-    uint8_t calculatedChecksum;
-    calculatedChecksum = from_CIO_buf[1]+from_CIO_buf[2]+from_CIO_buf[3]+from_CIO_buf[4];
-    if(from_CIO_buf[CIO_CHECKSUMINDEX] == calculatedChecksum){
-      for(int i = 0; i < PAYLOADSIZE; i++){
-        if(to_DSP_buf[i] != from_CIO_buf[i]) dataAvailable = true;
-        to_DSP_buf[i] = from_CIO_buf[i];
+    //copy from_CIO_buf -> to_DSP_buf
+    if(msglen == PAYLOADSIZE){
+      //discard message if checksum is wrong
+      uint8_t calculatedChecksum;
+      calculatedChecksum = from_CIO_buf[1]+from_CIO_buf[2]+from_CIO_buf[3]+from_CIO_buf[4];
+      if(from_CIO_buf[CIO_CHECKSUMINDEX] == calculatedChecksum){
+        for(int i = 0; i < PAYLOADSIZE; i++){
+          if(to_DSP_buf[i] != from_CIO_buf[i]) dataAvailable = true;
+          to_DSP_buf[i] = from_CIO_buf[i];
+        }
+      }
+      states[TEMPERATURE] = from_CIO_buf[TEMPINDEX];
+      states[ERROR] =       from_CIO_buf[ERRORINDEX];
+      cio_tx = true;  //show the user that this line works (appears to work)
+      //check if cio send error msg
+      states[CHAR1] = ' ';
+      states[CHAR2] = ' ';
+      states[CHAR3] = ' ';
+      if(states[ERROR]){
+        to_CIO_buf[COMMANDINDEX] = 0; //clear any commands
+        GODMODE = false;
+        states[CHAR1] = 'E';
+        states[CHAR2] = (char)(48+(from_CIO_buf[ERRORINDEX]/10));
+        states[CHAR3] = (char)(48+(from_CIO_buf[ERRORINDEX]%10));
+      }
+    } else
+    {
+      digitalWrite(D4, HIGH);  //LED on indicates bad message
+    }
+    /* debug 
+    else
+    {
+      if(msglen)
+      {
+        dataAvailable = true;
+        for(int i = 0; i < msglen; i++)
+        {
+        dismissed_from_CIO_buf[i] = from_CIO_buf[i];
+        }
+        dismissed_cio_len = msglen;
       }
     }
-    states[TEMPERATURE] = from_CIO_buf[TEMPINDEX];
-    states[ERROR] =       from_CIO_buf[ERRORINDEX];
-    //do stuff here if you want to alter the message
+    */
+    // Do stuff here if you want to alter the message
+    // Send last good message to DSP
     dsp_serial.write(to_DSP_buf, PAYLOADSIZE);
-    digitalWrite(D4, !digitalRead(D4));  //blink  
-    cio_tx = true;  //show the user that this line works (appears to work)
-  }
-  //check if cio send error msg
-  states[CHAR1] = ' ';
-  states[CHAR2] = ' ';
-  states[CHAR3] = ' ';
-  if(states[ERROR]){
-    to_CIO_buf[COMMANDINDEX] = 0; //clear any commands
-    GODMODE = false;
-    states[CHAR1] = 'E';
-    states[CHAR2] = 48+(to_CIO_buf[ERRORINDEX]/10);
-    states[CHAR3] = 48+(to_CIO_buf[ERRORINDEX]%10);
   }
   //check if display sent a message
   msglen = 0;
-  if(dsp_serial.available()){
+  if(dsp_serial.available())
+  {
     msglen = dsp_serial.readBytes(from_DSP_buf, PAYLOADSIZE);
-  }
-  //pass message to CIO
-  if(msglen == PAYLOADSIZE){
-    //discard message if checksum is wrong
-    uint8_t calculatedChecksum;
-    calculatedChecksum = from_DSP_buf[1]+from_DSP_buf[2]+from_DSP_buf[3]+from_DSP_buf[4];
-    if(from_DSP_buf[DSP_CHECKSUMINDEX] == calculatedChecksum){
-      for(int i = 0; i < PAYLOADSIZE; i++){
-        to_CIO_buf[i] = from_DSP_buf[i];
+    //copy from_DSP_buf -> to_CIO_buf
+    if(msglen == PAYLOADSIZE){
+      //discard message if checksum is wrong
+      uint8_t calculatedChecksum;
+      calculatedChecksum = from_DSP_buf[1]+from_DSP_buf[2]+from_DSP_buf[3]+from_DSP_buf[4];
+      if(from_DSP_buf[DSP_CHECKSUMINDEX] == calculatedChecksum)
+      {
+        for(int i = 0; i < PAYLOADSIZE; i++)
+        {
+          to_CIO_buf[i] = from_DSP_buf[i];
+        }
+        //Do stuff here to command the CIO
+        if(GODMODE){
+          updatePayload();
+        } else {
+          updateStates();
+        }
+        dsp_tx = true;  //show the user that this line works (appears to work)
+      }
+    }  else
+    {
+      digitalWrite(D4, HIGH);  //LED on indicates bad message
+    }
+    /* debug 
+    else
+    {
+      if(msglen)
+      {
+          dataAvailable = true;
+          for(int i = 0; i < msglen; i++)
+          {
+          dismissed_from_DSP_buf[i] = from_DSP_buf[i];
+          }
+          dismissed_dsp_len = msglen;
       }
     }
-    //Do stuff here to command the CIO
-    if(GODMODE){
-      updatePayload();
-    } else {
-      updateStates();
-    }
+    */
     cio_serial.write(to_CIO_buf, PAYLOADSIZE);
-    dsp_tx = true;  //show the user that this line works (appears to work)
   }
 }
 
@@ -126,15 +165,15 @@ void CIO::updatePayload(){
 
   //calc checksum -> byte5
   //THIS NEEDS TO BE IMPROVED IF OTHER CHECKSUMS IS USED (FOR OTHER BYTES in different models)
-  to_CIO_buf[DSP_CHECKSUMINDEX] = to_CIO_buf[1] + to_CIO_buf[2] + to_CIO_buf[3] + to_CIO_buf[4];
-  if(to_CIO_buf[DSP_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
-  prevchksum = to_CIO_buf[DSP_CHECKSUMINDEX];
+  to_CIO_buf[CIO_CHECKSUMINDEX] = to_CIO_buf[1] + to_CIO_buf[2] + to_CIO_buf[3] + to_CIO_buf[4];
+  if(to_CIO_buf[CIO_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
+  prevchksum = to_CIO_buf[CIO_CHECKSUMINDEX];
 }
 
 
 void BWC::begin(void){
 	_cio.begin();
-	_startNTP();
+	//_startNTP(); this is done from main.cpp
 	LittleFS.begin();
 	_loadSettings();
 	_loadCommandQueue();
@@ -166,13 +205,7 @@ void BWC::loop(){
   //feed the dog
   ESP.wdtFeed();
   ESP.wdtDisable();
-  
-	if (!DateTime.isTimeValid()) {
-      //Serial.println("Failed to get time from server, retry.");
-      DateTime.begin();
-    } 
-	_timestamp = DateTime.now();
-  
+  _timestamp = DateTime.now();
    _updateTimes();
   //feed the dog
   //ESP.wdtFeed();
@@ -430,6 +463,7 @@ String BWC::getJSONStates() {
 
     // Set the values in the document
     doc["CONTENT"] = "STATES";
+    doc["TIME"] = _timestamp;
     doc["LCK"] = _cio.states[LOCKEDSTATE];
     doc["PWR"] = _cio.states[POWERSTATE];
     doc["UNT"] = _cio.states[UNITSTATE];
@@ -443,6 +477,7 @@ String BWC::getJSONStates() {
     doc["CH2"] = _cio.states[CHAR2];
     doc["CH3"] = _cio.states[CHAR3];
     doc["JET"] = _cio.states[JETSSTATE];
+    doc["ERR"] = _cio.states[ERROR];
     doc["GOD"] = _cio.GODMODE;
 
     // Serialize JSON to string
@@ -559,6 +594,42 @@ String BWC::getJSONCommandQueue(){
   return jsonmsg;
 }
 
+String BWC::encodeBufferToString(uint8_t buf[7]){
+  String str = String();
+  for (unsigned long i = 0; i < 7; i++) {
+    str += String(buf[i], HEX);
+    str += " ";
+  }
+  return str;
+}
+
+String BWC::getSerialBuffers(){
+  ESP.wdtFeed();
+  DynamicJsonDocument doc(512);
+
+  // Set the values in the document
+  doc["CONTENT"] = "DEBUG";
+  doc["TIME"] = _timestamp;
+  doc["FROMDSP"] = encodeBufferToString(_cio.from_DSP_buf);
+  doc["TOCIO"] = encodeBufferToString(_cio.to_CIO_buf);
+  doc["FROMCIO"] = encodeBufferToString(_cio.from_CIO_buf);
+  doc["TODSP"] = encodeBufferToString(_cio.to_DSP_buf);
+  doc["REBOOTINFO"] = ESP.getResetReason();
+  doc["REBOOTTIME"] = DateTime.getBootTime();
+  /* debug
+  doc["FROMDSPFAIL"] = encodeBufferToString(_cio.dismissed_from_DSP_buf);
+  doc["LENDSP"] = _cio.dismissed_dsp_len;
+  doc["FROMCIOFAIL"] = encodeBufferToString(_cio.dismissed_from_CIO_buf);
+  doc["LENCIO"] = _cio.dismissed_cio_len;
+  */
+  // Serialize JSON to string
+  String json;
+  if (serializeJson(doc, json) == 0) {
+    json = "{\"error\": \"Failed to serialize message\"}";
+	}
+	return json;
+}
+
 bool BWC::newData(){
   bool result = _cio.dataAvailable;
   _cio.dataAvailable = false;
@@ -631,6 +702,7 @@ void BWC::saveSettingsFlag(){
 
 void BWC::saveSettings(){
   //kill the dog
+  ESP.wdtFeed();
   ESP.wdtDisable();
   _saveSettingsNeeded = false;
   File file = LittleFS.open("settings.txt", "w");
@@ -674,7 +746,7 @@ void BWC::saveSettings(){
   file.close();
   //update clock
   //DateTime.setTimeZone(_timezone); //deprecated
-  DateTime.begin();	
+  //DateTime.begin();   //removed to lower risk of wdt reset.
   //revive the dog
   ESP.wdtEnable(0);
 
@@ -713,6 +785,7 @@ void BWC::_loadCommandQueue(){
 
 void BWC::_saveCommandQueue(){
   //kill the dog
+  ESP.wdtFeed();
   ESP.wdtDisable();
   
   _saveCmdqNeeded = false;
@@ -749,6 +822,7 @@ void BWC::_saveCommandQueue(){
 void BWC::saveEventlog(){
   _saveEventlogNeeded = false;
   //kill the dog
+  ESP.wdtFeed();
   ESP.wdtDisable();
   File file = LittleFS.open("eventlog.txt", "a");
   if (!file) {

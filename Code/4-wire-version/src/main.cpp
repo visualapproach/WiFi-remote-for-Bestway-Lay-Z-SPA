@@ -28,9 +28,6 @@ void setup()
   // update webpage every 2 seconds. (will also be updated on state changes)
   updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
 
-  // update MQTT every 10 minutes. (will also be updated on state changes)
-  updateMqttTimer.attach(600, []{ sendMQTTFlag = true; });
-
   // needs to be loaded here for reading the wifi.json
   LittleFS.begin();
   loadWifi();
@@ -40,7 +37,7 @@ void setup()
   startOTA();
   startHttpServer();
   startWebSocket();
-  startMQTT();
+  startMqtt();
 
   pinMode(D4, OUTPUT);  //built in LED for some feedback
   digitalWrite(D4, LOW);
@@ -93,9 +90,12 @@ void loop()
     // run once after connection was established
     if (!wifiConnected)
     {
-      Serial.println("WiFi > Connected");
+      Serial.println(F("WiFi > Connected"));
       Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
       Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
+      startOTA();
+      startHttpServer();
+      startWebSocket();
     }
     // reset marker
     wifiConnected = true;
@@ -107,7 +107,7 @@ void loop()
     // run once after connection was lost
     if (wifiConnected)
     {
-      Serial.println("WiFi > Lost connection. Trying to reconnect ...");
+      Serial.println(F("WiFi > Lost connection. Trying to reconnect ..."));
     }
     // set marker
     wifiConnected = false;
@@ -131,13 +131,13 @@ void loop()
       if (!DateTime.isTimeValid())
       {
         Serial.println(F("NTP > Start synchronisation"));
-        DateTime.begin();
+        DateTime.begin(5000);
       }
 
-      if (!mqttClient.loop())
+      if (enableMqtt && !mqttClient.loop())
       {
-        Serial.println(F("MQTT > Reconnecting"));
-        MQTT_Connect();
+        Serial.println(F("MQTT > Not connected"));
+        mqttConnect();
       }
     }
   }
@@ -191,12 +191,19 @@ void sendWS()
   json = bwc.getJSONTimes();
   webSocket.broadcastTXT(json);
 
+  if(DEBUGSERIAL)
+  {
+    json = bwc.getSerialBuffers();
+    webSocket.broadcastTXT(json);
+  }
+
   // send other info
   String other = 
     String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(mqttClient.state()) + 
-    String(",\"CIOTX\":\"") + String(bwc.cio_tx) + 
-    String("\",\"DSPTX\":") + String(bwc.dsp_tx) + String("}");
-  
+    String(",\"CIOTX\":") + String(bwc.cio_tx) + 
+    String(",\"DSPTX\":") + String(bwc.dsp_tx) + 
+    String(",\"RSSI\":") + String(WiFi.RSSI()) + 
+    String("}");
   webSocket.broadcastTXT(other);
 }
 
@@ -216,22 +223,22 @@ void sendMQTT()
   json = bwc.getJSONStates();
   if (mqttClient.publish((String(mqttBaseTopic) + "/message").c_str(), String(json).c_str(), true))
   {
-    //Serial.println(F("MQTT published"));
+    //Serial.println(F("MQTT > message published"));
   }
   else
   {
-    //Serial.println(F("MQTT not published"));
+    //Serial.println(F("MQTT > message not published"));
   }
 
   // send times
   json = bwc.getJSONTimes();
   if (mqttClient.publish((String(mqttBaseTopic) + "/times").c_str(), String(json).c_str(), true))
   {
-    //Serial.println(F("MQTT published"));
+    //Serial.println(F("MQTT > times published"));
   }
   else
   {
-    //Serial.println(F("MQTT not published"));
+    //Serial.println(F("MQTT > times not published"));
   }
 }
 
@@ -260,7 +267,7 @@ void startWiFi()
 
     WiFi.begin(apSsid, apPwd);
 
-    Serial.print("WiFi > Trying to connect ...");
+    Serial.print(F("WiFi > Trying to connect ..."));
     int maxTries = 10;
     int tryCount = 0;
 
@@ -273,7 +280,7 @@ void startWiFi()
       if (tryCount >= maxTries)
       {
         Serial.println("");
-        Serial.println("WiFi > NOT connected!");
+        Serial.println(F("WiFi > NOT connected!"));
         if (enableWmApFallback)
         {
           // disable specific WiFi config
@@ -301,7 +308,7 @@ void startWiFi()
 
     wifiConnected = true;
 
-    Serial.println("WiFi > Connected.");
+    Serial.println(F("WiFi > Connected."));
     Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
     Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
   }
@@ -316,14 +323,15 @@ void startWiFi()
  */
 void startWiFiConfigPortal()
 {
-  Serial.println("WiFi > Using WiFiManager Config Portal");
+  Serial.println(F("WiFi > Using WiFiManager Config Portal"));
   wm.autoConnect(wmApName, wmApPassword);
-  Serial.print("WiFi > Trying to connect ...");
+  Serial.print(F("WiFi > Trying to connect ..."));
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
     Serial.print(".");
   }
+  Serial.println("");
 }
 
 
@@ -334,7 +342,7 @@ void startWiFiConfigPortal()
 void startNTP()
 {
   DateTime.setServer("pool.ntp.org");
-  DateTime.begin(3000);
+  DateTime.begin(5000);
 }
 
 
@@ -348,17 +356,17 @@ void startOTA()
   ArduinoOTA.setPassword(OTAPassword);
 
   ArduinoOTA.onStart([]() {
-    Serial.println(F("OTA Start"));
+    Serial.println(F("OTA > Start"));
     //bwc.stop(); // TODO: 6-wire only(?)
   });
   ArduinoOTA.onEnd([]() {
-    Serial.println(F("\r\nOTA End"));
+    Serial.println(F("OTA > End"));
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    Serial.printf("OTA > Progress: %u%%\r\n", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
+    Serial.printf("OTA > Error[%u]: ", error);
     if (error == OTA_AUTH_ERROR) Serial.println(F("Auth Failed"));
     else if (error == OTA_BEGIN_ERROR) Serial.println(F("Begin Failed"));
     else if (error == OTA_CONNECT_ERROR) Serial.println(F("Connect Failed"));
@@ -376,6 +384,8 @@ void startOTA()
  */
 void startWebSocket()
 {
+  // In case we are already running
+  webSocket.close();
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
   Serial.println(F("WebSocket > server started"));
@@ -391,14 +401,14 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
   {
     // if the websocket is disconnected
     case WStype_DISCONNECTED:
-      Serial.printf("WebSocket > [%u] Disconnected!\n", num);
+      Serial.printf("WebSocket > [%u] Disconnected!\r\n", num);
       break;
 
     // if a new websocket connection is established
     case WStype_CONNECTED:
       {
         IPAddress ip = webSocket.remoteIP(num);
-        Serial.printf("WebSocket > [%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
+        Serial.printf("WebSocket > [%u] Connected from %d.%d.%d.%d url: %s\r\n", num, ip[0], ip[1], ip[2], ip[3], payload);
         sendWS();
       }
       break;
@@ -406,7 +416,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
     // if new text data is received
     case WStype_TEXT:
       {
-        Serial.printf("WebSocket > [%u] get Text: %s\n", num, payload);
+        Serial.printf("WebSocket > [%u] get Text: %s\r\n", num, payload);
         DynamicJsonDocument doc(256);
         DeserializationError error = deserializeJson(doc, payload);
         if (error)
@@ -437,6 +447,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
  */
 void startHttpServer()
 {
+  // In case we are already running
+  server.stop();
   server.on(F("/getconfig/"), handleGetConfig);
   server.on(F("/setconfig/"), handleSetConfig);
   server.on(F("/getcommands/"), handleGetCommandQueue);
@@ -868,6 +880,7 @@ void loadMqtt()
 	mqttPassword = doc["mqttPassword"].as<String>();
 	mqttClientId = doc["mqttClientId"].as<String>();
 	mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
+  mqttTelemetryInterval = doc["mqttTelemetryInterval"];
 }
 
 /**
@@ -894,6 +907,7 @@ void saveMqtt()
   doc["mqttPassword"] = mqttPassword;
   doc["mqttClientId"] = mqttClientId;
   doc["mqttBaseTopic"] = mqttBaseTopic;
+  doc["mqttTelemetryInterval"] = mqttTelemetryInterval;
 
   if (serializeJson(doc, file) == 0)
   {
@@ -926,6 +940,7 @@ void handleGetMqtt()
   }
   doc["mqttClientId"] = mqttClientId;
   doc["mqttBaseTopic"] = mqttBaseTopic;
+  doc["mqttTelemetryInterval"] = mqttTelemetryInterval;
 
   String json;
   if (serializeJson(doc, json) == 0)
@@ -963,11 +978,12 @@ void handleSetMqtt()
   mqttPassword = doc["mqttPassword"].as<String>();
   mqttClientId = doc["mqttClientId"].as<String>();
   mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
+  mqttTelemetryInterval = doc["mqttTelemetryInterval"];
 
   server.send(200, "text/plain", "");
 
   saveMqtt();
-  startMQTT();
+  startMqtt();
 
 }
 
@@ -983,7 +999,7 @@ void handleDir()
   {
     Serial.println(root.fileName());
     mydir += root.fileName() + F(" \t Size: ");
-    mydir += String(root.fileSize()) + F(" Bytes\n");
+    mydir += String(root.fileSize()) + F(" Bytes\r\n");
   }
   server.send(200, "text/plain", mydir);
 }
@@ -1096,7 +1112,6 @@ void handleFileRemove()
 void handleRestart()
 {
   server.send(200, F("text/html"), F("ESP restart ..."));
-  Serial.println(F("ESP restart ..."));
 
   server.sendHeader("Location", "/");
   server.send(303);
@@ -1108,7 +1123,7 @@ void handleRestart()
   //bwc.stop(); // TODO: 6-wire only(?)
   bwc.saveSettings();
 
-  Serial.println("ESP restart ...");
+  Serial.println(F("ESP restart ..."));
   ESP.restart();
 }
 
@@ -1118,7 +1133,7 @@ void handleRestart()
  * MQTT setup and connect
  * @author 877dev
  */
-void startMQTT()
+void startMqtt()
 {
   // load mqtt credential file if it exists, and update default strings
   loadMqtt();
@@ -1136,21 +1151,18 @@ void startMQTT()
   mqttClient.setSocketTimeout(30);
   // set callback details
   // this function is called automatically whenever a message arrives on a subscribed topic.
-  mqttClient.setCallback(MQTTcallback);
+  mqttClient.setCallback(mqttCallback);
   // Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
-  if (enableMqtt)
-  {
-    MQTT_Connect();
-  }
+  mqttConnect();
 }
 
 /**
  * MQTT callback function
  * @author 877dev
  */
-void MQTTcallback(char* topic, byte* payload, unsigned int length)
+void mqttCallback(char* topic, byte* payload, unsigned int length)
 {
-  Serial.print(F("Message arrived ["));
+  Serial.print(F("MQTT > Message arrived ["));
   Serial.print(topic);
   Serial.print("] ");
   for (unsigned int i = 0; i < length; i++)
@@ -1179,63 +1191,45 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length)
 /**
  * Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
  */
-void MQTT_Connect()
+void mqttConnect()
 {
-  Serial.print(F("Connecting to MQTT...  "));
-  // We'll connect with a Retained Last Will that updates the '.../Status' topic with "Dead" when the device goes offline...
-  // Attempt to connect...
-  /*
-    MQTT Connection syntax:
-    boolean connect (client_id, username, password, willTopic, willQoS, willRetain, willMessage)
-    Connects the client with a Will message, username and password specified.
-    Parameters
-    client_id : the client ID to use when connecting to the server.
-    username : the username to use. If NULL, no username or password is used (const char[])
-    password : the password to use. If NULL, no password is used (const char[])
-    willTopic : the topic to be used by the will message (const char[])
-    willQoS : the quality of service to be used by the will message (int : 0,1 or 2)
-    willRetain : whether the will should be published with the retain flag (int : 0 or 1)
-    willMessage : the payload of the will message (const char[])
-    Returns
-    false - connection failed.
-    true - connection succeeded
-  */
-  if (mqttClient.connect(mqttClientId.c_str(), mqttUsername.c_str(), mqttPassword.c_str(), (String(mqttBaseTopic) + "/Status").c_str(), 0, 1, "Dead"))
+  // do not connect if MQTT is not enabled
+  if (!enableMqtt)
   {
-    // We get here if the connection was successful...
+    return;
+  }
+
+  Serial.print(F("MQTT > Connecting ... "));
+  // We'll connect with a Retained Last Will that updates the 'Status' topic with "Dead" when the device goes offline...
+  if (mqttClient.connect(
+    mqttClientId.c_str(), // client_id : the client ID to use when connecting to the server.
+    mqttUsername.c_str(), // username : the username to use. If NULL, no username or password is used (const char[])
+    mqttPassword.c_str(), // password : the password to use. If NULL, no password is used (const char[])
+    (String(mqttBaseTopic) + "/Status").c_str(), // willTopic : the topic to be used by the will message (const char[])
+    0, // willQoS : the quality of service to be used by the will message (int : 0,1 or 2)
+    1, // willRetain : whether the will should be published with the retain flag (int : 0 or 1)
+    "Dead")) // willMessage : the payload of the will message (const char[])
+  {
+    Serial.println(F("success!"));
     mqtt_connect_count++;
-    Serial.println(F("CONNECTED!"));
-    // Once connected, publish some announcements...
+    
+    // update MQTT every X seconds. (will also be updated on state changes)
+    updateMqttTimer.attach(mqttTelemetryInterval, []{ sendMQTTFlag = true; });
+    
     // These all have the Retained flag set to true, so that the value is stored on the server and can be retrieved at any point
-    // Check the .../Status topic to see that the device is still online before relying on the data from these retained topics
+    // Check the 'Status' topic to see that the device is still online before relying on the data from these retained topics
     mqttClient.publish((String(mqttBaseTopic) + "/Status").c_str(), "Alive", true);
     mqttClient.publish((String(mqttBaseTopic) + "/MAC_Address").c_str(), WiFi.macAddress().c_str(), true);                 // Device MAC Address
     mqttClient.publish((String(mqttBaseTopic) + "/MQTT_Connect_Count").c_str(), String(mqtt_connect_count).c_str(), true); // MQTT Connect Count
     mqttClient.loop();
 
-    // ... and then re/subscribe to the watched topics
-    mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());   // Watch the .../command topic for incoming MQTT messages
+    // Watch the 'command' topic for incoming MQTT messages
+    mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());
     mqttClient.loop();
-    // Add other watched topics in here...
   }
   else
   {
-    // We get here if the connection failed...
-    Serial.print(F("MQTT Connection FAILED, Return Code = "));
-    Serial.println(mqttClient.state());
-    Serial.println();
-    /*
-      mqttClient.state return code meanings...
-      -4 : MQTT_CONNECTION_TIMEOUT - the server didn't respond within the keepalive time
-      -3 : MQTT_CONNECTION_LOST - the network connection was broken
-      -2 : MQTT_CONNECT_FAILED - the network connection failed
-      -1 : MQTT_DISCONNECTED - the client is disconnected cleanly
-      0 : MQTT_CONNECTED - the client is connected
-      1 : MQTT_CONNECT_BAD_PROTOCOL - the server doesn't support the requested version of MQTT
-      2 : MQTT_CONNECT_BAD_CLIENT_ID - the server rejected the client identifier
-      3 : MQTT_CONNECT_UNAVAILABLE - the server was unable to accept the connection
-      4 : MQTT_CONNECT_BAD_CREDENTIALS - the username/password were rejected
-      5 : MQTT_CONNECT_UNAUTHORIZED - the client was not authorized to connect *
-    */
+    Serial.print(F("failed, Return Code = "));
+    Serial.println(mqttClient.state()); // states explained in WebSocket.js
   }
 }

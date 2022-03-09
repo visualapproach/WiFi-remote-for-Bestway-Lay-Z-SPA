@@ -53,8 +53,9 @@ const char *OTAPassword = "esp8266";
 const bool enableWmApFallback = true;
 /** get the name for the WiFi configuration manager access point */
 const char *wmApName = "Lay-Z-Spa Module";
-/** get the password for the WiFi configuration manager (min. 8, max. 63 chars) */
+/** get the password for the WiFi configuration manager (min. 8, max. 63 chars; NULL to disable) */
 const char *wmApPassword = "layzspam0dule";
+//const char *wmApPassword = NULL;
 
 /*
  * WiFi Access Point
@@ -108,3 +109,10 @@ String mqttPassword = "password";
 String mqttClientId = LEGACY_NAME;
 /** get or set the MQTT topic name */
 String mqttBaseTopic = LEGACY_NAME;
+/** get or set the MQTT telemetry interval */
+int mqttTelemetryInterval = 600;
+
+/* only enable this when debugging communication
+ * This feature has not been tested yet
+ */
+bool DEBUGSERIAL = false;

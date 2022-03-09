@@ -1,12 +1,8 @@
 //only declarations here please! Definitions belong in the cpp-file
-
+#include "model.h"
 
 #ifndef BWC54149E_8266_globals_H
 #define BWC54149E_8266_globals_H
-
-//uncomment your model and comment out the rest
-#define NO54149E
-
 
 //LSB
 const uint8_t DSP_DIM_BASE = 0x80;
@@ -89,14 +85,18 @@ const String ButtonNames[] = {
 	"HYDROJETS"		//not existing
 };
 
-#ifdef NO54149E
-
+#ifdef MODEL54149E
 const uint16_t ButtonCodes[] =
 {
 	0, 1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0, 1<<8, 1<<9
 };
 const bool HASJETS = false;
-
+#else //keep compiler happy with this dummy
+const uint16_t ButtonCodes[] =
+{
+	0, 1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0, 1<<8, 1<<9
+};
+const bool HASJETS = false;
 #endif
 
 enum States: byte
@@ -138,7 +138,7 @@ enum Commands: byte
 };
 
 const int MAXCOMMANDS = 11;
-const int MAXBUTTONS = 33;
+const int MAXBUTTONS = 200;
 
 
 //direct port manipulation memory adresses.
