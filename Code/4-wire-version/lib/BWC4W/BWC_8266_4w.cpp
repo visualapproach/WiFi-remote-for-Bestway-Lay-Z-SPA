@@ -614,6 +614,8 @@ String BWC::getSerialBuffers(){
   doc["TOCIO"] = encodeBufferToString(_cio.to_CIO_buf);
   doc["FROMCIO"] = encodeBufferToString(_cio.from_CIO_buf);
   doc["TODSP"] = encodeBufferToString(_cio.to_DSP_buf);
+  doc["REBOOTINFO"] = ESP.getResetReason();
+  doc["REBOOTTIME"] = DateTime.getBootTime();
   /* debug
   doc["FROMDSPFAIL"] = encodeBufferToString(_cio.dismissed_from_DSP_buf);
   doc["LENDSP"] = _cio.dismissed_dsp_len;
