@@ -1246,6 +1246,7 @@ void mqttConnect()
 
     mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), DateTime.format(DateFormatter::ISO8601).c_str(), true);
     mqttClient.publish((String(mqttBaseTopic) + "/reboot_reason").c_str(), ESP.getResetReason().c_str(), true);
+    mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), bwc.getButtonName().c_str(), true);
     mqttClient.loop();
     sendMQTT();
     setupHA();
