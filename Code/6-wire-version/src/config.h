@@ -1,7 +1,9 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 
-#define LEGACY_NAME "layzspa"
+#define DEVICE_NAME "layzspa"
+#define FW_VERSION "2022-03-12"
+#define HA_PREFIX "homeassistant"
 
 /*
  * Miscellaneous
@@ -9,7 +11,7 @@
 /** get the state of password visibility */
 const bool hidePasswords = true;
 /** get the network hostname of the device (max. length 26) */
-const char *netHostname = LEGACY_NAME;
+const char *netHostname = DEVICE_NAME;
 
 /*
  * Web Server Authentication
@@ -25,7 +27,7 @@ String authPassword = "password";
  * OTA Service Credentials
  */
 /** get the name for the OTA service */
-const char *OTAName = LEGACY_NAME;
+const char *OTAName = DEVICE_NAME;
 /** get the password for the OTA service  */
 const char *OTAPassword = "esp8266";
 
@@ -106,8 +108,8 @@ String mqttUsername = "username";
 /** get or set the MQTT server password */
 String mqttPassword = "password";
 /** get or set the unique MQTT client ID */
-String mqttClientId = LEGACY_NAME;
+String mqttClientId = DEVICE_NAME;
 /** get or set the MQTT topic name */
-String mqttBaseTopic = LEGACY_NAME;
+String mqttBaseTopic = DEVICE_NAME;
 /** get or set the MQTT telemetry interval */
 int mqttTelemetryInterval = 600;
