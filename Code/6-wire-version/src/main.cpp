@@ -1598,7 +1598,7 @@ void setupHA()
   doc["name"] = "Layzspa lock";
   doc["unique_id"] = "binary_sensor.layzspa_lock";
   doc["state_topic"] = mqttBaseTopic+"/message";
-  doc["value_template"] = "{% if value_json.LCK == 1 %}ON{% else %}OFF{% endif %}";
+  doc["value_template"] = "{% if value_json.LCK == 1 %}OFF{% else %}ON{% endif %}";
   doc["device_class"] = "lock";
   doc["expire_after"] = 700;
   doc["availability_topic"] = mqttBaseTopic+"/Status";
