@@ -674,14 +674,17 @@ void BWC::_handleCommandQ(void) {
 					_airtime_ms = 0;
 					_cost = 0;
 					_saveSettingsNeeded = true;
+          _cio.dataAvailable = true;
 					break;
 				case RESETCLTIMER:
 					_cltime = _timestamp;
 					_saveSettingsNeeded = true;
+          _cio.dataAvailable = true;
 					break;
 				case RESETFTIMER:
 					_ftime = _timestamp;
 					_saveSettingsNeeded = true;
+          _cio.dataAvailable = true;
 					break;
 				case SETJETS:
 					_qButton(HYDROJETS, JETSSTATE, _commandQ[0][1], 5000);
