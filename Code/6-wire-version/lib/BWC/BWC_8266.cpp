@@ -166,6 +166,13 @@ void IRAM_ATTR CIO::packetHandler(void) {
 //CIO comm
 //Read incoming bits, and take action after a complete byte
 void IRAM_ATTR CIO::clkHandler(void) {
+  //sanity check on clock signal
+  static uint32_t prev_us = 0;
+  uint32_t us = micros();
+  uint32_t period = 0;
+  if(us > prev_us) period = us - prev_us; //will be negative on rollover (once every hour-ish)
+  prev_us = us;
+  if(period < clk_per) clk_per = period;
 
   if (!_packet) return;
   //CS line is active, so send/receive bits on DATA line
@@ -794,6 +801,8 @@ String BWC::getJSONTimes() {
     doc["CLINT"] = _clinterval;
     doc["KWH"] = _cost/_price;
     doc["TTTT"] = _tttt;
+    doc["MINCLK"] = _cio.clk_per;
+    _cio.clk_per = 1000;  //reset minimum clock period
 
     // Serialize JSON to string
     String jsonmsg;
