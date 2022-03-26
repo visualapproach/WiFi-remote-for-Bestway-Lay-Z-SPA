@@ -58,6 +58,8 @@ int mqtt_connect_count;
 /**  */
 String prevButtonName = "";
 /**  */
+bool prevunit = 1;
+/**  */
 Ticker updateMqttTimer;
 /**  */
 bool sendMQTTFlag = false;
@@ -111,3 +113,5 @@ void handleRestart();
 void startMqtt();
 void mqttCallback(char* topic, byte* payload, unsigned int length);
 void mqttConnect();
+void setupHA();
+void setupClimate();
