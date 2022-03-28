@@ -1936,7 +1936,7 @@ void setupClimate()
   topic = String(HA_PREFIX) + F("/climate/layzspa_climate/config");
   Serial.println(topic);
   doc["name"] = F("Layzspa temperature control");
-  doc["unique_id"] = "button.layzspa_climate"+mychipid;
+  doc["unique_id"] = "climate.layzspa_climate"+mychipid;
   doc["max_temp"] = maxtemp;
   doc["min_temp"] = mintemp;
   doc["precision"] = 1.0;
