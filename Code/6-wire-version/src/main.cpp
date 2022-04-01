@@ -28,6 +28,9 @@ void setup()
   // update webpage every 2 seconds. (will also be updated on state changes)
   updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
 
+  // when NTP time is valid we save bootlog.txt and this timer stops
+  bootlogTimer.attach(5, []{ if(DateTime.isTimeValid()) {bwc.saveRebootInfo(); bootlogTimer.detach();} });
+
   // needs to be loaded here for reading the wifi.json
   LittleFS.begin();
   loadWifi();
@@ -38,7 +41,6 @@ void setup()
   startHttpServer();
   startWebSocket();
   startMqtt();
-
   bwc.print(WiFi.localIP().toString());
   Serial.println(F("End of setup()"));
 }

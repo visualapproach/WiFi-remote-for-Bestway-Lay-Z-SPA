@@ -462,7 +462,6 @@ void BWC::begin2(){
   LittleFS.begin();
   _loadSettings();
   _loadCommandQueue();
-  _saveRebootInfo();
   _restoreStates();
   if(_audio) _dsp.playIntro();
   //_dsp.LEDshow();
@@ -1181,7 +1180,7 @@ void BWC::saveEventlog(){
 
 }
 
-void BWC::_saveRebootInfo(){
+void BWC::saveRebootInfo(){
   File file = LittleFS.open("bootlog.txt", "a");
   if (!file) {
     Serial.println(F("Failed to save bootlog.txt"));

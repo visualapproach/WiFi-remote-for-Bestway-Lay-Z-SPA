@@ -24,6 +24,8 @@
 BWC bwc;
 
 /**  */
+Ticker bootlogTimer;
+/**  */
 Ticker periodicTimer;
 /**  */
 bool periodicTimerFlag = false;

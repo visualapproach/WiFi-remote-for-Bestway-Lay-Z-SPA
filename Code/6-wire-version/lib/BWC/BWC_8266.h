@@ -123,6 +123,7 @@ class BWC {
     String getButtonName();
     void saveDebugInfo(String s);
     void stop(void);
+    void saveRebootInfo();
 
   private:
     CIO _cio;
@@ -174,7 +175,6 @@ class BWC {
     void _loadSettings();
     void _loadCommandQueue();
     void _saveCommandQueue();
-    void _saveRebootInfo();
     void _updateTimes();
     void _restoreStates();
     void _saveStates();
