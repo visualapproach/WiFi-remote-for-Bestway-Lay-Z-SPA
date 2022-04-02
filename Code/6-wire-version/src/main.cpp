@@ -156,6 +156,12 @@ void loop()
     }
   }
 
+  //Only do this if locked out! (by pressing POWER - LOCK - TIMER - POWER)
+  if(bwc.getBtnSeqMatch())
+  {
+    resetWiFi();
+    ESP.reset();
+  } 
   //handleAUX();
 
   // You can add own code here, but don't stall!
@@ -669,6 +675,7 @@ void loadWifi()
   }
 
   enableAp = doc["enableAp"];
+  if(doc.containsKey("enableWM")) enableWmApFallback = doc["enableWM"];
   apSsid = doc["apSsid"].as<String>();
   apPwd = doc["apPwd"].as<String>();
 
@@ -710,6 +717,7 @@ void saveWifi()
   DynamicJsonDocument doc(1024);
 
   doc["enableAp"] = enableAp;
+  doc["enableWM"] = enableWmApFallback;
   doc["apSsid"] = apSsid;
   doc["apPwd"] = apPwd;
 
@@ -753,6 +761,7 @@ void handleGetWifi()
   DynamicJsonDocument doc(1024);
 
   doc["enableAp"] = enableAp;
+  doc["enableWM"] = enableWmApFallback;
   doc["apSsid"] = apSsid;
   doc["apPwd"] = "<enter password>";
   if (!hidePasswords)
@@ -809,6 +818,7 @@ void handleSetWifi()
   }
 
   enableAp = doc["enableAp"];
+  if(doc.containsKey("enableWM")) enableWmApFallback = doc["enableWM"];
   apSsid = doc["apSsid"].as<String>();
   apPwd = doc["apPwd"].as<String>();
 
@@ -848,7 +858,16 @@ void handleResetWifi()
 {
   server.send(200, F("text/html"), F("WiFi connection reset (erase) ..."));
   Serial.println(F("WiFi connection reset (erase) ..."));
+  resetWiFi();
 
+  server.send(200, F("text/html"), F("WiFi connection reset (erase) ... done."));
+  Serial.println(F("WiFi connection reset (erase) ... done."));
+  Serial.println(F("ESP reset ..."));
+  ESP.reset();
+}
+
+void resetWiFi()
+{
   periodicTimer.detach();
   updateMqttTimer.detach();
   updateWSTimer.detach();
@@ -860,6 +879,7 @@ void handleResetWifi()
   delay(1000);
 
   enableAp = false;
+  enableWmApFallback = true;
   apSsid = "empty";
   apPwd = "empty";
   saveWifi();
@@ -868,11 +888,6 @@ void handleResetWifi()
   wm.resetSettings();
   //WiFi.disconnect();
   delay(1000);
-
-  server.send(200, F("text/html"), F("WiFi connection reset (erase) ... done."));
-  Serial.println(F("WiFi connection reset (erase) ... done."));
-  Serial.println(F("ESP reset ..."));
-  ESP.reset();
 }
 
 /**

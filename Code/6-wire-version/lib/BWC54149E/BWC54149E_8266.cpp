@@ -448,10 +448,6 @@ void BWC::loop(){
   ESP.wdtFeed();
   ESP.wdtDisable();
 
-  if (!DateTime.isTimeValid()) {
-      //Serial.println("Failed to get time from server, retry.");
-      DateTime.begin();
-    }
   _timestamp = DateTime.now();
 
   //update DSP payload (memcpy(dest*, source*, len))
@@ -461,16 +457,17 @@ void BWC::loop(){
   }
   _dsp.updateDSP(_dspBrightness);
   _updateTimes();
- //update cio public payload
+  //update cio public payload
   _cio.loop();
   //manage command queue
   _handleCommandQ();
-  _handleButtonQ();//queue overrides real buttons
+  //queue overrides real buttons
+  _handleButtonQ();
   if(_saveEventlogNeeded) saveEventlog();
   if(_saveCmdqNeeded) _saveCommandQueue();
   if(_saveSettingsNeeded) saveSettings();
   if(_cio.stateChanged) {
-    _saveStates();
+    _saveStatesNeeded = true;
     _cio.stateChanged = false;
   }
   if(_saveStatesNeeded) _saveStates();
@@ -571,17 +568,30 @@ void BWC::_handleButtonQ(void) {
     _cio.button = ButtonCodes[index * EnabledButtons[index]];
     //prioritize manual temp setting by not competing with the set target command
     if (pressedButton == ButtonCodes[UP] || pressedButton == ButtonCodes[DOWN]) _sliderPrio = false;
-    //make noise
-    if(_audio)
+    //do things when a new button is pressed
+    if(index && (prevbtn == ButtonCodes[NOBTN]))
     {
-      if((index && EnabledButtons[index]) && (prevbtn == ButtonCodes[NOBTN]))
-      {
-        _dsp.beep2();
-      } 
+      //make noise
+      if(_audio && EnabledButtons[index]) _dsp.beep2();
+      //store pressed buttons sequence
+      for(int i = 0; i < 3; i++) _btnSequence[i] = _btnSequence[i+1];
+      _btnSequence[3] = index;
     }
     prevbtn = pressedButton;
   }
+}
 
+//check for special button sequence
+bool BWC::getBtnSeqMatch()
+{
+  if( _btnSequence[0] == POWER && 
+      _btnSequence[1] == LOCK && 
+      _btnSequence[2] == TIMER && 
+      _btnSequence[3] == POWER)
+  {
+    return true;
+  }
+  return false;
 }
 
 bool BWC::qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval) {

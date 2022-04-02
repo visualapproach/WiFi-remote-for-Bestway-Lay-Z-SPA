@@ -103,6 +103,7 @@ void saveWifi();
 void handleGetWifi();
 void handleSetWifi();
 void handleResetWifi();
+void resetWiFi();
 void loadMqtt();
 void saveMqtt();
 void handleGetMqtt();

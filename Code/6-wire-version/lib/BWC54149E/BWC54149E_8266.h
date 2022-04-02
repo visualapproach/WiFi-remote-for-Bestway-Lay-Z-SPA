@@ -121,6 +121,7 @@ class BWC {
 	void saveDebugInfo(String s);
 	void stop(void);
 	void saveRebootInfo();
+  bool getBtnSeqMatch();
 
   private:
     CIO _cio;
@@ -164,6 +165,7 @@ class BWC {
 	int _tttt_temp1;		//temp after last change
 	int _tttt;				//time to target temperature after subtracting running time since last calculation
 	int _tttt_calculated;	//constant between calculations
+  int _btnSequence[4] = {NOBTN,NOBTN,NOBTN,NOBTN}; //keep track of the four latest button presses
 
 	void _qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration);
 	void _handleCommandQ(void);

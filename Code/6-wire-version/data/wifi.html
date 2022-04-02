@@ -49,6 +49,16 @@
 			</table>
 		</section>
 
+    <section>
+			<h2>WiFi Manager Access Point:</h2>
+			<table>
+				<tr>
+					<td><label for="enableWM">Enable WiFi Manager AP:</label></td>
+					<td><input type="checkbox" id="enableWM"></td>
+				</tr>
+			</table>
+		</section>
+
 		<section>
 			<h2>Static IP:</h2>
 			<table>
@@ -120,6 +130,7 @@
 				This button resets the access point settings.<br />
 				The ESP will restart and start the "WiFi Configuration Manager".
 				Connect to it's access point and configure your WiFi (just like the first configuration).
+        Don't forget to disable WiFi Manager AP again if you want it off.
 			</p>
 			<table>
 				<tr>
@@ -148,6 +159,7 @@ function loadConfig()
 			document.getElementById("enableAp").checked = json.enableAp;
 			document.getElementById("apSsid").value = json.apSsid;
 			document.getElementById("apPwd").value = json.apPwd;
+			document.getElementById("enableWM").checked = json.enableWM;
 
 			document.getElementById("enableStaticIp4").checked = json.enableStaticIp4;
 			document.getElementById("ip4Address1").value = json.ip4Address[0];
@@ -186,6 +198,7 @@ function saveConfig()
 		"enableAp":(document.getElementById("enableAp").checked),
 		"apSsid":(document.getElementById("apSsid").value),
 		"apPwd":(document.getElementById("apPwd").value),
+		"enableWM":(document.getElementById("enableWM").checked),
 		"enableStaticIp4":(document.getElementById("enableStaticIp4").checked),
 		"ip4Address":[
 			parseInt(document.getElementById("ip4Address1").value),

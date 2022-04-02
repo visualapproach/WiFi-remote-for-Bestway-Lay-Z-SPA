@@ -2,7 +2,7 @@
 #include <ESP8266WiFi.h>
 
 #define DEVICE_NAME "layzspa"
-#define FW_VERSION "2022-03-26"
+#define FW_VERSION "2022-04-02"
 #define HA_PREFIX "homeassistant"
 
 /*
@@ -43,16 +43,15 @@ const char *OTAPassword = "esp8266";
  * 
  * NOTICE: If you want your ESP running continuously without creating an access point
  *  when having WiFi issues, set 'enableWmApFallback=false', otherwise we could fallback
- *  to this 'AP mode' on the upstart setup() job.
+ *  to this 'AP mode' on the upstart setup() job. This setting can be changed from web ui.
  * 
  * WARNING: For the case you set 'enableWmApFallback=false' you could lock out
  *  yourself when loosing your home network. You would have to "Reset WiFi" but
  *  you are not able to connect to the Web GUI without a connection.
  * 
- * TODO: create a hardware based key to "Reset WiFi"
  */
 /** get the state of the WiFi configuration manager fallback on wifi failures */
-const bool enableWmApFallback = true;
+bool enableWmApFallback = true;
 /** get the name for the WiFi configuration manager access point */
 const char *wmApName = "Lay-Z-Spa Module";
 /** get the password for the WiFi configuration manager (min. 8, max. 63 chars; NULL to disable) */
