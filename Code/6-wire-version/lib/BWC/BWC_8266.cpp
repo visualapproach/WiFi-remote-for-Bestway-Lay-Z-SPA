@@ -25,21 +25,6 @@ void CIO::begin(int cio_cs_pin, int cio_data_pin, int cio_clk_pin) {
   pinMode(_CLK_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(_CS_PIN), chipselectpin, CHANGE);
   attachInterrupt(digitalPinToInterrupt(_CLK_PIN), clockpin, CHANGE); //Write on falling edge and read on rising edge
-  while(!newData) delay(1); //wait for an update from cio
-  //initialize states
-  states[LOCKEDSTATE] = (_payload[LCK_IDX] & (1 << LCK_BIT)) > 0;
-  states[POWERSTATE] = (_payload[PWR_IDX] & (1 << PWR_BIT)) > 0;
-  states[UNITSTATE] = (_payload[C_IDX] & (1 << C_BIT)) > 0;
-  states[BUBBLESSTATE] = (_payload[AIR_IDX] & (1 << AIR_BIT)) > 0;
-  states[HEATGRNSTATE] = (_payload[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
-  states[HEATREDSTATE] = (_payload[REDHTR_IDX] & (1 << REDHTR_BIT)) > 0;
-  states[HEATSTATE] = states[HEATGRNSTATE] || states[HEATREDSTATE];
-  states[PUMPSTATE] = (_payload[FLT_IDX] & (1 << FLT_BIT)) > 0;
-  states[CHAR1] = (uint8_t)_getChar(_payload[DGT1_IDX]);
-  states[CHAR2] = (uint8_t)_getChar(_payload[DGT2_IDX]);
-  states[CHAR3] = (uint8_t)_getChar(_payload[DGT3_IDX]);
-  if(HASJETS) states[JETSSTATE] = (_payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
-  else states[JETSSTATE] = 0;
 }
 
 void CIO::stop(){
