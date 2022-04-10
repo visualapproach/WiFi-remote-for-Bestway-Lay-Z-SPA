@@ -78,6 +78,7 @@ const int myoutputpin = D8;
 void handleAUX();
 
 void sendWS();
+String getOtherInfo();
 void sendMQTT();
 
 void startWiFi();

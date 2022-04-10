@@ -212,12 +212,30 @@ void sendWS()
   webSocket.broadcastTXT(json);
 
   // send other info
-  String other = 
-    String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(mqttClient.state()) + 
-    String(",\"PressedButton\":\"") + bwc.getPressedButton() + 
-    String("\",\"HASJETS\":") + String(HASJETS) + String("}");
-  
-  webSocket.broadcastTXT(other);
+  json = getOtherInfo();
+  webSocket.broadcastTXT(json);
+}
+
+String getOtherInfo()
+{
+  DynamicJsonDocument doc(1024);
+  String json = "";
+  // Set the values in the document
+  doc["CONTENT"] = "OTHER";
+  doc["MQTT"] = mqttClient.state();
+  doc["PressedButton"] = bwc.getPressedButton();
+  doc["HASJETS"] = String(HASJETS);
+  doc["RSSI"] = WiFi.RSSI();
+  doc["IP"] = WiFi.localIP().toString();
+  doc["SSID"] = WiFi.SSID();
+  doc["FW"] = FW_VERSION;
+
+  // Serialize JSON to string
+  if (serializeJson(doc, json) == 0)
+  {
+    json = "{\"error\": \"Failed to serialize message\"}";
+  }
+  return json;
 }
 
 /**
@@ -255,17 +273,7 @@ void sendMQTT()
   }
 
   //send other info
-  DynamicJsonDocument doc(512);
-  json = "";
-  // Set the values in the document
-  doc["RSSI"] = WiFi.RSSI();
-  doc["IP"] = WiFi.localIP().toString();
-  doc["SSID"] = WiFi.SSID();
-
-  // Serialize JSON to string
-  if (serializeJson(doc, json) == 0) {
-    json = "{\"error\": \"Failed to serialize message\"}";
-  }
+  json = getOtherInfo();
   if (mqttClient.publish((String(mqttBaseTopic) + "/other").c_str(), String(json).c_str(), true))
   {
     //Serial.println(F("MQTT > other published"));
