@@ -53,54 +53,54 @@ const uint8_t CHARS[] = {
 
 enum Buttons: byte
 {
-	NOBTN,
-	LOCK,
-	TIMER,
-	BUBBLES,
-	UNIT,
-	HEAT,
-	PUMP,
-	DOWN,
-	UP,
-	POWER,
-	HYDROJETS
+  NOBTN,
+  LOCK,
+  TIMER,
+  BUBBLES,
+  UNIT,
+  HEAT,
+  PUMP,
+  DOWN,
+  UP,
+  POWER,
+  HYDROJETS
 };
 
 //set to zero to disable display buttons. Order as above.
 //Example: to disable UNIT and TIMER set 1,1,0,1,0,1,1,1,1,1,1
 const uint8_t EnabledButtons[] = {1,1,1,1,1,1,1,1,1,1,1};
 const String ButtonNames[] = {
-	"NOBTN",
-	"LOCK",
-	"TIMER",
-	"BUBBLES",
-	"UNIT",
-	"HEAT",
-	"PUMP",
-	"DOWN",
-	"UP",
-	"POWER",
-	"HYDROJETS"
+  "NOBTN",
+  "LOCK",
+  "TIMER",
+  "BUBBLES",
+  "UNIT",
+  "HEAT",
+  "PUMP",
+  "DOWN",
+  "UP",
+  "POWER",
+  "HYDROJETS"
 };
 
 #ifdef PRE2021
 const uint16_t ButtonCodes[] =
 {
-	0x1B1B, 0x0200, 0x0100, 0x0300, 0x1012, 0x1212, 0x1112, 0x1312, 0x0809, 0x0000
+  0x1B1B, 0x0200, 0x0100, 0x0300, 0x1012, 0x1212, 0x1112, 0x1312, 0x0809, 0x0000
 };
 const bool HASJETS = false;
 
 #elif defined(MIAMI2021)
 const uint16_t ButtonCodes[] =
 {
-	0x1B1B, 0x0100, 0x0300, 0x1212, 0x0809, 0x1012, 0x1112, 0x1312, 0x0200, 0x0000
+  0x1B1B, 0x0100, 0x0300, 0x1212, 0x0809, 0x1012, 0x1112, 0x1312, 0x0200, 0x0000
 };
 const bool HASJETS = false;
 
 #elif defined(MALDIVES2021)
 const uint16_t ButtonCodes[] =
 {
-	0x1B1B, 0x0100, 0x0300, 0x1212, 0x0a09, 0x1012, 0x1312, 0x0809, 0x0200, 0x0000, 0x1112
+  0x1B1B, 0x0100, 0x0300, 0x1212, 0x0a09, 0x1012, 0x1312, 0x0809, 0x0200, 0x0000, 0x1112
 };
 const bool HASJETS = true;
 
@@ -108,7 +108,7 @@ const bool HASJETS = true;
 //Make compiler happy. Will not be used.
 const uint16_t ButtonCodes[] =
 {
-	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
+  0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
 };
 const bool HASJETS = false;
 
@@ -116,40 +116,40 @@ const bool HASJETS = false;
 
 enum States: byte
 {
-	LOCKEDSTATE,
-	POWERSTATE,
-	UNITSTATE,
-	BUBBLESSTATE,
-	HEATGRNSTATE,
-	HEATREDSTATE,
-	HEATSTATE,
-	PUMPSTATE,
-	TEMPERATURE,
-	TARGET,
-	CHAR1,
-	CHAR2,
-	CHAR3,
-	JETSSTATE
+  LOCKEDSTATE,
+  POWERSTATE,
+  UNITSTATE,
+  BUBBLESSTATE,
+  HEATGRNSTATE,
+  HEATREDSTATE,
+  HEATSTATE,
+  PUMPSTATE,
+  TEMPERATURE,
+  TARGET,
+  CHAR1,
+  CHAR2,
+  CHAR3,
+  JETSSTATE
 };
 
 
 
 enum Commands: byte
 {
-	SETTARGET,
-	SETUNIT,
-	SETBUBBLES,
-	SETHEATER,
-	SETPUMP,
-	RESETQ,
-	REBOOTESP,
-	GETTARGET,
-	RESETTIMES,
-	RESETCLTIMER,
-	RESETFTIMER,
-	SETJETS,
-	SETBRIGHTNESS
-	//play song
+  SETTARGET,
+  SETUNIT,
+  SETBUBBLES,
+  SETHEATER,
+  SETPUMP,
+  RESETQ,
+  REBOOTESP,
+  GETTARGET,
+  RESETTIMES,
+  RESETCLTIMER,
+  RESETFTIMER,
+  SETJETS,
+  SETBRIGHTNESS
+  //play song
 };
 
 const int MAXCOMMANDS = 11;

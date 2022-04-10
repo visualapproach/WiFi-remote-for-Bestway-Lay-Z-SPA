@@ -6,21 +6,21 @@ void setup()
   pinMode(solarpin, INPUT_PULLUP);
   pinMode(myoutputpin, OUTPUT);
   digitalWrite(myoutputpin, LOW);
-  Serial.begin(115200);		//As if you connected serial to your pump...
+  Serial.begin(115200);    //As if you connected serial to your pump...
   //Serial.setDebugOutput(true);
   bwc.begin(); //no params = default pins
   bwc.loop();
   //Default pins:
-  // bwc.begin(			
-			// int cio_cs_pin 		= D1, 
-			// int cio_data_pin 	= D7, 
-			// int cio_clk_pin 		= D2, 
-			// int dsp_cs_pin 		= D3, 
-			// int dsp_data_pin 	= D5, 
-			// int dsp_clk_pin 		= D4, 
-			// int dsp_audio_pin 	= D6 
-			// );
-	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
+  // bwc.begin(      
+      // int cio_cs_pin     = D1, 
+      // int cio_data_pin   = D7, 
+      // int cio_clk_pin     = D2, 
+      // int dsp_cs_pin     = D3, 
+      // int dsp_data_pin   = D5, 
+      // int dsp_clk_pin     = D4, 
+      // int dsp_audio_pin   = D6 
+      // );
+  //example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
 
   // check things in a cycle
   periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
@@ -926,10 +926,10 @@ void loadMqtt()
   mqttIpAddress[2] = doc["mqttIpAddress"][2];
   mqttIpAddress[3] = doc["mqttIpAddress"][3];
   mqttPort = doc["mqttPort"];
-	mqttUsername = doc["mqttUsername"].as<String>();
-	mqttPassword = doc["mqttPassword"].as<String>();
-	mqttClientId = doc["mqttClientId"].as<String>();
-	mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
+  mqttUsername = doc["mqttUsername"].as<String>();
+  mqttPassword = doc["mqttPassword"].as<String>();
+  mqttClientId = doc["mqttClientId"].as<String>();
+  mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
   mqttTelemetryInterval = doc["mqttTelemetryInterval"];
 }
 
@@ -1031,7 +1031,7 @@ void handleSetMqtt()
   mqttTelemetryInterval = doc["mqttTelemetryInterval"];
 
   server.send(200, "text/plain", "");
-	
+  
   saveMqtt();
   startMqtt();
 }
@@ -1107,11 +1107,11 @@ void handleFileUpload()
       server.sendHeader("Location", "/success.html");
       server.send(303);
 
-	    if (upload.filename == "cmdq.txt")
+      if (upload.filename == "cmdq.txt")
       {
         bwc.reloadCommandQueue();
       }
-	    if (upload.filename == "settings.txt")
+      if (upload.filename == "settings.txt")
       {
         bwc.reloadSettings();
       }
