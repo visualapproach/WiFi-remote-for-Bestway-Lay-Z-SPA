@@ -97,6 +97,8 @@ function handlemsg(e)
 			"CONNECT_UNAUTHORIZED" // 5 / the client was not authorized to connect
 		]
 		document.getElementById('mqtt').innerHTML = "MQTT: " + mqtt_states[msgobj.MQTT + 4];
+		document.getElementById('fw').innerHTML = "Firmware version: " + msgobj.FW;
+		document.getElementById('rssi').innerHTML = "RSSI: " + msgobj.RSSI;
 
 		// hydro jets available
 		document.getElementById('jets').style.display = (msgobj.HASJETS ? 'inherit' : 'none');

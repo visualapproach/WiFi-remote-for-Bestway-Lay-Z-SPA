@@ -68,8 +68,7 @@ class CIO {
 class DSP {
 
   public:
-    //uint8_t payload[11] = {0xC0, 0xFB, 0xFF, 0xDB, 0xFF, 0xCD, 0xFF, B10001001, 0xFF, 0x01, 0xFF};
-    uint8_t payload[11] = {0xC0, 0x01, 0xFF, 0x01, 0xFF, 0x01, 0xFF, B00000001, 0xFF, 0x01, 0xFF};
+    uint8_t payload[11] = {0xC0, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x0};
 
     void begin(int dsp_cs_pin, int dsp_data_pin, int dsp_clk_pin, int dsp_audio_pin);
     uint16_t getButton(void);
@@ -123,6 +122,8 @@ class BWC {
     String getButtonName();
     void saveDebugInfo(String s);
     void stop(void);
+    void saveRebootInfo();
+    bool getBtnSeqMatch();
 
   private:
     CIO _cio;
@@ -166,6 +167,7 @@ class BWC {
     int _tttt_temp1;		//temp after last change
     int _tttt;				//time to target temperature after subtracting running time since last calculation
     int _tttt_calculated;	//constant between calculations
+    int _btnSequence[4] = {NOBTN,NOBTN,NOBTN,NOBTN}; //keep track of the four latest button presses
 
     void _qButton(uint32_t btn, uint32_t state, uint32_t value, int32_t maxduration);
     void _handleCommandQ(void);
@@ -174,7 +176,6 @@ class BWC {
     void _loadSettings();
     void _loadCommandQueue();
     void _saveCommandQueue();
-    void _saveRebootInfo();
     void _updateTimes();
     void _restoreStates();
     void _saveStates();

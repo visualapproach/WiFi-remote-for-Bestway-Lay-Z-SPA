@@ -7,9 +7,9 @@
 //LSB
 const uint8_t DSP_DIM_BASE = 0x80;
 const uint8_t DSP_DIM_ON = 0x8;
-const uint8_t CMD1 = B01000000;	//normal mode, auto+1 address
+const uint8_t CMD1 = B01000000;  //normal mode, auto+1 address
 const uint8_t CMD2 = B11000000; //start address 00H
-const uint8_t CMD3 = DSP_DIM_BASE | DSP_DIM_ON | 7;	//full brightness
+const uint8_t CMD3 = DSP_DIM_BASE | DSP_DIM_ON | 7;  //full brightness
 const uint16_t CLKPW = 50; //clock pulse period in us. clockfreq = 1/2*CLKPW
 
 
@@ -41,7 +41,7 @@ const byte F_BIT = 1;
 const byte PWR_IDX = 4; //not used. Always considered ON
 const byte PWR_BIT = 3;
 const byte HJT_IDX = 4; //wild guess if it exists on any model
-const byte HJT_BIT = 4;	//wild guess
+const byte HJT_BIT = 4;  //wild guess
 
 //8-segment codes. MSB-> .gfedcba <-LSB
 const uint8_t CHARCODES[] = {
@@ -55,86 +55,86 @@ const uint8_t CHARS[] = {
 
 enum Buttons: byte
 {
-	NOBTN,
-	LOCK,
-	TIMER,
-	BUBBLES,
-	UNIT,
-	HEAT,
-	PUMP,
-	DOWN,
-	UP,
-	POWER,
-	HYDROJETS
+  NOBTN,
+  LOCK,
+  TIMER,
+  BUBBLES,
+  UNIT,
+  HEAT,
+  PUMP,
+  DOWN,
+  UP,
+  POWER,
+  HYDROJETS
 };
 
 //set to zero to disable display buttons. Order as above.
 //Example: to disable UNIT and TIMER set 1,1,0,1,0,1,1,1,1,1,1
 const uint8_t EnabledButtons[] = {1,1,1,1,1,1,1,1,1,1,1};
 const String ButtonNames[] = {
-	"NOBTN",
-	"LOCK",
-	"TIMER",
-	"BUBBLES",
-	"UNIT",
-	"HEAT",
-	"PUMP",
-	"DOWN",
-	"UP",
-	"POWER",		//not existing
-	"HYDROJETS"		//not existing
+  "NOBTN",
+  "LOCK",
+  "TIMER",
+  "BUBBLES",
+  "UNIT",
+  "HEAT",
+  "PUMP",
+  "DOWN",
+  "UP",
+  "POWER",    //not existing
+  "HYDROJETS"    //not existing
 };
 
 #ifdef MODEL54149E
 const uint16_t ButtonCodes[] =
 {
-	0, 1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0, 1<<8, 1<<9
+  0, 1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0, 1<<8, 1<<9
 };
 const bool HASJETS = false;
 #else //keep compiler happy with this dummy
 const uint16_t ButtonCodes[] =
 {
-	0, 1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0, 1<<8, 1<<9
+  0, 1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0, 1<<8, 1<<9
 };
 const bool HASJETS = false;
 #endif
 
 enum States: byte
 {
-	LOCKEDSTATE,
-	POWERSTATE,
-	UNITSTATE,
-	BUBBLESSTATE,
-	HEATGRNSTATE,
-	HEATREDSTATE,
-	HEATSTATE,
-	PUMPSTATE,
-	TEMPERATURE,
-	TARGET,
-	CHAR1,
-	CHAR2,
-	CHAR3,
-	JETSSTATE
+  LOCKEDSTATE,
+  POWERSTATE,
+  UNITSTATE,
+  BUBBLESSTATE,
+  HEATGRNSTATE,
+  HEATREDSTATE,
+  HEATSTATE,
+  PUMPSTATE,
+  TEMPERATURE,
+  TARGET,
+  CHAR1,
+  CHAR2,
+  CHAR3,
+  JETSSTATE
 };
 
 
 
 enum Commands: byte
 {
-	SETTARGET,
-	SETUNIT,
-	SETBUBBLES,
-	SETHEATER,
-	SETPUMP,
-	RESETQ,
-	REBOOTESP,
-	GETTARGET,
-	RESETTIMES,
-	RESETCLTIMER,
-	RESETFTIMER,
-	SETJETS,
-	SETBRIGHTNESS
-	//play song
+  SETTARGET,
+  SETUNIT,
+  SETBUBBLES,
+  SETHEATER,
+  SETPUMP,
+  RESETQ,
+  REBOOTESP,
+  GETTARGET,
+  RESETTIMES,
+  RESETCLTIMER,
+  RESETFTIMER,
+  SETJETS,
+  SETBRIGHTNESS
+  //play song
 };
 
 const int MAXCOMMANDS = 11;

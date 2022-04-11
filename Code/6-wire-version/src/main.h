@@ -24,6 +24,8 @@
 BWC bwc;
 
 /**  */
+Ticker bootlogTimer;
+/**  */
 Ticker periodicTimer;
 /**  */
 bool periodicTimerFlag = false;
@@ -76,6 +78,7 @@ const int myoutputpin = D8;
 void handleAUX();
 
 void sendWS();
+String getOtherInfo();
 void sendMQTT();
 
 void startWiFi();
@@ -101,6 +104,7 @@ void saveWifi();
 void handleGetWifi();
 void handleSetWifi();
 void handleResetWifi();
+void resetWiFi();
 void loadMqtt();
 void saveMqtt();
 void handleGetMqtt();
@@ -115,3 +119,5 @@ void mqttCallback(char* topic, byte* payload, unsigned int length);
 void mqttConnect();
 void setupHA();
 void setupClimate();
+
+#warning "Don't forget to upload file system also"

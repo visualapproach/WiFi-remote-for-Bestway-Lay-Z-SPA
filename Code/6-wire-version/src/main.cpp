@@ -6,27 +6,30 @@ void setup()
   pinMode(solarpin, INPUT_PULLUP);
   pinMode(myoutputpin, OUTPUT);
   digitalWrite(myoutputpin, LOW);
-  Serial.begin(115200);		//As if you connected serial to your pump...
+  Serial.begin(115200);    //As if you connected serial to your pump...
   //Serial.setDebugOutput(true);
   bwc.begin(); //no params = default pins
-  bwc.loop();
+  //bwc.loop();
   //Default pins:
-  // bwc.begin(			
-			// int cio_cs_pin 		= D1, 
-			// int cio_data_pin 	= D7, 
-			// int cio_clk_pin 		= D2, 
-			// int dsp_cs_pin 		= D3, 
-			// int dsp_data_pin 	= D5, 
-			// int dsp_clk_pin 		= D4, 
-			// int dsp_audio_pin 	= D6 
-			// );
-	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
+  // bwc.begin(      
+      // int cio_cs_pin     = D1, 
+      // int cio_data_pin   = D7, 
+      // int cio_clk_pin     = D2, 
+      // int dsp_cs_pin     = D3, 
+      // int dsp_data_pin   = D5, 
+      // int dsp_clk_pin     = D4, 
+      // int dsp_audio_pin   = D6 
+      // );
+  //example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
 
   // check things in a cycle
   periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
   
   // update webpage every 2 seconds. (will also be updated on state changes)
   updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
+
+  // when NTP time is valid we save bootlog.txt and this timer stops
+  bootlogTimer.attach(5, []{ if(DateTime.isTimeValid()) {bwc.saveRebootInfo(); bootlogTimer.detach();} });
 
   // needs to be loaded here for reading the wifi.json
   LittleFS.begin();
@@ -38,8 +41,9 @@ void setup()
   startHttpServer();
   startWebSocket();
   startMqtt();
-
   bwc.print(WiFi.localIP().toString());
+  bwc.print("   ");
+  bwc.print(FW_VERSION);
   Serial.println(F("End of setup()"));
 }
 
@@ -154,6 +158,12 @@ void loop()
     }
   }
 
+  //Only do this if locked out! (by pressing POWER - LOCK - TIMER - POWER)
+  if(bwc.getBtnSeqMatch())
+  {
+    resetWiFi();
+    ESP.reset();
+  } 
   //handleAUX();
 
   // You can add own code here, but don't stall!
@@ -204,12 +214,30 @@ void sendWS()
   webSocket.broadcastTXT(json);
 
   // send other info
-  String other = 
-    String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(mqttClient.state()) + 
-    String(",\"PressedButton\":\"") + bwc.getPressedButton() + 
-    String("\",\"HASJETS\":") + String(HASJETS) + String("}");
-  
-  webSocket.broadcastTXT(other);
+  json = getOtherInfo();
+  webSocket.broadcastTXT(json);
+}
+
+String getOtherInfo()
+{
+  DynamicJsonDocument doc(1024);
+  String json = "";
+  // Set the values in the document
+  doc["CONTENT"] = "OTHER";
+  doc["MQTT"] = mqttClient.state();
+  doc["PressedButton"] = bwc.getPressedButton();
+  doc["HASJETS"] = String(HASJETS);
+  doc["RSSI"] = WiFi.RSSI();
+  doc["IP"] = WiFi.localIP().toString();
+  doc["SSID"] = WiFi.SSID();
+  doc["FW"] = FW_VERSION;
+
+  // Serialize JSON to string
+  if (serializeJson(doc, json) == 0)
+  {
+    json = "{\"error\": \"Failed to serialize message\"}";
+  }
+  return json;
 }
 
 /**
@@ -247,17 +275,7 @@ void sendMQTT()
   }
 
   //send other info
-  DynamicJsonDocument doc(512);
-  json = "";
-  // Set the values in the document
-  doc["RSSI"] = WiFi.RSSI();
-  doc["IP"] = WiFi.localIP().toString();
-  doc["SSID"] = WiFi.SSID();
-
-  // Serialize JSON to string
-  if (serializeJson(doc, json) == 0) {
-    json = "{\"error\": \"Failed to serialize message\"}";
-  }
+  json = getOtherInfo();
   if (mqttClient.publish((String(mqttBaseTopic) + "/other").c_str(), String(json).c_str(), true))
   {
     //Serial.println(F("MQTT > other published"));
@@ -667,6 +685,7 @@ void loadWifi()
   }
 
   enableAp = doc["enableAp"];
+  if(doc.containsKey("enableWM")) enableWmApFallback = doc["enableWM"];
   apSsid = doc["apSsid"].as<String>();
   apPwd = doc["apPwd"].as<String>();
 
@@ -708,6 +727,7 @@ void saveWifi()
   DynamicJsonDocument doc(1024);
 
   doc["enableAp"] = enableAp;
+  doc["enableWM"] = enableWmApFallback;
   doc["apSsid"] = apSsid;
   doc["apPwd"] = apPwd;
 
@@ -751,6 +771,7 @@ void handleGetWifi()
   DynamicJsonDocument doc(1024);
 
   doc["enableAp"] = enableAp;
+  doc["enableWM"] = enableWmApFallback;
   doc["apSsid"] = apSsid;
   doc["apPwd"] = "<enter password>";
   if (!hidePasswords)
@@ -807,6 +828,7 @@ void handleSetWifi()
   }
 
   enableAp = doc["enableAp"];
+  if(doc.containsKey("enableWM")) enableWmApFallback = doc["enableWM"];
   apSsid = doc["apSsid"].as<String>();
   apPwd = doc["apPwd"].as<String>();
 
@@ -846,7 +868,16 @@ void handleResetWifi()
 {
   server.send(200, F("text/html"), F("WiFi connection reset (erase) ..."));
   Serial.println(F("WiFi connection reset (erase) ..."));
+  resetWiFi();
 
+  server.send(200, F("text/html"), F("WiFi connection reset (erase) ... done."));
+  Serial.println(F("WiFi connection reset (erase) ... done."));
+  Serial.println(F("ESP reset ..."));
+  ESP.reset();
+}
+
+void resetWiFi()
+{
   periodicTimer.detach();
   updateMqttTimer.detach();
   updateWSTimer.detach();
@@ -858,6 +889,7 @@ void handleResetWifi()
   delay(1000);
 
   enableAp = false;
+  enableWmApFallback = true;
   apSsid = "empty";
   apPwd = "empty";
   saveWifi();
@@ -866,11 +898,6 @@ void handleResetWifi()
   wm.resetSettings();
   //WiFi.disconnect();
   delay(1000);
-
-  server.send(200, F("text/html"), F("WiFi connection reset (erase) ... done."));
-  Serial.println(F("WiFi connection reset (erase) ... done."));
-  Serial.println(F("ESP reset ..."));
-  ESP.reset();
 }
 
 /**
@@ -901,10 +928,10 @@ void loadMqtt()
   mqttIpAddress[2] = doc["mqttIpAddress"][2];
   mqttIpAddress[3] = doc["mqttIpAddress"][3];
   mqttPort = doc["mqttPort"];
-	mqttUsername = doc["mqttUsername"].as<String>();
-	mqttPassword = doc["mqttPassword"].as<String>();
-	mqttClientId = doc["mqttClientId"].as<String>();
-	mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
+  mqttUsername = doc["mqttUsername"].as<String>();
+  mqttPassword = doc["mqttPassword"].as<String>();
+  mqttClientId = doc["mqttClientId"].as<String>();
+  mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
   mqttTelemetryInterval = doc["mqttTelemetryInterval"];
 }
 
@@ -1006,7 +1033,7 @@ void handleSetMqtt()
   mqttTelemetryInterval = doc["mqttTelemetryInterval"];
 
   server.send(200, "text/plain", "");
-	
+  
   saveMqtt();
   startMqtt();
 }
@@ -1082,11 +1109,11 @@ void handleFileUpload()
       server.sendHeader("Location", "/success.html");
       server.send(303);
 
-	    if (upload.filename == "cmdq.txt")
+      if (upload.filename == "cmdq.txt")
       {
         bwc.reloadCommandQueue();
       }
-	    if (upload.filename == "settings.txt")
+      if (upload.filename == "settings.txt")
       {
         bwc.reloadSettings();
       }
@@ -1548,6 +1575,110 @@ void setupHA()
   doc.clear();
   doc.garbageCollect();
 
+  // spa uptime sensor
+  doc["device"] = devicedoc["device"];
+  payload = "";
+  topic = String(HA_PREFIX) + F("/sensor/layzspa_uptime/config");
+  Serial.println(topic);
+  doc["name"] = F("Layzspa uptime");
+  doc["unique_id"] = "sensor.layzspa_uptime"+mychipid;
+  doc["state_topic"] = mqttBaseTopic+F("/times");
+  doc["unit_of_measurement"] = F("days");
+  doc["value_template"] = F("{{ ( (value_json.UPTIME|int)/3600/24) | round(2) }}");
+  doc["expire_after"] = 700;
+  doc["icon"] = F("mdi:clock-outline");
+  doc["availability_topic"] = mqttBaseTopic+F("/Status");
+  doc["payload_available"] = F("Alive");
+  doc["payload_not_available"] = F("Dead");
+  if (serializeJson(doc, payload) == 0)
+  {
+    Serial.println(F("Failed to serialize HA message!"));
+    return;
+  }
+  mqttClient.publish(topic.c_str(), payload.c_str(), true);
+  mqttClient.loop();
+  Serial.println(payload);
+  doc.clear();
+  doc.garbageCollect();
+
+  // spa pump time sensor
+  doc["device"] = devicedoc["device"];
+  payload = "";
+  topic = String(HA_PREFIX) + F("/sensor/layzspa_pumptime/config");
+  Serial.println(topic);
+  doc["name"] = F("Layzspa pump time");
+  doc["unique_id"] = "sensor.layzspa_pumptime"+mychipid;
+  doc["state_topic"] = mqttBaseTopic+F("/times");
+  doc["unit_of_measurement"] = F("hours");
+  doc["value_template"] = F("{{ ( (value_json.PUMPTIME|int)/3600) | round(2) }}");
+  doc["expire_after"] = 700;
+  doc["icon"] = F("mdi:clock-outline");
+  doc["availability_topic"] = mqttBaseTopic+F("/Status");
+  doc["payload_available"] = F("Alive");
+  doc["payload_not_available"] = F("Dead");
+  if (serializeJson(doc, payload) == 0)
+  {
+    Serial.println(F("Failed to serialize HA message!"));
+    return;
+  }
+  mqttClient.publish(topic.c_str(), payload.c_str(), true);
+  mqttClient.loop();
+  Serial.println(payload);
+  doc.clear();
+  doc.garbageCollect();
+
+  // spa heater time sensor
+  doc["device"] = devicedoc["device"];
+  payload = "";
+  topic = String(HA_PREFIX) + F("/sensor/layzspa_heatertime/config");
+  Serial.println(topic);
+  doc["name"] = F("Layzspa heater time");
+  doc["unique_id"] = "sensor.layzspa_heatertime"+mychipid;
+  doc["state_topic"] = mqttBaseTopic+F("/times");
+  doc["unit_of_measurement"] = F("hours");
+  doc["value_template"] = F("{{ ( (value_json.HEATINGTIME|int)/3600) | round(2) }}");
+  doc["expire_after"] = 700;
+  doc["icon"] = F("mdi:clock-outline");
+  doc["availability_topic"] = mqttBaseTopic+F("/Status");
+  doc["payload_available"] = F("Alive");
+  doc["payload_not_available"] = F("Dead");
+  if (serializeJson(doc, payload) == 0)
+  {
+    Serial.println(F("Failed to serialize HA message!"));
+    return;
+  }
+  mqttClient.publish(topic.c_str(), payload.c_str(), true);
+  mqttClient.loop();
+  Serial.println(payload);
+  doc.clear();
+  doc.garbageCollect();
+
+  // spa air time sensor
+  doc["device"] = devicedoc["device"];
+  payload = "";
+  topic = String(HA_PREFIX) + F("/sensor/layzspa_airtime/config");
+  Serial.println(topic);
+  doc["name"] = F("Layzspa air time");
+  doc["unique_id"] = "sensor.layzspa_airtime"+mychipid;
+  doc["state_topic"] = mqttBaseTopic+F("/times");
+  doc["unit_of_measurement"] = F("hours");
+  doc["value_template"] = F("{{ ( (value_json.AIRTIME|int)/3600) | round(2) }}");
+  doc["expire_after"] = 700;
+  doc["icon"] = F("mdi:clock-outline");
+  doc["availability_topic"] = mqttBaseTopic+F("/Status");
+  doc["payload_available"] = F("Alive");
+  doc["payload_not_available"] = F("Dead");
+  if (serializeJson(doc, payload) == 0)
+  {
+    Serial.println(F("Failed to serialize HA message!"));
+    return;
+  }
+  mqttClient.publish(topic.c_str(), payload.c_str(), true);
+  mqttClient.loop();
+  Serial.println(payload);
+  doc.clear();
+  doc.garbageCollect();
+
   // spa lock binary_sensor
   doc["device"] = devicedoc["device"];
   payload = "";
@@ -1892,6 +2023,7 @@ void setupClimate()
   doc["availability_topic"] = mqttBaseTopic+F("/Status");
   doc["payload_available"] = F("Alive");
   doc["payload_not_available"] = F("Dead");
+  doc["device_class"] = F("temperature");
   if (serializeJson(doc, payload) == 0)
   {
     Serial.println(F("Failed to serialize HA message!"));
@@ -1917,6 +2049,7 @@ void setupClimate()
   doc["availability_topic"] = mqttBaseTopic+F("/Status");
   doc["payload_available"] = F("Alive");
   doc["payload_not_available"] = F("Dead");
+  doc["device_class"] = F("temperature");
   if (serializeJson(doc, payload) == 0)
   {
     Serial.println(F("Failed to serialize HA message!"));
@@ -1936,7 +2069,7 @@ void setupClimate()
   topic = String(HA_PREFIX) + F("/climate/layzspa_climate/config");
   Serial.println(topic);
   doc["name"] = F("Layzspa temperature control");
-  doc["unique_id"] = "button.layzspa_climate"+mychipid;
+  doc["unique_id"] = "climate.layzspa_climate"+mychipid;
   doc["max_temp"] = maxtemp;
   doc["min_temp"] = mintemp;
   doc["precision"] = 1.0;

@@ -25,21 +25,6 @@ void CIO::begin(int cio_cs_pin, int cio_data_pin, int cio_clk_pin) {
   pinMode(_CLK_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(_CS_PIN), chipselectpin, CHANGE);
   attachInterrupt(digitalPinToInterrupt(_CLK_PIN), clockpin, CHANGE); //Write on falling edge and read on rising edge
-  while(!newData) delay(1); //wait for an update from cio
-  //initialize states
-  states[LOCKEDSTATE] = (_payload[LCK_IDX] & (1 << LCK_BIT)) > 0;
-  states[POWERSTATE] = (_payload[PWR_IDX] & (1 << PWR_BIT)) > 0;
-  states[UNITSTATE] = (_payload[C_IDX] & (1 << C_BIT)) > 0;
-  states[BUBBLESSTATE] = (_payload[AIR_IDX] & (1 << AIR_BIT)) > 0;
-  states[HEATGRNSTATE] = (_payload[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
-  states[HEATREDSTATE] = (_payload[REDHTR_IDX] & (1 << REDHTR_BIT)) > 0;
-  states[HEATSTATE] = states[HEATGRNSTATE] || states[HEATREDSTATE];
-  states[PUMPSTATE] = (_payload[FLT_IDX] & (1 << FLT_BIT)) > 0;
-  states[CHAR1] = (uint8_t)_getChar(_payload[DGT1_IDX]);
-  states[CHAR2] = (uint8_t)_getChar(_payload[DGT2_IDX]);
-  states[CHAR3] = (uint8_t)_getChar(_payload[DGT3_IDX]);
-  if(HASJETS) states[JETSSTATE] = (_payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
-  else states[JETSSTATE] = 0;
 }
 
 void CIO::stop(){
@@ -457,12 +442,9 @@ void BWC::begin2(){
   _clinterval = 14;
   _audio = true;
   _restoreStatesOnStart = false;
-  _dsp.textOut(F("   hello   "));
-  //_startNTP();
   LittleFS.begin();
   _loadSettings();
   _loadCommandQueue();
-  _saveRebootInfo();
   _restoreStates();
   if(_audio) _dsp.playIntro();
   //_dsp.LEDshow();
@@ -493,16 +475,17 @@ void BWC::loop(){
   }
   _dsp.updateDSP(_dspBrightness);
   _updateTimes();
- //update cio public payload
+  //update cio public payload
   _cio.loop();
   //manage command queue
   _handleCommandQ();
-  _handleButtonQ();//queue overrides real buttons
+  //queue overrides real buttons
+  _handleButtonQ();
   if(_saveEventlogNeeded) saveEventlog();
   if(_saveCmdqNeeded) _saveCommandQueue();
   if(_saveSettingsNeeded) saveSettings();
   if(_cio.stateChanged) {
-    _saveStates();
+    _saveStatesNeeded = true;
     _cio.stateChanged = false;
   }
   if(_saveStatesNeeded) _saveStates();
@@ -609,17 +592,30 @@ void BWC::_handleButtonQ(void) {
     _cio.button = ButtonCodes[index * EnabledButtons[index]];
     //prioritize manual temp setting by not competing with the set target command
     if (pressedButton == ButtonCodes[UP] || pressedButton == ButtonCodes[DOWN]) _sliderPrio = false;
-    //make noise
-    if(_audio)
+    //do things when a new button is pressed
+    if(index && (prevbtn == ButtonCodes[NOBTN]))
     {
-      if((index && EnabledButtons[index]) && (prevbtn == ButtonCodes[NOBTN]))
-      {
-        _dsp.beep2();
-      } 
+      //make noise
+      if(_audio && EnabledButtons[index]) _dsp.beep2();
+      //store pressed buttons sequence
+      for(int i = 0; i < 3; i++) _btnSequence[i] = _btnSequence[i+1];
+      _btnSequence[3] = index;
     }
     prevbtn = pressedButton;
   }
+}
 
+//check for special button sequence
+bool BWC::getBtnSeqMatch()
+{
+  if( _btnSequence[0] == POWER && 
+      _btnSequence[1] == LOCK && 
+      _btnSequence[2] == TIMER && 
+      _btnSequence[3] == POWER)
+  {
+    return true;
+  }
+  return false;
 }
 
 bool BWC::qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval) {
@@ -1130,7 +1126,7 @@ void BWC::_restoreStates() {
     Serial.println(F("Failed to read states.txt"));
     return;
   }
-  DynamicJsonDocument doc(1024);
+  DynamicJsonDocument doc(512);
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, file);
   if (error) {
@@ -1143,6 +1139,7 @@ void BWC::_restoreStates() {
   uint8_t flt = doc["FLT"];
   uint8_t htr = doc["HTR"];
   qCommand(SETUNIT, unt, DateTime.now()+10, 0);
+  _cio.states[UNITSTATE] = unt;
   qCommand(SETPUMP, flt, DateTime.now()+12, 0);
   qCommand(SETHEATER, htr, DateTime.now()+14, 0);
   Serial.println("restoring states");
@@ -1181,7 +1178,7 @@ void BWC::saveEventlog(){
 
 }
 
-void BWC::_saveRebootInfo(){
+void BWC::saveRebootInfo(){
   File file = LittleFS.open("bootlog.txt", "a");
   if (!file) {
     Serial.println(F("Failed to save bootlog.txt"));
