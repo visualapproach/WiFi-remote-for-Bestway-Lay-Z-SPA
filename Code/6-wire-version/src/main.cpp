@@ -1573,6 +1573,110 @@ void setupHA()
   doc.clear();
   doc.garbageCollect();
 
+  // spa uptime sensor
+  doc["device"] = devicedoc["device"];
+  payload = "";
+  topic = String(HA_PREFIX) + F("/sensor/layzspa_uptime/config");
+  Serial.println(topic);
+  doc["name"] = F("Layzspa uptime");
+  doc["unique_id"] = "sensor.layzspa_uptime"+mychipid;
+  doc["state_topic"] = mqttBaseTopic+F("/times");
+  doc["unit_of_measurement"] = F("days");
+  doc["value_template"] = F("{{ ( (value_json.UPTIME|int)/3600/24) | round(2) }}");
+  doc["expire_after"] = 700;
+  doc["icon"] = F("mdi:clock-outline");
+  doc["availability_topic"] = mqttBaseTopic+F("/Status");
+  doc["payload_available"] = F("Alive");
+  doc["payload_not_available"] = F("Dead");
+  if (serializeJson(doc, payload) == 0)
+  {
+    Serial.println(F("Failed to serialize HA message!"));
+    return;
+  }
+  mqttClient.publish(topic.c_str(), payload.c_str(), true);
+  mqttClient.loop();
+  Serial.println(payload);
+  doc.clear();
+  doc.garbageCollect();
+
+  // spa pump time sensor
+  doc["device"] = devicedoc["device"];
+  payload = "";
+  topic = String(HA_PREFIX) + F("/sensor/layzspa_pumptime/config");
+  Serial.println(topic);
+  doc["name"] = F("Layzspa pump time");
+  doc["unique_id"] = "sensor.layzspa_pumptime"+mychipid;
+  doc["state_topic"] = mqttBaseTopic+F("/times");
+  doc["unit_of_measurement"] = F("hours");
+  doc["value_template"] = F("{{ ( (value_json.PUMPTIME|int)/3600) | round(2) }}");
+  doc["expire_after"] = 700;
+  doc["icon"] = F("mdi:clock-outline");
+  doc["availability_topic"] = mqttBaseTopic+F("/Status");
+  doc["payload_available"] = F("Alive");
+  doc["payload_not_available"] = F("Dead");
+  if (serializeJson(doc, payload) == 0)
+  {
+    Serial.println(F("Failed to serialize HA message!"));
+    return;
+  }
+  mqttClient.publish(topic.c_str(), payload.c_str(), true);
+  mqttClient.loop();
+  Serial.println(payload);
+  doc.clear();
+  doc.garbageCollect();
+
+  // spa heater time sensor
+  doc["device"] = devicedoc["device"];
+  payload = "";
+  topic = String(HA_PREFIX) + F("/sensor/layzspa_heatertime/config");
+  Serial.println(topic);
+  doc["name"] = F("Layzspa heater time");
+  doc["unique_id"] = "sensor.layzspa_heatertime"+mychipid;
+  doc["state_topic"] = mqttBaseTopic+F("/times");
+  doc["unit_of_measurement"] = F("hours");
+  doc["value_template"] = F("{{ ( (value_json.HEATINGTIME|int)/3600) | round(2) }}");
+  doc["expire_after"] = 700;
+  doc["icon"] = F("mdi:clock-outline");
+  doc["availability_topic"] = mqttBaseTopic+F("/Status");
+  doc["payload_available"] = F("Alive");
+  doc["payload_not_available"] = F("Dead");
+  if (serializeJson(doc, payload) == 0)
+  {
+    Serial.println(F("Failed to serialize HA message!"));
+    return;
+  }
+  mqttClient.publish(topic.c_str(), payload.c_str(), true);
+  mqttClient.loop();
+  Serial.println(payload);
+  doc.clear();
+  doc.garbageCollect();
+
+  // spa air time sensor
+  doc["device"] = devicedoc["device"];
+  payload = "";
+  topic = String(HA_PREFIX) + F("/sensor/layzspa_airtime/config");
+  Serial.println(topic);
+  doc["name"] = F("Layzspa air time");
+  doc["unique_id"] = "sensor.layzspa_airtime"+mychipid;
+  doc["state_topic"] = mqttBaseTopic+F("/times");
+  doc["unit_of_measurement"] = F("hours");
+  doc["value_template"] = F("{{ ( (value_json.AIRTIME|int)/3600) | round(2) }}");
+  doc["expire_after"] = 700;
+  doc["icon"] = F("mdi:clock-outline");
+  doc["availability_topic"] = mqttBaseTopic+F("/Status");
+  doc["payload_available"] = F("Alive");
+  doc["payload_not_available"] = F("Dead");
+  if (serializeJson(doc, payload) == 0)
+  {
+    Serial.println(F("Failed to serialize HA message!"));
+    return;
+  }
+  mqttClient.publish(topic.c_str(), payload.c_str(), true);
+  mqttClient.loop();
+  Serial.println(payload);
+  doc.clear();
+  doc.garbageCollect();
+
   // spa lock binary_sensor
   doc["device"] = devicedoc["device"];
   payload = "";
@@ -1917,6 +2021,7 @@ void setupClimate()
   doc["availability_topic"] = mqttBaseTopic+F("/Status");
   doc["payload_available"] = F("Alive");
   doc["payload_not_available"] = F("Dead");
+  doc["device_class"] = F("temperature");
   if (serializeJson(doc, payload) == 0)
   {
     Serial.println(F("Failed to serialize HA message!"));
@@ -1942,6 +2047,7 @@ void setupClimate()
   doc["availability_topic"] = mqttBaseTopic+F("/Status");
   doc["payload_available"] = F("Alive");
   doc["payload_not_available"] = F("Dead");
+  doc["device_class"] = F("temperature");
   if (serializeJson(doc, payload) == 0)
   {
     Serial.println(F("Failed to serialize HA message!"));
