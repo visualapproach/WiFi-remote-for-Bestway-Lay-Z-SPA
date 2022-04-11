@@ -226,7 +226,7 @@ String getOtherInfo()
   doc["CONTENT"] = "OTHER";
   doc["MQTT"] = mqttClient.state();
   doc["PressedButton"] = bwc.getPressedButton();
-  doc["HASJETS"] = String(HASJETS);
+  doc["HASJETS"] = HASJETS;
   doc["RSSI"] = WiFi.RSSI();
   doc["IP"] = WiFi.localIP().toString();
   doc["SSID"] = WiFi.SSID();
