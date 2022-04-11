@@ -442,7 +442,6 @@ void BWC::begin2(){
   _clinterval = 14;
   _audio = true;
   _restoreStatesOnStart = false;
-  _dsp.textOut(F("   hello   "));
   //_startNTP();
   LittleFS.begin();
   _loadSettings();

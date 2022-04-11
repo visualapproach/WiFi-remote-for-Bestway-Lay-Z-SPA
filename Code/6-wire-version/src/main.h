@@ -119,3 +119,5 @@ void mqttCallback(char* topic, byte* payload, unsigned int length);
 void mqttConnect();
 void setupHA();
 void setupClimate();
+
+#warning "Don't forget to upload file system also"

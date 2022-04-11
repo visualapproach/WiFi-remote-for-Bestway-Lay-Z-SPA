@@ -42,6 +42,8 @@ void setup()
   startWebSocket();
   startMqtt();
   bwc.print(WiFi.localIP().toString());
+  bwc.print("   ");
+  bwc.print(FW_VERSION);
   Serial.println(F("End of setup()"));
 }
 
