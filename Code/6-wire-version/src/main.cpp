@@ -9,7 +9,7 @@ void setup()
   Serial.begin(115200);    //As if you connected serial to your pump...
   //Serial.setDebugOutput(true);
   bwc.begin(); //no params = default pins
-  bwc.loop();
+  //bwc.loop();
   //Default pins:
   // bwc.begin(      
       // int cio_cs_pin     = D1, 

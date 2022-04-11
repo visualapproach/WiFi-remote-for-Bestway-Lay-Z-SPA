@@ -1085,7 +1085,7 @@ void BWC::_restoreStates() {
     Serial.println(F("Failed to read states.txt"));
     return;
   }
-  DynamicJsonDocument doc(1024);
+  DynamicJsonDocument doc(512);
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, file);
   if (error) {
@@ -1098,6 +1098,7 @@ void BWC::_restoreStates() {
   uint8_t flt = doc["FLT"];
   uint8_t htr = doc["HTR"];
   qCommand(SETUNIT, unt, DateTime.now()+10, 0);
+  _cio.states[UNITSTATE] = unt;
   qCommand(SETPUMP, flt, DateTime.now()+12, 0);
   qCommand(SETHEATER, htr, DateTime.now()+14, 0);
 
