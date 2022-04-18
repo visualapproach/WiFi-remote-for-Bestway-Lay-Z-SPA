@@ -102,7 +102,11 @@ void CIO::loop(void) {
       states[TARGET] = tmpTemp;
     }
     //wait 4 seconds after UP/DOWN is released to be sure that actual temp is shown
-    if( (capturePhase == 0) && (millis()-buttonReleaseTime > 10000) && payload[DGT3_IDX]!=0xED && payload[DGT3_IDX]!=0) states[TEMPERATURE] = tmpTemp;    
+    if( (capturePhase == 0) && (millis()-buttonReleaseTime > 10000) && payload[DGT3_IDX]!=0xED && payload[DGT3_IDX]!=0)
+    {
+      if(states[TEMPERATURE] != tmpTemp) dataAvailable = true;
+      states[TEMPERATURE] = tmpTemp;
+    }
     prevButton = button;
 
     if(states[UNITSTATE] != _prevUNT || states[HEATSTATE] != _prevHTR || states[PUMPSTATE] != _prevFLT) {
@@ -490,7 +494,7 @@ void BWC::loop(){
   }
   if(_saveStatesNeeded) _saveStates();
   //if set target command missed we need to correct that
-  if( (_cio.states[TARGET] != _latestTarget) && (_qButtonLen == 0) && (_latestTarget != 0) && (_sliderPrio) ) qCommand(SETTARGET, _latestTarget, 0, 0);
+  if( (_cio.states[TARGET] != _sliderTarget) && (_qButtonLen == 0) && (_sliderTarget != 0) && (_sliderPrio) ) qCommand(SETTARGET, _sliderTarget, 0, 0);
   //if target temp is unknown, find out.
   if( (_cio.states[TARGET] == 0) && (_qButtonLen == 0) ) qCommand(GETTARGET, (uint32_t)' ', 0, 0);
 
@@ -581,7 +585,7 @@ void BWC::_handleButtonQ(void) {
       //set buttoncode
       _cio.button = ButtonCodes[_buttonQ[0][0]];
     }
-  } 
+  }
   else 
   {
     static uint16_t prevbtn = ButtonCodes[NOBTN];
@@ -667,34 +671,22 @@ void BWC::_handleCommandQ(void) {
       switch (_commandQ[0][0]) {
         case SETTARGET:
           {
-            _latestTarget = _commandQ[0][1];
-            //Fiddling with the hardware buttons is ignored while this command executes.
+            _sliderTarget = _commandQ[0][1];
             _sliderPrio = true;
-            //Press up/down appropriate number of times. We need to time this well.
             int diff = (int)_commandQ[0][1] - (int)_cio.states[TARGET];
-            //First press will just show current target temp
-            int pushtime = 500;         //how fast can we do this??*******************
+            int pushtime = 500;
             int releasetime = 300;
-            _qButton(UP, TARGET, _commandQ[0][1], pushtime);
-            _qButton(NOBTN, TARGET, _commandQ[0][1], releasetime);
             uint32_t updown;
             diff<0 ? updown = DOWN : updown = UP;
-            for(int i = 0; i < abs(diff); i++)
-            {
-              _qButton(updown, CHAR1, 0xFF, pushtime);
-              _qButton(NOBTN, CHAR1, 0xFF, releasetime);
-            }
-            //Old method overshoots target too often:
-            //choose which direction to go (up or down)
-            // if(_cio.states[TARGET] > _commandQ[0][1]) _qButton(DOWN, TARGET, _commandQ[0][1], 10000);
-            // if(_cio.states[TARGET] < _commandQ[0][1]) _qButton(UP, TARGET, _commandQ[0][1], 10000);
+            _qButton(updown, CHAR1, 0xFF, pushtime);
+            _qButton(NOBTN, CHAR1, 0xFF, releasetime);
             break;
           }
         case SETUNIT:
           _qButton(UNIT, UNITSTATE, _commandQ[0][1], 5000);
           _qButton(NOBTN, CHAR3, 0xFF, 700);
           _qButton(UP, CHAR3, _commandQ[0][1], 700);
-          _latestTarget = 0; //force update
+          _sliderTarget = 0; //force update
           break;
         case SETBUBBLES:
           _qButton(BUBBLES, BUBBLESSTATE, _commandQ[0][1], 5000);

@@ -158,7 +158,7 @@ class BWC {
     bool _saveEventlogNeeded = false;
     bool _saveCmdqNeeded = false;
     bool _saveStatesNeeded = false;
-    int _latestTarget;
+    int _sliderTarget;
     int _tickerCount;
     bool _sliderPrio = true;
     uint32_t _tttt_time0;	//time at previous temperature change
