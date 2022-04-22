@@ -2,7 +2,7 @@
 #include <ESP8266WiFi.h>
 
 #define LEGACY_NAME "BW4W_1.0"
-#define FW_VERSION "2022-04-22"
+#define FW_VERSION "4W_2022-04-22"
 
 /*
  * Miscellaneous

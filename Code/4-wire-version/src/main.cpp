@@ -203,6 +203,7 @@ void sendWS()
     String(",\"CIOTX\":") + String(bwc.cio_tx) + 
     String(",\"DSPTX\":") + String(bwc.dsp_tx) + 
     String(",\"RSSI\":") + String(WiFi.RSSI()) + 
+    String(",\"FW\":\"") + FW_VERSION + "\"" +
     String("}");
   webSocket.broadcastTXT(other);
 }

@@ -540,7 +540,7 @@ String BWC::getJSONSettings(){
     doc["AUDIO"] = _audio;
     doc["REBOOTINFO"] = ESP.getResetReason();
     doc["REBOOTTIME"] = DateTime.getBootTime();
-  
+    
     // Serialize JSON to string
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
