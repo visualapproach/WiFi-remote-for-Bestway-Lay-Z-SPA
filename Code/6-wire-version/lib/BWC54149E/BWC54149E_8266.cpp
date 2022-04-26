@@ -642,6 +642,23 @@ void BWC::_handleCommandQ(void) {
             break;
           }
         case SETUNIT:
+          /* 
+            Quick convert temperature to other unit. 
+            This will also be done automatically in 10 seconds.
+            But we are impatient.
+          */
+          if(_commandQ[0][1] && !_cio.states[UNITSTATE])
+          {
+            //F to C
+            _cio.states[TEMPERATURE] = round((_cio.states[TEMPERATURE]-32)/1.8);
+            _cio.states[TARGET] = round((_cio.states[TARGET]-32)/1.8);
+          }
+          if(!_commandQ[0][1] && _cio.states[UNITSTATE])
+          {
+            //C to F
+            _cio.states[TEMPERATURE] = round((_cio.states[TEMPERATURE]*1.8)+32);
+            _cio.states[TARGET] = round((_cio.states[TARGET]*1.8)+32);
+          }
           _qButton(UNIT, UNITSTATE, _commandQ[0][1], 5000);
           _qButton(NOBTN, CHAR3, 0xFF, 700);
           _qButton(UP, CHAR3, _commandQ[0][1], 700);
