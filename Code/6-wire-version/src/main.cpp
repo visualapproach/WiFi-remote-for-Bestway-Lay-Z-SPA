@@ -1,7 +1,16 @@
 #include "main.h"
 
+
+// initial stack
+char *stack_start;
+
+
 void setup()
 {
+  // init record of stack
+  char stack;
+  stack_start = &stack;
+
   // put your setup code here, to run once:
   pinMode(solarpin, INPUT_PULLUP);
   pinMode(myoutputpin, OUTPUT);
@@ -2099,4 +2108,13 @@ void setupClimate()
   mqttClient.publish(topic.c_str(), payload.c_str(), true);
   mqttClient.loop();
   Serial.println(payload);
+}
+
+void printStackSize()
+{
+    char stack;
+    Serial.print (F("stack size "));
+    Serial.println (stack_start - &stack);
+    Serial.print (F("free heap "));
+    Serial.println ((long)ESP.getFreeHeap());
 }

@@ -51,6 +51,14 @@ void CIO::loop(void) {
     static int capturePhase = 0;
     static uint32_t buttonReleaseTime;
     static uint16_t prevButton = ButtonCodes[NOBTN];
+    
+    //capture TARGET after UP/DOWN has been pressed...
+    if ((button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN]))
+    {
+      buttonReleaseTime = millis();
+      capturePhase = 1;
+    } 
+
     /*
      * This model is only sending messages when something updated
      * so this section is not useful
@@ -96,11 +104,8 @@ void CIO::loop(void) {
     if(HASJETS) states[JETSSTATE] = (payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
     else states[JETSSTATE] = 0;
     //Determine if display is showing target temp or actual temp or anything else.
-    //capture TARGET after UP/DOWN has been pressed...
-    if( ((button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN])) && (prevButton != ButtonCodes[UP]) && (prevButton != ButtonCodes[DOWN]) ) capturePhase = 1;
-    //...until 2 seconds after UP/DOWN released
-    if( (button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN]) ) buttonReleaseTime = millis();
-    if(millis()-buttonReleaseTime > 2000) capturePhase = 0;
+    //...until 4 seconds after UP/DOWN released
+    if((millis()-buttonReleaseTime) > 2000) capturePhase = 0;
     //convert text on display to a value if the chars are recognized
     if(states[CHAR1] == '*' || states[CHAR2] == '*' || states[CHAR3] == '*') return;
     String tempstring = String((char)states[CHAR1])+String((char)states[CHAR2])+String((char)states[CHAR3]);
@@ -109,8 +114,8 @@ void CIO::loop(void) {
     if( (capturePhase == 1) && (tmpTemp > 19) ) {
       states[TARGET] = tmpTemp;
     }
-    //wait 4 seconds after UP/DOWN is released to be sure that actual temp is shown
-    if( (capturePhase == 0) && (millis()-buttonReleaseTime > 10000) && payload[DGT3_IDX]!=0xED && payload[DGT3_IDX]!=0)
+    //wait 6 seconds after UP/DOWN is released to be sure that actual temp is shown
+    if( (capturePhase == 0) && (states[CHAR3]!='H') && (states[CHAR3]!=' ') && ((millis()-buttonReleaseTime) > 6000) )
     {
       if(states[TEMPERATURE] != tmpTemp) dataAvailable = true;
       states[TEMPERATURE] = tmpTemp;
@@ -660,8 +665,8 @@ void BWC::_handleCommandQ(void) {
             _cio.states[TARGET] = round((_cio.states[TARGET]*1.8)+32);
           }
           _qButton(UNIT, UNITSTATE, _commandQ[0][1], 5000);
-          _qButton(NOBTN, CHAR3, 0xFF, 700);
-          _qButton(UP, CHAR3, _commandQ[0][1], 700);
+          _qButton(NOBTN, CHAR3, 0xFF, 300);
+          //_qButton(UP, CHAR3, _commandQ[0][1], 500);
           _sliderTarget = 0; //force update
           break;
         case SETBUBBLES:
@@ -723,6 +728,7 @@ void BWC::_handleCommandQ(void) {
       _saveCommandQueue();
       if(restartESP) {
         saveSettings();
+        delay(3000);
         ESP.restart();
       }
     }
