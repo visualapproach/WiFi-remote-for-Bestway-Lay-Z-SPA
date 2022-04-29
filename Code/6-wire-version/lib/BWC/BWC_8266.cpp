@@ -48,7 +48,6 @@ void CIO::loop(void) {
     newData = false;
     static int capturePhase = 0;
     static uint32_t buttonReleaseTime;
-    static uint16_t prevButton = ButtonCodes[NOBTN];
 
     //capture TARGET after UP/DOWN has been pressed...
     if ((button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN]))
@@ -96,6 +95,7 @@ void CIO::loop(void) {
     else states[JETSSTATE] = 0;
     //Determine if display is showing target temp or actual temp or anything else.
     //...until 4 seconds after UP/DOWN released
+    //static uint16_t prevButton = ButtonCodes[NOBTN];
     if((millis()-buttonReleaseTime) > 2000) capturePhase = 0;
     //convert text on display to a value if the chars are recognized
     if(states[CHAR1] == '*' || states[CHAR2] == '*' || states[CHAR3] == '*') return;
@@ -111,7 +111,7 @@ void CIO::loop(void) {
       if(states[TEMPERATURE] != tmpTemp) dataAvailable = true;
       states[TEMPERATURE] = tmpTemp;
     }
-    prevButton = button;
+    //prevButton = button;
 
     if(states[UNITSTATE] != _prevUNT || states[HEATSTATE] != _prevHTR || states[PUMPSTATE] != _prevFLT) {
       stateChanged = true;
@@ -1151,10 +1151,10 @@ void BWC::_restoreStates() {
   uint8_t unt = doc["UNT"];
   uint8_t flt = doc["FLT"];
   uint8_t htr = doc["HTR"];
-  qCommand(SETUNIT, unt, DateTime.now()+10, 0);
+  qCommand(SETUNIT, unt, 0, 0);
   _cio.states[UNITSTATE] = unt;
-  qCommand(SETPUMP, flt, DateTime.now()+12, 0);
-  qCommand(SETHEATER, htr, DateTime.now()+14, 0);
+  qCommand(SETPUMP, flt, 0, 0);
+  qCommand(SETHEATER, htr, 0, 0);
   Serial.println("restoring states");
   file.close();
 }
