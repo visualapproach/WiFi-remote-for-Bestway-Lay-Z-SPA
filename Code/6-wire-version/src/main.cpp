@@ -1818,6 +1818,39 @@ void setupHA()
   doc.clear();
   doc.garbageCollect();
 
+  // spa waterjets switch
+  if(HASJETS)
+  {
+    doc["device"] = devicedoc["device"];
+    payload = "";
+    topic = String(HA_PREFIX) + F("/switch/layzspa_jets/config");
+    Serial.println(topic);
+    doc["name"] = F("Layzspa jets");
+    doc["unique_id"] = "switch.layzspa_jets"+mychipid;
+    doc["state_topic"] = mqttBaseTopic+F("/message");
+    doc["command_topic"] = mqttBaseTopic+F("/command");
+    doc["value_template"] = F("{{ value_json.HJT }}");
+    doc["expire_after"] = 700;
+    doc["icon"] = F("mdi:hydro-power");
+    doc["availability_topic"] = mqttBaseTopic+F("/Status");
+    doc["payload_available"] = F("Alive");
+    doc["payload_not_available"] = F("Dead");
+    doc["payload_on"] = F("{CMD:11,VALUE:true,XTIME:0,INTERVAL:0}");
+    doc["payload_off"] = F("{CMD:11,VALUE:false,XTIME:0,INTERVAL:0}");
+    doc["state_on"] = 1;
+    doc["state_off"] = 0;
+    if (serializeJson(doc, payload) == 0)
+    {
+      Serial.println(F("Failed to serialize HA message!"));
+      return;
+    }
+    mqttClient.publish(topic.c_str(), payload.c_str(), true);
+    mqttClient.loop();
+    Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+  }
+
   // spa airbubbles switch
   doc["device"] = devicedoc["device"];
   payload = "";

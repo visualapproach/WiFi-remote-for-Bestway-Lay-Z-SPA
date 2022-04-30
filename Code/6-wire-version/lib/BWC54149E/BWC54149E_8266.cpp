@@ -74,7 +74,6 @@ void CIO::loop(void) {
       prev_checksum = checksum;
       return;
     }
-    prev_checksum = checksum;
      */
 
     //copy private array to public array

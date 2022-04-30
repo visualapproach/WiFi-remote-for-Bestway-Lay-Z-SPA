@@ -65,7 +65,6 @@ void CIO::loop(void) {
       prev_checksum = checksum;
       return;
     }
-    prev_checksum = checksum;
     
     //copy private array to public array
     for(int i = 0; i < 11; i++){

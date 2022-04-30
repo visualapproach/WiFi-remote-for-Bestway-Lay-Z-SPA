@@ -2,7 +2,7 @@
 #include <ESP8266WiFi.h>
 
 #define DEVICE_NAME "layzspa"
-#define FW_VERSION "2022-04-29"
+#define FW_VERSION "2022-04-30"
 #define HA_PREFIX "homeassistant"
 
 /*
