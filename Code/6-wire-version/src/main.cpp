@@ -2129,7 +2129,7 @@ void setupClimate()
   doc["temperature_command_template"] = F("{CMD:0,VALUE:{{ value|int }},XTIME:0,INTERVAL:0}");
   doc["power_command_topic"] = mqttBaseTopic+F("/command");
   doc["payload_on"] = F("{CMD:3,VALUE:1,XTIME:0,INTERVAL:0}");
-  doc["payload_off"] = F("{CMD:3,VALUE:0,XTIME:0,INTERVAL:0}");
+  doc["payload_off"] = F("{CMD:4,VALUE:0,XTIME:0,INTERVAL:0}");
   doc["availability_topic"] = mqttBaseTopic+F("/Status");
   doc["payload_available"] = F("Alive");
   doc["payload_not_available"] = F("Dead");
