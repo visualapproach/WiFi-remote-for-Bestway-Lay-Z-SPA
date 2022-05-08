@@ -2116,11 +2116,13 @@ void setupClimate()
   doc["min_temp"] = mintemp;
   doc["precision"] = 1.0;
   doc["temperature_unit"] = tempunit;
-  doc["modes"].add(serialized("\"off\", \"heat\""));
+  doc["modes"].add(serialized("\"fan_only\", \"off\", \"heat\""));
+  doc["mode_command_topic"] = mqttBaseTopic+F("/command");
+  doc["mode_command_template"] = F("{CMD:3,VALUE:{%if value == \"heat\" %}1{% else %}0{% endif %},XTIME:0,INTERVAL:0}");
   doc["mode_state_topic"] = mqttBaseTopic+F("/message");
   doc["mode_state_template"] = F("{% if value_json.RED == 1 %}heat{% elif value_json.GRN == 1 %}heat{% else %}off{% endif %}");
   doc["action_topic"] = mqttBaseTopic+F("/message");
-  doc["action_template"] = F("{% if value_json.RED == 1 %}heating{% elif value_json.GRN == 1 %}idle{% else %}off{% endif %}");
+  doc["action_template"] = F("{% if value_json.RED == 1 %}heating{% elif value_json.GRN == 1 %}idle{% elif value_json.FLT == 1 %}fan{% else %}off{% endif %}");
   doc["temperature_state_topic"] = mqttBaseTopic+F("/message");
   doc["temperature_state_template"] = F("{{ value_json.TGT }}");
   doc["current_temperature_topic"] = mqttBaseTopic+F("/message");
@@ -2128,8 +2130,8 @@ void setupClimate()
   doc["temperature_command_topic"] = mqttBaseTopic+F("/command");
   doc["temperature_command_template"] = F("{CMD:0,VALUE:{{ value|int }},XTIME:0,INTERVAL:0}");
   doc["power_command_topic"] = mqttBaseTopic+F("/command");
-  doc["payload_on"] = F("{CMD:3,VALUE:1,XTIME:0,INTERVAL:0}");
-  doc["payload_off"] = F("{CMD:3,VALUE:0,XTIME:0,INTERVAL:0}");
+  doc["payload_on"] = F("{CMD:4,VALUE:1,XTIME:0,INTERVAL:0}");
+  doc["payload_off"] = F("{CMD:4,VALUE:0,XTIME:0,INTERVAL:0}");
   doc["availability_topic"] = mqttBaseTopic+F("/Status");
   doc["payload_available"] = F("Alive");
   doc["payload_not_available"] = F("Dead");
