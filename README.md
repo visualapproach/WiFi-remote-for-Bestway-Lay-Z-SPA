@@ -65,6 +65,7 @@ Technical details in the [Documentation](bwc_docs.xlsx).
 Build instructions and more: [Instructions](Build-instructions-Bestway-WiFi-remote.pdf)
 
 <img src="./pics/txs0108e.jpg" width="300"> 
+@misterpeee's wife made and shared this case for 3d printing https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/discussions/265#discussion-4062382
 
 #### Installation (Alternative)
 [Eric's PCB](https://easyeda.com/Naesstrom/lay-z-spa_remote) (use with LLC below, choose 1x8 ch or 2x4 ch according to the PCB). 
