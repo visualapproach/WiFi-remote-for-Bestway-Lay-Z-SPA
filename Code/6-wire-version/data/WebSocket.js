@@ -101,8 +101,8 @@ function handlemsg(e)
 		document.getElementById('rssi').innerHTML = "RSSI: " + msgobj.RSSI;
 
 		// hydro jets available
-		document.getElementById('jets').style.display = (msgobj.HASJETS ? 'inherit' : 'none');
-		document.getElementById('jetstotals').style.display = (msgobj.HASJETS ? 'inherit' : 'none');
+		document.getElementById('jets').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
+		document.getElementById('jetstotals').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
 	}
 
 	if (msgobj.CONTENT == "STATES")
