@@ -236,44 +236,51 @@ void DSP::updateDSP(uint8_t brightness) {
    //refresh display with ~10Hz
   if(millis() -_dspLastRefreshTime > 99){
     _dspLastRefreshTime = millis();
-      digitalWrite(_DSP_LD_PIN, LOW); //start of packet
-      delayMicroseconds(CLKPW);
-      _sendBitsToDSP(CMD1, 8);
-      //end of packet: clock low, make sure LD is low before rising clock then LD
-      digitalWrite(_DSP_CLK_PIN, LOW);
-      digitalWrite(_DSP_LD_PIN, LOW);
-      delayMicroseconds(CLKPW);
-      digitalWrite(_DSP_CLK_PIN, HIGH);
-      delayMicroseconds(CLKPW);
-      digitalWrite(_DSP_LD_PIN, HIGH);
-      delayMicroseconds(CLKPW);
+        uint8_t enableLED = 0;
+    if(brightness > 0)
+    {
+      enableLED = DSP_DIM_ON;
+      brightness -= 1; 
+    } 
+    digitalWrite(_DSP_LD_PIN, LOW); //start of packet
+    delayMicroseconds(CLKPW);
+    _sendBitsToDSP(CMD1, 8);
+    //end of packet: clock low, make sure LD is low before rising clock then LD
+    digitalWrite(_DSP_CLK_PIN, LOW);
+    digitalWrite(_DSP_LD_PIN, LOW);
+    delayMicroseconds(CLKPW);
+    digitalWrite(_DSP_CLK_PIN, HIGH);
+    delayMicroseconds(CLKPW);
+    digitalWrite(_DSP_LD_PIN, HIGH);
+    delayMicroseconds(CLKPW);
 
-      digitalWrite(_DSP_LD_PIN, LOW); //start of packet
-      delayMicroseconds(CLKPW);
-      _sendBitsToDSP(CMD2, 8);
-      for(unsigned int i=0; i<sizeof(payload); i++){
-        _sendBitsToDSP(payload[i], 8);
-      }
-      //end of packet: clock low, make sure LD is low before rising clock then LD
-      digitalWrite(_DSP_CLK_PIN, LOW);
-      digitalWrite(_DSP_LD_PIN, LOW);
-      delayMicroseconds(CLKPW);
-      digitalWrite(_DSP_CLK_PIN, HIGH);
-      delayMicroseconds(CLKPW);
-      digitalWrite(_DSP_LD_PIN, HIGH);
-      delayMicroseconds(CLKPW);
-      
-      digitalWrite(_DSP_LD_PIN, LOW); //start of packet
-      delayMicroseconds(CLKPW);
-      _sendBitsToDSP((CMD3 & 0xF8) | brightness, 8);
-      //end of packet: clock low, make sure LD is low before rising clock then LD
-      digitalWrite(_DSP_CLK_PIN, LOW);
-      digitalWrite(_DSP_LD_PIN, LOW);
-      delayMicroseconds(CLKPW);
-      digitalWrite(_DSP_CLK_PIN, HIGH);
-      delayMicroseconds(CLKPW);
-      digitalWrite(_DSP_LD_PIN, HIGH);
-      delayMicroseconds(CLKPW);
+    digitalWrite(_DSP_LD_PIN, LOW); //start of packet
+    delayMicroseconds(CLKPW);
+    _sendBitsToDSP(CMD2, 8);
+    for(unsigned int i=0; i<sizeof(payload); i++){
+      _sendBitsToDSP(payload[i], 8);
+    }
+    //end of packet: clock low, make sure LD is low before rising clock then LD
+    digitalWrite(_DSP_CLK_PIN, LOW);
+    digitalWrite(_DSP_LD_PIN, LOW);
+    delayMicroseconds(CLKPW);
+    digitalWrite(_DSP_CLK_PIN, HIGH);
+    delayMicroseconds(CLKPW);
+    digitalWrite(_DSP_LD_PIN, HIGH);
+    delayMicroseconds(CLKPW);
+    
+    digitalWrite(_DSP_LD_PIN, LOW); //start of packet
+    delayMicroseconds(CLKPW);
+    _sendBitsToDSP((CMD3 & 0xF8)|enableLED|brightness, 8);
+
+    //end of packet: clock low, make sure LD is low before rising clock then LD
+    digitalWrite(_DSP_CLK_PIN, LOW);
+    digitalWrite(_DSP_LD_PIN, LOW);
+    delayMicroseconds(CLKPW);
+    digitalWrite(_DSP_CLK_PIN, HIGH);
+    delayMicroseconds(CLKPW);
+    digitalWrite(_DSP_LD_PIN, HIGH);
+    delayMicroseconds(CLKPW);
   }
 }
 
@@ -711,7 +718,7 @@ void BWC::_handleCommandQ(void) {
           _qButton(HYDROJETS, JETSSTATE, _commandQ[0][1], 5000);
           break;
         case SETBRIGHTNESS:
-          _dspBrightness = _commandQ[0][1] & 7;
+          if(_commandQ[0][1] < 9) _dspBrightness = _commandQ[0][1];
           break;
         case SETBEEP:
           _commandQ[0][1] == 0 ? _dsp.beep2() : _dsp.playIntro();

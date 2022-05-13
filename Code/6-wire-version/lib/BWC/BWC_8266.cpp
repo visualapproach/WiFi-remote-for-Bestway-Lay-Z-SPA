@@ -283,30 +283,37 @@ char DSP::_getCode(char value) {
 
 void DSP::updateDSP(uint8_t brightness) {
    //refresh display with ~10Hz
-  if(millis() -_dspLastRefreshTime > 99){
+  if(millis() -_dspLastRefreshTime > 99)
+  {
     _dspLastRefreshTime = millis();
-      delayMicroseconds(30);
-      digitalWrite(_CS_PIN, LOW); //start of packet
-      _sendBitsToDSP(DSP_CMD1_MODE6_11_7, 8);
-      digitalWrite(_CS_PIN, HIGH); //end of packet
+    uint8_t enableLED = 0;
+    if(brightness > 0)
+    {
+      enableLED = DSP_DIM_ON;
+      brightness -= 1; 
+    } 
+    delayMicroseconds(30);
+    digitalWrite(_CS_PIN, LOW); //start of packet
+    _sendBitsToDSP(DSP_CMD1_MODE6_11_7, 8);
+    digitalWrite(_CS_PIN, HIGH); //end of packet
 
-      delayMicroseconds(50);
-      digitalWrite(_CS_PIN, LOW);//start of packet
-      _sendBitsToDSP(DSP_CMD2_DATAWRITE, 8);
-      digitalWrite(_CS_PIN, HIGH);//end of packet
+    delayMicroseconds(50);
+    digitalWrite(_CS_PIN, LOW);//start of packet
+    _sendBitsToDSP(DSP_CMD2_DATAWRITE, 8);
+    digitalWrite(_CS_PIN, HIGH);//end of packet
 
-      //payload
-      delayMicroseconds(50);
-      digitalWrite(_CS_PIN, LOW);//start of packet
-      for (int i = 0; i < 11; i++)
-      _sendBitsToDSP(payload[i], 8);
-      digitalWrite(_CS_PIN, HIGH);//end of packet
+    //payload
+    delayMicroseconds(50);
+    digitalWrite(_CS_PIN, LOW);//start of packet
+    for (int i = 0; i < 11; i++)
+    _sendBitsToDSP(payload[i], 8);
+    digitalWrite(_CS_PIN, HIGH);//end of packet
 
-      delayMicroseconds(50);
-      digitalWrite(_CS_PIN, LOW);//start of packet
-      _sendBitsToDSP(DSP_DIM_BASE+DSP_DIM_ON+brightness, 8);
-      digitalWrite(_CS_PIN, HIGH);//end of packet
-      delayMicroseconds(50);
+    delayMicroseconds(50);
+    digitalWrite(_CS_PIN, LOW);//start of packet
+    _sendBitsToDSP(DSP_DIM_BASE|enableLED|brightness, 8);
+    digitalWrite(_CS_PIN, HIGH);//end of packet
+    delayMicroseconds(50);
   }
 }
 
@@ -750,7 +757,7 @@ void BWC::_handleCommandQ(void) {
           _qButton(HYDROJETS, JETSSTATE, _commandQ[0][1], 5000);
           break;
         case SETBRIGHTNESS:
-          _dspBrightness = _commandQ[0][1] & 7;
+          if(_commandQ[0][1] < 9) _dspBrightness = _commandQ[0][1];
           break;
         case SETBEEP:
           _commandQ[0][1] == 0 ? _dsp.beep2() : _dsp.playIntro();
