@@ -410,7 +410,7 @@ void startOTA()
 
   ArduinoOTA.onStart([]() {
     Serial.println(F("OTA > Start"));
-    bwc.stop();
+    stopall();
   });
   ArduinoOTA.onEnd([]() {
     Serial.println(F("OTA > End"));
@@ -430,7 +430,16 @@ void startOTA()
   Serial.println(F("OTA > ready"));
 }
 
-
+void stopall()
+{
+  bwc.stop();
+  periodicTimer.detach();
+  updateWSTimer.detach();
+  LittleFS.end();
+  server.stop();
+  webSocket.close();
+  mqttClient.disconnect();
+}
 
 /**
  * start a web socket server

@@ -87,6 +87,7 @@ void startWiFiConfigPortal();
 void startNTP();
 
 void startOTA();
+void stopall();
 
 void startWebSocket();
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len);
