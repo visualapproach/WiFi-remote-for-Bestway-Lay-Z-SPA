@@ -148,8 +148,8 @@ enum Commands: byte
   RESETCLTIMER,
   RESETFTIMER,
   SETJETS,
-  SETBRIGHTNESS
-  //play song
+  SETBRIGHTNESS,
+  SETBEEP
 };
 
 const int MAXCOMMANDS = 11;

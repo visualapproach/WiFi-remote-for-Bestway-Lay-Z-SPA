@@ -713,6 +713,10 @@ void BWC::_handleCommandQ(void) {
         case SETBRIGHTNESS:
           _dspBrightness = _commandQ[0][1] & 7;
           break;
+        case SETBEEP:
+          _commandQ[0][1] == 0 ? _dsp.beep2() : _dsp.playIntro();
+          break;
+      }
       }
       //If interval > 0 then append to commandQ with updated xtime.
       if(_commandQ[0][3] > 0) qCommand(_commandQ[0][0],_commandQ[0][1],_commandQ[0][2]+_commandQ[0][3],_commandQ[0][3]);
@@ -732,7 +736,7 @@ void BWC::_handleCommandQ(void) {
       }
     }
   }
-}
+
 
 
 String BWC::getJSONStates() {
