@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 
-#define LEGACY_NAME "BW4W_1.0"
-#define FW_VERSION "4W_2022-04-22"
+#define LEGACY_NAME "layzspa"
+#define FW_VERSION "4W_2022-05-15"
 
 /*
  * Miscellaneous
