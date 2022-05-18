@@ -49,7 +49,7 @@ see build instructions for more info.
 <img src="./pics/web05_mqtt-config.png" width="300">
 
 #### WiFi Module / Pump
-<img src="./pics/pcb.jpg" width="300"><img src="./pics/pcb v2.png" width="300"><br />
+<img src="./pics/pcb.jpg" width="300"><br />
 <img src="./pics/pump.jpg" width="300">
 
 #### Schematics
@@ -62,8 +62,8 @@ Link to my version of the PCB (use with LLC below):
 Open the project in editor and download gerber files. 
 Upload them to a PCB factory like [JLCPCB](https://jlcpcb.com/). 
 You can also find the gerber files in the code/PCB folder here.
-There is a v2 also which has slots for both kinds of LLC, and room for low pass filter if needed. I have ordered this but not tested yet!
-
+There is a v2 also which has slots for both kinds of LLC, and room for low pass filter if needed. I have ordered this but not tested yet!<br>
+<img src="./pics/pcb v2.png" width="300"><br>
 Technical details in the [Documentation](bwc_docs.xlsx).
 Build instructions and more: [Instructions](Build-instructions-Bestway-WiFi-remote.pdf)
 
