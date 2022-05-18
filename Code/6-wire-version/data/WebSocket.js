@@ -98,6 +98,7 @@ function handlemsg(e)
 		]
 		document.getElementById('mqtt').innerHTML = "MQTT: " + mqtt_states[msgobj.MQTT + 4];
 		document.getElementById('fw').innerHTML = "Firmware version: " + msgobj.FW;
+		document.getElementById('model').innerHTML = "Model: " + msgobj.MODEL;
 		document.getElementById('rssi').innerHTML = "RSSI: " + msgobj.RSSI;
 
 		// hydro jets available

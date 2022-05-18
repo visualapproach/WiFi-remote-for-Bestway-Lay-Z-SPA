@@ -476,6 +476,7 @@ String BWC::getJSONSettings(){
     doc["REBOOTINFO"] = ESP.getResetReason();
     doc["REBOOTTIME"] = DateTime.getBootTime();
     doc["RESTORE"] = _restoreStatesOnStart;
+    doc["MODEL"] = MYMODEL;
 
     // Serialize JSON to string
     String jsonmsg;

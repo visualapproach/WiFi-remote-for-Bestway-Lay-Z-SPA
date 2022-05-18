@@ -54,6 +54,7 @@ const uint16_t ButtonCodes[] =
   0x1B1B, 0x0200, 0x0100, 0x0300, 0x1012, 0x1212, 0x1112, 0x1312, 0x0809, 0x0000
 };
 const bool HASJETS = false;
+const String MYMODEL = "PRE2021";
 
 #elif defined(MIAMI2021)
 const uint16_t ButtonCodes[] =
@@ -61,6 +62,7 @@ const uint16_t ButtonCodes[] =
   0x1B1B, 0x0100, 0x0300, 0x1212, 0x0809, 0x1012, 0x1112, 0x1312, 0x0200, 0x0000
 };
 const bool HASJETS = false;
+const String MYMODEL = "MIAMI2021";
 
 #elif defined(MALDIVES2021)
 const uint16_t ButtonCodes[] =
@@ -68,6 +70,7 @@ const uint16_t ButtonCodes[] =
   0x1B1B, 0x0100, 0x0300, 0x1212, 0x0a09, 0x1012, 0x1312, 0x0809, 0x0200, 0x0000, 0x1112
 };
 const bool HASJETS = true;
+const String MYMODEL = "MALDIVES2021";
 
 #else
 //Make compiler happy. Will not be used.
@@ -76,6 +79,7 @@ const uint16_t ButtonCodes[] =
   0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
 };
 const bool HASJETS = false;
+const String MYMODEL = "ISCREWEDUP";
 
 #endif
 

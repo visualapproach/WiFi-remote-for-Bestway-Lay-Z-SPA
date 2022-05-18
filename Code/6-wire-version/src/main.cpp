@@ -240,6 +240,7 @@ String getOtherInfo()
   doc["IP"] = WiFi.localIP().toString();
   doc["SSID"] = WiFi.SSID();
   doc["FW"] = FW_VERSION;
+  doc["MODEL"] = MYMODEL;
 
   // Serialize JSON to string
   if (serializeJson(doc, json) == 0)
@@ -1320,7 +1321,7 @@ void setupHA()
   devicedoc["device"]["connections"].add(serialized("[\"mac\",\"" + WiFi.macAddress()+"\"]" ));
   devicedoc["device"]["identifiers"] = mychipid;
   devicedoc["device"]["manufacturer"] = F("Visualapproach");
-  devicedoc["device"]["model"] = F("NodeMCU 12E");
+  devicedoc["device"]["model"] = MYMODEL;
   devicedoc["device"]["name"] = F("Layzspa WiFi controller");
   devicedoc["device"]["sw_version"] = FW_VERSION;
 
@@ -2056,7 +2057,7 @@ void setupClimate()
   devicedoc["device"]["connections"].add(serialized("[\"mac\",\"" + WiFi.macAddress()+"\"]" ));
   devicedoc["device"]["identifiers"] = ESP.getChipId();
   devicedoc["device"]["manufacturer"] = "Visualapproach";
-  devicedoc["device"]["model"] = "NodeMCU 12E";
+  devicedoc["device"]["model"] = MYMODEL;
   devicedoc["device"]["name"] = "Layzspa WiFi controller";
   devicedoc["device"]["sw_version"] = FW_VERSION;
 

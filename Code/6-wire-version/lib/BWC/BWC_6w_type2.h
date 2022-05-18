@@ -12,6 +12,7 @@ const uint16_t ButtonCodes[] =
   0, 1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0, 1<<8, 1<<9
 };
 const bool HASJETS = false;
+const String MYMODEL = "MODEL54149E";
 
 //LSB
 const uint8_t CMD1 = B01000000;  //normal mode, auto+1 address
