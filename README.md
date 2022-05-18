@@ -63,7 +63,7 @@ Open the project in editor and download gerber files.
 Upload them to a PCB factory like [JLCPCB](https://jlcpcb.com/). 
 You can also find the gerber files in the code/PCB folder here.
 There is a v2 also which has slots for both kinds of LLC, and room for low pass filter if needed. I have ordered this but not tested yet!<br>
-<img src="./pics/pcb v2.png" width="300"><br>
+<img src="./pics/pcb v2.png" width="300">New pin numbers. Must edit code before use!<br>
 Technical details in the [Documentation](bwc_docs.xlsx).
 Build instructions and more: [Instructions](Build-instructions-Bestway-WiFi-remote.pdf)
 
