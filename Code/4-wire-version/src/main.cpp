@@ -198,14 +198,31 @@ void sendWS()
   }
 
   // send other info
-  String other = 
-    String("{\"CONTENT\":\"OTHER\",\"MQTT\":") + String(mqttClient.state()) + 
-    String(",\"CIOTX\":") + String(bwc.cio_tx) + 
-    String(",\"DSPTX\":") + String(bwc.dsp_tx) + 
-    String(",\"RSSI\":") + String(WiFi.RSSI()) + 
-    String(",\"FW\":\"") + FW_VERSION + "\"" +
-    String("}");
-  webSocket.broadcastTXT(other);
+  json = getOtherInfo();
+  webSocket.broadcastTXT(json);
+}
+
+String getOtherInfo()
+{
+  DynamicJsonDocument doc(1024);
+  String json = "";
+  // Set the values in the document
+  doc["CONTENT"] = "OTHER";
+  doc["CIOTX"] = bwc.cio_tx;
+  doc["DSPTX"] = bwc.dsp_tx;
+  doc["HASJETS"] = HASJETS;
+  doc["RSSI"] = WiFi.RSSI();
+  doc["IP"] = WiFi.localIP().toString();
+  doc["SSID"] = WiFi.SSID();
+  doc["FW"] = FW_VERSION;
+  doc["MODEL"] = MYMODEL;
+
+  // Serialize JSON to string
+  if (serializeJson(doc, json) == 0)
+  {
+    json = "{\"error\": \"Failed to serialize message\"}";
+  }
+  return json;
 }
 
 /**

@@ -123,6 +123,8 @@ const uint8_t JETSBITMASK =   B00001000;  //8
 const uint8_t HEATBITMASK1 =   B00110000;  //48  heater stage 1 = 50%
 const uint8_t HEATBITMASK2 =   B01000000;  //64  heater stage 2 = 100%
 const uint8_t POWERBITMASK =   B10000000;  //128
+const bool HASJETS = true;
+const String MYMODEL = "NO54173";
 #endif
 
 #ifdef NO54138
@@ -167,6 +169,8 @@ const uint8_t HEATBITMASK2 =   B00110000;  //48  heater stage 2 = on
 //const uint8_t HEATBITMASK1 =   B00110000;  //48  heater stage 1 = 50%
 //const uint8_t HEATBITMASK2 =   B01000000;  //64  heater stage 2 = 100%
 const uint8_t POWERBITMASK =   B10000000;  //128
+const bool HASJETS = true;
+const String MYMODEL = "NO54138";
 #endif
 
 #ifdef NO54123
@@ -206,6 +210,8 @@ const uint8_t JETSBITMASK =   B00000000;  //0;  //no jets on this machine.
 const uint8_t HEATBITMASK1 =   B00000010;  //(1 << 1) "stage 1"
 const uint8_t HEATBITMASK2 =   B00001000;  //(1 << 3) "stage 2" (thanks @dietmar-1 for testing and reporting this)
 const uint8_t POWERBITMASK =   B00000001;  //1;
+const bool HASJETS = false;
+const String MYMODEL = "NO54123";
 #endif
 
 #ifdef NO54154
@@ -245,6 +251,8 @@ const uint8_t JETSBITMASK =   B00000000;  //0;  //no jets on this machine.
 const uint8_t HEATBITMASK1 =   B00000010;  //(1 << 1) "stage 1"
 const uint8_t HEATBITMASK2 =   B00001000;  //(1 << 3) "stage 2" (thanks @dietmar-1 for testing and reporting this)
 const uint8_t POWERBITMASK =   B00000001;  //1;
+const bool HASJETS = false;
+const String MYMODEL = "NO54154";
 #endif
 
 #endif

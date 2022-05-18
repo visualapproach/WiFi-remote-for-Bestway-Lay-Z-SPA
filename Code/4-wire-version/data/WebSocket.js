@@ -100,18 +100,14 @@ function handlemsg(e)
     document.getElementById('mqtt').innerHTML = "MQTT: " + mqtt_states[msgobj.MQTT + 4];
 
     // hydro jets available
-    var jetsAvailable = false;
-    if (typeof(msgobj.HASJETS) != 'undefined') // TODO: figure out..
-    {
-      jetsAvailable = true;
-    }
-    document.getElementById('jetstitle').style.display = (jetsAvailable ? 'inherit' : 'none');
-    document.getElementById('jetsbutton').style.display = (jetsAvailable ? 'inherit' : 'none');
-    document.getElementById('jetstotals').style.display = (jetsAvailable ? 'inherit' : 'none');
+    document.getElementById('jetstitle').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
+    document.getElementById('jetsbutton').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
+    document.getElementById('jetstotals').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
 
     document.getElementById('ciotx').innerHTML = 'CIO TX: ' + (msgobj.CIOTX ? 'Active' : 'Dead');
     document.getElementById('dsptx').innerHTML = 'DSP TX: ' + (msgobj.DSPTX ? 'Active' : 'Dead');
     document.getElementById('fw').innerHTML = 'Firmware: ' + msgobj.FW;
+    document.getElementById('model').innerHTML = 'Model: ' + msgobj.MODEL;
   }
 
   if (msgobj.CONTENT == "STATES")
