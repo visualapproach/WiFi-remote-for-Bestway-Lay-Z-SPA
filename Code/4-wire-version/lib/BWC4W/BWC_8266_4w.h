@@ -19,6 +19,18 @@
 #include <Ticker.h>
 #include <SoftwareSerial.h>
 
+#ifdef PCB_V2
+const int CIO_RX = D1;
+const int CIO_TX = D2;
+const int DSP_TX = D4;
+const int DSP_RX = D5;
+#else
+const int CIO_RX = D3;
+const int CIO_TX = D2;
+const int DSP_TX = D6;
+const int DSP_RX = D7;
+#endif
+
 class CIO {
 
   public:
@@ -37,8 +49,8 @@ class CIO {
     uint8_t to_DSP_buf[7];    //ESP to DSP
     uint8_t from_DSP_buf[7];  //DSP to ESP. We can ignore this message and send our own when ESP is in charge.
     uint8_t to_CIO_buf[7];    //Otherwise copy here. Buffer to send from ESP to CIO
-    bool cio_tx;              //set to true when data received. Send to webinterface+serial for debugging
-    bool dsp_tx;              //set to true when data received. Send to webinterface+serial for debugging
+    bool cio_tx_ok;              //set to true when data received. Send to webinterface+serial for debugging
+    bool dsp_tx_ok;              //set to true when data received. Send to webinterface+serial for debugging
 
     uint8_t heatbitmask;
 
@@ -70,8 +82,8 @@ class BWC {
   void saveSettingsFlag();
   void saveSettings();
   Ticker saveSettingsTimer;
-  bool cio_tx;
-  bool dsp_tx;
+  bool cio_tx_ok;
+  bool dsp_tx_ok;
   void reloadCommandQueue();
   String encodeBufferToString(uint8_t buf[7]);
   String getSerialBuffers();

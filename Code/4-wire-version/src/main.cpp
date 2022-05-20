@@ -208,8 +208,8 @@ String getOtherInfo()
   String json = "";
   // Set the values in the document
   doc["CONTENT"] = "OTHER";
-  doc["CIOTX"] = bwc.cio_tx;
-  doc["DSPTX"] = bwc.dsp_tx;
+  doc["CIOTX"] = bwc.cio_tx_ok;
+  doc["DSPTX"] = bwc.dsp_tx_ok;
   doc["HASJETS"] = HASJETS;
   doc["RSSI"] = WiFi.RSSI();
   doc["IP"] = WiFi.localIP().toString();

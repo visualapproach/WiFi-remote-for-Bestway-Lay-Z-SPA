@@ -1,17 +1,14 @@
 #include "BWC_8266_4w.h"
 
 void CIO::begin() {
-  //Setup serial to CIO and DSP here according to my PCB
+  //Setup serial to CIO and DSP here according to chosen PCB.
   /*
-    CIO_RX = D3
-    CIO_TX = D2
-    DSP_TX = D6
-    DSP_RX = D7
     Devices are sending on their TX lines, so we read that with RX pins on the ESP
+    Hence the "backwards" parameters
   */
-  cio_serial.begin(9600, SWSERIAL_8N1, D2, D3, false, 63);
+  cio_serial.begin(9600, SWSERIAL_8N1, CIO_TX, CIO_RX, false, 63);
   cio_serial.setTimeout(20);
-  dsp_serial.begin(9600, SWSERIAL_8N1, D6, D7, false, 63);
+  dsp_serial.begin(9600, SWSERIAL_8N1, DSP_TX, DSP_RX, false, 63);
   dsp_serial.setTimeout(20);
 
   states[TARGET] = 20;
@@ -22,8 +19,8 @@ void CIO::begin() {
   states[CHAR1] = ' ';
   states[CHAR2] = ' ';
   states[CHAR3] = ' ';
-  cio_tx = false;
-  dsp_tx = false;
+  cio_tx_ok = false;
+  dsp_tx_ok = false;
 }
 
 void CIO::loop(void) {
@@ -46,7 +43,7 @@ void CIO::loop(void) {
       }
       states[TEMPERATURE] = from_CIO_buf[TEMPINDEX];
       states[ERROR] =       from_CIO_buf[ERRORINDEX];
-      cio_tx = true;  //show the user that this line works (appears to work)
+      cio_tx_ok = true;  //show the user that this line works (appears to work)
       //check if cio send error msg
       states[CHAR1] = ' ';
       states[CHAR2] = ' ';
@@ -102,7 +99,7 @@ void CIO::loop(void) {
         } else {
           updateStates();
         }
-        dsp_tx = true;  //show the user that this line works (appears to work)
+        dsp_tx_ok = true;  //show the user that this line works (appears to work)
       }
     }  else
     {
@@ -175,8 +172,8 @@ void BWC::begin(void){
   _cio.begin();
   //_startNTP(); this is done from main.cpp
   LittleFS.begin();
-  cio_tx = false;
-  dsp_tx = false;  
+  cio_tx_ok = false;
+  dsp_tx_ok = false;  
   _cltime = 0;
   _ftime = 0;
   _uptime = 0;
@@ -217,8 +214,8 @@ void BWC::loop(){
   if(_saveCmdqNeeded) _saveCommandQueue();
   if(_saveSettingsNeeded) saveSettings();
   ESP.wdtEnable(0);
-  cio_tx = _cio.cio_tx;
-  dsp_tx = _cio.dsp_tx;
+  cio_tx_ok = _cio.cio_tx_ok;
+  dsp_tx_ok = _cio.dsp_tx_ok;
 }
 
 
