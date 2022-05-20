@@ -4,8 +4,13 @@
 #include "Arduino.h"
 #include "BWC_const.h"
 
+#ifdef PCB_V2
+const int ciopins[] = {D1, D2, D3};
+const int dsppins[] = {D4, D5, D6, D7};
+#else
 const int ciopins[] = {D7, D2, D1};
 const int dsppins[] = {D5, D4, D3, D6};
+#endif
 
 const uint16_t ButtonCodes[] =
 {
@@ -60,7 +65,7 @@ const uint8_t CHARCODES[] = {
 class CIO {
 
   public:
-    void begin(int cio_cs_pin, int cio_data_pin, int cio_clk_pin);
+    void begin(int cio_td_pin, int cio_clk_pin, int cio_ld_pin);
     void loop(void);
     void eopHandler(void);
     void packetHandler(void);
@@ -104,7 +109,7 @@ class DSP {
   public:
     uint8_t payload[5];
 
-    void begin(int dsp_cs_pin, int dsp_data_pin, int dsp_clk_pin, int dsp_audio_pin);
+    void begin(int dsp_td_pin, int dsp_clk_pin, int dsp_ld_pin, int dsp_audio_pin);
     uint16_t getButton(void);
     void updateDSP(uint8_t brightness);
     void textOut(String txt);
@@ -123,9 +128,9 @@ class DSP {
     uint16_t _oldButton = ButtonCodes[NOBTN];
     uint16_t _prevButton = ButtonCodes[NOBTN];
     //Pins
-    int _DSP_LD_PIN;
     int _DSP_TD_PIN;
     int _DSP_CLK_PIN;
+    int _DSP_LD_PIN;
     int _DSP_AUDIO_PIN;
 };
 

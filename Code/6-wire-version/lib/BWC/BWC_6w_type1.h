@@ -4,8 +4,13 @@
 #include "Arduino.h"
 #include "BWC_const.h"
 
-const int ciopins[] = {D1, D7, D2};
-const int dsppins[] = {D3, D5, D4, D6};
+#ifdef PCB_V2
+const int ciopins[] = {D1, D2, D3};
+const int dsppins[] = {D4, D5, D6, D7};
+#else
+const int ciopins[] = {D7, D2, D1};
+const int dsppins[] = {D5, D4, D3, D6};
+#endif
 
 //LSB
 const uint8_t DSP_CMD2_DATAREAD = 0x42;
@@ -87,7 +92,7 @@ const String MYMODEL = "ISCREWEDUP";
 class CIO {
 
   public:
-    void begin(int cio_cs_pin, int cio_data_pin, int cio_clk_pin);
+    void begin(int cio_data_pin, int cio_clk_pin, int cio_cs_pin);
     void loop(void);
     void eopHandler(void);
     void packetHandler(void);
@@ -132,7 +137,7 @@ class DSP {
   public:
     uint8_t payload[11] = {0xC0, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x0};
 
-    void begin(int dsp_cs_pin, int dsp_data_pin, int dsp_clk_pin, int dsp_audio_pin);
+    void begin(int dsp_data_pin, int dsp_clk_pin, int dsp_cs_pin, int dsp_audio_pin);
     uint16_t getButton(void);
     void updateDSP(uint8_t brightness);
     void textOut(String txt);

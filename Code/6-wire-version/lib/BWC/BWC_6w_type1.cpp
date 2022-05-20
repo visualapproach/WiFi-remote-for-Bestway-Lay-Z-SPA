@@ -10,11 +10,11 @@ static void IRAM_ATTR clockpin(void) {
   pointerToClass->clkHandler();
 }
 
-void CIO::begin(int cio_cs_pin, int cio_data_pin, int cio_clk_pin) {
+void CIO::begin(int cio_data_pin, int cio_clk_pin, int cio_cs_pin) {
   pointerToClass = this;
-  _CS_PIN = cio_cs_pin;
   _DATA_PIN = cio_data_pin;
   _CLK_PIN = cio_clk_pin;
+  _CS_PIN = cio_cs_pin;
   pinMode(_CS_PIN, INPUT);
   pinMode(_DATA_PIN, INPUT);
   pinMode(_CLK_PIN, INPUT);
@@ -330,10 +330,10 @@ void DSP::LEDshow() {
   }
 }
 
-void DSP::begin(int dsp_cs_pin, int dsp_data_pin, int dsp_clk_pin, int dsp_audio_pin) {
-  _CS_PIN = dsp_cs_pin;
+void DSP::begin(int dsp_data_pin, int dsp_clk_pin, int dsp_cs_pin, int dsp_audio_pin) {
   _DATA_PIN = dsp_data_pin;
   _CLK_PIN = dsp_clk_pin;
+  _CS_PIN = dsp_cs_pin;
   _AUDIO_PIN = dsp_audio_pin;
 
   pinMode(_CS_PIN, OUTPUT);
