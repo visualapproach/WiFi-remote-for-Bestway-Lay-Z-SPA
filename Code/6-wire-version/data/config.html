@@ -78,6 +78,11 @@
               <option value="2">Set air bubbles (0/1)</option>
               <option value="3">Set heater (0/1)</option>
               <option value="4">Set filter pump (0/1)</option>
+              <option value="5">Reset queue (not used)</option>
+              <option value="7">Internal command (get target) (not used)</option>
+              <option value="8">Reset times (not used)</option>
+              <option value="9">Reset Cl timer (not used)</option>
+              <option value="10">Reset filter timer (not used)</option>
               <option value="11">Set hydrojets (0/1)</option>
               <option value="12">Set display brightness (0-8)</option>
               <option value="13">Set beep (0/1)</option>
@@ -126,7 +131,15 @@ const setpump = 4;
 const resetq = 5;
 const rebootesp = 6;
 const gettarget = 7;
-const commandlist = ["Set target", "Set unit", "Set bubbles", "Set heat", "Set pump", "Reset queue", "Reboot ESP", "Internal cmd"];
+const resettimes = 8;
+const resetcl = 9;
+const resetfilter = 10;
+const setjets = 11;
+const setbrightness = 12;
+const setbeep = 13;
+
+const commandlist = ["Set target", "Set unit", "Set bubbles", "Set heat", "Set pump", "Reset queue", "Reboot ESP", 
+                      "Internal cmd", "Reset times", "Reset Cl timer", "Reset filter timer", "Set jets", "Set brightness", "Beep"];
 
 function loadconfig(){
   const Http = new XMLHttpRequest();
