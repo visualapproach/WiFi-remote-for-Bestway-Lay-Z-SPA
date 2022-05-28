@@ -19,6 +19,18 @@
 #include <Ticker.h>
 #include <SoftwareSerial.h>
 
+#ifdef PCB_V2
+const int CIO_RX = D1;
+const int CIO_TX = D2;
+const int DSP_TX = D4;
+const int DSP_RX = D5;
+#else
+const int CIO_RX = D3;
+const int CIO_TX = D2;
+const int DSP_TX = D6;
+const int DSP_RX = D7;
+#endif
+
 class CIO {
 
   public:
@@ -37,8 +49,8 @@ class CIO {
     uint8_t to_DSP_buf[7];    //ESP to DSP
     uint8_t from_DSP_buf[7];  //DSP to ESP. We can ignore this message and send our own when ESP is in charge.
     uint8_t to_CIO_buf[7];    //Otherwise copy here. Buffer to send from ESP to CIO
-    bool cio_tx;              //set to true when data received. Send to webinterface+serial for debugging
-    bool dsp_tx;              //set to true when data received. Send to webinterface+serial for debugging
+    bool cio_tx_ok;              //set to true when data received. Send to webinterface+serial for debugging
+    bool dsp_tx_ok;              //set to true when data received. Send to webinterface+serial for debugging
 
     uint8_t heatbitmask;
 
@@ -55,77 +67,77 @@ class CIO {
 class BWC {
 
   public:
-	void begin(void); 
+  void begin(void); 
     void loop();
-	bool qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval);
-	bool newData();
-	void saveEventlog();
-	String getJSONStates();
-	String getJSONTimes();
-	String getJSONSettings();
-	void setJSONSettings(String message);
-	String getJSONCommandQueue();
-	void print(String txt);
-	uint8_t getState(int state);
-	void saveSettingsFlag();
-	void saveSettings();
-	Ticker saveSettingsTimer;
-	bool cio_tx;
-	bool dsp_tx;
-	void reloadCommandQueue();
-	String encodeBufferToString(uint8_t buf[7]);
-	String getSerialBuffers();
+  bool qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval);
+  bool newData();
+  void saveEventlog();
+  String getJSONStates();
+  String getJSONTimes();
+  String getJSONSettings();
+  void setJSONSettings(String message);
+  String getJSONCommandQueue();
+  void print(String txt);
+  uint8_t getState(int state);
+  void saveSettingsFlag();
+  void saveSettings();
+  Ticker saveSettingsTimer;
+  bool cio_tx_ok;
+  bool dsp_tx_ok;
+  void reloadCommandQueue();
+  String encodeBufferToString(uint8_t buf[7]);
+  String getSerialBuffers();
 
   private:
     CIO _cio;
-	uint32_t _commandQ[MAXCOMMANDS][4];
-	int _qCommandLen = 0;		//length of commandQ
-	uint32_t _buttonQ[MAXBUTTONS][4];
-	int _qButtonLen = 0;	//length of buttonQ
-	uint32_t _timestamp;
-	bool _newData = false;
-	uint32_t _cltime;
-	uint32_t _ftime;
-	uint32_t _uptime;
-	uint32_t _pumptime;
-	uint32_t _heatingtime;
-	uint32_t _airtime;
-	uint32_t _jettime;
-	uint32_t _uptime_ms;
-	uint32_t _pumptime_ms;
-	uint32_t _heatingtime_ms;
-	uint32_t _airtime_ms;
-	uint32_t _jettime_ms;
-	int32_t _timezone;
-	float _price;
-	uint32_t _finterval;
-	uint32_t _clinterval;
-	uint32_t _audio;
-	float _cost;
-	float _kwh;
-	bool _saveSettingsNeeded = false;
-	bool _saveEventlogNeeded = false;
-	bool _saveCmdqNeeded = false;
-	int _latestTarget;
-	int _tickerCount;
-	bool _sliderPrio = true;
-	uint8_t _currentStateIndex = 0;
-	uint32_t _tttt_time0;	//time at previous temperature change
-	uint32_t _tttt_time1;	//time at last temperature change
-	int _tttt_temp0;		//temp after previous change
-	int _tttt_temp1;		//temp after last change
-	int _tttt;				//time to target temperature after subtracting running time since last calculation
-	int _tttt_calculated;	//constant between calculations
+  uint32_t _commandQ[MAXCOMMANDS][4];
+  int _qCommandLen = 0;    //length of commandQ
+  uint32_t _buttonQ[MAXBUTTONS][4];
+  int _qButtonLen = 0;  //length of buttonQ
+  uint32_t _timestamp;
+  bool _newData = false;
+  uint32_t _cltime;
+  uint32_t _ftime;
+  uint32_t _uptime;
+  uint32_t _pumptime;
+  uint32_t _heatingtime;
+  uint32_t _airtime;
+  uint32_t _jettime;
+  uint32_t _uptime_ms;
+  uint32_t _pumptime_ms;
+  uint32_t _heatingtime_ms;
+  uint32_t _airtime_ms;
+  uint32_t _jettime_ms;
+  int32_t _timezone;
+  float _price;
+  uint32_t _finterval;
+  uint32_t _clinterval;
+  uint32_t _audio;
+  float _cost;
+  float _kwh;
+  bool _saveSettingsNeeded = false;
+  bool _saveEventlogNeeded = false;
+  bool _saveCmdqNeeded = false;
+  int _latestTarget;
+  int _tickerCount;
+  bool _sliderPrio = true;
+  uint8_t _currentStateIndex = 0;
+  uint32_t _tttt_time0;  //time at previous temperature change
+  uint32_t _tttt_time1;  //time at last temperature change
+  int _tttt_temp0;    //temp after previous change
+  int _tttt_temp1;    //temp after last change
+  int _tttt;        //time to target temperature after subtracting running time since last calculation
+  int _tttt_calculated;  //constant between calculations
 
-	void _qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration);
-	void _handleCommandQ(void);
-	void _handleButtonQ(void);
-	void _startNTP();
-	void _loadSettings();
-	void _loadCommandQueue();
-	void _saveCommandQueue();
-	void _saveRebootInfo();
-	void _updateTimes();
+  void _qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration);
+  void _handleCommandQ(void);
+  void _handleButtonQ(void);
+  void _startNTP();
+  void _loadSettings();
+  void _loadCommandQueue();
+  void _saveCommandQueue();
+  void _saveRebootInfo();
+  void _updateTimes();
 };
 
 #endif

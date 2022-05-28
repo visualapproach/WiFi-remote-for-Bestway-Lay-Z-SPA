@@ -1,38 +1,4 @@
-#include "BWC54149E_8266.h"
-
-CIO *pointerToClass;
-//BWC *pointerToBWC;
-
-//set flag instead of saving. This may avoid crashes. Some functions appears to crash when called from a timer.
-// static void tick(void){
-  // pointerToBWC->saveSettingsFlag();
-// }
-
-static void IRAM_ATTR LEDdatapin(void) {
-  pointerToClass->LEDdataHandler();
-}
-static void IRAM_ATTR clockpin(void) {
-  pointerToClass->clkHandler();
-}
-
-void CIO::begin(int cio_td_pin, int cio_clk_pin, int cio_ld_pin) {
-  pointerToClass = this;
-  _CIO_TD_PIN = cio_td_pin;
-  _CIO_CLK_PIN = cio_clk_pin;
-  _CIO_LD_PIN = cio_ld_pin;
-  pinMode(_CIO_LD_PIN, INPUT);
-  pinMode(_CIO_TD_PIN, OUTPUT);
-  pinMode(_CIO_CLK_PIN, INPUT);
-  digitalWrite(_CIO_TD_PIN, 1); //idle high
-  attachInterrupt(digitalPinToInterrupt(_CIO_LD_PIN), LEDdatapin, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(_CIO_CLK_PIN), clockpin, CHANGE); //Write on falling edge and read on rising edge
-}
-
-void CIO::stop(){
-  detachInterrupt(digitalPinToInterrupt(_CIO_LD_PIN));
-  detachInterrupt(digitalPinToInterrupt(_CIO_CLK_PIN));
-}
-
+#include "BWC_common.h"
 
 //match 7 segment pattern to a real digit
 char CIO::_getChar(uint8_t value) {
@@ -44,177 +10,6 @@ char CIO::_getChar(uint8_t value) {
   return '*';
 }
 
-void CIO::loop(void) {
-  //newdata is true when a data packet has arrived from cio
-  if(newData) {
-    newData = false;
-    static int capturePhase = 0;
-    static uint32_t buttonReleaseTime;
-    static uint16_t prevButton = ButtonCodes[NOBTN];
-    /*
-     * This model is only sending messages when something updated
-     * so this section is not useful
-     */
-    /*
-    //require two consecutive messages to be equal before registering
-    static uint8_t prev_checksum = 0;
-    uint8_t checksum = 0;
-    for(unsigned int i = 0; i < sizeof(payload); i++){
-      checksum += _payload[i];
-    }
-    if(checksum != prev_checksum) {
-      prev_checksum = checksum;
-      return;
-    }
-    prev_checksum = checksum;
-     */
-
-    //copy private array to public array
-    for(unsigned int i = 0; i < sizeof(payload); i++){
-      payload[i] = _payload[i];
-    }
-
-    //determine if anything changed, so we can update webclients
-    for(unsigned int i = 0; i < sizeof(payload); i++){
-      if (payload[i] != _prevPayload[i]) dataAvailable = true;
-      _prevPayload[i] = payload[i];
-    }
-
-    //brightness = _brightness & 7; //extract only the brightness bits (0-7)
-    //extract information from payload to a better format
-    states[LOCKEDSTATE] = (payload[LCK_IDX] & (1 << LCK_BIT)) > 0;
-    states[POWERSTATE] = 1;  //(payload[PWR_IDX] & (1 << PWR_BIT)) > 0;
-    states[UNITSTATE] = (payload[C_IDX] & (1 << C_BIT)) > 0;
-    states[BUBBLESSTATE] = (payload[AIR_IDX] & (1 << AIR_BIT)) > 0;
-    states[HEATGRNSTATE] = (payload[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
-    states[HEATREDSTATE] = (payload[REDHTR_IDX] & (1 << REDHTR_BIT)) > 0;
-    states[HEATSTATE] = states[HEATGRNSTATE] || states[HEATREDSTATE];
-    states[PUMPSTATE] = (payload[FLT_IDX] & (1 << FLT_BIT)) > 0;
-    states[CHAR1] = (uint8_t)_getChar(payload[DGT1_IDX]);
-    states[CHAR2] = (uint8_t)_getChar(payload[DGT2_IDX]);
-    states[CHAR3] = (uint8_t)_getChar(payload[DGT3_IDX]);
-    if(HASJETS) states[JETSSTATE] = (payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
-    else states[JETSSTATE] = 0;
-    //Determine if display is showing target temp or actual temp or anything else.
-    //capture TARGET after UP/DOWN has been pressed...
-    if( ((button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN])) && (prevButton != ButtonCodes[UP]) && (prevButton != ButtonCodes[DOWN]) ) capturePhase = 1;
-    //...until 2 seconds after UP/DOWN released
-    if( (button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN]) ) buttonReleaseTime = millis();
-    if(millis()-buttonReleaseTime > 2000) capturePhase = 0;
-    //convert text on display to a value if the chars are recognized
-    if(states[CHAR1] == '*' || states[CHAR2] == '*' || states[CHAR3] == '*') return;
-    String tempstring = String((char)states[CHAR1])+String((char)states[CHAR2])+String((char)states[CHAR3]);
-    uint8_t tmpTemp = tempstring.toInt();
-    //capture only if showing plausible values (not blank screen while blinking)
-    if( (capturePhase == 1) && (tmpTemp > 19) ) {
-      states[TARGET] = tmpTemp;
-    }
-    //wait 4 seconds after UP/DOWN is released to be sure that actual temp is shown
-    if( (capturePhase == 0) && (millis()-buttonReleaseTime > 10000) && payload[DGT3_IDX]!=0xED && payload[DGT3_IDX]!=0) states[TEMPERATURE] = tmpTemp;    
-    prevButton = button;
-
-    if(states[UNITSTATE] != _prevUNT || states[HEATSTATE] != _prevHTR || states[PUMPSTATE] != _prevFLT) {
-      stateChanged = true;
-      _prevUNT = states[UNITSTATE];
-      _prevHTR = states[HEATSTATE];
-      _prevFLT = states[PUMPSTATE];
-    }
-  }
-}
-
-//CIO comm
-//packet start/stop
-void IRAM_ATTR CIO::LEDdataHandler(void) {
-  //Check START/END condition: _LD_PIN change when _CLK_PIN is high.
-  if (READ_PERI_REG(PIN_IN) & (1 << _CIO_CLK_PIN)) {
-    _byteCount = 0;
-    _bitCount = 0;
-    _received_cmd = 0;
-    newData = READ_PERI_REG(PIN_IN) & (1 << _CIO_LD_PIN);
-  }
-}
-
-void IRAM_ATTR CIO::clkHandler(void) {
-  //read data on _cio_ld_pin and write to _cio_td_pin (LSBF)
-
-  uint16_t td_bitnumber = _bitCount % 10;
-  uint16_t ld_bitnumber = _bitCount % 8;
-  uint16_t buttonwrapper = (B11111110 << 8) | (button<<1); //startbit @ bit0, stopbit @ bit9
-
-  //rising or falling edge?
-  bool risingedge = READ_PERI_REG(PIN_IN) & (1 << _CIO_CLK_PIN);
-  if(risingedge){
-    //clk rising edge
-    _byteCount = _bitCount / 8;
-    if(_byteCount == 0){
-      _received_cmd |= ((READ_PERI_REG(PIN_IN) & (1 << _CIO_LD_PIN))>0) << ld_bitnumber;
-    }
-    else if( (_byteCount<6) && (_received_cmd == CMD2) ){ //only write to payload after CMD2. Also protect from buffer overflow
-      //overwrite the old payload bit with new bit
-      _payload[_byteCount-1] = (_payload[_byteCount-1] & ~(1 << ld_bitnumber)) | ((READ_PERI_REG(PIN_IN) & (1 << _CIO_LD_PIN))>0) << ld_bitnumber;
-    }
-    //store brightness in _cio local variable. It is not used, but put here in case we want to obey the pump.
-    if(_bitCount == 7 && (_received_cmd & B11000000) == B10000000) _brightness = _received_cmd;
-    _bitCount++;
-  } else {
-    //clk falling edge
-    //first and last bit is a dummy start/stop bit (0/1), then 8 data bits in btwn
-    if (buttonwrapper & (1 << td_bitnumber)) {
-      WRITE_PERI_REG( PIN_OUT_SET, 1 << _CIO_TD_PIN);
-    } else {
-      WRITE_PERI_REG( PIN_OUT_CLEAR, 1 << _CIO_TD_PIN);
-    }
-  }
-}
-
-uint16_t DSP::getButton(void) {
-  if(millis() - _dspLastGetButton > 20){
-    uint16_t newButton = 0;
-    _dspLastGetButton = millis();
-    //startbit
-    digitalWrite(_DSP_CLK_PIN, LOW);
-    delayMicroseconds(CLKPW);
-    digitalWrite(_DSP_CLK_PIN, HIGH);
-    delayMicroseconds(CLKPW);
-    //clock in 8 data bits
-    for(int i = 0; i < 8; i++){
-      digitalWrite(_DSP_CLK_PIN, LOW);
-      delayMicroseconds(CLKPW);
-      digitalWrite(_DSP_CLK_PIN, HIGH);
-      newButton |= digitalRead(_DSP_TD_PIN)<<i;
-      delayMicroseconds(CLKPW);
-    }
-    //stop bit
-    digitalWrite(_DSP_CLK_PIN, LOW);
-    delayMicroseconds(CLKPW);
-    digitalWrite(_DSP_CLK_PIN, HIGH);
-    //work around for glitches. Only register change after two consecutive and equal values
-    if(newButton == _prevButton){
-      _oldButton = newButton;
-    } else {
-      _prevButton = newButton;
-    }
-  }
-  return (_oldButton);
-}
-
-
-//bitsToSend can only be 8 with this solution of LSB first
-void DSP::_sendBitsToDSP(uint32_t outBits, int bitsToSend) {
-  for (int i = 0; i < bitsToSend; i++) {
-    digitalWrite(_DSP_CLK_PIN, LOW);
-    delayMicroseconds(5);
-    digitalWrite(_DSP_LD_PIN, outBits & (1 << i));
-    delayMicroseconds(CLKPW-5);
-    digitalWrite(_DSP_CLK_PIN, HIGH);
-    delayMicroseconds(CLKPW);
-  }
-}
-
-uint16_t DSP::_receiveBitsFromDSP() {
-  return 0;
-}
-
 char DSP::_getCode(char value) {
   for (unsigned int index = 0; index < sizeof(CHARS); index++) {
     if (value == CHARS[index]) {
@@ -224,172 +19,32 @@ char DSP::_getCode(char value) {
   return 0x00;  //no match, return 'space'
 }
 
-void DSP::updateDSP(uint8_t brightness) {
-   //refresh display with ~10Hz
-  if(millis() -_dspLastRefreshTime > 99){
-    _dspLastRefreshTime = millis();
-      digitalWrite(_DSP_LD_PIN, LOW); //start of packet
-      delayMicroseconds(CLKPW);
-      _sendBitsToDSP(CMD1, 8);
-      //end of packet: clock low, make sure LD is low before rising clock then LD
-      digitalWrite(_DSP_CLK_PIN, LOW);
-      digitalWrite(_DSP_LD_PIN, LOW);
-      delayMicroseconds(CLKPW);
-      digitalWrite(_DSP_CLK_PIN, HIGH);
-      delayMicroseconds(CLKPW);
-      digitalWrite(_DSP_LD_PIN, HIGH);
-      delayMicroseconds(CLKPW);
-
-      digitalWrite(_DSP_LD_PIN, LOW); //start of packet
-      delayMicroseconds(CLKPW);
-      _sendBitsToDSP(CMD2, 8);
-      for(unsigned int i=0; i<sizeof(payload); i++){
-        _sendBitsToDSP(payload[i], 8);
-      }
-      //end of packet: clock low, make sure LD is low before rising clock then LD
-      digitalWrite(_DSP_CLK_PIN, LOW);
-      digitalWrite(_DSP_LD_PIN, LOW);
-      delayMicroseconds(CLKPW);
-      digitalWrite(_DSP_CLK_PIN, HIGH);
-      delayMicroseconds(CLKPW);
-      digitalWrite(_DSP_LD_PIN, HIGH);
-      delayMicroseconds(CLKPW);
-      
-      digitalWrite(_DSP_LD_PIN, LOW); //start of packet
-      delayMicroseconds(CLKPW);
-      _sendBitsToDSP((CMD3 & 0xF8) | brightness, 8);
-      //end of packet: clock low, make sure LD is low before rising clock then LD
-      digitalWrite(_DSP_CLK_PIN, LOW);
-      digitalWrite(_DSP_LD_PIN, LOW);
-      delayMicroseconds(CLKPW);
-      digitalWrite(_DSP_CLK_PIN, HIGH);
-      delayMicroseconds(CLKPW);
-      digitalWrite(_DSP_LD_PIN, HIGH);
-      delayMicroseconds(CLKPW);
-  }
-}
-
-void DSP::textOut(String txt) {
-  int len = txt.length();
-  if (len >= 3) {
-    for (int i = 0; i < len - 2; i++) {
-      payload[DGT1_IDX] = _getCode(txt.charAt(i));
-      payload[DGT2_IDX] = _getCode(txt.charAt(i + 1));
-      payload[DGT3_IDX] = _getCode(txt.charAt(i + 2));
-      updateDSP(7);
-      delay(230);
-    }
-  }
-  else if (len == 2) {
-    payload[DGT1_IDX] = _getCode(' ');
-    payload[DGT2_IDX] = _getCode(txt.charAt(0));
-    payload[DGT3_IDX] = _getCode(txt.charAt(1));
-    updateDSP(7);
-  }
-  else if (len == 1) {
-    payload[DGT1_IDX] = _getCode(' ');
-    payload[DGT2_IDX] = _getCode(' ');
-    payload[DGT3_IDX] = _getCode(txt.charAt(0));
-    updateDSP(7);
-  }
-}
-
-void DSP::LEDshow() {
-  //todo: clear payload first...
-  for(unsigned int y = 0; y < sizeof(payload); y++){
-    for(int x = 0; x < 9; x++){
-      payload[y] = (1 << x);
-      updateDSP(7);
-      delay(200);
-    }
-  }
-}
-
-void DSP::begin(int dsp_td_pin, int dsp_clk_pin, int dsp_ld_pin, int dsp_audio_pin) {
-  _DSP_TD_PIN = dsp_td_pin;
-  _DSP_CLK_PIN = dsp_clk_pin;
-  _DSP_LD_PIN = dsp_ld_pin;
-  _DSP_AUDIO_PIN = dsp_audio_pin;
-
-  pinMode(_DSP_LD_PIN, OUTPUT);
-  pinMode(_DSP_TD_PIN, INPUT);
-  pinMode(_DSP_CLK_PIN, OUTPUT);
-  pinMode(_DSP_AUDIO_PIN, OUTPUT);
-  digitalWrite(_DSP_LD_PIN, HIGH);   //idle high
-  digitalWrite(_DSP_CLK_PIN, HIGH); //shift on falling, latch on rising
-  digitalWrite(_DSP_AUDIO_PIN, LOW);
-}
-
-void DSP::playIntro() {
-  int longnote = 125;
-  int shortnote = 63;
-
-  tone(_DSP_AUDIO_PIN, NOTE_C7, longnote);
-  delay(2 * longnote);
-  tone(_DSP_AUDIO_PIN, NOTE_G6, shortnote);
-  delay(2 * shortnote);
-  tone(_DSP_AUDIO_PIN, NOTE_G6, shortnote);
-  delay(2 * shortnote);
-  tone(_DSP_AUDIO_PIN, NOTE_A6, longnote);
-  delay(2 * longnote);
-  tone(_DSP_AUDIO_PIN, NOTE_G6, longnote);
-  delay(2 * longnote);
-  //paus
-  delay(2 * longnote);
-  tone(_DSP_AUDIO_PIN, NOTE_B6, longnote);
-  delay(2 * longnote);
-  tone(_DSP_AUDIO_PIN, NOTE_C7, longnote);
-  delay(2 * longnote);
-  noTone(_DSP_AUDIO_PIN);
-}
-
-//silent beep instead of annoying beeps every time something changes
-void DSP::beep() {
-  //int longnote = 125;
-  // int shortnote = 63;
-  // tone(_AUDIO_PIN, NOTE_C6, shortnote);
-  // delay(shortnote);
-  // tone(_AUDIO_PIN, NOTE_C7, shortnote);
-  // delay(shortnote);
-  // noTone(_AUDIO_PIN);
-}
-
-//new beep for button presses only
-void DSP::beep2() {
-  //int longnote = 125;
-  int shortnote = 40;
-  tone(_DSP_AUDIO_PIN, NOTE_D6, shortnote);
-  delay(shortnote);
-  tone(_DSP_AUDIO_PIN, NOTE_D7, shortnote);
-  delay(shortnote);
-  tone(_DSP_AUDIO_PIN, NOTE_D8, shortnote);
-  delay(shortnote);
-  noTone(_DSP_AUDIO_PIN);
-}
-
 BWC::BWC(){}
 
 void BWC::begin(void){
-  _cio.begin(D7, D2, D1);
-  _dsp.begin(D5, D4, D3, D6);
+  _cio.begin(ciopins[0], ciopins[1], ciopins[2]);
+  _dsp.begin(dsppins[0], dsppins[1], dsppins[2], dsppins[3]);
   begin2();
 }
 
+//overloaded function if user want to manually use different pinout
 void BWC::begin(
-      int cio_td_pin,
+  //left symbol is for type1, right for type2
+      int cio_data_td_pin,
       int cio_clk_pin,
-      int cio_ld_pin,
-      int dsp_td_pin,
+      int cio_cs_ld_pin,
+      int dsp_data_td_pin,
       int dsp_clk_pin,
-      int dsp_ld_pin,
+      int dsp_cs_ld_pin,
       int dsp_audio_pin
       )
-      {
+{
   //start CIO and DSP modules
-  _cio.begin(cio_td_pin, cio_clk_pin, cio_ld_pin);
-  _dsp.begin(dsp_td_pin, dsp_clk_pin, dsp_ld_pin, dsp_audio_pin);
+  _cio.begin(cio_data_td_pin, cio_clk_pin, cio_cs_ld_pin);
+  _dsp.begin(dsp_data_td_pin, dsp_clk_pin, dsp_cs_ld_pin, dsp_audio_pin);
   begin2();
 }
+
 
 void BWC::begin2(){
   //Initialize variables
@@ -412,7 +67,7 @@ void BWC::begin2(){
   _loadCommandQueue();
   _restoreStates();
   if(_audio) _dsp.playIntro();
-  _dsp.LEDshow();
+  //_dsp.LEDshow();
   saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
   _tttt = 0;
   _tttt_calculated = 0;
@@ -434,7 +89,6 @@ void BWC::loop(){
   _timestamp = DateTime.now();
 
   //update DSP payload (memcpy(dest*, source*, len))
-  //memcpy(&_dsp.payload[0], &_cio.payload[0], 11);
   for(unsigned int i = 0; i < sizeof(_dsp.payload); i++){
     _dsp.payload[i] = _cio.payload[i];
   }
@@ -454,8 +108,8 @@ void BWC::loop(){
     _cio.stateChanged = false;
   }
   if(_saveStatesNeeded) _saveStates();
-  //if set target command overshot we need to correct that
-  if( (_cio.states[TARGET] != _latestTarget) && (_qButtonLen == 0) && (_latestTarget != 0) && (_sliderPrio) ) qCommand(SETTARGET, _latestTarget, 0, 0);
+  //if set target command missed we need to correct that
+  if( (_cio.states[TARGET] != _sliderTarget) && (_qButtonLen == 0) && (_sliderTarget != 0) && (_sliderPrio) ) qCommand(SETTARGET, _sliderTarget, 0, 0);
   //if target temp is unknown, find out.
   if( (_cio.states[TARGET] == 0) && (_qButtonLen == 0) ) qCommand(GETTARGET, (uint32_t)' ', 0, 0);
 
@@ -507,7 +161,7 @@ int BWC::_CodeToButton(uint16_t val){
   return 0;
 }
 
-void BWC::_qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration) {
+void BWC::_qButton(uint32_t btn, uint32_t state, uint32_t value, int32_t maxduration) {
   if(_qButtonLen == MAXBUTTONS) return;  //maybe textout an error message if queue is full?
   _buttonQ[_qButtonLen][0] = btn;
   _buttonQ[_qButtonLen][1] = state;
@@ -522,11 +176,13 @@ void BWC::_handleButtonQ(void) {
 
   elapsedTime = millis() - prevMillis;
   prevMillis = millis();
-  if(_qButtonLen > 0){
+  if(_qButtonLen > 0)
+  {
     // First subtract elapsed time from maxduration
     _buttonQ[0][3] -= elapsedTime;
     //check if state is as desired, or duration is up. If so - remove row. Else set BTNCODE
-    if( (_cio.states[_buttonQ[0][1]] == _buttonQ[0][2]) || (_buttonQ[0][3] <= 0) ){
+    if( (_cio.states[_buttonQ[0][1]] == _buttonQ[0][2]) || (_buttonQ[0][3] <= 0) )
+    {
       if(_buttonQ[0][0] == UP || _buttonQ[0][0] == DOWN) maxeffort = false;
       //remove row
       for(int i = 0; i < _qButtonLen-1; i++){
@@ -537,12 +193,16 @@ void BWC::_handleButtonQ(void) {
       }
       _qButtonLen--;
       _cio.button = ButtonCodes[NOBTN];
-    } else {
+    } 
+    else 
+    {
       if(_buttonQ[0][0] == UP || _buttonQ[0][0] == DOWN) maxeffort = true;
       //set buttoncode
       _cio.button = ButtonCodes[_buttonQ[0][0]];
     }
-  } else {
+  }
+  else 
+  {
     static uint16_t prevbtn = ButtonCodes[NOBTN];
     //no queue so let dsp value through
     uint16_t pressedButton = _dsp.getButton();
@@ -623,37 +283,43 @@ void BWC::_handleCommandQ(void) {
     if (_timestamp >= _commandQ[0][2]){
       _qButton(POWER, POWERSTATE, 1, 5000); //press POWER button until states[POWERSTATE] is 1, max 5000 ms
       _qButton(LOCK, LOCKEDSTATE, 0, 5000); //press LOCK button until states[LOCKEDSTATE] is 0
-      switch (_commandQ[0][0]) {
+      switch (_commandQ[0][0]) 
+      {
         case SETTARGET:
           {
-            _latestTarget = _commandQ[0][1];
-            //Fiddling with the hardware buttons is ignored while this command executes.
+            _sliderTarget = _commandQ[0][1];
             _sliderPrio = true;
-            //Press up/down appropriate number of times. We need to time this well.
             int diff = (int)_commandQ[0][1] - (int)_cio.states[TARGET];
-            //First press will just show current target temp
-            int pushtime = 500;         //how fast can we do this??*******************
+            int pushtime = 500;
             int releasetime = 300;
-            _qButton(UP, TARGET, _commandQ[0][1], pushtime);
-            _qButton(NOBTN, TARGET, _commandQ[0][1], releasetime);
             uint32_t updown;
             diff<0 ? updown = DOWN : updown = UP;
-            for(int i = 0; i < abs(diff); i++)
-            {
-              _qButton(updown, CHAR1, 0xFF, pushtime);
-              _qButton(NOBTN, CHAR1, 0xFF, releasetime);
-            }
-            //Old method overshoots target too often:
-            //choose which direction to go (up or down)
-            // if(_cio.states[TARGET] > _commandQ[0][1]) _qButton(DOWN, TARGET, _commandQ[0][1], 10000);
-            // if(_cio.states[TARGET] < _commandQ[0][1]) _qButton(UP, TARGET, _commandQ[0][1], 10000);
+            _qButton(updown, CHAR1, 0xFF, pushtime);
+            _qButton(NOBTN, CHAR1, 0xFF, releasetime);
             break;
           }
         case SETUNIT:
+          /* 
+            Quick convert temperature to other unit. 
+            This will also be done automatically in 10 seconds.
+            But we are impatient.
+          */
+          if(_commandQ[0][1] && !_cio.states[UNITSTATE])
+          {
+            //F to C
+            _cio.states[TEMPERATURE] = round((_cio.states[TEMPERATURE]-32)/1.8);
+            _cio.states[TARGET] = round((_cio.states[TARGET]-32)/1.8);
+          }
+          if(!_commandQ[0][1] && _cio.states[UNITSTATE])
+          {
+            //C to F
+            _cio.states[TEMPERATURE] = round((_cio.states[TEMPERATURE]*1.8)+32);
+            _cio.states[TARGET] = round((_cio.states[TARGET]*1.8)+32);
+          }
           _qButton(UNIT, UNITSTATE, _commandQ[0][1], 5000);
-          _qButton(NOBTN, CHAR3, 0xFF, 700);
-          _qButton(UP, CHAR3, _commandQ[0][1], 700);
-          _latestTarget = 0; //force update
+          _qButton(NOBTN, CHAR3, 0xFF, 300);
+          //_qButton(UP, CHAR3, _commandQ[0][1], 500);
+          _sliderTarget = 0; //force update
           break;
         case SETBUBBLES:
           _qButton(BUBBLES, BUBBLESSTATE, _commandQ[0][1], 5000);
@@ -698,7 +364,10 @@ void BWC::_handleCommandQ(void) {
           _qButton(HYDROJETS, JETSSTATE, _commandQ[0][1], 5000);
           break;
         case SETBRIGHTNESS:
-          _dspBrightness = _commandQ[0][1] & 7;
+          if(_commandQ[0][1] < 9) _dspBrightness = _commandQ[0][1];
+          break;
+        case SETBEEP:
+          _commandQ[0][1] == 0 ? _dsp.beep2() : _dsp.playIntro();
           break;
       }
       //If interval > 0 then append to commandQ with updated xtime.
@@ -714,6 +383,7 @@ void BWC::_handleCommandQ(void) {
       _saveCommandQueue();
       if(restartESP) {
         saveSettings();
+        delay(3000);
         ESP.restart();
       }
     }
@@ -778,6 +448,8 @@ String BWC::getJSONTimes() {
     doc["CLINT"] = _clinterval;
     doc["KWH"] = _cost/_price;
     doc["TTTT"] = _tttt;
+    doc["MINCLK"] = _cio.clk_per;
+    _cio.clk_per = 1000;  //reset minimum clock period
 
     // Serialize JSON to string
     String jsonmsg;
@@ -805,6 +477,7 @@ String BWC::getJSONSettings(){
     doc["REBOOTINFO"] = ESP.getResetReason();
     doc["REBOOTTIME"] = DateTime.getBootTime();
     doc["RESTORE"] = _restoreStatesOnStart;
+    doc["MODEL"] = MYMODEL;
 
     // Serialize JSON to string
     String jsonmsg;
@@ -967,10 +640,8 @@ void BWC::saveSettings(){
     Serial.println(F("Failed to write json to settings.txt"));
   }
   file.close();
-  DateTime.begin();
   //revive the dog
   ESP.wdtEnable(0);
-
 }
 
 void BWC::_loadCommandQueue(){
@@ -1097,11 +768,11 @@ void BWC::_restoreStates() {
   uint8_t unt = doc["UNT"];
   uint8_t flt = doc["FLT"];
   uint8_t htr = doc["HTR"];
-  qCommand(SETUNIT, unt, DateTime.now()+10, 0);
+  qCommand(SETUNIT, unt, 0, 0);
   _cio.states[UNITSTATE] = unt;
-  qCommand(SETPUMP, flt, DateTime.now()+12, 0);
-  qCommand(SETHEATER, htr, DateTime.now()+14, 0);
-
+  qCommand(SETPUMP, flt, 0, 0);
+  qCommand(SETHEATER, htr, 0, 0);
+  Serial.println("restoring states");
   file.close();
 }
 

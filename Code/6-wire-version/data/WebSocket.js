@@ -98,11 +98,12 @@ function handlemsg(e)
 		]
 		document.getElementById('mqtt').innerHTML = "MQTT: " + mqtt_states[msgobj.MQTT + 4];
 		document.getElementById('fw').innerHTML = "Firmware version: " + msgobj.FW;
+		document.getElementById('model').innerHTML = "Model: " + msgobj.MODEL;
 		document.getElementById('rssi').innerHTML = "RSSI: " + msgobj.RSSI;
 
 		// hydro jets available
-		document.getElementById('jets').style.display = (msgobj.HASJETS ? 'inherit' : 'none');
-		document.getElementById('jetstotals').style.display = (msgobj.HASJETS ? 'inherit' : 'none');
+		document.getElementById('jets').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
+		document.getElementById('jetstotals').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
 	}
 
 	if (msgobj.CONTENT == "STATES")

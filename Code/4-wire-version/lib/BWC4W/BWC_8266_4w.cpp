@@ -1,17 +1,14 @@
 #include "BWC_8266_4w.h"
 
 void CIO::begin() {
-  //Setup serial to CIO and DSP here according to my PCB
+  //Setup serial to CIO and DSP here according to chosen PCB.
   /*
-    CIO_RX = D3
-    CIO_TX = D2
-    DSP_TX = D6
-    DSP_RX = D7
     Devices are sending on their TX lines, so we read that with RX pins on the ESP
+    Hence the "backwards" parameters
   */
-  cio_serial.begin(9600, SWSERIAL_8N1, D2, D3, false, 63);
+  cio_serial.begin(9600, SWSERIAL_8N1, CIO_TX, CIO_RX, false, 63);
   cio_serial.setTimeout(20);
-  dsp_serial.begin(9600, SWSERIAL_8N1, D6, D7, false, 63);
+  dsp_serial.begin(9600, SWSERIAL_8N1, DSP_TX, DSP_RX, false, 63);
   dsp_serial.setTimeout(20);
 
   states[TARGET] = 20;
@@ -22,8 +19,8 @@ void CIO::begin() {
   states[CHAR1] = ' ';
   states[CHAR2] = ' ';
   states[CHAR3] = ' ';
-  cio_tx = false;
-  dsp_tx = false;
+  cio_tx_ok = false;
+  dsp_tx_ok = false;
 }
 
 void CIO::loop(void) {
@@ -46,7 +43,7 @@ void CIO::loop(void) {
       }
       states[TEMPERATURE] = from_CIO_buf[TEMPINDEX];
       states[ERROR] =       from_CIO_buf[ERRORINDEX];
-      cio_tx = true;  //show the user that this line works (appears to work)
+      cio_tx_ok = true;  //show the user that this line works (appears to work)
       //check if cio send error msg
       states[CHAR1] = ' ';
       states[CHAR2] = ' ';
@@ -102,7 +99,7 @@ void CIO::loop(void) {
         } else {
           updateStates();
         }
-        dsp_tx = true;  //show the user that this line works (appears to work)
+        dsp_tx_ok = true;  //show the user that this line works (appears to work)
       }
     }  else
     {
@@ -172,15 +169,11 @@ void CIO::updatePayload(){
 
 
 void BWC::begin(void){
-	_cio.begin();
-	//_startNTP(); this is done from main.cpp
-	LittleFS.begin();
-	_loadSettings();
-	_loadCommandQueue();
-	_saveRebootInfo();
-	saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
-  cio_tx = false;
-  dsp_tx = false;	
+  _cio.begin();
+  //_startNTP(); this is done from main.cpp
+  LittleFS.begin();
+  cio_tx_ok = false;
+  dsp_tx_ok = false;  
   _cltime = 0;
   _ftime = 0;
   _uptime = 0;
@@ -199,6 +192,10 @@ void BWC::begin(void){
   _tttt_time1 = DateTime.now();
   _tttt_temp0 = 20;
   _tttt_temp1 = 20;
+  _loadSettings();
+  _loadCommandQueue();
+  _saveRebootInfo();
+  saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
 }
 
 void BWC::loop(){
@@ -217,69 +214,69 @@ void BWC::loop(){
   if(_saveCmdqNeeded) _saveCommandQueue();
   if(_saveSettingsNeeded) saveSettings();
   ESP.wdtEnable(0);
-  cio_tx = _cio.cio_tx;
-  dsp_tx = _cio.dsp_tx;
+  cio_tx_ok = _cio.cio_tx_ok;
+  dsp_tx_ok = _cio.dsp_tx_ok;
 }
 
 
 bool BWC::qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval) {
-	//handle special commands
-	if(cmd == RESETQ){
-		_qButtonLen = 0;
-		_qCommandLen = 0;
-		_saveCommandQueue();
-		return true;
-	} 
+  //handle special commands
+  if(cmd == RESETQ){
+    _qButtonLen = 0;
+    _qCommandLen = 0;
+    _saveCommandQueue();
+    return true;
+  } 
 
-	//add parameters to _commandQ[rows][parameter columns] and sort the array on xtime.
-	int row = _qCommandLen;
-	if (_qCommandLen == MAXCOMMANDS) return false;
-	//sort array on xtime
-	for (int i = 0; i < _qCommandLen; i++) {
-		if (xtime < _commandQ[i][2]){
-			//insert row at [i]
-			row = i;
-			break;
-		}
-	}	
-	//make room for new row
-	for (int i = _qCommandLen; i > (row); i--){
-		_commandQ[i][0] = _commandQ[i-1][0];
-		_commandQ[i][1] = _commandQ[i-1][1];
-		_commandQ[i][2] = _commandQ[i-1][2];
-		_commandQ[i][3] = _commandQ[i-1][3];
-	}
-	//add new command
-	_commandQ[row][0] = cmd;
-	_commandQ[row][1] = val;
-	_commandQ[row][2] = xtime;
-	_commandQ[row][3] = interval;
-	_qCommandLen++;
-	delay(0);
-	_saveCommandQueue();
-	return true;
+  //add parameters to _commandQ[rows][parameter columns] and sort the array on xtime.
+  int row = _qCommandLen;
+  if (_qCommandLen == MAXCOMMANDS) return false;
+  //sort array on xtime
+  for (int i = 0; i < _qCommandLen; i++) {
+    if (xtime < _commandQ[i][2]){
+      //insert row at [i]
+      row = i;
+      break;
+    }
+  }  
+  //make room for new row
+  for (int i = _qCommandLen; i > (row); i--){
+    _commandQ[i][0] = _commandQ[i-1][0];
+    _commandQ[i][1] = _commandQ[i-1][1];
+    _commandQ[i][2] = _commandQ[i-1][2];
+    _commandQ[i][3] = _commandQ[i-1][3];
+  }
+  //add new command
+  _commandQ[row][0] = cmd;
+  _commandQ[row][1] = val;
+  _commandQ[row][2] = xtime;
+  _commandQ[row][3] = interval;
+  _qCommandLen++;
+  delay(0);
+  _saveCommandQueue();
+  return true;
 }
 
 void BWC::_handleCommandQ(void) {
-	bool restartESP = false;
-	if(_qCommandLen > 0) { 
-	//cmp time with xtime. If more, then execute (adding buttons to buttonQ).
-	
-		if (_timestamp >= _commandQ[0][2]){
-			switch (_commandQ[0][0]) {
+  bool restartESP = false;
+  if(_qCommandLen > 0) { 
+  //cmp time with xtime. If more, then execute (adding buttons to buttonQ).
+  
+    if (_timestamp >= _commandQ[0][2]){
+      switch (_commandQ[0][0]) {
 
-				case SETTARGET:
-					_cio.states[TARGET] = _commandQ[0][1];
+        case SETTARGET:
+          _cio.states[TARGET] = _commandQ[0][1];
           _cio.dataAvailable = true;
           if(_cio.states[TARGET] > 40) _cio.states[TARGET] = 40;  //don't cook anyone
-					break;
+          break;
 
-				case SETUNIT:
+        case SETUNIT:
           _cio.states[UNITSTATE] = _commandQ[0][1];
           _cio.dataAvailable = true;
-					break;
+          break;
 
-				case SETBUBBLES:
+        case SETBUBBLES:
           if(_cio.states[BUBBLESSTATE] == _commandQ[0][1]) break;  //no change required
           _cio.dataAvailable = true;
           _currentStateIndex = JUMPTABLE[_currentStateIndex][BUBBLETOGGLE];
@@ -291,7 +288,7 @@ void BWC::_handleCommandQ(void) {
           if(ALLOWEDSTATES[_currentStateIndex][3] == 2) {
             qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
           }
-					// _cio.states[BUBBLESSTATE] = _commandQ[0][1];
+          // _cio.states[BUBBLESSTATE] = _commandQ[0][1];
           // if(_commandQ[0][1]){
           // //bubbles is turned on. Limit H1, H2 and pump according to matrix
           //   _cio.states[PUMPSTATE] = _cio.states[PUMPSTATE] && (COMB_MATRIX & 1<<1); 
@@ -305,9 +302,9 @@ void BWC::_handleCommandQ(void) {
           //   //bubbles is turned off
           //   _cio.heatbitmask = HEATBITMASK1 | HEATBITMASK2; //set full heating power
           // }
-					break;
+          break;
 
-				case SETHEATER:
+        case SETHEATER:
           if(_cio.states[HEATSTATE] == _commandQ[0][1]) break;  //no change required
           _cio.dataAvailable = true;
           _currentStateIndex = JUMPTABLE[_currentStateIndex][HEATTOGGLE];
@@ -320,7 +317,7 @@ void BWC::_handleCommandQ(void) {
             qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
           }
 
-					// _cio.states[HEATSTATE] = _commandQ[0][1];
+          // _cio.states[HEATSTATE] = _commandQ[0][1];
           // if(_commandQ[0][1]) {
           //   if(_commandQ[0][1] == 1) {
           //     //start first heater element
@@ -342,9 +339,9 @@ void BWC::_handleCommandQ(void) {
           //     _cio.states[JETSSTATE] &= _cio.states[JETSSTATE] && (COMB_MATRIX & 1<<4);
           //   }
           // } 
-					break;
+          break;
 
-				case SETPUMP:
+        case SETPUMP:
           if(_cio.states[PUMPSTATE] == _commandQ[0][1]) break;  //no change required
           //let pump run a bit to cool element
           _cio.dataAvailable = true;
@@ -362,44 +359,44 @@ void BWC::_handleCommandQ(void) {
               qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
             }
           }
-					break;
+          break;
 
-				case REBOOTESP:				
-					restartESP = true;
-					break;
+        case REBOOTESP:        
+          restartESP = true;
+          break;
 
-				case GETTARGET:
-					
-					break;
+        case GETTARGET:
+          
+          break;
 
-				case RESETTIMES:
-					_uptime = 0;
-					_pumptime = 0;
-					_heatingtime = 0;
-					_airtime = 0;
+        case RESETTIMES:
+          _uptime = 0;
+          _pumptime = 0;
+          _heatingtime = 0;
+          _airtime = 0;
           _jettime = 0;
-					_uptime_ms = 0;
-					_pumptime_ms = 0;
-					_heatingtime_ms = 0;
-					_airtime_ms = 0;
+          _uptime_ms = 0;
+          _pumptime_ms = 0;
+          _heatingtime_ms = 0;
+          _airtime_ms = 0;
           _jettime_ms = 0;
-					_cost = 0;
+          _cost = 0;
           _kwh = 0;
-					_saveSettingsNeeded = true;		
+          _saveSettingsNeeded = true;    
           _cio.dataAvailable = true;
-					break;
+          break;
 
-				case RESETCLTIMER:
-					_cltime = _timestamp;
-					_saveSettingsNeeded = true;
+        case RESETCLTIMER:
+          _cltime = _timestamp;
+          _saveSettingsNeeded = true;
           _cio.dataAvailable = true;
-					break;
+          break;
 
-				case RESETFTIMER:
-					_ftime = _timestamp;
-					_saveSettingsNeeded = true;
+        case RESETFTIMER:
+          _ftime = _timestamp;
+          _saveSettingsNeeded = true;
           _cio.dataAvailable = true;
-					break;
+          break;
 
         case SETJETS:
           if(_cio.states[JETSSTATE] == _commandQ[0][1]) break;  //no change required
@@ -432,26 +429,29 @@ void BWC::_handleCommandQ(void) {
           else
             _cio.heatbitmask = HEATBITMASK1;
           break;
-			}
-			//If interval > 0 then append to commandQ with updated xtime.
-			if(_commandQ[0][3] > 0) qCommand(_commandQ[0][0],_commandQ[0][1],_commandQ[0][2]+_commandQ[0][3],_commandQ[0][3]);
-			//remove from commandQ and decrease qCommandLen
-			for(int i = 0; i < _qCommandLen-1; i++){
-			_commandQ[i][0] = _commandQ[i+1][0];
-			_commandQ[i][1] = _commandQ[i+1][1];
-			_commandQ[i][2] = _commandQ[i+1][2];
-			_commandQ[i][3] = _commandQ[i+1][3];
-			}
-			_qCommandLen--;
-			_saveCommandQueue();
-			if(restartESP) {
-				saveSettings();			
-				ESP.restart();
-			}
-		}
-	}
+      }
+      //If interval > 0 then append to commandQ with updated xtime.
+      if(_commandQ[0][3] > 0) qCommand(_commandQ[0][0],_commandQ[0][1],_commandQ[0][2]+_commandQ[0][3],_commandQ[0][3]);
+      //remove from commandQ and decrease qCommandLen
+      for(int i = 0; i < _qCommandLen-1; i++){
+      _commandQ[i][0] = _commandQ[i+1][0];
+      _commandQ[i][1] = _commandQ[i+1][1];
+      _commandQ[i][2] = _commandQ[i+1][2];
+      _commandQ[i][3] = _commandQ[i+1][3];
+      }
+      _qCommandLen--;
+      _saveCommandQueue();
+      if(restartESP) {
+        Serial.println("saving settings");
+        saveSettings();
+        delay(3000);
+        Serial.println("restarting");
+        ESP.restart();
+      }
+    }
+  }
 }
-	
+  
 
 String BWC::getJSONStates() {
     // Allocate a temporary JsonDocument
@@ -484,8 +484,8 @@ String BWC::getJSONStates() {
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
       jsonmsg = "{\"error\": \"Failed to serialize message\"}";
-	}
-	return jsonmsg;
+  }
+  return jsonmsg;
 }
 
 String BWC::getJSONTimes() {
@@ -516,8 +516,8 @@ String BWC::getJSONTimes() {
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
       jsonmsg = "{\"error\": \"Failed to serialize message\"}";
-	}
-	return jsonmsg;
+  }
+  return jsonmsg;
 }
 
 String BWC::getJSONSettings(){
@@ -537,13 +537,13 @@ String BWC::getJSONSettings(){
     doc["AUDIO"] = _audio;
     doc["REBOOTINFO"] = ESP.getResetReason();
     doc["REBOOTTIME"] = DateTime.getBootTime();
-	
+    
     // Serialize JSON to string
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
       jsonmsg = "{\"error\": \"Failed to serialize message\"}";
-	}
-	return jsonmsg;	
+  }
+  return jsonmsg;  
 }
 
 void BWC::setJSONSettings(String message){
@@ -567,7 +567,7 @@ void BWC::setJSONSettings(String message){
   _finterval = doc["FINT"];
   _clinterval = doc["CLINT"];
   _audio = doc["AUDIO"];
-  saveSettings();	
+  saveSettings();  
 }
 
 String BWC::getJSONCommandQueue(){
@@ -580,10 +580,10 @@ String BWC::getJSONCommandQueue(){
   // Set the values in the document
   doc["LEN"] = _qCommandLen;
   for(int i = 0; i < _qCommandLen; i++){
-	  doc["CMD"][i] = _commandQ[i][0];
-	  doc["VALUE"][i] = _commandQ[i][1];
-	  doc["XTIME"][i] = _commandQ[i][2];
-	  doc["INTERVAL"][i] = _commandQ[i][3];
+    doc["CMD"][i] = _commandQ[i][0];
+    doc["VALUE"][i] = _commandQ[i][1];
+    doc["XTIME"][i] = _commandQ[i][2];
+    doc["INTERVAL"][i] = _commandQ[i][3];
   }
 
   // Serialize JSON to file
@@ -626,16 +626,16 @@ String BWC::getSerialBuffers(){
   String json;
   if (serializeJson(doc, json) == 0) {
     json = "{\"error\": \"Failed to serialize message\"}";
-	}
-	return json;
+  }
+  return json;
 }
 
 bool BWC::newData(){
   bool result = _cio.dataAvailable;
   _cio.dataAvailable = false;
-	return result;
+  return result;
 }
-	
+  
 void BWC::_startNTP() {
   // setup this after wifi connected
   // you can use custom timezone,server and timeout
@@ -693,11 +693,11 @@ void BWC::_loadSettings(){
 }
 
 void BWC::saveSettingsFlag(){
-	//ticker fails if duration is more than 71 min. So we use a counter every 60 minutes
-	if(++_tickerCount >= 3){
-		_saveSettingsNeeded = true;	
-		_tickerCount = 0;
-	}
+  //ticker fails if duration is more than 71 min. So we use a counter every 60 minutes
+  if(++_tickerCount >= 3){
+    _saveSettingsNeeded = true;  
+    _tickerCount = 0;
+  }
 }
 
 void BWC::saveSettings(){
@@ -715,15 +715,15 @@ void BWC::saveSettings(){
   // Don't forget to change the capacity to match your requirements.
   // Use arduinojson.org/assistant to compute the capacity.
   DynamicJsonDocument doc(1024);
-	_heatingtime += _heatingtime_ms/1000;
-	_pumptime += _pumptime_ms/1000;
-	_airtime += _airtime_ms/1000;
+  _heatingtime += _heatingtime_ms/1000;
+  _pumptime += _pumptime_ms/1000;
+  _airtime += _airtime_ms/1000;
   _jettime += _jettime_ms/1000;
-	_uptime += _uptime_ms/1000;
-	_heatingtime_ms = 0;
-	_pumptime_ms = 0;
-	_airtime_ms = 0;
-	_uptime_ms = 0;
+  _uptime += _uptime_ms/1000;
+  _heatingtime_ms = 0;
+  _pumptime_ms = 0;
+  _airtime_ms = 0;
+  _uptime_ms = 0;
   // Set the values in the document
   doc["CLTIME"] = _cltime;
   doc["FTIME"] = _ftime;
@@ -774,13 +774,13 @@ void BWC::_loadCommandQueue(){
   // Set the values in the variables
   _qCommandLen = doc["LEN"];
   for(int i = 0; i < _qCommandLen; i++){
-	  _commandQ[i][0] = doc["CMD"][i];
-	  _commandQ[i][1] = doc["VALUE"][i];
-	  _commandQ[i][2] = doc["XTIME"][i];
-	  _commandQ[i][3] = doc["INTERVAL"][i];
+    _commandQ[i][0] = doc["CMD"][i];
+    _commandQ[i][1] = doc["VALUE"][i];
+    _commandQ[i][2] = doc["XTIME"][i];
+    _commandQ[i][3] = doc["INTERVAL"][i];
   }
 
-  file.close();		
+  file.close();    
 }
 
 void BWC::_saveCommandQueue(){
@@ -803,17 +803,17 @@ void BWC::_saveCommandQueue(){
   // Set the values in the document
   doc["LEN"] = _qCommandLen;
   for(int i = 0; i < _qCommandLen; i++){
-	  doc["CMD"][i] = _commandQ[i][0];
-	  doc["VALUE"][i] = _commandQ[i][1];
-	  doc["XTIME"][i] = _commandQ[i][2];
-	  doc["INTERVAL"][i] = _commandQ[i][3];
+    doc["CMD"][i] = _commandQ[i][0];
+    doc["VALUE"][i] = _commandQ[i][1];
+    doc["XTIME"][i] = _commandQ[i][2];
+    doc["INTERVAL"][i] = _commandQ[i][3];
   }
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
     Serial.println(F("Failed to write cmdq.txt"));
   }
-  file.close();	
+  file.close();  
   //revive the dog
   ESP.wdtEnable(0);
 
@@ -837,7 +837,7 @@ void BWC::saveEventlog(){
 
   // Set the values in the document
   for(uint16_t i = 0; i < sizeof(_cio.states); i++){
-	doc[i] = _cio.states[i];
+  doc[i] = _cio.states[i];
   }
   doc["timestamp"] = DateTime.format(DateFormatter::SIMPLE);
 
@@ -845,7 +845,7 @@ void BWC::saveEventlog(){
   if (serializeJson(doc, file) == 0) {
     Serial.println(F("Failed to write eventlog.txt"));
   }
-  file.close();		
+  file.close();    
   //revive the dog
   ESP.wdtEnable(0);
 
@@ -871,59 +871,59 @@ void BWC::_saveRebootInfo(){
     Serial.println(F("Failed to write bootlog.txt"));
   }
   file.println();
-  file.close();	
+  file.close();  
 }
 
 void BWC::_updateTimes(){
-	uint32_t now = millis();
-	static uint32_t prevtime;
-	int elapsedtime = now-prevtime;
-	prevtime = now;
-	if (elapsedtime < 0) return; //millis() rollover every 49 days
-	if(_cio.states[HEATREDSTATE]){
-		_heatingtime_ms += elapsedtime;
-	}
-	if(_cio.states[PUMPSTATE]){
-		_pumptime_ms += elapsedtime;
-	}
-	if(_cio.states[BUBBLESSTATE]){
-		_airtime_ms += elapsedtime;
-	}
-	if(_cio.states[JETSSTATE]){
-		_jettime_ms += elapsedtime;
-	}
-	_uptime_ms += elapsedtime;
-	
-	if(_uptime_ms > 1000000000){
-		_heatingtime += _heatingtime_ms/1000;
-		_pumptime += _pumptime_ms/1000;
-		_airtime += _airtime_ms/1000;
+  uint32_t now = millis();
+  static uint32_t prevtime;
+  int elapsedtime = now-prevtime;
+  prevtime = now;
+  if (elapsedtime < 0) return; //millis() rollover every 49 days
+  if(_cio.states[HEATREDSTATE]){
+    _heatingtime_ms += elapsedtime;
+  }
+  if(_cio.states[PUMPSTATE]){
+    _pumptime_ms += elapsedtime;
+  }
+  if(_cio.states[BUBBLESSTATE]){
+    _airtime_ms += elapsedtime;
+  }
+  if(_cio.states[JETSSTATE]){
+    _jettime_ms += elapsedtime;
+  }
+  _uptime_ms += elapsedtime;
+  
+  if(_uptime_ms > 1000000000){
+    _heatingtime += _heatingtime_ms/1000;
+    _pumptime += _pumptime_ms/1000;
+    _airtime += _airtime_ms/1000;
     _jettime += _jettime_ms/1000;
-		_uptime += _uptime_ms/1000;
-		_heatingtime_ms = 0;
-		_pumptime_ms = 0;
-		_airtime_ms = 0;
+    _uptime += _uptime_ms/1000;
+    _heatingtime_ms = 0;
+    _pumptime_ms = 0;
+    _airtime_ms = 0;
     _jettime_ms = 0;
-		_uptime_ms = 0;
-	}
-	
-  _kwh =  HEATER_WATTS * (_heatingtime+_heatingtime_ms/1000) / 3600 +
+    _uptime_ms = 0;
+  }
+  
+  _kwh =  (HEATER_WATTS * (_heatingtime+_heatingtime_ms/1000) / 3600 +
           PUMP_WATTS * (_pumptime+_pumptime_ms/1000) / 3600 +
           BUBBLES_WATTS * (_airtime+_airtime_ms/1000) / 3600 +
           JETS_WATTS * (_jettime+_jettime_ms/1000) / 3600 +
-          IDLE_WATTS * (_uptime+_uptime_ms/1000) / 3600 / 
+          IDLE_WATTS * (_uptime+_uptime_ms/1000) / 3600) / 
           1000.0; //Wh -> kWh
-	_cost = _price*_kwh;
+  _cost = _price*_kwh;
 }
 
 void BWC::print(String txt){
 }
 
 uint8_t BWC::getState(int state){
-	return _cio.states[state];
+  return _cio.states[state];
 }
 
 void BWC::reloadCommandQueue(){
-	  _loadCommandQueue();
-	  return;
+    _loadCommandQueue();
+    return;
 }

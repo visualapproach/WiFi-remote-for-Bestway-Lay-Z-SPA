@@ -1,7 +1,16 @@
 #include "main.h"
 
+
+// initial stack
+char *stack_start;
+
+
 void setup()
 {
+  // init record of stack
+  char stack;
+  stack_start = &stack;
+
   // put your setup code here, to run once:
   pinMode(solarpin, INPUT_PULLUP);
   pinMode(myoutputpin, OUTPUT);
@@ -231,6 +240,7 @@ String getOtherInfo()
   doc["IP"] = WiFi.localIP().toString();
   doc["SSID"] = WiFi.SSID();
   doc["FW"] = FW_VERSION;
+  doc["MODEL"] = MYMODEL;
 
   // Serialize JSON to string
   if (serializeJson(doc, json) == 0)
@@ -401,7 +411,7 @@ void startOTA()
 
   ArduinoOTA.onStart([]() {
     Serial.println(F("OTA > Start"));
-    bwc.stop();
+    stopall();
   });
   ArduinoOTA.onEnd([]() {
     Serial.println(F("OTA > End"));
@@ -421,7 +431,16 @@ void startOTA()
   Serial.println(F("OTA > ready"));
 }
 
-
+void stopall()
+{
+  bwc.stop();
+  periodicTimer.detach();
+  updateWSTimer.detach();
+  LittleFS.end();
+  server.stop();
+  webSocket.close();
+  mqttClient.disconnect();
+}
 
 /**
  * start a web socket server
@@ -1302,7 +1321,7 @@ void setupHA()
   devicedoc["device"]["connections"].add(serialized("[\"mac\",\"" + WiFi.macAddress()+"\"]" ));
   devicedoc["device"]["identifiers"] = mychipid;
   devicedoc["device"]["manufacturer"] = F("Visualapproach");
-  devicedoc["device"]["model"] = F("NodeMCU 12E");
+  devicedoc["device"]["model"] = MYMODEL;
   devicedoc["device"]["name"] = F("Layzspa WiFi controller");
   devicedoc["device"]["sw_version"] = FW_VERSION;
 
@@ -1809,6 +1828,39 @@ void setupHA()
   doc.clear();
   doc.garbageCollect();
 
+  // spa waterjets switch
+  if(HASJETS)
+  {
+    doc["device"] = devicedoc["device"];
+    payload = "";
+    topic = String(HA_PREFIX) + F("/switch/layzspa_jets/config");
+    Serial.println(topic);
+    doc["name"] = F("Layzspa jets");
+    doc["unique_id"] = "switch.layzspa_jets"+mychipid;
+    doc["state_topic"] = mqttBaseTopic+F("/message");
+    doc["command_topic"] = mqttBaseTopic+F("/command");
+    doc["value_template"] = F("{{ value_json.HJT }}");
+    doc["expire_after"] = 700;
+    doc["icon"] = F("mdi:hydro-power");
+    doc["availability_topic"] = mqttBaseTopic+F("/Status");
+    doc["payload_available"] = F("Alive");
+    doc["payload_not_available"] = F("Dead");
+    doc["payload_on"] = F("{CMD:11,VALUE:true,XTIME:0,INTERVAL:0}");
+    doc["payload_off"] = F("{CMD:11,VALUE:false,XTIME:0,INTERVAL:0}");
+    doc["state_on"] = 1;
+    doc["state_off"] = 0;
+    if (serializeJson(doc, payload) == 0)
+    {
+      Serial.println(F("Failed to serialize HA message!"));
+      return;
+    }
+    mqttClient.publish(topic.c_str(), payload.c_str(), true);
+    mqttClient.loop();
+    Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+  }
+
   // spa airbubbles switch
   doc["device"] = devicedoc["device"];
   payload = "";
@@ -2005,7 +2057,7 @@ void setupClimate()
   devicedoc["device"]["connections"].add(serialized("[\"mac\",\"" + WiFi.macAddress()+"\"]" ));
   devicedoc["device"]["identifiers"] = ESP.getChipId();
   devicedoc["device"]["manufacturer"] = "Visualapproach";
-  devicedoc["device"]["model"] = "NodeMCU 12E";
+  devicedoc["device"]["model"] = MYMODEL;
   devicedoc["device"]["name"] = "Layzspa WiFi controller";
   devicedoc["device"]["sw_version"] = FW_VERSION;
 
@@ -2074,11 +2126,13 @@ void setupClimate()
   doc["min_temp"] = mintemp;
   doc["precision"] = 1.0;
   doc["temperature_unit"] = tempunit;
-  doc["modes"].add(serialized("\"off\", \"heat\""));
+  doc["modes"].add(serialized("\"fan_only\", \"off\", \"heat\""));
+  doc["mode_command_topic"] = mqttBaseTopic+F("/command");
+  doc["mode_command_template"] = F("{CMD:3,VALUE:{%if value == \"heat\" %}1{% else %}0{% endif %},XTIME:0,INTERVAL:0}");
   doc["mode_state_topic"] = mqttBaseTopic+F("/message");
   doc["mode_state_template"] = F("{% if value_json.RED == 1 %}heat{% elif value_json.GRN == 1 %}heat{% else %}off{% endif %}");
   doc["action_topic"] = mqttBaseTopic+F("/message");
-  doc["action_template"] = F("{% if value_json.RED == 1 %}heating{% elif value_json.GRN == 1 %}idle{% else %}off{% endif %}");
+  doc["action_template"] = F("{% if value_json.RED == 1 %}heating{% elif value_json.GRN == 1 %}idle{% elif value_json.FLT == 1 %}fan{% else %}off{% endif %}");
   doc["temperature_state_topic"] = mqttBaseTopic+F("/message");
   doc["temperature_state_template"] = F("{{ value_json.TGT }}");
   doc["current_temperature_topic"] = mqttBaseTopic+F("/message");
@@ -2086,8 +2140,8 @@ void setupClimate()
   doc["temperature_command_topic"] = mqttBaseTopic+F("/command");
   doc["temperature_command_template"] = F("{CMD:0,VALUE:{{ value|int }},XTIME:0,INTERVAL:0}");
   doc["power_command_topic"] = mqttBaseTopic+F("/command");
-  doc["payload_on"] = F("{CMD:3,VALUE:1,XTIME:0,INTERVAL:0}");
-  doc["payload_off"] = F("{CMD:3,VALUE:0,XTIME:0,INTERVAL:0}");
+  doc["payload_on"] = F("{CMD:4,VALUE:1,XTIME:0,INTERVAL:0}");
+  doc["payload_off"] = F("{CMD:4,VALUE:0,XTIME:0,INTERVAL:0}");
   doc["availability_topic"] = mqttBaseTopic+F("/Status");
   doc["payload_available"] = F("Alive");
   doc["payload_not_available"] = F("Dead");
@@ -2099,4 +2153,13 @@ void setupClimate()
   mqttClient.publish(topic.c_str(), payload.c_str(), true);
   mqttClient.loop();
   Serial.println(payload);
+}
+
+void printStackSize()
+{
+    char stack;
+    Serial.print (F("stack size "));
+    Serial.println (stack_start - &stack);
+    Serial.print (F("free heap "));
+    Serial.println ((long)ESP.getFreeHeap());
 }
