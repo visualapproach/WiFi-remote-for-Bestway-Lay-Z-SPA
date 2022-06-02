@@ -10,5 +10,7 @@
 //The 54123 should work also for 54112 judging from a comment from @jenswalit in the forum
 
 //If using/testing the new PCB choose PCB_V2
-#define PCB_V1
-//#define PCB_V2  //The PCB with rounded corners
+//#define PCB_V1
+#define PCB_V2  //The PCB with rounded corners
+
+#warning "USING PINOUT FOR PCB V2. EDIT lib/BWC/model.h IF USING OTHER PCB"
