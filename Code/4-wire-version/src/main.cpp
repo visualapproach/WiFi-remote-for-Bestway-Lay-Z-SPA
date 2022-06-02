@@ -208,6 +208,7 @@ String getOtherInfo()
   String json = "";
   // Set the values in the document
   doc["CONTENT"] = "OTHER";
+  doc["MQTT"] = mqttClient.state();
   doc["CIOTX"] = bwc.cio_tx_ok;
   doc["DSPTX"] = bwc.dsp_tx_ok;
   doc["HASJETS"] = HASJETS;
@@ -257,6 +258,18 @@ void sendMQTT()
   else
   {
     //Serial.println(F("MQTT > times not published"));
+  }
+
+  
+  //send other info
+  json = getOtherInfo();
+  if (mqttClient.publish((String(mqttBaseTopic) + "/other").c_str(), String(json).c_str(), true))
+  {
+    //Serial.println(F("MQTT > other published"));
+  }
+  else
+  {
+    //Serial.println(F("MQTT > other not published"));
   }
 }
 
@@ -1244,6 +1257,12 @@ void mqttConnect()
     // Watch the 'command' topic for incoming MQTT messages
     mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());
     mqttClient.loop();
+
+    mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), DateTime.format(DateFormatter::ISO8601).c_str(), true);
+    mqttClient.publish((String(mqttBaseTopic) + "/reboot_reason").c_str(), ESP.getResetReason().c_str(), true);
+    mqttClient.loop();
+    sendMQTT();
+    //setupHA(); //Setup MQTT Device
   }
   else
   {
