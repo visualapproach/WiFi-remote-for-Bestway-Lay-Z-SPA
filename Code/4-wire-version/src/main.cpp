@@ -47,6 +47,17 @@ void setup()
 
 void loop()
 {
+  // calc looptime
+  static bool firstloopdone = false;
+  unsigned long ms = millis();
+  unsigned long looptime;
+  if(ms>prevlooptime && firstloopdone){
+    looptime = ms - prevlooptime;
+    looptime_min = min(looptime, looptime_min);
+    looptime_max = max(looptime, looptime_max);
+  } 
+  prevlooptime = ms;
+  firstloopdone = true;
   // We need this self-destructing info several times, so save it locally
   bool newData = bwc.newData();
   // Fiddle with the pump computer
@@ -214,6 +225,8 @@ String getOtherInfo()
   doc["SSID"] = WiFi.SSID();
   doc["FW"] = FW_VERSION;
   doc["MODEL"] = MYMODEL;
+  doc["LOOPMAX"] = looptime_max;
+  doc["LOOPMIN"] = looptime_min;
 
   // Serialize JSON to string
   if (serializeJson(doc, json) == 0)

@@ -13,4 +13,6 @@
 //#define PCB_V1
 #define PCB_V2  //The PCB with rounded corners
 
+#ifdef PCB_V2 
 #warning "USING PINOUT FOR PCB V2. EDIT lib/BWC/model.h IF USING OTHER PCB"
+#endif
