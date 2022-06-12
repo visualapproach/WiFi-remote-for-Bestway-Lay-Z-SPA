@@ -125,9 +125,6 @@ void loop()
     }
     if (WiFi.status() == WL_CONNECTED)
     {
-      // could be interesting to display the IP
-      //bwc.print(WiFi.localIP().toString());
-
       if (!DateTime.isTimeValid())
       {
         Serial.println(F("NTP > Start synchronisation"));

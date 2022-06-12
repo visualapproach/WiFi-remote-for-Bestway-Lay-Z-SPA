@@ -31,11 +31,13 @@ void CIO::loop(void) {
   {
     msglen = cio_serial.readBytes(from_CIO_buf, PAYLOADSIZE);
     //copy from_CIO_buf -> to_DSP_buf
-    if(msglen == PAYLOADSIZE){
+    if(msglen == PAYLOADSIZE)
+    {
       //discard message if checksum is wrong
       uint8_t calculatedChecksum;
       calculatedChecksum = from_CIO_buf[1]+from_CIO_buf[2]+from_CIO_buf[3]+from_CIO_buf[4];
-      if(from_CIO_buf[CIO_CHECKSUMINDEX] == calculatedChecksum){
+      if(from_CIO_buf[CIO_CHECKSUMINDEX] == calculatedChecksum)
+      {
         for(int i = 0; i < PAYLOADSIZE; i++){
           if(to_DSP_buf[i] != from_CIO_buf[i]) dataAvailable = true;
           to_DSP_buf[i] = from_CIO_buf[i];
@@ -48,7 +50,8 @@ void CIO::loop(void) {
       states[CHAR1] = ' ';
       states[CHAR2] = ' ';
       states[CHAR3] = ' ';
-      if(states[ERROR]){
+      if(states[ERROR])
+      {
         to_CIO_buf[COMMANDINDEX] = 0; //clear any commands
         GODMODE = false;
         states[CHAR1] = 'E';
@@ -83,7 +86,8 @@ void CIO::loop(void) {
   {
     msglen = dsp_serial.readBytes(from_DSP_buf, PAYLOADSIZE);
     //copy from_DSP_buf -> to_CIO_buf
-    if(msglen == PAYLOADSIZE){
+    if(msglen == PAYLOADSIZE)
+    {
       //discard message if checksum is wrong
       uint8_t calculatedChecksum;
       calculatedChecksum = from_DSP_buf[1]+from_DSP_buf[2]+from_DSP_buf[3]+from_DSP_buf[4];
