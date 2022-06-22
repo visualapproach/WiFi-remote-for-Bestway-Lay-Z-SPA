@@ -220,6 +220,7 @@ String getOtherInfo()
   doc["CIOTX"] = bwc.cio_tx_ok;
   doc["DSPTX"] = bwc.dsp_tx_ok;
   doc["HASJETS"] = HASJETS;
+  doc["HASAIR"] = HASAIR;
   doc["RSSI"] = WiFi.RSSI();
   doc["IP"] = WiFi.localIP().toString();
   doc["SSID"] = WiFi.SSID();
