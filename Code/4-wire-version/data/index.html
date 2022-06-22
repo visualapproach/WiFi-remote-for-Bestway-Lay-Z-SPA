@@ -67,12 +67,14 @@
       </table>
       <table class="fixed">
         <tr>
-          <td>Bubbles</td>
+          <td><div id="airtitle">Bubbles</div></td>
           <td>
-            <label class="switch">
-            <input type="checkbox" id="AIR" onchange="sendCommand('toggleBubbles')">
-            <span class="slider round"></span>
-            </label>
+            <div id="airbutton">
+              <label class="switch">
+              <input type="checkbox" id="AIR" onchange="sendCommand('toggleBubbles')">
+              <span class="slider round"></span>
+              </label>
+            </div>
           </td>
           <td>Heater</td>
           <td>
@@ -156,7 +158,7 @@
           <td>Heating:</td>
           <td><span id="heatingtime">n/a</span></td>
         </tr>
-        <tr>
+        <tr id="airtotals">
           <td>Air:</td>
           <td><span id="airtime">n/a</span></td>
         </tr>

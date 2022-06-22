@@ -100,9 +100,14 @@ function handlemsg(e)
     document.getElementById('mqtt').innerHTML = "MQTT: " + mqtt_states[msgobj.MQTT + 4];
 
     // hydro jets available
-    document.getElementById('jetstitle').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
-    document.getElementById('jetsbutton').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
-    document.getElementById('jetstotals').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
+    
+    document.getElementById('jetstitle').style.display = (jetsAvailable ? 'inherit' : 'none');
+    document.getElementById('jetsbutton').style.display = (jetsAvailable ? 'inherit' : 'none');
+    document.getElementById('jetstotals').style.display = (jetsAvailable ? 'table-row' : 'none');
+    
+    document.getElementById('airtitle').style.display = (airAvailable ? 'inherit' : 'none');
+    document.getElementById('airbutton').style.display = (airAvailable ? 'inherit' : 'none');
+    document.getElementById('airtotals').style.display = (airAvailable ? 'table-row' : 'none');
 
     document.getElementById('ciotx').innerHTML = 'CIO TX: ' + (msgobj.CIOTX ? 'Active' : 'Dead');
     document.getElementById('dsptx').innerHTML = 'DSP TX: ' + (msgobj.DSPTX ? 'Active' : 'Dead');
