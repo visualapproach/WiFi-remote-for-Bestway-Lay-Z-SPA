@@ -195,7 +195,7 @@ function saveconfig(){
     "FINT":parseInt(document.getElementById("finterval").value),
     "CLINT":parseInt(document.getElementById("clinterval").value),
     "AUDIO":document.getElementById("audio").checked//,
-    //"RESTORE":document.getElementById("restore").value
+    //"RESTORE":parseInt(document.getElementById("restore").value)
     }
   Http.send(JSON.stringify(msgobj));
   console.log(msgobj);

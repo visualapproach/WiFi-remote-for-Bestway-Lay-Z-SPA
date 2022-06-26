@@ -1039,10 +1039,10 @@ void handleDir()
   while (root.next())
   {
     Serial.println(root.fileName());
-    mydir += root.fileName() + F(" \t Size: ");
-    mydir += String(root.fileSize()) + F(" Bytes\r\n");
+    mydir += "<a href=\"/" + root.fileName() + "\">" + root.fileName() + "</a>" + F(" \t Size: ");
+    mydir += String(root.fileSize()) + F(" Bytes<br>");
   }
-  server.send(200, "text/plain", mydir);
+  server.send(200, "text/html", mydir);
 }
 
 /**
