@@ -434,13 +434,17 @@ void startOTA()
 void stopall()
 {
   bwc.stop();
+  updateMqttTimer.detach();
   periodicTimer.detach();
   updateWSTimer.detach();
   LittleFS.end();
   server.stop();
   webSocket.close();
   mqttClient.disconnect();
+  bwc.saveSettings();
 }
+
+
 
 /**
  * start a web socket server
@@ -1186,14 +1190,11 @@ void handleRestart()
   server.send(303);
 
   delay(1000);
-  periodicTimer.detach();
-  updateMqttTimer.detach();
-  updateWSTimer.detach();
-  bwc.stop();
-  bwc.saveSettings();
-
+  stopall();
+  delay(1000);
   Serial.println(F("ESP restart ..."));
   ESP.restart();
+  delay(3000);
 }
 
 
