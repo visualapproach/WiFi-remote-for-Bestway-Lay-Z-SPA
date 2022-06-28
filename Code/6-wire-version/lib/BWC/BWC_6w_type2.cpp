@@ -31,86 +31,83 @@ void CIO::stop(){
 
 void CIO::loop(void) {
   //newdata is true when a data packet has arrived from cio
-  if(newData) {
-    newData = false;
-    static int capturePhase = 0;
-    static uint32_t buttonReleaseTime;
-    
-    //capture TARGET after UP/DOWN has been pressed...
-    if ((button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN]))
-    {
-      buttonReleaseTime = millis();
-      capturePhase = 1;
-    } 
+  if(!newData) return;
+  newData = false;
+  static uint32_t buttonReleaseTime;
+  enum Readmode: int {readtemperature, uncertain, readtarget};
+  static int capturePhase = readtemperature;
 
-    /*
-     * This model is only sending messages when something updated
-     * so this section is not useful
-     */
-    /*
-    //require two consecutive messages to be equal before registering
-    static uint8_t prev_checksum = 0;
-    uint8_t checksum = 0;
-    for(unsigned int i = 0; i < sizeof(payload); i++){
-      checksum += _payload[i];
-    }
-    if(checksum != prev_checksum) {
-      prev_checksum = checksum;
-      return;
-    }
-     */
+  //capture TARGET after UP/DOWN has been pressed...
+  if ((button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN]))
+  {
+    buttonReleaseTime = millis(); //updated as long as buttons are pressed
+    capturePhase = readtarget;
+  } 
 
-    //copy private array to public array
-    for(unsigned int i = 0; i < sizeof(payload); i++){
-      payload[i] = _payload[i];
-    }
+  /*
+    * This model is only sending messages when something updated
+    * so this section is not useful
+    */
+  //require two consecutive messages to be equal before registering
 
-    //determine if anything changed, so we can update webclients
-    for(unsigned int i = 0; i < sizeof(payload); i++){
-      if (payload[i] != _prevPayload[i]) dataAvailable = true;
-      _prevPayload[i] = payload[i];
-    }
-
-    //brightness = _brightness & 7; //extract only the brightness bits (0-7)
-    //extract information from payload to a better format
-    states[LOCKEDSTATE] = (payload[LCK_IDX] & (1 << LCK_BIT)) > 0;
-    states[POWERSTATE] = 1;  //(payload[PWR_IDX] & (1 << PWR_BIT)) > 0;
-    states[UNITSTATE] = (payload[C_IDX] & (1 << C_BIT)) > 0;
-    states[BUBBLESSTATE] = (payload[AIR_IDX] & (1 << AIR_BIT)) > 0;
-    states[HEATGRNSTATE] = (payload[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
-    states[HEATREDSTATE] = (payload[REDHTR_IDX] & (1 << REDHTR_BIT)) > 0;
-    states[HEATSTATE] = states[HEATGRNSTATE] || states[HEATREDSTATE];
-    states[PUMPSTATE] = (payload[FLT_IDX] & (1 << FLT_BIT)) > 0;
-    states[CHAR1] = (uint8_t)_getChar(payload[DGT1_IDX]);
-    states[CHAR2] = (uint8_t)_getChar(payload[DGT2_IDX]);
-    states[CHAR3] = (uint8_t)_getChar(payload[DGT3_IDX]);
-    if(HASJETS) states[JETSSTATE] = (payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
-    else states[JETSSTATE] = 0;
-    //Determine if display is showing target temp or actual temp or anything else.
-    //...until 4 seconds after UP/DOWN released
-    if((millis()-buttonReleaseTime) > 2000) capturePhase = 0;
-    //convert text on display to a value if the chars are recognized
-    if(states[CHAR1] == '*' || states[CHAR2] == '*' || states[CHAR3] == '*') return;
-    String tempstring = String((char)states[CHAR1])+String((char)states[CHAR2])+String((char)states[CHAR3]);
-    uint8_t tmpTemp = tempstring.toInt();
-    //capture only if showing plausible values (not blank screen while blinking)
-    if( (capturePhase == 1) && (tmpTemp > 19) ) {
-      states[TARGET] = tmpTemp;
-    }
-    //wait 6 seconds after UP/DOWN is released to be sure that actual temp is shown
-    if( (capturePhase == 0) && (states[CHAR3]!='H') && (states[CHAR3]!=' ') && ((millis()-buttonReleaseTime) > 6000) )
-    {
-      if(states[TEMPERATURE] != tmpTemp) dataAvailable = true;
-      states[TEMPERATURE] = tmpTemp;
-    }
-
-    if(states[UNITSTATE] != _prevUNT || states[HEATSTATE] != _prevHTR || states[PUMPSTATE] != _prevFLT) {
-      stateChanged = true;
-      _prevUNT = states[UNITSTATE];
-      _prevHTR = states[HEATSTATE];
-      _prevFLT = states[PUMPSTATE];
-    }
+  //copy private array to public array
+  for(unsigned int i = 0; i < sizeof(payload); i++){
+    payload[i] = _payload[i];
   }
+
+  //determine if anything changed, so we can update webclients
+  for(unsigned int i = 0; i < sizeof(payload); i++){
+    if (payload[i] != _prevPayload[i]) dataAvailable = true;
+    _prevPayload[i] = payload[i];
+  }
+
+  //brightness = _brightness & 7; //extract only the brightness bits (0-7)
+  //extract information from payload to a better format
+  states[LOCKEDSTATE] = (payload[LCK_IDX] & (1 << LCK_BIT)) > 0;
+  states[POWERSTATE] = 1;  //(payload[PWR_IDX] & (1 << PWR_BIT)) > 0;
+  states[UNITSTATE] = (payload[C_IDX] & (1 << C_BIT)) > 0;
+  states[BUBBLESSTATE] = (payload[AIR_IDX] & (1 << AIR_BIT)) > 0;
+  states[HEATGRNSTATE] = (payload[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
+  states[HEATREDSTATE] = (payload[REDHTR_IDX] & (1 << REDHTR_BIT)) > 0;
+  states[HEATSTATE] = states[HEATGRNSTATE] || states[HEATREDSTATE];
+  states[PUMPSTATE] = (payload[FLT_IDX] & (1 << FLT_BIT)) > 0;
+  states[CHAR1] = (uint8_t)_getChar(payload[DGT1_IDX]);
+  states[CHAR2] = (uint8_t)_getChar(payload[DGT2_IDX]);
+  states[CHAR3] = (uint8_t)_getChar(payload[DGT3_IDX]);
+  if(HASJETS) states[JETSSTATE] = (payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
+  else states[JETSSTATE] = 0;
+  //Determine if display is showing target temp or actual temp or anything else.
+  //Unreadable characters - exit
+  if(states[CHAR1] == '*' || states[CHAR2] == '*' || states[CHAR3] == '*') return;
+  //Error or user plays with timer button - exit (error notification can be dealt with in main.cpp or elsewhere)
+  if(states[CHAR1] == 'E' || states[CHAR3] == 'H' || states[CHAR3] == ' ') return;
+  
+  //Stop expecting target temp after timeout
+  if((millis()-buttonReleaseTime) > 2000) capturePhase = uncertain;
+  if((millis()-buttonReleaseTime) > 6000) capturePhase = readtemperature;
+  //convert text on display to a value if the chars are recognized
+  String tempstring = String((char)states[CHAR1])+String((char)states[CHAR2])+String((char)states[CHAR3]);
+  uint8_t parsedValue = tempstring.toInt();
+  //capture target temperature only if showing plausible values (not blank screen while blinking)
+  if( (capturePhase == readtarget) && (parsedValue > 19) ) {
+    states[TARGET] = parsedValue;
+  }
+  //wait 6 seconds after UP/DOWN is released to be sure that actual temp is shown
+  if(capturePhase == readtemperature)
+  {
+    if(states[TEMPERATURE] != parsedValue) dataAvailable = true;
+    states[TEMPERATURE] = parsedValue;
+  }
+
+  //If any of these states changes, we need to set a flag to save states. Used to restore them after reboot.
+  if(states[UNITSTATE] != _prevUNT || states[HEATSTATE] != _prevHTR || states[PUMPSTATE] != _prevFLT) {
+    stateChanged = true;
+    _prevUNT = states[UNITSTATE];
+    _prevHTR = states[HEATSTATE];
+    _prevFLT = states[PUMPSTATE];
+  }
+}
+
 }
 
 //CIO comm
