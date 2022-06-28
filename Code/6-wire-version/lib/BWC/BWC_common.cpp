@@ -101,7 +101,6 @@ void BWC::loop(){
   //queue overrides real buttons
   _handleButtonQ();
   if(_saveEventlogNeeded) saveEventlog();
-  if(_saveCmdqNeeded) _saveCommandQueue();
   if(_saveSettingsNeeded) saveSettings();
   if(_cio.stateChanged) {
     _saveStatesNeeded = true;
@@ -183,7 +182,6 @@ void BWC::_handleButtonQ(void) {
     //check if state is as desired, or duration is up. If so - remove row. Else set BTNCODE
     if( (_cio.states[_buttonQ[0][1]] == _buttonQ[0][2]) || (_buttonQ[0][3] <= 0) )
     {
-      if(_buttonQ[0][0] == UP || _buttonQ[0][0] == DOWN) maxeffort = false;
       //remove row
       for(int i = 0; i < _qButtonLen-1; i++){
         _buttonQ[i][0] = _buttonQ[i+1][0];
@@ -196,7 +194,6 @@ void BWC::_handleButtonQ(void) {
     } 
     else 
     {
-      if(_buttonQ[0][0] == UP || _buttonQ[0][0] == DOWN) maxeffort = true;
       //set buttoncode
       _cio.button = ButtonCodes[_buttonQ[0][0]];
     }
@@ -531,7 +528,6 @@ String BWC::getJSONCommandQueue(){
 }
 
 bool BWC::newData(){
-  if(maxeffort) return false;  
   bool result = _cio.dataAvailable;
   _cio.dataAvailable = false;
   if (result && _audio) _dsp.beep();
@@ -596,10 +592,6 @@ void BWC::saveSettingsFlag(){
 }
 
 void BWC::saveSettings(){
-  if(maxeffort) {
-    _saveSettingsNeeded = true;
-    return;
-  }
   //kill the dog
   ESP.wdtDisable();
   _saveSettingsNeeded = false;
@@ -673,14 +665,8 @@ void BWC::_loadCommandQueue(){
 }
 
 void BWC::_saveCommandQueue(){
-  if(maxeffort) {
-    _saveCmdqNeeded = true;
-    return;
-  }
   //kill the dog
   ESP.wdtDisable();
-
-  _saveCmdqNeeded = false;
   File file = LittleFS.open("cmdq.txt", "w");
   if (!file) {
     Serial.println(F("Failed to save cmdq.txt"));
@@ -719,10 +705,6 @@ void BWC::reloadSettings(){
 }
 
 void BWC::_saveStates() {
-  if(maxeffort) {
-    _saveStatesNeeded = true;
-    return;
-  }
   //kill the dog
   ESP.wdtDisable();
 
@@ -777,11 +759,6 @@ void BWC::_restoreStates() {
 }
 
 void BWC::saveEventlog(){
-  if(maxeffort) {
-    _saveEventlogNeeded = true;
-    return;
-  }
-  _saveEventlogNeeded = false;
   //kill the dog
   ESP.wdtDisable();
   File file = LittleFS.open("eventlog.txt", "a");
