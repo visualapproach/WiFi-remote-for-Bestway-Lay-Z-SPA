@@ -255,4 +255,52 @@ const bool HASJETS = false;
 const String MYMODEL = "NO54154";
 #endif
 
+#ifdef NO54144
+
+//what row in allowedstates to go to when pressing Bubbles, Jets, Pump, Heat (columns in that order)
+//Example: We are in state zero (first row). If we press Bubbles (first column) then there is a 6
+//meaning current state (row) is now 6. According to ALLOWEDSTATES table, we turn on Bubbles and keep
+//everything else off. (1,0,0,0)
+const uint8_t JUMPTABLE[][4] = {
+// b,j,p,h  
+  {1,2,3,4},
+  {0,2,3,4},
+  {1,0,3,4},
+  {1,2,0,4},
+  {1,2,0,3}
+};
+//Bubbles, Jets, Pump, Heat
+const uint8_t ALLOWEDSTATES[][4] = {
+  {0,0,0,0},
+  {1,0,0,0},
+  {0,1,0,0},
+  {0,0,1,0},
+  {0,0,1,2}  //the "2" means both heater elements
+};
+
+//cio
+const uint8_t TEMPINDEX = 2;
+const uint8_t ERRORINDEX = 3;
+const uint8_t CIO_CHECKSUMINDEX = 5;
+//dsp
+const uint8_t COMMANDINDEX = 2;
+const uint8_t DSP_CHECKSUMINDEX = 5;
+
+const uint8_t PAYLOADSIZE = 7;
+
+const uint8_t PUMPBITMASK =   B00000101;  //5
+const uint8_t BUBBLESBITMASK =   B00000010;  //2
+const uint8_t JETSBITMASK =   B00001000;  //8
+// const uint8_t HEATBITMASK1 =   B00000000;  //0    heater stage 1 = off
+// const uint8_t HEATBITMASK2 =   B00110000;  //48  heater stage 2 = on
+//lines below should be tested. It would be consistent with 54173 model.
+//If heating is slow this is probably the cause but I don't want to change it before someone tests it.
+const uint8_t HEATBITMASK1 =   B00110000;  //48  heater stage 1 = 50%
+const uint8_t HEATBITMASK2 =   B01000000;  //64  heater stage 2 = 100%
+const uint8_t POWERBITMASK =   B10000000;  //128
+const bool HASJETS = true;
+const bool HASAIR = false;
+const String MYMODEL = "NO54144";
+#endif
+
 #endif
