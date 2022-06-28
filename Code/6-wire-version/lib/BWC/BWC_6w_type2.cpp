@@ -108,8 +108,6 @@ void CIO::loop(void) {
   }
 }
 
-}
-
 //CIO comm
 //packet start/stop
 void IRAM_ATTR CIO::packetHandler(void) {
