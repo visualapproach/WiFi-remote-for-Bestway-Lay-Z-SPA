@@ -67,7 +67,7 @@ void loop()
   if (WiFi.status() == WL_CONNECTED)
   {
     // listen for websocket events
-    webSocket.loop();
+    // webSocket.loop();
     // listen for webserver events
     server.handleClient();
     // listen for OTA events
