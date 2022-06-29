@@ -31,6 +31,12 @@ void CIO::stop(){
 void CIO::loop(void) {
   //newdata is true when a data packet has arrived from cio
   if(!newData) return;
+  if(_packet_error)
+  {
+    _packet_error = false;
+    newData = false;
+    return;
+  }
   newData = false;
   static uint32_t buttonReleaseTime;
   enum Readmode: int {readtemperature, uncertain, readtarget};
@@ -116,6 +122,8 @@ void IRAM_ATTR CIO::eopHandler(void) {
   //process latest data and enter corresponding mode (like listen for DSP_STS or send BTN_OUT)
   //pinMode(_DATA_PIN, INPUT);
   WRITE_PERI_REG( PIN_DIR_INPUT, 1 << _DATA_PIN);
+  if(_byteCount != 11 && _byteCount != 0) _packet_error = true;
+  if(_bitCount != 0) _packet_error = true;
   _byteCount = 0;
   _bitCount = 0;
   uint8_t msg = _receivedByte;
@@ -147,6 +155,7 @@ void IRAM_ATTR CIO::eopHandler(void) {
 //CIO comm
 //packet start
 //arduino core 3.0.1+ should work with digitalWrite() now.
+//CS line toggles
 void IRAM_ATTR CIO::packetHandler(void) {
   if (!(READ_PERI_REG(PIN_IN) & (1 << _CS_PIN))) {
     //packet start
@@ -162,6 +171,7 @@ void IRAM_ATTR CIO::packetHandler(void) {
 
 //CIO comm
 //Read incoming bits, and take action after a complete byte
+//CLK line toggles
 void IRAM_ATTR CIO::clkHandler(void) {
   //sanity check on clock signal
   static uint32_t prev_us = 0;
@@ -201,11 +211,22 @@ void IRAM_ATTR CIO::clkHandler(void) {
     _bitCount++;
     if (_bitCount == 8) {
       _bitCount = 0;
-      if (_CIO_cmd_matches == 2) { //meaning we have received the header for 11 data bytes to come
-        _payload[_byteCount] = _receivedByte;
-        _byteCount++;
+      //We have received the header for 11 data bytes to come
+      if (_CIO_cmd_matches == 2)  
+      {
+        if(_byteCount < 11)
+        {
+          _payload[_byteCount] = _receivedByte;
+          _byteCount++;
+        }
+        else
+        {
+          _packet_error = true;
+        }
       }
-      else if (_receivedByte == DSP_CMD2_DATAREAD) {
+      //We have received request for button pressed
+      else if (_receivedByte == DSP_CMD2_DATAREAD)
+      {
         _sendBit = 8;
         _dataIsOutput = true;
         //pinMode(_DATA_PIN, OUTPUT);

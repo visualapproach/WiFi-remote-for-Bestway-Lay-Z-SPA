@@ -128,6 +128,7 @@ class CIO {
     bool _prevUNT;
     bool _prevHTR;
     bool _prevFLT;
+    volatile bool _packet_error = false;
 
     char _getChar(uint8_t value);
 };
