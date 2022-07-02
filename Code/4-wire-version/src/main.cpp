@@ -47,6 +47,17 @@ void setup()
 
 void loop()
 {
+  // calc looptime
+  static bool firstloopdone = false;
+  unsigned long ms = millis();
+  unsigned long looptime;
+  if(ms>prevlooptime && firstloopdone){
+    looptime = ms - prevlooptime;
+    looptime_min = min(looptime, looptime_min);
+    looptime_max = max(looptime, looptime_max);
+  } 
+  prevlooptime = ms;
+  firstloopdone = true;
   // We need this self-destructing info several times, so save it locally
   bool newData = bwc.newData();
   // Fiddle with the pump computer
@@ -125,9 +136,6 @@ void loop()
     }
     if (WiFi.status() == WL_CONNECTED)
     {
-      // could be interesting to display the IP
-      //bwc.print(WiFi.localIP().toString());
-
       if (!DateTime.isTimeValid())
       {
         Serial.println(F("NTP > Start synchronisation"));
@@ -208,14 +216,18 @@ String getOtherInfo()
   String json = "";
   // Set the values in the document
   doc["CONTENT"] = "OTHER";
+  doc["MQTT"] = mqttClient.state();
   doc["CIOTX"] = bwc.cio_tx_ok;
   doc["DSPTX"] = bwc.dsp_tx_ok;
   doc["HASJETS"] = HASJETS;
+  doc["HASAIR"] = HASAIR;
   doc["RSSI"] = WiFi.RSSI();
   doc["IP"] = WiFi.localIP().toString();
   doc["SSID"] = WiFi.SSID();
   doc["FW"] = FW_VERSION;
   doc["MODEL"] = MYMODEL;
+  doc["LOOPMAX"] = looptime_max;
+  doc["LOOPMIN"] = looptime_min;
 
   // Serialize JSON to string
   if (serializeJson(doc, json) == 0)
@@ -257,6 +269,18 @@ void sendMQTT()
   else
   {
     //Serial.println(F("MQTT > times not published"));
+  }
+
+  
+  //send other info
+  json = getOtherInfo();
+  if (mqttClient.publish((String(mqttBaseTopic) + "/other").c_str(), String(json).c_str(), true))
+  {
+    //Serial.println(F("MQTT > other published"));
+  }
+  else
+  {
+    //Serial.println(F("MQTT > other not published"));
   }
 }
 
@@ -1016,10 +1040,10 @@ void handleDir()
   while (root.next())
   {
     Serial.println(root.fileName());
-    mydir += root.fileName() + F(" \t Size: ");
-    mydir += String(root.fileSize()) + F(" Bytes\r\n");
+    mydir += "<a href=\"/" + root.fileName() + "\">" + root.fileName() + "</a>" + F(" \t Size: ");
+    mydir += String(root.fileSize()) + F(" Bytes<br>");
   }
-  server.send(200, "text/plain", mydir);
+  server.send(200, "text/html", mydir);
 }
 
 /**
@@ -1244,6 +1268,12 @@ void mqttConnect()
     // Watch the 'command' topic for incoming MQTT messages
     mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());
     mqttClient.loop();
+
+    mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), DateTime.format(DateFormatter::ISO8601).c_str(), true);
+    mqttClient.publish((String(mqttBaseTopic) + "/reboot_reason").c_str(), ESP.getResetReason().c_str(), true);
+    mqttClient.loop();
+    sendMQTT();
+    //setupHA(); //Setup MQTT Device
   }
   else
   {

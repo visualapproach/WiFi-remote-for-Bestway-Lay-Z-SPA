@@ -4,11 +4,16 @@
 //#define NO54173 //this is same as 54138 but can run heater on 50% when bubbles are on.
 //#define NO54123 //not tested. ref https://github.com/mrQ000/layz-rc link to presentation slides
 //#define NO54154 //no jets. Works for Palm Springs 54129
+//#define NO54144 //with jets, but no bubbles.  Palm Springs 54144
 
 
 //WARNING: DEVICES HAVE DIFFERENT PINOUTS!!! CHECK BEFORE USING
 //The 54123 should work also for 54112 judging from a comment from @jenswalit in the forum
 
 //If using/testing the new PCB choose PCB_V2
-#define PCB_V1
-//#define PCB_V2  //The PCB with rounded corners
+//#define PCB_V1
+#define PCB_V2  //The PCB with rounded corners
+
+#ifdef PCB_V2 
+#warning "USING PINOUT FOR PCB V2. EDIT lib/BWC/model.h IF USING OTHER PCB"
+#endif

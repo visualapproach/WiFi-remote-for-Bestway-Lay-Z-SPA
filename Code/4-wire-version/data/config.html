@@ -80,10 +80,9 @@
               <option value="2">Set air bubbles</option>
               <option value="3">Set heater</option>
               <option value="4">Set filter pump</option>
-              <!--
               <option value="11">Set hydrojets</option>
-              -->
               <option value="6">Reboot ESP</option>
+              <option value="12">Take Control</option>
             </select>
           </td>
         </tr>
@@ -129,7 +128,9 @@ const resetq = 5;
 const rebootesp = 6;
 const gettarget = 7;
 const setjets = 11;
-const commandlist = ["Set target", "Set unit", "Set bubbles", "Set heat", "Set pump", "Reset queue", "Reboot ESP", "Internal cmd", "Set jets"];
+const setgodmode = 12;
+const commandlist = ["Set target", "Set unit", "Set bubbles", "Set heat", "Set pump", "Reset queue", "Reboot ESP", "Internal cmd", "resetTotals:", "resetTimerChlorine", "resetTimerFilter",  "Set jets", "Take Control"];
+
 
 function loadconfig(){
   const Http = new XMLHttpRequest();
@@ -195,7 +196,7 @@ function saveconfig(){
     "FINT":parseInt(document.getElementById("finterval").value),
     "CLINT":parseInt(document.getElementById("clinterval").value),
     "AUDIO":document.getElementById("audio").checked//,
-    //"RESTORE":document.getElementById("restore").value
+    //"RESTORE":parseInt(document.getElementById("restore").value)
     }
   Http.send(JSON.stringify(msgobj));
   console.log(msgobj);

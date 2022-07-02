@@ -61,7 +61,8 @@ bool runonce = true;
 const int solarpin = D0;
 /** pulled to GND. Boot fails if pulled HIGH. */
 const int myoutputpin = D8;
-
+/** track loop times */
+unsigned long prevlooptime, looptime_max, looptime_min;
 
 
 void handleAUX();

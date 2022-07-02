@@ -67,7 +67,7 @@ void loop()
   if (WiFi.status() == WL_CONNECTED)
   {
     // listen for websocket events
-    webSocket.loop();
+    // webSocket.loop();
     // listen for webserver events
     server.handleClient();
     // listen for OTA events
@@ -434,13 +434,17 @@ void startOTA()
 void stopall()
 {
   bwc.stop();
+  updateMqttTimer.detach();
   periodicTimer.detach();
   updateWSTimer.detach();
   LittleFS.end();
   server.stop();
   webSocket.close();
   mqttClient.disconnect();
+  bwc.saveSettings();
 }
+
+
 
 /**
  * start a web socket server
@@ -1068,10 +1072,10 @@ void handleDir()
   while (root.next())
   {
     Serial.println(root.fileName());
-    mydir += root.fileName() + F(" \t Size: ");
-    mydir += String(root.fileSize()) + F(" Bytes\r\n");
+    mydir += "<a href=\"/" + root.fileName() + "\">" + root.fileName() + "</a>" + F(" \t Size: ");
+    mydir += String(root.fileSize()) + F(" Bytes<br>");
   }
-  server.send(200, "text/plain", mydir);
+  server.send(200, "text/html", mydir);
 }
 
 /**
@@ -1186,14 +1190,11 @@ void handleRestart()
   server.send(303);
 
   delay(1000);
-  periodicTimer.detach();
-  updateMqttTimer.detach();
-  updateWSTimer.detach();
-  bwc.stop();
-  bwc.saveSettings();
-
+  stopall();
+  delay(1000);
   Serial.println(F("ESP restart ..."));
   ESP.restart();
+  delay(3000);
 }
 
 
