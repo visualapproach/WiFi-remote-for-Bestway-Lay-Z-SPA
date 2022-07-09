@@ -76,8 +76,10 @@ class CIO {
     bool dataAvailable = false;
     bool stateChanged = false; //save states when true
     volatile uint16_t button = NOBTN;
-    uint8_t payload[5];
+    uint8_t payload[11];
     uint8_t states[14];
+    uint16_t state_age[14];
+    bool state_changed[14];
     uint8_t brightness;
     bool targetIsDisplayed = false;
     //uint16_t lastPressedButton;
