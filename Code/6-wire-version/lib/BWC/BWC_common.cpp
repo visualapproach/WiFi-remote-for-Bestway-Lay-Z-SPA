@@ -66,6 +66,7 @@ void BWC::begin2(){
   _loadSettings();
   _loadCommandQueue();
   _restoreStates();
+  _loadCoolArray();
   if(_audio) _dsp.playIntro();
   //_dsp.LEDshow();
   saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
@@ -75,6 +76,9 @@ void BWC::begin2(){
   _tttt_time1 = DateTime.now();
   _tttt_temp0 = 20;
   _tttt_temp1 = 20;
+
+  _ambient_temp = 20;
+  _virtualTempFix = -99;
 }
 
 void BWC::stop(){
@@ -102,11 +106,6 @@ void BWC::loop(){
   _handleButtonQ();
   if(_saveEventlogNeeded) saveEventlog();
   if(_saveSettingsNeeded) saveSettings();
-  if(_cio.stateChanged) {
-    _saveStatesNeeded = true;
-    _cio.stateChanged = false;
-  }
-  if(_saveStatesNeeded) _saveStates();
   //if set target command missed we need to correct that
   if( (_cio.states[TARGET] != _sliderTarget) && (_qButtonLen == 0) && (_sliderTarget != 0) && (_sliderPrio) ) qCommand(SETTARGET, _sliderTarget, 0, 0);
   //if target temp is unknown, find out.
@@ -129,7 +128,185 @@ void BWC::loop(){
     _tttt_calculated = (target-_tttt_temp1) * dtime/dtemp;
   } 
   _tttt = _tttt_calculated - _timestamp + _tttt_time1;
+
+  _calcVirtualTemp();
+  _handleStateChanges();
   ESP.wdtEnable(0);
+}
+
+void BWC::_handleStateChanges()
+{
+  static bool delayedAction[14];
+  if(_cio.state_changed[UNITSTATE] || _cio.state_changed[HEATSTATE] || _cio.state_changed[PUMPSTATE])
+  {
+    _saveStates();
+  }
+  if(delayedAction[TEMPERATURE] && (_cio.state_age[TEMPERATURE] > 500))
+  {
+    _updateVirtualTempFix_ontempchange();
+  }
+  if(_cio.state_changed[HEATREDSTATE])
+  {
+    _updateVirtualTempFix_onheaterchange();
+  }
+
+  for(int i = 0; i < 14; i++)
+  {
+    if(_cio.state_changed[i])
+    {
+      _cio.state_changed[i] = false;
+      _cio.state_age[i] = 0;
+      delayedAction[i] = true;
+    }
+    if(delayedAction[i] && (_cio.state_age[i] > 500))
+    {
+      delayedAction[i] = false;
+      _newDataToSend = true;
+    }
+  }
+
+}
+
+// return how many hours until pool is ready
+float BWC::_estHeatingTime()
+{
+  if(_virtualTemp > _cio.states[TARGET]) return -2;  //Let us know when temp has fallen to target
+
+  float degAboveAmbient = _virtualTemp - _ambient_temp;
+  int index = abs(int(degAboveAmbient));
+  if(index > 19) index = 19;  //prevent index out of bounds
+  float fraction = 1.0 - (degAboveAmbient - floor(degAboveAmbient));
+  int deltaTemp = _cio.states[TARGET] - _virtualTemp;
+  
+  //integrate the time needed to reach target
+  //how long to next integer temp
+  float coolingPerHour = _coolingDegPerHourArray[index];
+  //mirror the curve below ambient temp (there is a warming effect instead of cooling)
+  if(degAboveAmbient < 0) coolingPerHour *= -1;
+  float netRisePerHour;
+  if(_cio.states[HEATREDSTATE])
+  {
+    netRisePerHour = _heatingDegPerHour - coolingPerHour;
+  }
+  else
+  {
+    netRisePerHour = - coolingPerHour;
+  }
+  float hoursRemaining = fraction / netRisePerHour;
+  //iterate up to target
+  for(int i = 1; i <= deltaTemp; i++)
+  {
+    degAboveAmbient = _virtualTemp + i - _ambient_temp;
+    index = abs(int(degAboveAmbient));
+    if(index > 19) index = 19;
+    coolingPerHour = _coolingDegPerHourArray[index];
+    //mirror the curve below ambient temp (there is a warming effect instead of cooling)
+    if(degAboveAmbient < 0) coolingPerHour *= -1;
+    if(_cio.states[HEATREDSTATE])
+    {
+      netRisePerHour = _heatingDegPerHour - coolingPerHour;
+    }
+    else
+    {
+      netRisePerHour = - coolingPerHour;
+    }
+    if(netRisePerHour != 0)
+      hoursRemaining += 1 / netRisePerHour;
+    else
+      hoursRemaining = -1;
+  }
+
+  if(hoursRemaining >= 0)
+  return hoursRemaining;
+  else return -1;
+}
+
+void BWC::_calcVirtualTemp()
+{
+  // calculate from last updated VTFix.
+  float netRisePerHour;
+  float degAboveAmbient = _virtualTemp - _ambient_temp;
+  int index = abs(int(degAboveAmbient));
+  if(index > 19) index = 19;  //prevent index out of bounds
+  float coolingPerHour = _coolingDegPerHourArray[index];
+  if(degAboveAmbient < 0) coolingPerHour *= -1;
+
+  if(_cio.states[HEATREDSTATE])
+  {
+    netRisePerHour = _heatingDegPerHour - coolingPerHour;
+  }
+  else
+  {
+    netRisePerHour = - coolingPerHour;
+  }
+  float elapsed_hours = _virtualTempFix_age / 3600.0 / 1000.0;
+  _virtualTemp = _virtualTempFix + netRisePerHour * elapsed_hours;
+  // Serial.printf("DAA: %f\t", degAboveAmbient);
+  // Serial.printf("index: %d\t", index);
+  // Serial.printf("CPH: %f\t", coolingPerHour);
+  // Serial.printf("NRPH: %f\t", netRisePerHour);
+  // Serial.printf("EH: %f\t", elapsed_hours);
+  // Serial.printf("VTM: %f\t", _virtualTemp);
+  // Serial.printf("VTMF: %f\n", _virtualTempFix);
+}
+
+//Called on temp change
+void BWC::_updateVirtualTempFix_ontempchange()
+{
+  // Serial.println("***_updateVirtualTempFix_ontempchange");
+  //startup init
+  if(_virtualTempFix == -99)
+  {
+    _virtualTempFix = _cio.states[TEMPERATURE];
+    _virtualTempFix_age = 0;
+    return;
+  } 
+  //readings are only valid if pump is running and has been running for a little while.
+  if(_cio.states[PUMPSTATE] && _cio.state_age[PUMPSTATE] > 30000)
+  {
+    _virtualTemp = _cio.states[TEMPERATURE];
+    /*
+    update_coolingDegPerHourArray
+    Measured temp has changed by 1.x degrees (presumably) over a certain time
+    1.x degree/(temperature age in ms / 3600 / 1000)hours = 1.x * 3 600 000 / temperature age in ms
+    */
+
+    // We can only know something about rate of change if we had continous cooling since last update
+    // (Nobody messed with the heater during the 1 degree change)
+    if(_cio.state_age[HEATREDSTATE] >= _virtualTempFix_age)
+    {
+      // rate of heating is not subject to change (fixed wattage and pool size) so do this only if cooling
+      if(!_cio.states[HEATREDSTATE])
+      {
+        float degAboveAmbient = _virtualTemp - _ambient_temp;
+        int index = abs(int(degAboveAmbient));
+        if(index < 20)
+        {
+          float tempdiff = _virtualTempFix - _virtualTemp;
+          _coolingDegPerHourArray[index] = (tempdiff * 3600000.0) / _virtualTempFix_age;
+          saveCoolArray();
+        }
+      }
+      _virtualTempFix = _cio.states[TEMPERATURE];
+      _virtualTempFix_age = 0;
+    }
+  }
+}
+
+//Called on heater state change
+void BWC::_updateVirtualTempFix_onheaterchange()
+{
+  // Serial.println("***_updateVirtualTempFix_onheaterchange");
+  _virtualTempFix = _virtualTemp;
+  _virtualTempFix_age = 0;
+}
+
+void BWC::setAmbientTemperature(int64_t amb)
+{
+  // Serial.println("***setAmbientTemperature");
+  _ambient_temp = (int)amb;
+  _virtualTempFix = _virtualTemp;
+  _virtualTempFix_age = 0;
 }
 
 //save out debug text to file "debug.txt" on littleFS
@@ -234,7 +411,7 @@ bool BWC::getBtnSeqMatch()
   return false;
 }
 
-bool BWC::qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval) {
+bool BWC::qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval) {
   //handle special commands
   if(cmd == RESETQ){
     _qButtonLen = 0;
@@ -272,30 +449,45 @@ bool BWC::qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval
   return true;
 }
 
+void BWC::unlock()
+{
+  _qButton(POWER, POWERSTATE, 1, 5000); //press POWER button until states[POWERSTATE] is 1, max 5000 ms
+  _qButton(LOCK, LOCKEDSTATE, 0, 5000); //press LOCK button until states[LOCKEDSTATE] is 0
+}
+
 void BWC::_handleCommandQ(void) {
   bool restartESP = false;
   if(_qCommandLen > 0) {
   //cmp time with xtime. If more, then execute (adding buttons to buttonQ).
 
     if (_timestamp >= _commandQ[0][2]){
-      _qButton(POWER, POWERSTATE, 1, 5000); //press POWER button until states[POWERSTATE] is 1, max 5000 ms
-      _qButton(LOCK, LOCKEDSTATE, 0, 5000); //press LOCK button until states[LOCKEDSTATE] is 0
       switch (_commandQ[0][0]) 
       {
         case SETTARGET:
           {
-            _sliderTarget = _commandQ[0][1];
-            _sliderPrio = true;
-            int diff = (int)_commandQ[0][1] - (int)_cio.states[TARGET];
+            unlock();
+            uint8_t impliedunitcelsius = _commandQ[0][1] < 41;
+            int diff;
+            int desiredvalue = _commandQ[0][1];
+            //pump is set to celsius but F given
+            if(_cio.states[UNITSTATE] && !impliedunitcelsius)
+              desiredvalue = (int)round(_F2C(_commandQ[0][1]));
+            //pump is set to farenheit but C given
+            if(!_cio.states[UNITSTATE] && impliedunitcelsius)
+              desiredvalue = (int)round(_C2F(_commandQ[0][1]));
+            diff = desiredvalue - (int)_cio.states[TARGET];
             int pushtime = 500;
             int releasetime = 300;
             uint32_t updown;
             diff<0 ? updown = DOWN : updown = UP;
             _qButton(updown, CHAR1, 0xFF, pushtime);
             _qButton(NOBTN, CHAR1, 0xFF, releasetime);
+            _sliderTarget = desiredvalue;
+            _sliderPrio = true;
             break;
           }
         case SETUNIT:
+          unlock();
           /* 
             Quick convert temperature to other unit. 
             This will also be done automatically in 10 seconds.
@@ -319,18 +511,22 @@ void BWC::_handleCommandQ(void) {
           _sliderTarget = 0; //force update
           break;
         case SETBUBBLES:
+          unlock();
           _qButton(BUBBLES, BUBBLESSTATE, _commandQ[0][1], 5000);
           break;
         case SETHEATER:
+          unlock();
           _qButton(HEAT, HEATSTATE, _commandQ[0][1], 5000);
           break;
         case SETPUMP:
+          unlock();
           _qButton(PUMP, PUMPSTATE, _commandQ[0][1], 5000);
           break;
         case REBOOTESP:
           restartESP = true;
           break;
         case GETTARGET:
+          unlock();
           _qButton(UP, CHAR3, 32, 500); //ignore desired value and wait for first blink. 32 = ' '
           _qButton(NOBTN, CHAR1, 0xFF, 5000);  //block further presses until blinking stops
           break;
@@ -358,6 +554,7 @@ void BWC::_handleCommandQ(void) {
           _cio.dataAvailable = true;
           break;
         case SETJETS:
+          unlock();
           _qButton(HYDROJETS, JETSSTATE, _commandQ[0][1], 5000);
           break;
         case SETBRIGHTNESS:
@@ -365,6 +562,9 @@ void BWC::_handleCommandQ(void) {
           break;
         case SETBEEP:
           _commandQ[0][1] == 0 ? _dsp.beep2() : _dsp.playIntro();
+          break;
+        case SETAMBIENT:
+          setAmbientTemperature(_commandQ[0][1]);
           break;
       }
       //If interval > 0 then append to commandQ with updated xtime.
@@ -394,7 +594,7 @@ String BWC::getJSONStates() {
     // Use arduinojson.org/assistant to compute the capacity.
   //feed the dog
   ESP.wdtFeed();
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(1536);
 
     // Set the values in the document
     doc["CONTENT"] = "STATES";
@@ -406,13 +606,39 @@ String BWC::getJSONStates() {
     doc["GRN"] = _cio.states[HEATGRNSTATE];
     doc["RED"] = _cio.states[HEATREDSTATE];
     doc["FLT"] = _cio.states[PUMPSTATE];
-    doc["TGT"] = _cio.states[TARGET];
-    doc["TMP"] = _cio.states[TEMPERATURE];
     doc["CH1"] = _cio.states[CHAR1];
     doc["CH2"] = _cio.states[CHAR2];
     doc["CH3"] = _cio.states[CHAR3];
     doc["HJT"] = _cio.states[JETSSTATE];
     doc["BRT"] = _dspBrightness;
+    doc["AMB"] = _ambient_temp;
+    doc["TGT"] = _cio.states[TARGET];
+    doc["TMP"] = _cio.states[TEMPERATURE];
+    doc["VTM"] = _virtualTemp;
+    if(_cio.states[UNITSTATE])
+    {
+      //celsius
+    doc["AMBC"] = _ambient_temp;
+    doc["TGTC"] = _cio.states[TARGET];
+    doc["TMPC"] = _cio.states[TEMPERATURE];
+    doc["VTMC"] = _virtualTemp;
+    doc["AMBF"] = round(_C2F((float)_ambient_temp));
+    doc["TGTF"] = round(_C2F((float)_cio.states[TARGET]));
+    doc["TMPF"] = round(_C2F((float)_cio.states[TEMPERATURE]));
+    doc["VTMF"] = _C2F(_virtualTemp);
+    }
+    else
+    {
+      //farenheit
+    doc["AMBF"] = _ambient_temp;
+    doc["TGTF"] = _cio.states[TARGET];
+    doc["TMPF"] = _cio.states[TEMPERATURE];
+    doc["VTMF"] = _virtualTemp;
+    doc["AMBC"] = round(_F2C((float)_ambient_temp));
+    doc["TGTC"] = round(_F2C((float)_cio.states[TARGET]));
+    doc["TMPC"] = round(_F2C((float)_cio.states[TEMPERATURE]));
+    doc["VTMC"] = _F2C(_virtualTemp);
+    }
 
     // Serialize JSON to string
     String jsonmsg;
@@ -445,6 +671,11 @@ String BWC::getJSONTimes() {
     doc["CLINT"] = _clinterval;
     doc["KWH"] = _cost/_price;
     doc["TTTT"] = _tttt;
+    float t2r = _estHeatingTime();
+    String t2r_string = String(t2r);
+    if(t2r == -2) t2r_string = F("Already");
+    if(t2r == -1) t2r_string = F("Never");
+    doc["T2R"] = t2r_string;
     doc["MINCLK"] = _cio.clk_per;
     _cio.clk_per = 1000;  //reset minimum clock period
 
@@ -504,6 +735,7 @@ void BWC::setJSONSettings(String message){
   _audio = doc["AUDIO"];
   _restoreStatesOnStart = doc["RESTORE"];
   saveSettings();
+  saveCoolArray();//*******just for debug
 }
 
 String BWC::getJSONCommandQueue(){
@@ -528,8 +760,8 @@ String BWC::getJSONCommandQueue(){
 }
 
 bool BWC::newData(){
-  bool result = _cio.dataAvailable;
-  _cio.dataAvailable = false;
+  bool result = _newDataToSend;
+  _newDataToSend = false;
   if (result && _audio) _dsp.beep();
   return result;
 }
@@ -664,6 +896,37 @@ void BWC::_loadCommandQueue(){
   file.close();
 }
 
+void BWC::_loadCoolArray(){
+  for(unsigned int i = 0; i < sizeof(_coolingDegPerHourArray)/sizeof(float); i++)
+  {
+    _coolingDegPerHourArray[i] = i/20.0;
+  }
+  return;
+
+  File file = LittleFS.open("coolarray.json", "r");
+  if (!file) {
+    Serial.println(F("Failed to read coolarray.json"));
+    return;
+  }
+
+  DynamicJsonDocument doc(1024);
+  // Deserialize the JSON document
+  DeserializationError error = deserializeJson(doc, file);
+  if (error) {
+    Serial.println(F("Failed to deserialize coolarray.json, using default."));
+    file.close();
+    return;
+  }
+
+  // Set the values in the variables
+  for(int i = 0; i < 20; i++){
+    _coolingDegPerHourArray[i] = doc["array"][i];
+  }
+
+  file.close();
+}
+
+
 void BWC::_saveCommandQueue(){
   //kill the dog
   ESP.wdtDisable();
@@ -785,6 +1048,34 @@ void BWC::saveEventlog(){
 
 }
 
+void BWC::saveCoolArray(){
+  //kill the dog
+  ESP.wdtDisable();
+  File file = LittleFS.open("coolarray.json", "w");
+  if (!file) {
+    Serial.println(F("Failed to save coolarray.json"));
+    return;
+  }
+
+  DynamicJsonDocument doc(1024);
+
+  doc["UTC"] = DateTime.format(DateFormatter::SIMPLE);
+  // Set the values in the document
+  for(int i = 0; i < 20; i++)
+  {
+    doc["array"][i] = _coolingDegPerHourArray[i];
+  }
+  //copyArray(_coolingDegPerHourArray, doc.to<JsonArray>());
+
+  // Serialize JSON to file
+  if (serializeJson(doc, file) == 0) {
+    Serial.println(F("Failed to serialize coolarray.json"));
+  }
+  file.close();
+  //revive the dog
+  ESP.wdtEnable(0);
+}
+
 void BWC::saveRebootInfo(){
   File file = LittleFS.open("bootlog.txt", "a");
   if (!file) {
@@ -808,23 +1099,30 @@ void BWC::saveRebootInfo(){
 void BWC::_updateTimes(){
   uint32_t now = millis();
   static uint32_t prevtime = now;
-  int elapsedtime = now-prevtime;
+  int elapsedtime_ms = now-prevtime;
+  //(some of) these age-counters resets when the state changes
+  for(unsigned int i = 0; i < sizeof(_cio.state_age)/sizeof(uint16_t); i++)
+  {
+      _cio.state_age[i] += elapsedtime_ms;
+  }
+  _virtualTempFix_age += elapsedtime_ms;
 
   prevtime = now;
-  if (elapsedtime < 0) return; //millis() rollover every 49 days
+  if (elapsedtime_ms < 0) return; //millis() rollover every 49 days
   if(_cio.states[HEATREDSTATE]){
-    _heatingtime_ms += elapsedtime;
+    _heatingtime_ms += elapsedtime_ms;
   }
   if(_cio.states[PUMPSTATE]){
-    _pumptime_ms += elapsedtime;
+    _pumptime_ms += elapsedtime_ms;
   }
   if(_cio.states[BUBBLESSTATE]){
-    _airtime_ms += elapsedtime;
+    _airtime_ms += elapsedtime_ms;
   }
   if(_cio.states[JETSSTATE]){
-    _jettime_ms += elapsedtime;
+    _jettime_ms += elapsedtime_ms;
   }
-  _uptime_ms += elapsedtime;
+  _uptime_ms += elapsedtime_ms;
+
 
   if(_uptime_ms > 1000000000){
     _heatingtime += _heatingtime_ms/1000;
@@ -869,4 +1167,14 @@ String BWC::getPressedButton(){
 
 String BWC::getButtonName() {
   return ButtonNames[_CodeToButton(_dsp.getButton() )];
+}
+
+float BWC::_C2F(float c)
+{
+  return c*1.8+32;
+}
+
+float BWC::_F2C(float f)
+{
+  return (f-32)/1.8;
 }

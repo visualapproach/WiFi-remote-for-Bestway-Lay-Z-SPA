@@ -76,7 +76,8 @@ enum Commands: byte
   RESETFTIMER,
   SETJETS,
   SETBRIGHTNESS,
-  SETBEEP
+  SETBEEP,
+  SETAMBIENT
 };
 
 const int MAXCOMMANDS = 11;
