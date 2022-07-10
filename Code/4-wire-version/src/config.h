@@ -2,7 +2,7 @@
 #include <ESP8266WiFi.h>
 
 #define LEGACY_NAME "layzspa"
-#define FW_VERSION "4W_2022-06-27"
+#define FW_VERSION "4W_2022-07-10"
 
 /*
  * Miscellaneous
