@@ -1,0 +1,17 @@
+#requires a sensor "outside_temperature". Can be created from met integrations if you don't have a physical sensor.
+
+- id: '1656868177359'
+  alias: Lay-z-spa update ambient temp
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.outside_temperature
+  condition: []
+  action:
+  - service: mqtt.publish
+    data:
+      topic: layzspa/command
+      payload_template: '{"CMD":14,"VALUE":{{ states("sensor.outside_temperature")|round
+        }},"XTIME":0,"INTERVAL":0}'
+  mode: single
