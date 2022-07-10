@@ -42,23 +42,25 @@ void CIO::loop(void) {
           if(to_DSP_buf[i] != from_CIO_buf[i]) dataAvailable = true;
           to_DSP_buf[i] = from_CIO_buf[i];
         }
-      }
-      states[TEMPERATURE] = from_CIO_buf[TEMPINDEX];
-      states[ERROR] =       from_CIO_buf[ERRORINDEX];
-      cio_tx_ok = true;  //show the user that this line works (appears to work)
-      //check if cio send error msg
-      states[CHAR1] = ' ';
-      states[CHAR2] = ' ';
-      states[CHAR3] = ' ';
-      if(states[ERROR])
-      {
-        to_CIO_buf[COMMANDINDEX] = 0; //clear any commands
-        GODMODE = false;
-        states[CHAR1] = 'E';
-        states[CHAR2] = (char)(48+(from_CIO_buf[ERRORINDEX]/10));
-        states[CHAR3] = (char)(48+(from_CIO_buf[ERRORINDEX]%10));
-      }
-    } else
+
+        states[TEMPERATURE] = from_CIO_buf[TEMPINDEX];
+        states[ERROR] =       from_CIO_buf[ERRORINDEX];
+        cio_tx_ok = true;  //show the user that this line works (appears to work)
+        //check if cio send error msg
+        states[CHAR1] = ' ';
+        states[CHAR2] = ' ';
+        states[CHAR3] = ' ';
+        if(states[ERROR])
+        {
+          to_CIO_buf[COMMANDINDEX] = 0; //clear any commands
+          GODMODE = false;
+          states[CHAR1] = 'E';
+          states[CHAR2] = (char)(48+(from_CIO_buf[ERRORINDEX]/10));
+          states[CHAR3] = (char)(48+(from_CIO_buf[ERRORINDEX]%10));
+        }
+      }    
+    } 
+    else
     {
       digitalWrite(D4, HIGH);  //LED on indicates bad message
     }
@@ -105,24 +107,11 @@ void CIO::loop(void) {
         }
         dsp_tx_ok = true;  //show the user that this line works (appears to work)
       }
-    }  else
+    }
+    else
     {
       digitalWrite(D4, HIGH);  //LED on indicates bad message
     }
-    /* debug 
-    else
-    {
-      if(msglen)
-      {
-          dataAvailable = true;
-          for(int i = 0; i < msglen; i++)
-          {
-          dismissed_from_DSP_buf[i] = from_DSP_buf[i];
-          }
-          dismissed_dsp_len = msglen;
-      }
-    }
-    */
     cio_serial.write(to_CIO_buf, PAYLOADSIZE);
   }
 }
