@@ -276,7 +276,8 @@ void BWC::_updateVirtualTempFix_ontempchange()
     if(_cio.state_age[HEATREDSTATE] >= _virtualTempFix_age)
     {
       // rate of heating is not subject to change (fixed wattage and pool size) so do this only if cooling
-      if(!_cio.states[HEATREDSTATE])
+      // and do not calibrate if bubbles has been on
+      if(!_cio.states[HEATREDSTATE] && !_cio.states[BUBBLESSTATE] && (_cio.state_age[BUBBLESSTATE] >= _cio.state_age[_virtualTempFix_age]))
       {
         float degAboveAmbient = _virtualTemp - _ambient_temp;
         int index = abs(int(degAboveAmbient));
