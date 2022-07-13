@@ -138,7 +138,8 @@ void CIO::loop(void) {
     if(states[TEMPERATURE] != parsedValue)
     {
       dataAvailable = true;
-    states[TEMPERATURE] = parsedValue;
+      deltaTemp = parsedValue - states[TEMPERATURE];
+      states[TEMPERATURE] = parsedValue;
       state_changed[TEMPERATURE] = true;
     }
   }

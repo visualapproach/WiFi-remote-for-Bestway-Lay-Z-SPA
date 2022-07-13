@@ -136,35 +136,39 @@ void BWC::loop(){
 
 void BWC::_handleStateChanges()
 {
-  static bool delayedAction[14];
+  //not used now, but possibility to take action some time after the change occured
+  //static bool delayedAction[14];
+  // Save these changes so we can restore states on reboot
   if(_cio.state_changed[UNITSTATE] || _cio.state_changed[HEATSTATE] || _cio.state_changed[PUMPSTATE])
   {
     _saveStates();
   }
-  if(delayedAction[TEMPERATURE] && (_cio.state_age[TEMPERATURE] > 500))
+
+  // Temp must be stable for 500 ms before we do anything. Avoids spikes
+  //if(delayedAction[TEMPERATURE] && (_cio.state_age[TEMPERATURE] > 500))
+  if(_cio.state_changed[TEMPERATURE])
   {
     _updateVirtualTempFix_ontempchange();
+    //delayedAction[TEMPERATURE] = false;
   }
+
+  // Store virtual temp data point
   if(_cio.state_changed[HEATREDSTATE])
   {
     _updateVirtualTempFix_onheaterchange();
   }
 
+  // Reset state ages for changed states
   for(int i = 0; i < 14; i++)
   {
     if(_cio.state_changed[i])
     {
       _cio.state_changed[i] = false;
       _cio.state_age[i] = 0;
-      delayedAction[i] = true;
-    }
-    if(delayedAction[i] && (_cio.state_age[i] > 500))
-    {
-      delayedAction[i] = false;
+      //delayedAction[i] = true;
       _newDataToSend = true;
     }
   }
-
 }
 
 // return how many hours until pool is ready
@@ -253,51 +257,48 @@ void BWC::_calcVirtualTemp()
 //Called on temp change
 void BWC::_updateVirtualTempFix_ontempchange()
 {
-  // Serial.println("***_updateVirtualTempFix_ontempchange");
   //startup init
   if(_virtualTempFix == -99)
   {
     _virtualTempFix = _cio.states[TEMPERATURE];
     _virtualTempFix_age = 0;
     return;
-  } 
-  //readings are only valid if pump is running and has been running for a little while.
-  if(_cio.states[PUMPSTATE] && _cio.state_age[PUMPSTATE] > 30000)
-  {
-    _virtualTemp = _cio.states[TEMPERATURE];
-    /*
-    update_coolingDegPerHourArray
-    Measured temp has changed by 1.x degrees (presumably) over a certain time
-    1.x degree/(temperature age in ms / 3600 / 1000)hours = 1.x * 3 600 000 / temperature age in ms
-    */
+  }
 
-    // We can only know something about rate of change if we had continous cooling since last update
-    // (Nobody messed with the heater during the 1 degree change)
-    if(_cio.state_age[HEATREDSTATE] >= _virtualTempFix_age)
-    {
-      // rate of heating is not subject to change (fixed wattage and pool size) so do this only if cooling
-      // and do not calibrate if bubbles has been on
-      if(!_cio.states[HEATREDSTATE] && !_cio.states[BUBBLESSTATE] && (_cio.state_age[BUBBLESSTATE] >= _cio.state_age[_virtualTempFix_age]))
-      {
-        float degAboveAmbient = _virtualTemp - _ambient_temp;
-        int index = abs(int(degAboveAmbient));
-        if(index < 20)
-        {
-          float tempdiff = _virtualTempFix - _virtualTemp;
-          _coolingDegPerHourArray[index] = (tempdiff * 3600000.0) / _virtualTempFix_age;
-          saveCoolArray();
-        }
-      }
-      _virtualTempFix = _cio.states[TEMPERATURE];
-      _virtualTempFix_age = 0;
-    }
+  //Do not process if temperature changed > 1 degree (reading spikes)
+  if(abs(_cio.deltaTemp) != 1) return;
+
+  //readings are only valid if pump is running and has been running for 60s.
+  if(!_cio.states[PUMPSTATE] || (_cio.state_age[PUMPSTATE] < 60000)) return;
+
+  _virtualTemp = _cio.states[TEMPERATURE];
+  _virtualTempFix = _cio.states[TEMPERATURE];
+  _virtualTempFix_age = 0;  
+  /*
+  update_coolingDegPerHourArray
+  Measured temp has changed by 1 degree over a certain time
+  1 degree/(temperature age in ms / 3600 / 1000)hours = 3 600 000 / temperature age in ms
+  */
+
+  // We can only know something about rate of change if we had continous cooling since last update
+  // (Nobody messed with the heater during the 1 degree change)
+  if(_cio.state_age[HEATREDSTATE] < _cio.state_age[TEMPERATURE]) return;
+  // rate of heating is not subject to change (fixed wattage and pool size) so do this only if cooling
+  // and do not calibrate if bubbles has been on
+  if(_cio.states[HEATREDSTATE] || _cio.states[BUBBLESSTATE] || (_cio.state_age[BUBBLESSTATE] < _cio.state_age[TEMPERATURE])) return;
+  float degAboveAmbient = _virtualTemp - _ambient_temp;
+  int index = abs(int(degAboveAmbient));
+  if(index < 20)
+  {
+    //float tempdiff = abs(_virtualTempFix - _virtualTemp);  tempdiff is 1! Do not calibrate with a virtual temp.
+    _coolingDegPerHourArray[index] = 3600000.0 / _cio.state_age[TEMPERATURE];
+    saveCoolArray();
   }
 }
 
 //Called on heater state change
 void BWC::_updateVirtualTempFix_onheaterchange()
 {
-  // Serial.println("***_updateVirtualTempFix_onheaterchange");
   _virtualTempFix = _virtualTemp;
   _virtualTempFix_age = 0;
 }
@@ -1102,7 +1103,7 @@ void BWC::_updateTimes(){
   static uint32_t prevtime = now;
   int elapsedtime_ms = now-prevtime;
   //(some of) these age-counters resets when the state changes
-  for(unsigned int i = 0; i < sizeof(_cio.state_age)/sizeof(uint16_t); i++)
+  for(unsigned int i = 0; i < sizeof(_cio.state_age)/sizeof(uint32_t); i++)
   {
       _cio.state_age[i] += elapsedtime_ms;
   }

@@ -2137,7 +2137,7 @@ void setupClimate()
   doc["unique_id"] = "sensor.layzspa_virtual_temp_f"+mychipid;
   doc["state_topic"] = mqttBaseTopic+F("/message");
   doc["unit_of_measurement"] = "°F";
-  doc["value_template"] = F("{{ value_json.VTMF }}");
+  doc["value_template"] = F("{{ value_json.VTMF | round(2) }}");
   doc["expire_after"] = 700;
   doc["availability_topic"] = mqttBaseTopic+F("/Status");
   doc["payload_available"] = F("Alive");
@@ -2163,7 +2163,7 @@ void setupClimate()
   doc["unique_id"] = "sensor.layzspa_virtual_temp_c"+mychipid;
   doc["state_topic"] = mqttBaseTopic+F("/message");
   doc["unit_of_measurement"] = "°C";
-  doc["value_template"] = F("{{ value_json.VTMC }}");
+  doc["value_template"] = F("{{ value_json.VTMC | round(2) }}");
   doc["expire_after"] = 700;
   doc["availability_topic"] = mqttBaseTopic+F("/Status");
   doc["payload_available"] = F("Alive");
@@ -2216,6 +2216,32 @@ void setupClimate()
   doc["state_topic"] = mqttBaseTopic+F("/message");
   doc["unit_of_measurement"] = "°C";
   doc["value_template"] = F("{{ value_json.TGTC }}");
+  doc["expire_after"] = 700;
+  doc["availability_topic"] = mqttBaseTopic+F("/Status");
+  doc["payload_available"] = F("Alive");
+  doc["payload_not_available"] = F("Dead");
+  doc["device_class"] = F("temperature");
+  if (serializeJson(doc, payload) == 0)
+  {
+    Serial.println(F("Failed to serialize HA message!"));
+    return;
+  }
+  mqttClient.publish(topic.c_str(), payload.c_str(), true);
+  mqttClient.loop();
+  Serial.println(payload);
+  doc.clear();
+  doc.garbageCollect();
+
+  // spa ambient temperature sensor c
+  doc["device"] = devicedoc["device"];
+  payload = "";
+  topic = String(HA_PREFIX) + F("/sensor/layzspa_amb_temp_c/config");
+  Serial.println(topic);
+  doc["name"] = F("Layzspa ambient temp (C)");
+  doc["unique_id"] = "sensor.layzspa_amb_temp_c"+mychipid;
+  doc["state_topic"] = mqttBaseTopic+F("/message");
+  doc["unit_of_measurement"] = "°C";
+  doc["value_template"] = F("{{ value_json.AMBC }}");
   doc["expire_after"] = 700;
   doc["availability_topic"] = mqttBaseTopic+F("/Status");
   doc["payload_available"] = F("Alive");
