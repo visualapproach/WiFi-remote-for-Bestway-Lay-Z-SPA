@@ -526,6 +526,7 @@ void startHttpServer()
   server.on(F("/getmqtt/"), handleGetMqtt);
   server.on(F("/setmqtt/"), handleSetMqtt);
   server.on(F("/dir/"), handleDir);
+  server.on(F("/hwtest/"), handleHWtest);
   server.on(F("/upload.html"), HTTP_POST, [](){
     server.send(200, "text/plain", "");
   }, handleFileUpload);
@@ -537,6 +538,49 @@ void startHttpServer()
   // start the HTTP server
   server.begin();
   Serial.println(F("HTTP > server started"));
+}
+
+void handleHWtest()
+{
+  int errors = 0;
+  bool state = false;
+  String result = "";
+
+  bwc.stop();
+  delay(1000);
+
+  for(int pin = 0; pin < 3; pin++)
+  {
+    pinMode(ciopins[pin], OUTPUT);
+    pinMode(dsppins[pin], INPUT);
+    for(int t = 0; t < 1000; t++)
+    {
+      state = !state;
+      digitalWrite(ciopins[pin], state);
+      delayMicroseconds(10);
+      errors += digitalRead(dsppins[pin]) != state;
+    }
+    result += "DSP input pin " + String(pin+2) + " " + String(errors) + " errors of 1000\n";
+    errors = 0;
+    delay(0);
+  }
+  for(int pin = 0; pin < 3; pin++)
+  {
+    pinMode(dsppins[pin], OUTPUT);
+    pinMode(ciopins[pin], INPUT);
+    for(int t = 0; t < 1000; t++)
+    {
+      state = !state;
+      digitalWrite(dsppins[pin], state);
+      delayMicroseconds(10);
+      errors += digitalRead(ciopins[pin]) != state;
+    }
+    result += "CIO input pin " + String(pin+2) + " " + String(errors) + " errors of 1000\n";
+    errors = 0;
+    delay(0);
+  }
+
+  server.send(200, "text/plain", result);
 }
 
 /**
