@@ -84,20 +84,10 @@ void loop()
         prevButtonName = msg;
       }
 
-      if (newData)
+      if (newData || sendMQTTFlag)
       {
-        //the climate control in HA must know what unit to expect
-        if(bwc.getState(UNITSTATE) != prevunit)
-        {
-          prevunit = bwc.getState(UNITSTATE);
-          setupClimate();
-        }
         sendMQTT();
-      }
-      else if (sendMQTTFlag)
-      {
         sendMQTTFlag = false;
-        sendMQTT();
       }
     }
     
@@ -1360,6 +1350,9 @@ void setupHA()
   String topic;
   String payload;
   String mychipid = String((unsigned int)ESP.getChipId());
+  int maxtemp, mintemp;
+  maxtemp = 104;
+  mintemp = 68;
   DynamicJsonDocument devicedoc(512);
   DynamicJsonDocument doc(2048);
   devicedoc["device"]["configuration_url"] = "http://" + WiFi.localIP().toString();
@@ -1595,7 +1588,7 @@ void setupHA()
   doc["unique_id"] = "sensor.layzspa_energy"+mychipid;
   doc["state_topic"] = mqttBaseTopic+F("/times");
   doc["unit_of_measurement"] = F("kWh");
-  doc["value_template"] = F("{{ value_json.KWH }}");
+  doc["value_template"] = F("{{ value_json.KWH | round(3) }}");
   doc["device_class"] = F("energy");
   doc["state_class"] = F("total_increasing");
   doc["expire_after"] = 700;
@@ -2099,27 +2092,6 @@ void setupHA()
   doc.clear();
   doc.garbageCollect();
 
-  setupClimate();
-}
-
-void setupClimate()
-{
-  String mychipid = String((unsigned int)ESP.getChipId());
-  int maxtemp, mintemp;
-  maxtemp = 104;
-  mintemp = 68;
-  String topic;
-  String payload;
-  DynamicJsonDocument devicedoc(512);
-  DynamicJsonDocument doc(2048);
-  devicedoc["device"]["configuration_url"] = "http://" + WiFi.localIP().toString();
-  devicedoc["device"]["connections"].add(serialized("[\"mac\",\"" + WiFi.macAddress()+"\"]" ));
-  devicedoc["device"]["identifiers"] = ESP.getChipId();
-  devicedoc["device"]["manufacturer"] = "Visualapproach";
-  devicedoc["device"]["model"] = MYMODEL;
-  devicedoc["device"]["name"] = "Layzspa WiFi controller";
-  devicedoc["device"]["sw_version"] = FW_VERSION;
-
   // spa temperature sensor f
   doc["device"] = devicedoc["device"];
   payload = "";
@@ -2341,7 +2313,38 @@ void setupClimate()
   }
   mqttClient.publish(topic.c_str(), payload.c_str(), true);
   mqttClient.loop();
+  doc.clear();
+  doc.garbageCollect();
   Serial.println(payload);
+
+
+/* REMOVE THIS PART */
+  // spa ambient temperature sensor c
+  doc["device"] = devicedoc["device"];
+  payload = "";
+  topic = String(HA_PREFIX) + F("/sensor/layzspa_VTF/config");
+  Serial.println(topic);
+  doc["name"] = F("Layzspa VTF temp");
+  doc["unique_id"] = "sensor.layzspa_VTF"+mychipid;
+  doc["state_topic"] = mqttBaseTopic+F("/message");
+  doc["unit_of_measurement"] = "°C";
+  doc["value_template"] = F("{{ value_json.VTF }}");
+  doc["expire_after"] = 700;
+  doc["availability_topic"] = mqttBaseTopic+F("/Status");
+  doc["payload_available"] = F("Alive");
+  doc["payload_not_available"] = F("Dead");
+  doc["device_class"] = F("temperature");
+  if (serializeJson(doc, payload) == 0)
+  {
+    Serial.println(F("Failed to serialize HA message!"));
+    return;
+  }
+  mqttClient.publish(topic.c_str(), payload.c_str(), true);
+  mqttClient.loop();
+  Serial.println(payload);
+  doc.clear();
+  doc.garbageCollect();
+
 }
 
 void printStackSize()

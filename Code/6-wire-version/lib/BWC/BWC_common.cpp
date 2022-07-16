@@ -129,8 +129,8 @@ void BWC::loop(){
   } 
   _tttt = _tttt_calculated - _timestamp + _tttt_time1;
 
-  _calcVirtualTemp();
   _handleStateChanges();
+  _calcVirtualTemp();
   ESP.wdtEnable(0);
 }
 
@@ -245,6 +245,12 @@ void BWC::_calcVirtualTemp()
   }
   float elapsed_hours = _virtualTempFix_age / 3600.0 / 1000.0;
   _virtualTemp = _virtualTempFix + netRisePerHour * elapsed_hours;
+  // Rebase start of calculation from new temperature
+  if(abs(_virtualTemp - _virtualTempFix) > 1)
+  {
+    _virtualTempFix = _virtualTemp;
+    _virtualTempFix_age = 0;
+  }
   // Serial.printf("DAA: %f\t", degAboveAmbient);
   // Serial.printf("index: %d\t", index);
   // Serial.printf("CPH: %f\t", coolingPerHour);
@@ -617,6 +623,7 @@ String BWC::getJSONStates() {
     doc["TGT"] = _cio.states[TARGET];
     doc["TMP"] = _cio.states[TEMPERATURE];
     doc["VTM"] = _virtualTemp;
+    doc["VTF"] = _virtualTempFix; // **************************REMOVE THIS LINE
     if(_cio.states[UNITSTATE])
     {
       //celsius

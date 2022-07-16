@@ -140,6 +140,7 @@ void CIO::loop(void) {
   //capture target temperature only if showing plausible values (not blank screen while blinking)
   if( (capturePhase == readtarget) && (parsedValue > 19) ) {
     states[TARGET] = parsedValue;
+    state_changed[TARGET] = true;
   }
   //wait 6 seconds after UP/DOWN is released to be sure that actual temp is shown
   if(capturePhase == readtemperature)
