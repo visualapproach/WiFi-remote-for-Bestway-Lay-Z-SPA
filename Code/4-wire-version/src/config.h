@@ -2,7 +2,7 @@
 #include <ESP8266WiFi.h>
 
 #define LEGACY_NAME "layzspa"
-#define FW_VERSION "4W_2022-07-17"
+#define FW_VERSION "4W_2022-07-18"
 #define HA_PREFIX "homeassistant"
 
 /*
@@ -98,7 +98,7 @@ IPAddress ip4DnsSecondary(8,8,4,4);
  * You can modify this via Web GUI.
  */
 /** get or set the state of the MQTT server connection */
-bool enableMqtt = false;
+bool useMqtt = false;
 /** get or set the MQTT server IP address */
 IPAddress mqttIpAddress(192,168,0,20);
 /** get or set the MQTT server port */
