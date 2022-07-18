@@ -33,7 +33,10 @@ void setup()
 
   // check things in a cycle
   periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
-  
+
+  // delayed mqtt start
+  startComplete.attach(120, []{ enableMqtt = true; startComplete.detach(); });
+
   // update webpage every 2 seconds. (will also be updated on state changes)
   updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
 
@@ -979,7 +982,7 @@ void loadMqtt()
     return;
   }
   
-  enableMqtt = doc["enableMqtt"];
+  useMqtt = doc["enableMqtt"];
   mqttIpAddress[0] = doc["mqttIpAddress"][0];
   mqttIpAddress[1] = doc["mqttIpAddress"][1];
   mqttIpAddress[2] = doc["mqttIpAddress"][2];
@@ -1006,7 +1009,7 @@ void saveMqtt()
 
   DynamicJsonDocument doc(1024);
 
-  doc["enableMqtt"] = enableMqtt;
+  doc["enableMqtt"] = useMqtt;
   doc["mqttIpAddress"][0] = mqttIpAddress[0];
   doc["mqttIpAddress"][1] = mqttIpAddress[1];
   doc["mqttIpAddress"][2] = mqttIpAddress[2];
@@ -1035,7 +1038,7 @@ void handleGetMqtt()
   
   DynamicJsonDocument doc(1024);
 
-  doc["enableMqtt"] = enableMqtt;
+  doc["enableMqtt"] = useMqtt;
   doc["mqttIpAddress"][0] = mqttIpAddress[0];
   doc["mqttIpAddress"][1] = mqttIpAddress[1];
   doc["mqttIpAddress"][2] = mqttIpAddress[2];
@@ -1077,7 +1080,7 @@ void handleSetMqtt()
     return;
   }
 
-  enableMqtt = doc["enableMqtt"];
+  useMqtt = doc["enableMqtt"];
   mqttIpAddress[0] = doc["mqttIpAddress"][0];
   mqttIpAddress[1] = doc["mqttIpAddress"][1];
   mqttIpAddress[2] = doc["mqttIpAddress"][2];

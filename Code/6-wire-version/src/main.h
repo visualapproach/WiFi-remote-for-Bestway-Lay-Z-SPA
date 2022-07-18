@@ -21,6 +21,7 @@ BWC bwc;
 Ticker bootlogTimer;
 /**  */
 Ticker periodicTimer;
+Ticker startComplete;
 /**  */
 bool periodicTimerFlag = false;
 /**  */
@@ -59,6 +60,7 @@ bool prevunit = 1;
 Ticker updateMqttTimer;
 /**  */
 bool sendMQTTFlag = false;
+bool enableMqtt = false;
 
 /** used for handleAUX() */
 bool runonce = true;
