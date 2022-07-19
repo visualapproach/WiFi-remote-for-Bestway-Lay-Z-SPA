@@ -104,7 +104,6 @@ class CIO {
 
     volatile bool newData = false;
     bool dataAvailable = false;
-    bool stateChanged = false; //save states when true
     volatile uint16_t button = NOBTN;
     uint8_t payload[11];
     uint8_t states[14];
@@ -131,9 +130,6 @@ class CIO {
     int _CLK_PIN;
     int _DATA_PIN;
     uint8_t _prevPayload[11];
-    bool _prevUNT;
-    bool _prevHTR;
-    bool _prevFLT;
     volatile bool _packet_error = false;
 
     char _getChar(uint8_t value);

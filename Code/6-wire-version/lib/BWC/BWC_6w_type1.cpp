@@ -153,15 +153,6 @@ void CIO::loop(void) {
       state_changed[TEMPERATURE] = true;
     }
   }
-
-  //If any of these states changes, we need to set a flag to save states. Used to restore them after reboot.
-  /* REDUNDANT REMOVE AFTER TEST */
-  if(states[UNITSTATE] != _prevUNT || states[HEATSTATE] != _prevHTR || states[PUMPSTATE] != _prevFLT) {
-    stateChanged = true;
-    _prevUNT = states[UNITSTATE];
-    _prevHTR = states[HEATSTATE];
-    _prevFLT = states[PUMPSTATE];
-  }
 }
 
 //end of packet

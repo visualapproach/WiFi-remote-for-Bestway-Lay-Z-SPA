@@ -274,8 +274,8 @@ void BWC::_updateVirtualTempFix_ontempchange()
   //Do not process if temperature changed > 1 degree (reading spikes)
   if(abs(_cio.deltaTemp) != 1) return;
 
-  //readings are only valid if pump is running and has been running for 60s.
-  if(!_cio.states[PUMPSTATE] || (_cio.state_age[PUMPSTATE] < 60000)) return;
+  //readings are only valid if pump is running and has been running for 5 min.
+  if(!_cio.states[PUMPSTATE] || (_cio.state_age[PUMPSTATE] < 5*60000)) return;
 
   _virtualTemp = _cio.states[TEMPERATURE];
   _virtualTempFix = _cio.states[TEMPERATURE];
@@ -292,12 +292,15 @@ void BWC::_updateVirtualTempFix_ontempchange()
   // rate of heating is not subject to change (fixed wattage and pool size) so do this only if cooling
   // and do not calibrate if bubbles has been on
   if(_cio.states[HEATREDSTATE] || _cio.states[BUBBLESSTATE] || (_cio.state_age[BUBBLESSTATE] < _cio.state_age[TEMPERATURE])) return;
+  if(_cio.deltaTemp > 0 && _virtualTemp > _ambient_temp) return; //temp is rising when it should be falling. Bail out
+  if(_cio.deltaTemp < 0 && _virtualTemp < _ambient_temp) return; //temp is falling when it should be rising. Bail out
   float degAboveAmbient = _virtualTemp - _ambient_temp;
   int index = abs(int(degAboveAmbient));
   if(index < 20)
   {
     //float tempdiff = abs(_virtualTempFix - _virtualTemp);  tempdiff is 1! Do not calibrate with a virtual temp.
-    _coolingDegPerHourArray[index] = 3600000.0 / _cio.state_age[TEMPERATURE];
+    float newdph = 3600000.0 / _cio.state_age[TEMPERATURE];
+    if(newdph < 3) _coolingDegPerHourArray[index] = newdph; //treat superfast rate of change as anomaly and discard it
     saveCoolArray();
   }
 }
