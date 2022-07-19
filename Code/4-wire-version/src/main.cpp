@@ -26,7 +26,7 @@ void setup()
   periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
 
   // run once after setup (should be) is done
-  startTimer.attach(120, []{ enableMqtt = true; startTimer.detach(); });
+  startTimer.attach(120, []{ if(useMqtt) enableMqtt = true; startTimer.detach(); });
 
   // update webpage every 2 seconds. (will also be updated on state changes)
   updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
