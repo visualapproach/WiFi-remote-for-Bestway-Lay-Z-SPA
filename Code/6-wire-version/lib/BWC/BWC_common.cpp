@@ -244,13 +244,14 @@ void BWC::_calcVirtualTemp()
     netRisePerHour = - coolingPerHour;
   }
   float elapsed_hours = _virtualTempFix_age / 3600.0 / 1000.0;
-  _virtualTemp = _virtualTempFix + netRisePerHour * elapsed_hours;
-  // Rebase start of calculation from new temperature
-  if(abs(_virtualTemp - _virtualTempFix) > 1)
+  float newvt = _virtualTempFix + netRisePerHour * elapsed_hours;
+  // Rebase start of calculation from new integer temperature
+  if(int(_virtualTemp) != int(newvt))
   {
-    _virtualTempFix = _virtualTemp;
+    _virtualTempFix = newvt;
     _virtualTempFix_age = 0;
   }
+  _virtualTemp = newvt;
   // Serial.printf("DAA: %f\t", degAboveAmbient);
   // Serial.printf("index: %d\t", index);
   // Serial.printf("CPH: %f\t", coolingPerHour);

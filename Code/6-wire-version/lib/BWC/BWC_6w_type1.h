@@ -4,11 +4,11 @@
 #include "Arduino.h"
 #include "BWC_const.h"
 
-#ifdef PCB_V2
+#if defined(PCB_V2)
 //DATA, CLK, CS
 const int ciopins[] = {D1, D2, D3};
 const int dsppins[] = {D4, D5, D6, D7};
-#elif PCB_V2B
+#elif defined(PCB_V2B)
 const int ciopins[] = {D1, D2, D5};
 const int dsppins[] = {D6, D4, D3, D7};
 #else
