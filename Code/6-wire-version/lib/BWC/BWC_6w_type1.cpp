@@ -72,14 +72,54 @@ void CIO::loop(void) {
 
   brightness = _brightness & 7; //extract only the brightness bits (0-7)
   //extract information from payload to a better format
-  states[LOCKEDSTATE] = (payload[LCK_IDX] & (1 << LCK_BIT)) > 0;
-  states[POWERSTATE] = (payload[PWR_IDX] & (1 << PWR_BIT)) > 0;
-  states[UNITSTATE] = (payload[C_IDX] & (1 << C_BIT)) > 0;
-  states[BUBBLESSTATE] = (payload[AIR_IDX] & (1 << AIR_BIT)) > 0;
-  states[HEATGRNSTATE] = (payload[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
-  states[HEATREDSTATE] = (payload[REDHTR_IDX] & (1 << REDHTR_BIT)) > 0;
-  states[HEATSTATE] = states[HEATGRNSTATE] || states[HEATREDSTATE];
-  states[PUMPSTATE] = (payload[FLT_IDX] & (1 << FLT_BIT)) > 0;
+  bool state = (payload[LCK_IDX] & (1 << LCK_BIT)) > 0;
+  if(states[LOCKEDSTATE] != state)
+  {
+    states[LOCKEDSTATE] = state;
+    state_changed[LOCKEDSTATE] = true;
+  }
+  state =  (payload[PWR_IDX] & (1 << PWR_BIT)) > 0;
+  if(states[POWERSTATE] != state)
+  {
+    states[POWERSTATE] = state;
+    state_changed[POWERSTATE] = true;
+  }
+  state = (payload[C_IDX] & (1 << C_BIT)) > 0;
+  if(states[UNITSTATE] != state)
+  {
+    states[UNITSTATE] = state;
+    state_changed[UNITSTATE] = true;
+  }
+  state = (payload[AIR_IDX] & (1 << AIR_BIT)) > 0;
+  if(states[BUBBLESSTATE] != state)
+  {
+    states[BUBBLESSTATE] = state;
+    state_changed[BUBBLESSTATE] = true;
+  }
+  state =  (payload[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
+  if(states[HEATGRNSTATE] != state)
+  {
+    states[HEATGRNSTATE] = state;
+    state_changed[HEATGRNSTATE] = true;
+  }
+  state = (payload[REDHTR_IDX] & (1 << REDHTR_BIT)) > 0;
+  if(states[HEATREDSTATE] != state)
+  {
+    states[HEATREDSTATE] = state;
+    state_changed[HEATREDSTATE] = true;
+  }
+  state = states[HEATGRNSTATE] || states[HEATREDSTATE];
+  if(states[HEATSTATE] != state)
+  {
+    states[HEATSTATE] = state;
+    state_changed[HEATSTATE] = true;
+  }
+  state = (payload[FLT_IDX] & (1 << FLT_BIT)) > 0;
+  if(states[PUMPSTATE] != state)
+  {
+    states[PUMPSTATE] = state;
+    state_changed[PUMPSTATE] = true;
+  }
   states[CHAR1] = (uint8_t)_getChar(payload[DGT1_IDX]);
   states[CHAR2] = (uint8_t)_getChar(payload[DGT2_IDX]);
   states[CHAR3] = (uint8_t)_getChar(payload[DGT3_IDX]);
@@ -100,20 +140,18 @@ void CIO::loop(void) {
   //capture target temperature only if showing plausible values (not blank screen while blinking)
   if( (capturePhase == readtarget) && (parsedValue > 19) ) {
     states[TARGET] = parsedValue;
+    state_changed[TARGET] = true;
   }
   //wait 6 seconds after UP/DOWN is released to be sure that actual temp is shown
   if(capturePhase == readtemperature)
   {
-    if(states[TEMPERATURE] != parsedValue) dataAvailable = true;
-    states[TEMPERATURE] = parsedValue;
-  }
-
-  //If any of these states changes, we need to set a flag to save states. Used to restore them after reboot.
-  if(states[UNITSTATE] != _prevUNT || states[HEATSTATE] != _prevHTR || states[PUMPSTATE] != _prevFLT) {
-    stateChanged = true;
-    _prevUNT = states[UNITSTATE];
-    _prevHTR = states[HEATSTATE];
-    _prevFLT = states[PUMPSTATE];
+    if(states[TEMPERATURE] != parsedValue)
+    {
+      dataAvailable = true;
+      deltaTemp = parsedValue - states[TEMPERATURE];
+      states[TEMPERATURE] = parsedValue;
+      state_changed[TEMPERATURE] = true;
+    }
   }
 }
 

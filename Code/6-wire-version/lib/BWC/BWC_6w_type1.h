@@ -4,9 +4,13 @@
 #include "Arduino.h"
 #include "BWC_const.h"
 
-#ifdef PCB_V2
+#if defined(PCB_V2)
+//DATA, CLK, CS
 const int ciopins[] = {D1, D2, D3};
 const int dsppins[] = {D4, D5, D6, D7};
+#elif defined(PCB_V2B)
+const int ciopins[] = {D1, D2, D5};
+const int dsppins[] = {D6, D4, D3, D7};
 #else
 const int ciopins[] = {D7, D2, D1};
 const int dsppins[] = {D5, D4, D3, D6};
@@ -53,6 +57,9 @@ const uint8_t CHARCODES[] = {
   0xFB, 0xE9, 0xED, 0x61, 0x1D, 0xE1, 0x71, 0x01, 0xA9, 0xB9, 0xE7, 0xCF, 0xA1, 0xDB, 0xF1, 0x39, 0x7D, 0x01, 0xDD, 0xB7
 };
 
+/*
+NOBTN, LOCK, TIMER, BUBBLES, UNIT, HEAT, PUMP, DOWN, UP, POWER, HYDROJETS
+*/
 #if defined(PRE2021)
 const uint16_t ButtonCodes[] =
 {
@@ -101,10 +108,12 @@ class CIO {
 
     volatile bool newData = false;
     bool dataAvailable = false;
-    bool stateChanged = false; //save states when true
     volatile uint16_t button = NOBTN;
     uint8_t payload[11];
     uint8_t states[14];
+    uint32_t state_age[14];
+    bool state_changed[14];
+    int deltaTemp;
     uint8_t brightness;
     bool targetIsDisplayed = false;
     //uint16_t lastPressedButton;
@@ -125,9 +134,6 @@ class CIO {
     int _CLK_PIN;
     int _DATA_PIN;
     uint8_t _prevPayload[11];
-    bool _prevUNT;
-    bool _prevHTR;
-    bool _prevFLT;
     volatile bool _packet_error = false;
 
     char _getChar(uint8_t value);

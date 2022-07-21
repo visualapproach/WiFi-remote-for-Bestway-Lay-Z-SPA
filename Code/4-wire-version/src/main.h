@@ -18,10 +18,12 @@ BWC bwc;
 
 /**  */
 Ticker periodicTimer;
+Ticker startTimer;
 /**  */
 bool periodicTimerFlag = false;
 /**  */
 int periodicTimerInterval = 60;
+
 /** get or set the state of the network beeing connected */
 bool wifiConnected = false;
 
@@ -54,6 +56,7 @@ String prevButtonName = "";
 Ticker updateMqttTimer;
 /**  */
 bool sendMQTTFlag = false;
+bool enableMqtt = false;
 
 /** used for handleAUX() */
 bool runonce = true;
@@ -106,3 +109,4 @@ void handleRestart();
 void startMqtt();
 void mqttCallback(char* topic, byte* payload, unsigned int length);
 void mqttConnect();
+void setupHA();

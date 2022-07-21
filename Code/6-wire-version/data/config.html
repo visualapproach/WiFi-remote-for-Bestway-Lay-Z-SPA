@@ -79,6 +79,7 @@
               <option value="3">Set heater (0/1)</option>
               <option value="4">Set filter pump (0/1)</option>
               <option value="5">Reset queue (not used)</option>
+              <option value="6">Reboot ESP</option>
               <option value="7">Internal command (get target) (not used)</option>
               <option value="8">Reset times (not used)</option>
               <option value="9">Reset Cl timer (not used)</option>
@@ -86,7 +87,7 @@
               <option value="11">Set hydrojets (0/1)</option>
               <option value="12">Set display brightness (0-8)</option>
               <option value="13">Set beep (0/1)</option>
-              <option value="6">Reboot ESP</option>
+              <option value="14">Set ambient temp (any integer)</option>
               </select>
           </td>
         </tr>
@@ -137,9 +138,10 @@ const resetfilter = 10;
 const setjets = 11;
 const setbrightness = 12;
 const setbeep = 13;
+const setambient = 14;
 
 const commandlist = ["Set target", "Set unit", "Set bubbles", "Set heat", "Set pump", "Reset queue", "Reboot ESP", 
-                      "Internal cmd", "Reset times", "Reset Cl timer", "Reset filter timer", "Set jets", "Set brightness", "Beep"];
+                      "Internal cmd", "Reset times", "Reset Cl timer", "Reset filter timer", "Set jets", "Set brightness", "Beep", "Set ambient temp."];
 
 function loadconfig(){
   const Http = new XMLHttpRequest();

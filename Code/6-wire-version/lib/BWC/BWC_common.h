@@ -30,9 +30,10 @@ class BWC {
     void begin2();
     void begin(int, int, int, int, int, int, int);
     void loop();
-    bool qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval);
+    bool qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval);
     bool newData();
     void saveEventlog();
+    void saveCoolArray();
     String getJSONStates();
     String getJSONTimes();
     String getJSONSettings();
@@ -52,17 +53,18 @@ class BWC {
     void stop(void);
     void saveRebootInfo();
     bool getBtnSeqMatch();
+    void setAmbientTemperature(int64_t amb);
+    void unlock(void);
 
   private:
     CIO _cio;
     DSP _dsp;
     uint8_t _dspBrightness;
-    uint32_t _commandQ[MAXCOMMANDS][4];
+    int64_t _commandQ[MAXCOMMANDS][4]; //64 bits to house both timestamp > 15 years in future, and negative values
     int _qCommandLen = 0;  //length of commandQ
     int32_t _buttonQ[MAXBUTTONS][4];
     int _qButtonLen = 0;  //length of buttonQ
     uint32_t _timestamp;
-    bool _newData = false;
     uint32_t _cltime;
     uint32_t _ftime;
     uint32_t _uptime;
@@ -96,18 +98,32 @@ class BWC {
     int _tttt;  //time to target temperature after subtracting running time since last calculation
     int _tttt_calculated;  //constant between calculations
     int _btnSequence[4] = {NOBTN,NOBTN,NOBTN,NOBTN}; //keep track of the four latest button presses
-
     void _qButton(uint32_t btn, uint32_t state, uint32_t value, int32_t maxduration);
     void _handleCommandQ(void);
     void _handleButtonQ(void);
     void _startNTP();
     void _loadSettings();
     void _loadCommandQueue();
+    void _loadCoolArray();
     void _saveCommandQueue();
     void _updateTimes();
     void _restoreStates();
     void _saveStates();
     int _CodeToButton(uint16_t val);
+    float _estHeatingTime();
+    float _coolingDegPerHourArray[20];
+    int _ambient_temp;
+    float _heatingDegPerHour = 1.5;
+    float _virtualTemp; //=virtualtempfix+calculated diff
+    float _virtualTempFix; //last fixed data point to add or subtract temp from
+    uint32_t _virtualTempFix_age;
+    void _calcVirtualTemp();
+    void _updateVirtualTempFix_ontempchange();
+    void _updateVirtualTempFix_onheaterchange();
+    void _handleStateChanges();
+    float _C2F(float c);
+    float _F2C(float f);
+    bool _newDataToSend = false;
 };
 
 #endif

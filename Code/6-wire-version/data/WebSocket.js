@@ -15,7 +15,9 @@ const cmd = {
 	resetTimerChlorine: 9,
 	resetTimerFilter: 10,
 	toggleHydroJets: 11,
-	setBrightness: 12
+	setBrightness: 12,
+  setBeep: 13,
+  setAmbient: 14
 };
 
 // button element ID mapping
@@ -112,6 +114,7 @@ function handlemsg(e)
 		document.getElementById('temp').min = (msgobj.UNT ? 20 : 68);
 		document.getElementById('temp').max = (msgobj.UNT ? 40 : 104);
 		document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
+		document.getElementById('vtlabel').innerHTML = msgobj.VTM.toFixed(2).toString();
 		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
 
 		// buttons
@@ -133,10 +136,12 @@ function handlemsg(e)
 		{
 			document.getElementById('temp').value = msgobj.TGT;
 			document.getElementById('brt').value = msgobj.BRT;
+			document.getElementById('amb').value = msgobj.AMB;
 			initSlider = false;
 		}
 		document.getElementById('sliderTempVal').innerHTML = document.getElementById('temp').value.toString();
 		document.getElementById('sliderBrtVal').innerHTML = document.getElementById('brt').value.toString();
+		document.getElementById('sliderAmbVal').innerHTML = document.getElementById('amb').value.toString();
 	}
 
 	if (msgobj.CONTENT == "TIMES")
@@ -161,6 +166,7 @@ function handlemsg(e)
 		document.getElementById('filtertime').innerHTML = s2dhms(msgobj.PUMPTIME);
 		document.getElementById('jettime').innerHTML = s2dhms(msgobj.JETTIME);
 		document.getElementById('cost').innerHTML = (msgobj.COST).toFixed(2);
+    document.getElementById('t2r').innerHTML = (msgobj.T2R);
 		document.getElementById('tttt').innerHTML = (msgobj.TTTT/3600).toFixed(2) + "h<br>(" + new Date(msgobj.TIME * 1000 + msgobj.TTTT * 1000).toLocaleString() + ")";
 	}
 };
@@ -203,6 +209,11 @@ function sendCommand(val)
 		document.getElementById("sliderBrtVal").innerHTML = value.toString();
 		document.getElementById("dsp").style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(value+1)), 0, 0);
 
+	}
+	else if (val == 'setAmbient')
+	{
+		value = parseInt(document.getElementById('amb').value);
+		document.getElementById("sliderAmbVal").innerHTML = value.toString();
 	}
 	else if (eid[val] && (val == 'toggleUnit' || val == 'toggleBubbles' || val == 'toggleHeater' || val == 'togglePump' || val == 'toggleHydroJets'))
 	{
