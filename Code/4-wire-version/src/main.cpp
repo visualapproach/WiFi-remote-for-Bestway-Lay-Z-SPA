@@ -1857,15 +1857,15 @@ void setupHA()
   // god mode switch
   doc["device"] = devicedoc["device"];
   payload = "";
-  topic = String(HA_PREFIX) + F("/switch/layzspa_4w_godmode/config");
+  topic = String(HA_PREFIX) + F("/switch/layzspa_ctrl/config");
   Serial.println(topic);
   doc["name"] = F("Layzspa take control");
-  doc["unique_id"] = "switch.layzspa_4w_pump"+mychipid;
+  doc["unique_id"] = "switch.layzspa_4w_ctrl"+mychipid;
   doc["state_topic"] = mqttBaseTopic+F("/message");
   doc["command_topic"] = mqttBaseTopic+F("/command");
   doc["value_template"] = F("{{ value_json.GOD }}");
   doc["expire_after"] = 700;
-  doc["icon"] = F("mdi:pump");
+  doc["icon"] = F("mdi:controller-classic");
   doc["availability_topic"] = mqttBaseTopic+F("/Status");
   doc["payload_available"] = F("Alive");
   doc["payload_not_available"] = F("Dead");
