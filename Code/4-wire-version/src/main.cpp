@@ -1711,7 +1711,7 @@ void setupHA()
   doc["name"] = F("Layzspa connection");
   doc["unique_id"] = "binary_sensor.layzspa_4w_connection"+mychipid;
   doc["state_topic"] = mqttBaseTopic+F("/Status");
-  doc["device-class"] = F("connectivity");
+  doc["device_class"] = F("connectivity");
   doc["availability_topic"] = mqttBaseTopic+F("/Status");
   doc["payload_available"] = F("Alive");
   doc["payload_not_available"] = F("Dead");
@@ -1737,7 +1737,7 @@ void setupHA()
   doc["unique_id"] = "binary_sensor.layzspa_4w_error"+mychipid;
   doc["state_topic"] = mqttBaseTopic+F("/message");
   doc["value_template"] = F("{{ value_json.ERR }}");
-  doc["device-class"] = F("problem");
+  doc["device_class"] = F("problem");
   doc["entity_category"] = F("diagnostic");
   doc["availability_topic"] = mqttBaseTopic+F("/Status");
   doc["payload_available"] = F("Alive");
