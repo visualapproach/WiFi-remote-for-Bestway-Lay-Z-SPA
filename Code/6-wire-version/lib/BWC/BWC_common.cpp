@@ -252,22 +252,16 @@ void BWC::_calcVirtualTemp()
     _virtualTempFix_age = 0;
   }
   _virtualTemp = newvt;
-  // Serial.printf("DAA: %f\t", degAboveAmbient);
-  // Serial.printf("index: %d\t", index);
-  // Serial.printf("CPH: %f\t", coolingPerHour);
-  // Serial.printf("NRPH: %f\t", netRisePerHour);
-  // Serial.printf("EH: %f\t", elapsed_hours);
-  // Serial.printf("VTM: %f\t", _virtualTemp);
-  // Serial.printf("VTMF: %f\n", _virtualTempFix);
 }
 
 //Called on temp change
 void BWC::_updateVirtualTempFix_ontempchange()
 {
   //startup init
-  if(_virtualTempFix == -99)
+  if(_virtualTempFix < -10)
   {
     _virtualTempFix = _cio.states[TEMPERATURE];
+    _virtualTemp = _virtualTempFix;
     _virtualTempFix_age = 0;
     return;
   }
