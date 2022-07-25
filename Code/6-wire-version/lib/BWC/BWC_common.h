@@ -52,7 +52,7 @@ class BWC {
     void stop(void);
     void saveRebootInfo();
     bool getBtnSeqMatch();
-    void setAmbientTemperature(int64_t amb);
+    void setAmbientTemperature(int64_t amb, bool unit);
     void unlock(void);
 
   private:

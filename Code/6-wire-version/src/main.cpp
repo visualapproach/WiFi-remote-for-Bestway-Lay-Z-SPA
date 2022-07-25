@@ -447,6 +447,7 @@ void startWebSocket()
   // In case we are already running
   webSocket.close();
   webSocket.begin();
+  webSocket.enableHeartbeat(3000, 3000, 1);
   webSocket.onEvent(webSocketEvent);
   Serial.println(F("WebSocket > server started"));
 }

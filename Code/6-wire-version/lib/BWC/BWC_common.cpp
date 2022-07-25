@@ -119,6 +119,19 @@ void BWC::_handleStateChanges()
 {
   //not used now, but possibility to take action some time after the change occured
   //static bool delayedAction[14];
+  if(_cio.state_changed[UNITSTATE])
+  {
+    if(_cio.states[UNITSTATE])
+    {
+      _cio.states[TARGET] = round(_F2C(_cio.states[TARGET]));
+    }
+    else
+    {
+      _cio.states[TARGET] = round(_C2F(_cio.states[TARGET]));
+    }
+    _sliderTarget = _cio.states[TARGET];
+  }
+
   // Save these changes so we can restore states on reboot
   if(_cio.state_changed[UNITSTATE] || _cio.state_changed[HEATSTATE] || _cio.state_changed[PUMPSTATE])
   {
@@ -155,13 +168,15 @@ void BWC::_handleStateChanges()
 // return how many hours until pool is ready
 float BWC::_estHeatingTime()
 {
-  if(_virtualTemp > _cio.states[TARGET]) return -2;  //Let us know when temp has fallen to target
+  int targetInC = _cio.states[TARGET];
+  if(!_cio.states[UNITSTATE]) targetInC = _F2C(targetInC);
+  if(_virtualTemp > targetInC) return -2;  //Let us know when temp has fallen to target
 
   float degAboveAmbient = _virtualTemp - _ambient_temp;
   int index = abs(int(degAboveAmbient));
   if(index > 19) index = 19;  //prevent index out of bounds
   float fraction = 1.0 - (degAboveAmbient - floor(degAboveAmbient));
-  int deltaTemp = _cio.states[TARGET] - _virtualTemp;
+  int deltaTemp = targetInC - _virtualTemp;
   
   //integrate the time needed to reach target
   //how long to next integer temp
@@ -238,10 +253,12 @@ void BWC::_calcVirtualTemp()
 //Called on temp change
 void BWC::_updateVirtualTempFix_ontempchange()
 {
+  int tempInC = _cio.states[TEMPERATURE];
+  if(!_cio.states[UNITSTATE]) tempInC = _F2C(tempInC);
   //startup init
   if(_virtualTempFix < -10)
   {
-    _virtualTempFix = _cio.states[TEMPERATURE];
+    _virtualTempFix = tempInC;
     _virtualTemp = _virtualTempFix;
     _virtualTempFix_age = 0;
     return;
@@ -253,8 +270,8 @@ void BWC::_updateVirtualTempFix_ontempchange()
   //readings are only valid if pump is running and has been running for 5 min.
   if(!_cio.states[PUMPSTATE] || (_cio.state_age[PUMPSTATE] < 5*60000)) return;
 
-  _virtualTemp = _cio.states[TEMPERATURE];
-  _virtualTempFix = _cio.states[TEMPERATURE];
+  _virtualTemp = tempInC;
+  _virtualTempFix = tempInC;
   _virtualTempFix_age = 0;  
   /*
   update_coolingDegPerHourArray
@@ -288,10 +305,11 @@ void BWC::_updateVirtualTempFix_onheaterchange()
   _virtualTempFix_age = 0;
 }
 
-void BWC::setAmbientTemperature(int64_t amb)
+void BWC::setAmbientTemperature(int64_t amb, bool unit)
 {
-  // Serial.println("***setAmbientTemperature");
   _ambient_temp = (int)amb;
+  if(!unit) _ambient_temp = _F2C(_ambient_temp);
+
   _virtualTempFix = _virtualTemp;
   _virtualTempFix_age = 0;
 }
@@ -475,27 +493,8 @@ void BWC::_handleCommandQ(void) {
           }
         case SETUNIT:
           unlock();
-          /* 
-            Quick convert temperature to other unit. 
-            This will also be done automatically in 10 seconds.
-            But we are impatient.
-          */
-          if(_commandQ[0][1] && !_cio.states[UNITSTATE])
-          {
-            //F to C
-            _cio.states[TEMPERATURE] = round((_cio.states[TEMPERATURE]-32)/1.8);
-            _cio.states[TARGET] = round((_cio.states[TARGET]-32)/1.8);
-          }
-          if(!_commandQ[0][1] && _cio.states[UNITSTATE])
-          {
-            //C to F
-            _cio.states[TEMPERATURE] = round((_cio.states[TEMPERATURE]*1.8)+32);
-            _cio.states[TARGET] = round((_cio.states[TARGET]*1.8)+32);
-          }
           _qButton(UNIT, UNITSTATE, _commandQ[0][1], 5000);
           _qButton(NOBTN, CHAR3, 0xFF, 300);
-          //_qButton(UP, CHAR3, _commandQ[0][1], 500);
-          _sliderTarget = 0; //force update
           break;
         case SETBUBBLES:
           unlock();
@@ -550,8 +549,11 @@ void BWC::_handleCommandQ(void) {
         case SETBEEP:
           _commandQ[0][1] == 0 ? _dsp.beep2() : _dsp.playIntro();
           break;
-        case SETAMBIENT:
-          setAmbientTemperature(_commandQ[0][1]);
+        case SETAMBIENTF:
+          setAmbientTemperature(_commandQ[0][1], false);
+          break;
+        case SETAMBIENTC:
+          setAmbientTemperature(_commandQ[0][1], true);
           break;
       }
       //If interval > 0 then append to commandQ with updated xtime.
@@ -598,34 +600,34 @@ String BWC::getJSONStates() {
     doc["CH3"] = _cio.states[CHAR3];
     doc["HJT"] = _cio.states[JETSSTATE];
     doc["BRT"] = _dspBrightness;
-    doc["AMB"] = _ambient_temp;
     doc["TGT"] = _cio.states[TARGET];
     doc["TMP"] = _cio.states[TEMPERATURE];
-    doc["VTM"] = _virtualTemp;
     doc["VTF"] = _virtualTempFix; // **************************REMOVE THIS LINE
+    doc["VTMC"] = _virtualTemp;
+    doc["VTMF"] = _C2F(_virtualTemp);
+    doc["AMBC"] = _ambient_temp;
+    doc["AMBF"] = round(_C2F(_ambient_temp));
     if(_cio.states[UNITSTATE])
     {
       //celsius
-    doc["AMBC"] = _ambient_temp;
-    doc["TGTC"] = _cio.states[TARGET];
-    doc["TMPC"] = _cio.states[TEMPERATURE];
-    doc["VTMC"] = _virtualTemp;
-    doc["AMBF"] = round(_C2F((float)_ambient_temp));
-    doc["TGTF"] = round(_C2F((float)_cio.states[TARGET]));
-    doc["TMPF"] = round(_C2F((float)_cio.states[TEMPERATURE]));
-    doc["VTMF"] = _C2F(_virtualTemp);
+      doc["AMB"] = _ambient_temp;
+      doc["VTM"] = _virtualTemp;
+      doc["TGTC"] = _cio.states[TARGET];
+      doc["TMPC"] = _cio.states[TEMPERATURE];
+      doc["TGTF"] = round(_C2F((float)_cio.states[TARGET]));
+      doc["TMPF"] = round(_C2F((float)_cio.states[TEMPERATURE]));
+      doc["VTMF"] = _C2F(_virtualTemp);
     }
     else
     {
       //farenheit
-    doc["AMBF"] = _ambient_temp;
-    doc["TGTF"] = _cio.states[TARGET];
-    doc["TMPF"] = _cio.states[TEMPERATURE];
-    doc["VTMF"] = _virtualTemp;
-    doc["AMBC"] = round(_F2C((float)_ambient_temp));
-    doc["TGTC"] = round(_F2C((float)_cio.states[TARGET]));
-    doc["TMPC"] = round(_F2C((float)_cio.states[TEMPERATURE]));
-    doc["VTMC"] = _F2C(_virtualTemp);
+      doc["AMB"] = round(_C2F(_ambient_temp));
+      doc["VTM"] = _C2F(_virtualTemp);
+      doc["TGTF"] = _cio.states[TARGET];
+      doc["TMPF"] = _cio.states[TEMPERATURE];
+      doc["TGTC"] = round(_F2C((float)_cio.states[TARGET]));
+      doc["TMPC"] = round(_F2C((float)_cio.states[TEMPERATURE]));
+      doc["VTMC"] = _virtualTemp;
     }
 
     // Serialize JSON to string

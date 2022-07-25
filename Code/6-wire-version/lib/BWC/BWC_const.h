@@ -77,7 +77,8 @@ enum Commands: byte
   SETJETS,
   SETBRIGHTNESS,
   SETBEEP,
-  SETAMBIENT
+  SETAMBIENTF,
+  SETAMBIENTC
 };
 
 const int MAXCOMMANDS = 11;
