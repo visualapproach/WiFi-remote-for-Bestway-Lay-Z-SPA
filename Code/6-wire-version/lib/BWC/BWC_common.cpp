@@ -27,25 +27,6 @@ void BWC::begin(void){
   begin2();
 }
 
-//overloaded function if user want to manually use different pinout
-void BWC::begin(
-  //left symbol is for type1, right for type2
-      int cio_data_td_pin,
-      int cio_clk_pin,
-      int cio_cs_ld_pin,
-      int dsp_data_td_pin,
-      int dsp_clk_pin,
-      int dsp_cs_ld_pin,
-      int dsp_audio_pin
-      )
-{
-  //start CIO and DSP modules
-  _cio.begin(cio_data_td_pin, cio_clk_pin, cio_cs_ld_pin);
-  _dsp.begin(dsp_data_td_pin, dsp_clk_pin, dsp_cs_ld_pin, dsp_audio_pin);
-  begin2();
-}
-
-
 void BWC::begin2(){
   //Initialize variables
   _dspBrightness = 7; //default = max brightness

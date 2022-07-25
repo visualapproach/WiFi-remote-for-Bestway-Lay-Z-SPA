@@ -28,7 +28,6 @@ class BWC {
     BWC();
     void begin(void); 
     void begin2();
-    void begin(int, int, int, int, int, int, int);
     void loop();
     bool qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval);
     bool newData();
