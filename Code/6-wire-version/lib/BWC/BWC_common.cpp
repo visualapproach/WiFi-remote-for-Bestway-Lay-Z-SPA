@@ -68,8 +68,8 @@ void BWC::stop(){
 
 void BWC::loop(){
   //feed the dog
-  ESP.wdtFeed();
-  ESP.wdtDisable();
+  // ESP.wdtFeed();
+  // ESP.wdtDisable();
 
   _timestamp = DateTime.now();
 
@@ -112,7 +112,7 @@ void BWC::loop(){
 
   _handleStateChanges();
   _calcVirtualTemp();
-  ESP.wdtEnable(0);
+  // ESP.wdtEnable(0);
 }
 
 void BWC::_handleStateChanges()
@@ -582,7 +582,7 @@ String BWC::getJSONStates() {
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
   //feed the dog
-  ESP.wdtFeed();
+  // ESP.wdtFeed();
     DynamicJsonDocument doc(1536);
 
     // Set the values in the document
@@ -643,7 +643,7 @@ String BWC::getJSONTimes() {
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
   //feed the dog
-  ESP.wdtFeed();
+  // ESP.wdtFeed();
     DynamicJsonDocument doc(1024);
 
     // Set the values in the document
@@ -682,32 +682,32 @@ String BWC::getJSONSettings(){
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
   //feed the dog
-  ESP.wdtFeed();
-    DynamicJsonDocument doc(1024);
+  // ESP.wdtFeed();
+  DynamicJsonDocument doc(1024);
 
-    // Set the values in the document
-    doc["CONTENT"] = "SETTINGS";
-    doc["TIMEZONE"] = _timezone;
-    doc["PRICE"] = _price;
-    doc["FINT"] = _finterval;
-    doc["CLINT"] = _clinterval;
-    doc["AUDIO"] = _audio;
-    doc["REBOOTINFO"] = ESP.getResetReason();
-    doc["REBOOTTIME"] = DateTime.getBootTime();
-    doc["RESTORE"] = _restoreStatesOnStart;
-    doc["MODEL"] = MYMODEL;
+  // Set the values in the document
+  doc["CONTENT"] = "SETTINGS";
+  doc["TIMEZONE"] = _timezone;
+  doc["PRICE"] = _price;
+  doc["FINT"] = _finterval;
+  doc["CLINT"] = _clinterval;
+  doc["AUDIO"] = _audio;
+  doc["REBOOTINFO"] = ESP.getResetReason();
+  doc["REBOOTTIME"] = DateTime.getBootTime();
+  doc["RESTORE"] = _restoreStatesOnStart;
+  doc["MODEL"] = MYMODEL;
 
-    // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-      jsonmsg = "{\"error\": \"Failed to serialize message\"}";
+  // Serialize JSON to string
+  String jsonmsg;
+  if (serializeJson(doc, jsonmsg) == 0) {
+    jsonmsg = "{\"error\": \"Failed to serialize message\"}";
   }
   return jsonmsg;
 }
 
 void BWC::setJSONSettings(String message){
   //feed the dog
-  ESP.wdtFeed();
+  // ESP.wdtFeed();
   DynamicJsonDocument doc(1024);
 
   // Deserialize the JSON document
@@ -730,7 +730,7 @@ void BWC::setJSONSettings(String message){
 
 String BWC::getJSONCommandQueue(){
   //feed the dog
-  ESP.wdtFeed();
+  // ESP.wdtFeed();
   DynamicJsonDocument doc(1024);
   // Set the values in the document
   doc["LEN"] = _qCommandLen;
@@ -815,7 +815,7 @@ void BWC::saveSettingsFlag(){
 
 void BWC::saveSettings(){
   //kill the dog
-  ESP.wdtDisable();
+  // ESP.wdtDisable();
   _saveSettingsNeeded = false;
   File file = LittleFS.open("settings.txt", "w");
   if (!file) {
@@ -855,7 +855,7 @@ void BWC::saveSettings(){
   }
   file.close();
   //revive the dog
-  ESP.wdtEnable(0);
+  // ESP.wdtEnable(0);
 }
 
 void BWC::_loadCommandQueue(){
@@ -919,7 +919,7 @@ void BWC::_loadCoolArray(){
 
 void BWC::_saveCommandQueue(){
   //kill the dog
-  ESP.wdtDisable();
+  // ESP.wdtDisable();
   File file = LittleFS.open("cmdq.txt", "w");
   if (!file) {
     Serial.println(F("Failed to save cmdq.txt"));
@@ -943,7 +943,7 @@ void BWC::_saveCommandQueue(){
   }
   file.close();
   //revive the dog
-  ESP.wdtEnable(0);
+  // ESP.wdtEnable(0);
 
 }
 
@@ -959,7 +959,7 @@ void BWC::reloadSettings(){
 
 void BWC::_saveStates() {
   //kill the dog
-  ESP.wdtDisable();
+  // ESP.wdtDisable();
 
   _saveStatesNeeded = false;
   File file = LittleFS.open("states.txt", "w");
@@ -981,7 +981,7 @@ void BWC::_saveStates() {
   }
   file.close();
   //revive the dog
-  ESP.wdtEnable(0);
+  // ESP.wdtEnable(0);
 }
 
 void BWC::_restoreStates() {
@@ -1013,7 +1013,7 @@ void BWC::_restoreStates() {
 
 void BWC::saveEventlog(){
   //kill the dog
-  ESP.wdtDisable();
+  // ESP.wdtDisable();
   File file = LittleFS.open("eventlog.txt", "a");
   if (!file) {
     Serial.println(F("Failed to save eventlog.txt"));
@@ -1034,13 +1034,13 @@ void BWC::saveEventlog(){
   }
   file.close();
   //revive the dog
-  ESP.wdtEnable(0);
+  // ESP.wdtEnable(0);
 
 }
 
 void BWC::saveCoolArray(){
   //kill the dog
-  ESP.wdtDisable();
+  // ESP.wdtDisable();
   File file = LittleFS.open("coolarray.json", "w");
   if (!file) {
     Serial.println(F("Failed to save coolarray.json"));
@@ -1063,7 +1063,7 @@ void BWC::saveCoolArray(){
   }
   file.close();
   //revive the dog
-  ESP.wdtEnable(0);
+  // ESP.wdtEnable(0);
 }
 
 void BWC::saveRebootInfo(){

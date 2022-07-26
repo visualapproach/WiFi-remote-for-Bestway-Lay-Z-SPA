@@ -111,10 +111,10 @@ class BWC {
     int _CodeToButton(uint16_t val);
     float _estHeatingTime();
     float _coolingDegPerHourArray[20];
-    int _ambient_temp;
-    float _heatingDegPerHour = 1.5;
-    float _virtualTemp; //=virtualtempfix+calculated diff
-    float _virtualTempFix; //last fixed data point to add or subtract temp from
+    int _ambient_temp; //always in C internally
+    float _heatingDegPerHour = 1.5; //always in C internally
+    float _virtualTemp; //=virtualtempfix+calculated diff, always in C internally
+    float _virtualTempFix; //last fixed data point to add or subtract temp from, always in C internally
     uint32_t _virtualTempFix_age;
     void _calcVirtualTemp();
     void _updateVirtualTempFix_ontempchange();
