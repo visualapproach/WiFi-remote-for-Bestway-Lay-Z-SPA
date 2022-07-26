@@ -1465,6 +1465,7 @@ void setupHA()
   doc["name"] = F("Layzspa rssi");
   doc["uniq_id"] = "sensor.layzspa_rssi"+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/other");
+  doc["unit_of_meas"] = F("dBm");
   doc["val_tpl"] = F("{{ value_json.RSSI }}");
   doc["expire_after"] = 700;
   doc["avty_t"] = mqttBaseTopic+F("/Status");
