@@ -221,6 +221,7 @@ float BWC::_estHeatingTime()
   else return -1;
 }
 
+//virtual temp is always C in this code and will be converted when sending externally
 void BWC::_calcVirtualTemp()
 {
   // calculate from last updated VTFix.
@@ -254,7 +255,11 @@ void BWC::_calcVirtualTemp()
 void BWC::_updateVirtualTempFix_ontempchange()
 {
   int tempInC = _cio.states[TEMPERATURE];
-  if(!_cio.states[UNITSTATE]) tempInC = _F2C(tempInC);
+  float conversion = 1;
+  if(!_cio.states[UNITSTATE]) {
+    tempInC = _F2C(tempInC);
+    conversion = _F2C(1);
+  }
   //startup init
   if(_virtualTempFix < -10)
   {
@@ -292,8 +297,8 @@ void BWC::_updateVirtualTempFix_ontempchange()
   if(index < 20)
   {
     //float tempdiff = abs(_virtualTempFix - _virtualTemp);  tempdiff is 1! Do not calibrate with a virtual temp.
-    float newdph = 3600000.0 / _cio.state_age[TEMPERATURE];
-    if(newdph < 3) _coolingDegPerHourArray[index] = newdph; //treat superfast rate of change as anomaly and discard it
+    float newdph = conversion*3600000.0 / _cio.state_age[TEMPERATURE];
+    if(newdph < (3.0/conversion)) _coolingDegPerHourArray[index] = newdph; //treat superfast rate of change as anomaly and discard it
     saveCoolArray();
   }
 }
