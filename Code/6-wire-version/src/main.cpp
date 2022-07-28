@@ -1612,6 +1612,62 @@ void setupHA()
   doc.clear();
   doc.garbageCollect();
 
+  // spa daily energy sensor
+  doc["dev"] = devicedoc["dev"];
+  payload = "";
+  topic = String(HA_PREFIX) + F("/sensor/layzspa_today/config");
+  Serial.println(topic);
+  doc["name"] = F("Layzspa today");
+  doc["uniq_id"] = "sensor.layzspa_today"+mychipid;
+  doc["stat_t"] = mqttBaseTopic+F("/times");
+  doc["unit_of_meas"] = F("kWh");
+  doc["val_tpl"] = F("{{ value_json.KWHD | round(3) }}");
+  doc["dev_cla"] = F("energy");
+  doc["state_class"] = F("total_increasing");
+  doc["expire_after"] = 700;
+  doc["icon"] = F("mdi:flash");
+  doc["avty_t"] = mqttBaseTopic+F("/Status");
+  doc["pl_avail"] = F("Alive");
+  doc["pl_not_avail"] = F("Dead");
+  if (serializeJson(doc, payload) == 0)
+  {
+    Serial.println(F("Failed to serialize HA message!"));
+    return;
+  }
+  mqttClient.publish(topic.c_str(), payload.c_str(), true);
+  mqttClient.loop();
+  Serial.println(payload);
+  doc.clear();
+  doc.garbageCollect();
+
+  // spa power sensor
+  doc["dev"] = devicedoc["dev"];
+  payload = "";
+  topic = String(HA_PREFIX) + F("/sensor/layzspa_power/config");
+  Serial.println(topic);
+  doc["name"] = F("Layzspa power");
+  doc["uniq_id"] = "sensor.layzspa_power"+mychipid;
+  doc["stat_t"] = mqttBaseTopic+F("/times");
+  doc["unit_of_meas"] = F("W");
+  doc["val_tpl"] = F("{{ value_json.WATT | int }}");
+  doc["dev_cla"] = F("power");
+  doc["state_class"] = F("measurement");
+  doc["expire_after"] = 700;
+  doc["icon"] = F("mdi:flash");
+  doc["avty_t"] = mqttBaseTopic+F("/Status");
+  doc["pl_avail"] = F("Alive");
+  doc["pl_not_avail"] = F("Dead");
+  if (serializeJson(doc, payload) == 0)
+  {
+    Serial.println(F("Failed to serialize HA message!"));
+    return;
+  }
+  mqttClient.publish(topic.c_str(), payload.c_str(), true);
+  mqttClient.loop();
+  Serial.println(payload);
+  doc.clear();
+  doc.garbageCollect();
+
   // spa chlorine age sensor
   doc["dev"] = devicedoc["dev"];
   payload = "";

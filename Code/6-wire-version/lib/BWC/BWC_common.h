@@ -81,7 +81,9 @@ class BWC {
     uint32_t _finterval;
     uint32_t _clinterval;
     bool _audio;
-    float _cost;
+    float _energyTotal;
+    float _energyDaily;
+    int _energyPower;
     bool _restoreStatesOnStart = false;
     bool _saveSettingsNeeded = false;
     bool _saveEventlogNeeded = false;

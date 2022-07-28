@@ -3,6 +3,13 @@
 #include "Arduino.h"
 #include "model.h"
 
+const int HEATERPOWER = 1900;
+const int PUMPPOWER = 40;
+const int AIRPOWER = 800;
+const int IDLEPOWER = 2;
+const int JETPOWER = 400;
+
+
 const uint8_t DSP_DIM_BASE = 0x80;
 const uint8_t DSP_DIM_ON = 0x8;
 
@@ -78,7 +85,8 @@ enum Commands: byte
   SETBRIGHTNESS,
   SETBEEP,
   SETAMBIENTF,
-  SETAMBIENTC
+  SETAMBIENTC,
+  RESETDAILY
 };
 
 const int MAXCOMMANDS = 11;

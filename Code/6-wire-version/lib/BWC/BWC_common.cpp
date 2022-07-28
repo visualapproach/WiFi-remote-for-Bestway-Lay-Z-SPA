@@ -530,7 +530,7 @@ void BWC::_handleCommandQ(void) {
           _pumptime_ms = 0;
           _heatingtime_ms = 0;
           _airtime_ms = 0;
-          _cost = 0;
+          _energyTotal = 0;
           _saveSettingsNeeded = true;
           _cio.dataAvailable = true;
           break;
@@ -559,6 +559,9 @@ void BWC::_handleCommandQ(void) {
           break;
         case SETAMBIENTC:
           setAmbientTemperature(_commandQ[0][1], true);
+          break;
+        case RESETDAILY:
+          _energyDaily = 0;
           break;
       }
       //If interval > 0 then append to commandQ with updated xtime.
@@ -661,10 +664,12 @@ String BWC::getJSONTimes() {
     doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
     doc["AIRTIME"] = _airtime + _airtime_ms/1000;
     doc["JETTIME"] = _jettime + _jettime_ms/1000;
-    doc["COST"] = _cost;
+    doc["COST"] = _energyTotal * _price;
     doc["FINT"] = _finterval;
     doc["CLINT"] = _clinterval;
-    doc["KWH"] = _cost/_price;
+    doc["KWH"] = _energyTotal;
+    doc["KWHD"] = _energyDaily;
+    doc["WATT"] = _energyPower;
     doc["TTTT"] = _tttt;
     float t2r = _estHeatingTime();
     String t2r_string = String(t2r);
@@ -806,6 +811,8 @@ void BWC::_loadSettings(){
   _finterval = doc["FINT"];
   _clinterval = doc["CLINT"];
   _audio = doc["AUDIO"];
+  _energyTotal = doc["KWH"];
+  _energyDaily = doc["KWHD"];
   _restoreStatesOnStart = doc["RESTORE"];
   file.close();
 }
@@ -851,6 +858,8 @@ void BWC::saveSettings(){
   doc["FINT"] = _finterval;
   doc["CLINT"] = _clinterval;
   doc["AUDIO"] = _audio;
+  doc["KWH"] = _energyTotal;
+  doc["KWHD"] = _energyDaily;
   doc["SAVETIME"] = DateTime.format(DateFormatter::SIMPLE);
   doc["RESTORE"] = _restoreStatesOnStart;
 
@@ -1132,13 +1141,20 @@ void BWC::_updateTimes(){
     _uptime_ms = 0;
   }
 
-  _cost = _price*(
-                  (_heatingtime+_heatingtime_ms/1000)/3600.0 * 1900 + //s -> h ->Wh
-                  (_pumptime+_pumptime_ms/1000)/3600.0 * 40 +
-                  (_airtime+_airtime_ms/1000)/3600.0 * 800 +
-                  (_uptime+_uptime_ms/1000)/3600.0 * 2 +
-                  (_jettime+_jettime_ms/1000)/3600.0 * 400
-                  )/1000.0; //Wh -> kWh
+  // watts, kWh today, total kWh
+  float heatingEnergy = (_heatingtime+_heatingtime_ms/1000)/3600.0 * HEATERPOWER;
+  float pumpEnergy = (_pumptime+_pumptime_ms/1000)/3600.0 * PUMPPOWER;
+  float airEnergy = (_airtime+_airtime_ms/1000)/3600.0 * AIRPOWER;
+  float idleEnergy = (_uptime+_uptime_ms/1000)/3600.0 * IDLEPOWER;
+  float jetEnergy = (_jettime+_jettime_ms/1000)/3600.0 * JETPOWER;
+  _energyTotal = (heatingEnergy + pumpEnergy + airEnergy + idleEnergy + jetEnergy)/1000; //Wh -> kWh
+  _energyPower = _cio.states[HEATREDSTATE] * HEATERPOWER;
+  _energyPower += _cio.states[PUMPSTATE] * PUMPPOWER;
+  _energyPower += _cio.states[BUBBLESSTATE] * AIRPOWER;
+  _energyPower += IDLEPOWER;
+  _energyPower += _cio.states[JETSSTATE] * JETPOWER;
+  
+  _energyDaily += (elapsedtime_ms / 1000.0) / 3600.0 * _energyPower / 1000.0;
 }
 
 void BWC::print(String txt){
