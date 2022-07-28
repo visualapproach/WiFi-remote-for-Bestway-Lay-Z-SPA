@@ -2324,7 +2324,7 @@ void setupHA()
 
 
 /* REMOVE THIS PART */
-  // spa ambient temperature sensor c
+  // spa virtual temperature fixed data point
   doc["dev"] = devicedoc["dev"];
   payload = "";
   topic = String(HA_PREFIX) + F("/sensor/layzspa_VTF/config");
@@ -2333,7 +2333,7 @@ void setupHA()
   doc["uniq_id"] = "sensor.layzspa_VTF"+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["unit_of_meas"] = "°C";
-  doc["val_tpl"] = F("{{ value_json.VTF }}");
+  doc["val_tpl"] = F("{{ value_json.VTF | round(2) }}");
   doc["expire_after"] = 700;
   doc["avty_t"] = mqttBaseTopic+F("/Status");
   doc["pl_avail"] = F("Alive");
