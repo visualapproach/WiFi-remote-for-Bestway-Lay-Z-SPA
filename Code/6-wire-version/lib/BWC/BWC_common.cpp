@@ -68,7 +68,7 @@ void BWC::stop(){
 
 void BWC::loop(){
   //feed the dog
-  // ESP.wdtFeed();
+  ESP.wdtFeed();
   // ESP.wdtDisable();
 
   _timestamp = DateTime.now();
@@ -590,58 +590,58 @@ String BWC::getJSONStates() {
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
   //feed the dog
-  // ESP.wdtFeed();
-    DynamicJsonDocument doc(1536);
+  ESP.wdtFeed();
+  DynamicJsonDocument doc(1536);
 
-    // Set the values in the document
-    doc["CONTENT"] = "STATES";
-    doc["TIME"] = _timestamp;
-    doc["LCK"] = _cio.states[LOCKEDSTATE];
-    doc["PWR"] = _cio.states[POWERSTATE];
-    doc["UNT"] = _cio.states[UNITSTATE];
-    doc["AIR"] = _cio.states[BUBBLESSTATE];
-    doc["GRN"] = _cio.states[HEATGRNSTATE];
-    doc["RED"] = _cio.states[HEATREDSTATE];
-    doc["FLT"] = _cio.states[PUMPSTATE];
-    doc["CH1"] = _cio.states[CHAR1];
-    doc["CH2"] = _cio.states[CHAR2];
-    doc["CH3"] = _cio.states[CHAR3];
-    doc["HJT"] = _cio.states[JETSSTATE];
-    doc["BRT"] = _dspBrightness;
-    doc["TGT"] = _cio.states[TARGET];
-    doc["TMP"] = _cio.states[TEMPERATURE];
-    doc["VTF"] = _virtualTempFix; // **************************REMOVE THIS LINE
-    doc["VTMC"] = _virtualTemp;
+  // Set the values in the document
+  doc["CONTENT"] = "STATES";
+  doc["TIME"] = _timestamp;
+  doc["LCK"] = _cio.states[LOCKEDSTATE];
+  doc["PWR"] = _cio.states[POWERSTATE];
+  doc["UNT"] = _cio.states[UNITSTATE];
+  doc["AIR"] = _cio.states[BUBBLESSTATE];
+  doc["GRN"] = _cio.states[HEATGRNSTATE];
+  doc["RED"] = _cio.states[HEATREDSTATE];
+  doc["FLT"] = _cio.states[PUMPSTATE];
+  doc["CH1"] = _cio.states[CHAR1];
+  doc["CH2"] = _cio.states[CHAR2];
+  doc["CH3"] = _cio.states[CHAR3];
+  doc["HJT"] = _cio.states[JETSSTATE];
+  doc["BRT"] = _dspBrightness;
+  doc["TGT"] = _cio.states[TARGET];
+  doc["TMP"] = _cio.states[TEMPERATURE];
+  doc["VTF"] = _virtualTempFix; // **************************REMOVE THIS LINE
+  doc["VTMC"] = _virtualTemp;
+  doc["VTMF"] = _C2F(_virtualTemp);
+  doc["AMBC"] = _ambient_temp;
+  doc["AMBF"] = round(_C2F(_ambient_temp));
+  if(_cio.states[UNITSTATE])
+  {
+    //celsius
+    doc["AMB"] = _ambient_temp;
+    doc["VTM"] = _virtualTemp;
+    doc["TGTC"] = _cio.states[TARGET];
+    doc["TMPC"] = _cio.states[TEMPERATURE];
+    doc["TGTF"] = round(_C2F((float)_cio.states[TARGET]));
+    doc["TMPF"] = round(_C2F((float)_cio.states[TEMPERATURE]));
     doc["VTMF"] = _C2F(_virtualTemp);
-    doc["AMBC"] = _ambient_temp;
-    doc["AMBF"] = round(_C2F(_ambient_temp));
-    if(_cio.states[UNITSTATE])
-    {
-      //celsius
-      doc["AMB"] = _ambient_temp;
-      doc["VTM"] = _virtualTemp;
-      doc["TGTC"] = _cio.states[TARGET];
-      doc["TMPC"] = _cio.states[TEMPERATURE];
-      doc["TGTF"] = round(_C2F((float)_cio.states[TARGET]));
-      doc["TMPF"] = round(_C2F((float)_cio.states[TEMPERATURE]));
-      doc["VTMF"] = _C2F(_virtualTemp);
-    }
-    else
-    {
-      //farenheit
-      doc["AMB"] = round(_C2F(_ambient_temp));
-      doc["VTM"] = _C2F(_virtualTemp);
-      doc["TGTF"] = _cio.states[TARGET];
-      doc["TMPF"] = _cio.states[TEMPERATURE];
-      doc["TGTC"] = round(_F2C((float)_cio.states[TARGET]));
-      doc["TMPC"] = round(_F2C((float)_cio.states[TEMPERATURE]));
-      doc["VTMC"] = _virtualTemp;
-    }
+  }
+  else
+  {
+    //farenheit
+    doc["AMB"] = round(_C2F(_ambient_temp));
+    doc["VTM"] = _C2F(_virtualTemp);
+    doc["TGTF"] = _cio.states[TARGET];
+    doc["TMPF"] = _cio.states[TEMPERATURE];
+    doc["TGTC"] = round(_F2C((float)_cio.states[TARGET]));
+    doc["TMPC"] = round(_F2C((float)_cio.states[TEMPERATURE]));
+    doc["VTMC"] = _virtualTemp;
+  }
 
-    // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-      jsonmsg = "{\"error\": \"Failed to serialize message\"}";
+  // Serialize JSON to string
+  String jsonmsg;
+  if (serializeJson(doc, jsonmsg) == 0) {
+    jsonmsg = "{\"error\": \"Failed to serialize message\"}";
   }
   return jsonmsg;
 }
@@ -651,38 +651,38 @@ String BWC::getJSONTimes() {
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
   //feed the dog
-  // ESP.wdtFeed();
-    DynamicJsonDocument doc(1024);
+  ESP.wdtFeed();
+  DynamicJsonDocument doc(1024);
 
-    // Set the values in the document
-    doc["CONTENT"] = "TIMES";
-    doc["TIME"] = _timestamp;
-    doc["CLTIME"] = _cltime;
-    doc["FTIME"] = _ftime;
-    doc["UPTIME"] = _uptime + _uptime_ms/1000;
-    doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;    
-    doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
-    doc["AIRTIME"] = _airtime + _airtime_ms/1000;
-    doc["JETTIME"] = _jettime + _jettime_ms/1000;
-    doc["COST"] = _energyTotal * _price;
-    doc["FINT"] = _finterval;
-    doc["CLINT"] = _clinterval;
-    doc["KWH"] = _energyTotal;
-    doc["KWHD"] = _energyDaily;
-    doc["WATT"] = _energyPower;
-    doc["TTTT"] = _tttt;
-    float t2r = _estHeatingTime();
-    String t2r_string = String(t2r);
-    if(t2r == -2) t2r_string = F("Already");
-    if(t2r == -1) t2r_string = F("Never");
-    doc["T2R"] = t2r_string;
-    doc["MINCLK"] = _cio.clk_per;
-    _cio.clk_per = 1000;  //reset minimum clock period
+  // Set the values in the document
+  doc["CONTENT"] = "TIMES";
+  doc["TIME"] = _timestamp;
+  doc["CLTIME"] = _cltime;
+  doc["FTIME"] = _ftime;
+  doc["UPTIME"] = _uptime + _uptime_ms/1000;
+  doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;    
+  doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
+  doc["AIRTIME"] = _airtime + _airtime_ms/1000;
+  doc["JETTIME"] = _jettime + _jettime_ms/1000;
+  doc["COST"] = _energyTotal * _price;
+  doc["FINT"] = _finterval;
+  doc["CLINT"] = _clinterval;
+  doc["KWH"] = _energyTotal;
+  doc["KWHD"] = _energyDaily;
+  doc["WATT"] = _energyPower;
+  doc["TTTT"] = _tttt;
+  float t2r = _estHeatingTime();
+  String t2r_string = String(t2r);
+  if(t2r == -2) t2r_string = F("Already");
+  if(t2r == -1) t2r_string = F("Never");
+  doc["T2R"] = t2r_string;
+  doc["MINCLK"] = _cio.clk_per;
+  _cio.clk_per = 1000;  //reset minimum clock period
 
-    // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-      jsonmsg = "{\"error\": \"Failed to serialize message\"}";
+  // Serialize JSON to string
+  String jsonmsg;
+  if (serializeJson(doc, jsonmsg) == 0) {
+    jsonmsg = "{\"error\": \"Failed to serialize message\"}";
   }
   return jsonmsg;
 }
@@ -692,7 +692,7 @@ String BWC::getJSONSettings(){
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
   //feed the dog
-  // ESP.wdtFeed();
+  ESP.wdtFeed();
   DynamicJsonDocument doc(1024);
 
   // Set the values in the document
@@ -740,7 +740,7 @@ void BWC::setJSONSettings(String message){
 
 String BWC::getJSONCommandQueue(){
   //feed the dog
-  // ESP.wdtFeed();
+  ESP.wdtFeed();
   DynamicJsonDocument doc(1024);
   // Set the values in the document
   doc["LEN"] = _qCommandLen;
@@ -828,6 +828,7 @@ void BWC::saveSettingsFlag(){
 void BWC::saveSettings(){
   //kill the dog
   // ESP.wdtDisable();
+  ESP.wdtFeed();
   _saveSettingsNeeded = false;
   File file = LittleFS.open("settings.txt", "w");
   if (!file) {
@@ -934,6 +935,7 @@ void BWC::_loadCoolArray(){
 void BWC::_saveCommandQueue(){
   //kill the dog
   // ESP.wdtDisable();
+  ESP.wdtFeed();
   File file = LittleFS.open("cmdq.txt", "w");
   if (!file) {
     Serial.println(F("Failed to save cmdq.txt"));
@@ -974,7 +976,7 @@ void BWC::reloadSettings(){
 void BWC::_saveStates() {
   //kill the dog
   // ESP.wdtDisable();
-
+  ESP.wdtFeed();
   _saveStatesNeeded = false;
   File file = LittleFS.open("states.txt", "w");
   if (!file) {
@@ -1028,6 +1030,7 @@ void BWC::_restoreStates() {
 void BWC::saveEventlog(){
   //kill the dog
   // ESP.wdtDisable();
+  ESP.wdtFeed();
   File file = LittleFS.open("eventlog.txt", "a");
   if (!file) {
     Serial.println(F("Failed to save eventlog.txt"));
@@ -1055,6 +1058,7 @@ void BWC::saveEventlog(){
 void BWC::saveCoolArray(){
   //kill the dog
   // ESP.wdtDisable();
+  ESP.wdtFeed();
   File file = LittleFS.open("coolarray.json", "w");
   if (!file) {
     Serial.println(F("Failed to save coolarray.json"));
