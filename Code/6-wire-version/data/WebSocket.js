@@ -16,8 +16,10 @@ const cmd = {
 	resetTimerFilter: 10,
 	toggleHydroJets: 11,
 	setBrightness: 12,
-  setBeep: 13,
-  setAmbient: 14
+	setBeep: 13,
+	setAmbient: 15,
+	setAmbientF: 14,
+	setAmbientC: 15
 };
 
 // button element ID mapping
@@ -113,6 +115,8 @@ function handlemsg(e)
 		// temperature
 		document.getElementById('temp').min = (msgobj.UNT ? 20 : 68);
 		document.getElementById('temp').max = (msgobj.UNT ? 40 : 104);
+		document.getElementById('amb').min = (msgobj.UNT ? -10 : 14);;
+		document.getElementById('amb').max = (msgobj.UNT ? 50 : 122);;
 		document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
 		document.getElementById('vtlabel').innerHTML = msgobj.VTM.toFixed(2).toString();
 		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
@@ -213,6 +217,8 @@ function sendCommand(val)
 	else if (val == 'setAmbient')
 	{
 		value = parseInt(document.getElementById('amb').value);
+		if(document.getElementById("UNT").checked) val = 'setAmbientC';
+		else val = 'setAmbientF';
 		document.getElementById("sliderAmbVal").innerHTML = value.toString();
 	}
 	else if (eid[val] && (val == 'toggleUnit' || val == 'toggleBubbles' || val == 'toggleHeater' || val == 'togglePump' || val == 'toggleHydroJets'))

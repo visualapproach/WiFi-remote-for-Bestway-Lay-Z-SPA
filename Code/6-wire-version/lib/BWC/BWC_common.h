@@ -28,7 +28,6 @@ class BWC {
     BWC();
     void begin(void); 
     void begin2();
-    void begin(int, int, int, int, int, int, int);
     void loop();
     bool qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval);
     bool newData();
@@ -53,7 +52,7 @@ class BWC {
     void stop(void);
     void saveRebootInfo();
     bool getBtnSeqMatch();
-    void setAmbientTemperature(int64_t amb);
+    void setAmbientTemperature(int64_t amb, bool unit);
     void unlock(void);
 
   private:
@@ -82,7 +81,9 @@ class BWC {
     uint32_t _finterval;
     uint32_t _clinterval;
     bool _audio;
-    float _cost;
+    float _energyTotal;
+    float _energyDaily;
+    int _energyPower;
     bool _restoreStatesOnStart = false;
     bool _saveSettingsNeeded = false;
     bool _saveEventlogNeeded = false;
@@ -112,10 +113,10 @@ class BWC {
     int _CodeToButton(uint16_t val);
     float _estHeatingTime();
     float _coolingDegPerHourArray[20];
-    int _ambient_temp;
-    float _heatingDegPerHour = 1.5;
-    float _virtualTemp; //=virtualtempfix+calculated diff
-    float _virtualTempFix; //last fixed data point to add or subtract temp from
+    int _ambient_temp; //always in C internally
+    float _heatingDegPerHour = 1.5; //always in C internally
+    float _virtualTemp; //=virtualtempfix+calculated diff, always in C internally
+    float _virtualTempFix; //last fixed data point to add or subtract temp from, always in C internally
     uint32_t _virtualTempFix_age;
     void _calcVirtualTemp();
     void _updateVirtualTempFix_ontempchange();
