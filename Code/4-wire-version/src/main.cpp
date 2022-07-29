@@ -1734,14 +1734,14 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/binary_sensor/layzspa_4w_error/config");
   Serial.println(topic);
   doc["name"] = F("Layzspa Error");
-  doc["unique_id"] = "binary_sensor.layzspa_4w_error"+mychipid;
-  doc["state_topic"] = mqttBaseTopic+F("/message");
-  doc["value_template"] = F("{{ value_json.ERR }}");
-  doc["device_class"] = F("problem");
-  doc["entity_category"] = F("diagnostic");
-  doc["availability_topic"] = mqttBaseTopic+F("/Status");
-  doc["payload_available"] = F("Alive");
-  doc["payload_not_available"] = F("Dead");
+  doc["uniq_id"] = "binary_sensor.layzspa_4w_error"+mychipid;
+  doc["stat_t"] = mqttBaseTopic+F("/message");
+  doc["val_tpl"] = F("{{ value_json.ERR }}");
+  doc["dev_cla"] = F("problem");
+  doc["ent_cat"] = F("diagnostic");
+  doc["avty_t"] = mqttBaseTopic+F("/Status");
+  doc["pl_avail"] = F("Alive");
+  doc["pl_not_avail"] = F("Dead");
   doc["payload_on"] = 1;
   doc["payload_off"] = 0;
   if (serializeJson(doc, payload) == 0)
