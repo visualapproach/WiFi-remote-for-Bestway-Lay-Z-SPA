@@ -1907,7 +1907,7 @@ void setupHA()
   doc["name"] = F("Layzspa connection");
   doc["uniq_id"] = "binary_sensor.layzspa_connection"+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/Status");
-  doc["dev-class"] = F("connectivity");
+  doc["dev_cla"] = F("connectivity");
   doc["avty_t"] = mqttBaseTopic+F("/Status");
   doc["pl_avail"] = F("Alive");
   doc["pl_not_avail"] = F("Dead");
