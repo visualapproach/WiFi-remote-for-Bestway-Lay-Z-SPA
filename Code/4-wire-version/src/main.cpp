@@ -1711,7 +1711,7 @@ void setupHA()
   doc["name"] = F("Layzspa connection");
   doc["uniq_id"] = "binary_sensor.layzspa_4w_connection"+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/Status");
-  doc["dev-class"] = F("connectivity");
+  doc["dev_cla"] = F("connectivity");
   doc["avty_t"] = mqttBaseTopic+F("/Status");
   doc["pl_avail"] = F("Alive");
   doc["pl_not_avail"] = F("Dead");
@@ -1728,6 +1728,33 @@ void setupHA()
   doc.clear();
   doc.garbageCollect();
 
+  // spa 4 wire Error status binary_sensor
+  doc["device"] = devicedoc["device"];
+  payload = "";
+  topic = String(HA_PREFIX) + F("/binary_sensor/layzspa_4w_error/config");
+  Serial.println(topic);
+  doc["name"] = F("Layzspa Error");
+  doc["unique_id"] = "binary_sensor.layzspa_4w_error"+mychipid;
+  doc["state_topic"] = mqttBaseTopic+F("/message");
+  doc["value_template"] = F("{{ value_json.ERR }}");
+  doc["device_class"] = F("problem");
+  doc["entity_category"] = F("diagnostic");
+  doc["availability_topic"] = mqttBaseTopic+F("/Status");
+  doc["payload_available"] = F("Alive");
+  doc["payload_not_available"] = F("Dead");
+  doc["payload_on"] = 1;
+  doc["payload_off"] = 0;
+  if (serializeJson(doc, payload) == 0)
+  {
+    Serial.println(F("Failed to serialize HA message!"));
+    return;
+  }
+  mqttClient.publish(topic.c_str(), payload.c_str(), true);
+  mqttClient.loop();
+  Serial.println(payload);
+  doc.clear();
+  doc.garbageCollect();
+	
   // spa heat regulation switch
   doc["dev"] = devicedoc["dev"];
   payload = "";
@@ -1865,14 +1892,14 @@ void setupHA()
   doc["command_topic"] = mqttBaseTopic+F("/command");
   doc["val_tpl"] = F("{{ value_json.GOD }}");
   doc["exp_aft"] = 700;
-  doc["icon"] = F("mdi:controller-classic");
+  doc["icon"] = F("mdi:camera-control");
   doc["avty_t"] = mqttBaseTopic+F("/Status");
   doc["pl_avail"] = F("Alive");
   doc["pl_not_avail"] = F("Dead");
   doc["payload_on"] = F("{CMD:12,VALUE:true,XTIME:0,INTERVAL:0}");
   doc["payload_off"] = F("{CMD:12,VALUE:false,XTIME:0,INTERVAL:0}");
-  doc["state_on"] = 1;
-  doc["state_off"] = 0;
+  doc["state_on"] = true;
+  doc["state_off"] = false;
   if (serializeJson(doc, payload) == 0)
   {
     Serial.println(F("Failed to serialize HA message!"));
