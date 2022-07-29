@@ -923,7 +923,7 @@ void BWC::_updateTimes(){
   _energyPower += IDLEPOWER;
   _energyPower += _cio.states[JETSSTATE] * JETPOWER;
   
-  _energyDaily += (elapsedtime_ms / 1000.0) / 3600.0 * _energyPower / 1000.0;
+  _energyDaily += (elapsedtime / 1000.0) / 3600.0 * _energyPower / 1000.0;
 }
 
 void BWC::print(String txt){
