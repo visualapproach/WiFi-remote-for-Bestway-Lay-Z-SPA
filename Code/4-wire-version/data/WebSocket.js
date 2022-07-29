@@ -15,7 +15,11 @@ const cmd = {
   resetTimerChlorine: 9,
   resetTimerFilter: 10,
   toggleHydroJets: 11,
-  toggleGodMode: 12
+  toggleGodMode: 12,
+	setAmbient: 15,
+	setAmbientF: 14,
+	setAmbientC: 15
+
 };
 
 // button element ID mapping
@@ -223,12 +227,19 @@ function sendCommand(val)
     document.getElementById('ttlabel').innerHTML = tmp;
     document.getElementById("sliderTempVal").innerHTML = tmp;
   }
-//  else if (val == 'setBrightness')
-//  {
-//    value = parseInt(document.getElementById('brt').value);
-//    document.getElementById("sliderBrtVal").innerHTML = value.toString();
-//    document.getElementById("dsp").style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(value+1)), 0, 0);
-//  }
+  //  else if (val == 'setBrightness')
+  //  {
+  //    value = parseInt(document.getElementById('brt').value);
+  //    document.getElementById("sliderBrtVal").innerHTML = value.toString();
+  //    document.getElementById("dsp").style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(value+1)), 0, 0);
+  //  }
+  else if (val == 'setAmbient')
+  {
+    value = parseInt(document.getElementById('amb').value);
+    if(document.getElementById("UNT").checked) val = 'setAmbientC';
+    else val = 'setAmbientF';
+    document.getElementById("sliderAmbVal").innerHTML = value.toString();
+  }
   else if (eid[val] && (val == 'toggleBubbles' || val == 'toggleHeater' || val == 'togglePump' || val == 'toggleHydroJets' || val == 'toggleGodMode'))
   {
     value = document.getElementById(eid[val]).checked;

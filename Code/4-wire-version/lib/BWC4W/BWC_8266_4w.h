@@ -67,77 +67,80 @@ class CIO {
 class BWC {
 
   public:
-  void begin(void); 
+    void begin(void); 
     void loop();
-  bool qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval);
-  bool newData();
-  void saveEventlog();
-  String getJSONStates();
-  String getJSONTimes();
-  String getJSONSettings();
-  void setJSONSettings(String message);
-  String getJSONCommandQueue();
-  void print(String txt);
-  uint8_t getState(int state);
-  void saveSettingsFlag();
-  void saveSettings();
-  Ticker saveSettingsTimer;
-  bool cio_tx_ok;
-  bool dsp_tx_ok;
-  void reloadCommandQueue();
-  String encodeBufferToString(uint8_t buf[7]);
-  String getSerialBuffers();
+    bool qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval);
+    bool newData();
+    void saveEventlog();
+    String getJSONStates();
+    String getJSONTimes();
+    String getJSONSettings();
+    void setJSONSettings(String message);
+    String getJSONCommandQueue();
+    void print(String txt);
+    uint8_t getState(int state);
+    void saveSettingsFlag();
+    void saveSettings();
+    Ticker saveSettingsTimer;
+    bool cio_tx_ok;
+    bool dsp_tx_ok;
+    void reloadCommandQueue();
+    String encodeBufferToString(uint8_t buf[7]);
+    String getSerialBuffers();
 
   private:
     CIO _cio;
-  uint32_t _commandQ[MAXCOMMANDS][4];
-  int _qCommandLen = 0;    //length of commandQ
-  uint32_t _buttonQ[MAXBUTTONS][4];
-  int _qButtonLen = 0;  //length of buttonQ
-  uint32_t _timestamp;
-  bool _newData = false;
-  uint32_t _cltime;
-  uint32_t _ftime;
-  uint32_t _uptime;
-  uint32_t _pumptime;
-  uint32_t _heatingtime;
-  uint32_t _airtime;
-  uint32_t _jettime;
-  uint32_t _uptime_ms;
-  uint32_t _pumptime_ms;
-  uint32_t _heatingtime_ms;
-  uint32_t _airtime_ms;
-  uint32_t _jettime_ms;
-  int32_t _timezone;
-  float _price;
-  uint32_t _finterval;
-  uint32_t _clinterval;
-  uint32_t _audio;
-  float _cost;
-  float _kwh;
-  bool _saveSettingsNeeded = false;
-  bool _saveEventlogNeeded = false;
-  bool _saveCmdqNeeded = false;
-  int _latestTarget;
-  int _tickerCount;
-  bool _sliderPrio = true;
-  uint8_t _currentStateIndex = 0;
-  uint32_t _tttt_time0;  //time at previous temperature change
-  uint32_t _tttt_time1;  //time at last temperature change
-  int _tttt_temp0;    //temp after previous change
-  int _tttt_temp1;    //temp after last change
-  int _tttt;        //time to target temperature after subtracting running time since last calculation
-  int _tttt_calculated;  //constant between calculations
+    uint32_t _commandQ[MAXCOMMANDS][4];
+    int _qCommandLen = 0;    //length of commandQ
+    uint32_t _buttonQ[MAXBUTTONS][4];
+    int _qButtonLen = 0;  //length of buttonQ
+    uint32_t _timestamp;
+    bool _newData = false;
+    uint32_t _cltime;
+    uint32_t _ftime;
+    uint32_t _uptime;
+    uint32_t _pumptime;
+    uint32_t _heatingtime;
+    uint32_t _airtime;
+    uint32_t _jettime;
+    uint32_t _uptime_ms;
+    uint32_t _pumptime_ms;
+    uint32_t _heatingtime_ms;
+    uint32_t _airtime_ms;
+    uint32_t _jettime_ms;
+    int32_t _timezone;
+    float _price;
+    uint32_t _finterval;
+    uint32_t _clinterval;
+    uint32_t _audio;
+    float _energyTotal;
+    float _energyDaily;
+    int _energyPower;
+    float _cost;
+    float _kwh;
+    bool _saveSettingsNeeded = false;
+    bool _saveEventlogNeeded = false;
+    bool _saveCmdqNeeded = false;
+    int _latestTarget;
+    int _tickerCount;
+    bool _sliderPrio = true;
+    uint8_t _currentStateIndex = 0;
+    uint32_t _tttt_time0;  //time at previous temperature change
+    uint32_t _tttt_time1;  //time at last temperature change
+    int _tttt_temp0;    //temp after previous change
+    int _tttt_temp1;    //temp after last change
+    int _tttt;        //time to target temperature after subtracting running time since last calculation
+    int _tttt_calculated;  //constant between calculations
 
-  void _qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration);
-  void _handleCommandQ(void);
-  void _handleButtonQ(void);
-  void _startNTP();
-  void _loadSettings();
-  void _loadCommandQueue();
-  void _saveCommandQueue();
-  void _saveRebootInfo();
-  void _updateTimes();
+    void _qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration);
+    void _handleCommandQ(void);
+    void _handleButtonQ(void);
+    void _startNTP();
+    void _loadSettings();
+    void _loadCommandQueue();
+    void _saveCommandQueue();
+    void _saveRebootInfo();
+    void _updateTimes();
 };
 
 #endif
