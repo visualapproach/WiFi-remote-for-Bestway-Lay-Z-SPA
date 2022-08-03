@@ -227,10 +227,11 @@ void BWC::_calcVirtualTemp()
   // calculate from last updated VTFix.
   float netRisePerHour;
   float degAboveAmbient = _virtualTemp - _ambient_temp;
-  int index = abs(int(degAboveAmbient));
-  if(index > 19) index = 19;  //prevent index out of bounds
-  float coolingPerHour = _coolingDegPerHourArray[index];
-  if(degAboveAmbient < 0) coolingPerHour *= -1;
+  // int index = abs(int(degAboveAmbient));
+  // if(index > 19) index = 19;  //prevent index out of bounds
+  //float coolingPerHour = _coolingDegPerHourArray[index];
+  float coolingPerHour = degAboveAmbient / R_COOLING;
+  // if(degAboveAmbient < 0) coolingPerHour *= -1;
 
   if(_cio.states[HEATREDSTATE])
   {
@@ -249,6 +250,19 @@ void BWC::_calcVirtualTemp()
     _virtualTempFix_age = 0;
   }
   _virtualTemp = newvt;
+
+  /* Using Newtons law of cooling
+      T(t) = Tenv + (T(0) - Tenv)*e^(-t/r)
+      r = -t / ln( (T(t)-Tenv) / (T(0)-Tenv) )
+      dT/dt = (T(t) - Tenv) / r
+      ----------------------------------------
+      T(t) : Temperature at time t
+      Tenv : _ambient_temp (considered constant)
+      T(0) : Temperature at time 0 (_virtualTempFix)
+      e    : natural number 2,71828182845904
+      r    : a constant we need to find out by measurements
+  */
+  
 }
 
 //Called on temp change
@@ -293,14 +307,17 @@ void BWC::_updateVirtualTempFix_ontempchange()
   if(_cio.deltaTemp > 0 && _virtualTemp > _ambient_temp) return; //temp is rising when it should be falling. Bail out
   if(_cio.deltaTemp < 0 && _virtualTemp < _ambient_temp) return; //temp is falling when it should be rising. Bail out
   float degAboveAmbient = _virtualTemp - _ambient_temp;
-  int index = abs(int(degAboveAmbient));
-  if(index < 20)
-  {
-    //float tempdiff = abs(_virtualTempFix - _virtualTemp);  tempdiff is 1! Do not calibrate with a virtual temp.
-    float newdph = conversion*3600000.0 / _cio.state_age[TEMPERATURE];
-    if(newdph < (3.0/conversion)) _coolingDegPerHourArray[index] = newdph; //treat superfast rate of change as anomaly and discard it
-    saveCoolArray();
-  }
+  // int index = abs(int(degAboveAmbient));
+  // can't calibrate if ambient ~ virtualtemp
+  if(abs(degAboveAmbient) <= 1) return;
+  // if(index < 20)
+  // {
+  //   //float tempdiff = abs(_virtualTempFix - _virtualTemp);  tempdiff is 1! Do not calibrate with a virtual temp.
+  //   float newdph = conversion*3600000.0 / _cio.state_age[TEMPERATURE];
+  //   if(newdph < (3.0/conversion)) _coolingDegPerHourArray[index] = newdph; //treat superfast rate of change as anomaly and discard it
+  //   saveCoolArray();
+  // }
+  R_COOLING = (_cio.state_age[TEMPERATURE]/3600000.0) / log((conversion*degAboveAmbient) / (conversion*(degAboveAmbient - _cio.deltaTemp)));
 }
 
 //Called on heater state change

@@ -113,6 +113,7 @@ class BWC {
     int _CodeToButton(uint16_t val);
     float _estHeatingTime();
     float _coolingDegPerHourArray[20];
+    float R_COOLING = 20;
     int _ambient_temp; //always in C internally
     float _heatingDegPerHour = 1.5; //always in C internally
     float _virtualTemp; //=virtualtempfix+calculated diff, always in C internally
