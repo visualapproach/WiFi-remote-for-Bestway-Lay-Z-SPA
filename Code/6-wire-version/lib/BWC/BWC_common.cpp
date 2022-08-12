@@ -47,7 +47,6 @@ void BWC::begin2(){
   _loadSettings();
   _loadCommandQueue();
   _restoreStates();
-  _loadCoolArray();
   if(_audio) _dsp.playIntro();
   //_dsp.LEDshow();
   saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
@@ -173,16 +172,12 @@ float BWC::_estHeatingTime()
   if(_virtualTemp > targetInC) return -2;  //Let us know when temp has fallen to target
 
   float degAboveAmbient = _virtualTemp - _ambient_temp;
-  int index = abs(int(degAboveAmbient));
-  if(index > 19) index = 19;  //prevent index out of bounds
   float fraction = 1.0 - (degAboveAmbient - floor(degAboveAmbient));
   int deltaTemp = targetInC - _virtualTemp;
   
   //integrate the time needed to reach target
   //how long to next integer temp
-  float coolingPerHour = _coolingDegPerHourArray[index];
-  //mirror the curve below ambient temp (there is a warming effect instead of cooling)
-  if(degAboveAmbient < 0) coolingPerHour *= -1;
+  float coolingPerHour = degAboveAmbient / R_COOLING;
   float netRisePerHour;
   if(_cio.states[HEATREDSTATE])
   {
@@ -197,11 +192,7 @@ float BWC::_estHeatingTime()
   for(int i = 1; i <= deltaTemp; i++)
   {
     degAboveAmbient = _virtualTemp + i - _ambient_temp;
-    index = abs(int(degAboveAmbient));
-    if(index > 19) index = 19;
-    coolingPerHour = _coolingDegPerHourArray[index];
-    //mirror the curve below ambient temp (there is a warming effect instead of cooling)
-    if(degAboveAmbient < 0) coolingPerHour *= -1;
+    coolingPerHour = degAboveAmbient / R_COOLING;
     if(_cio.states[HEATREDSTATE])
     {
       netRisePerHour = _heatingDegPerHour - coolingPerHour;
@@ -227,11 +218,7 @@ void BWC::_calcVirtualTemp()
   // calculate from last updated VTFix.
   float netRisePerHour;
   float degAboveAmbient = _virtualTemp - _ambient_temp;
-  // int index = abs(int(degAboveAmbient));
-  // if(index > 19) index = 19;  //prevent index out of bounds
-  //float coolingPerHour = _coolingDegPerHourArray[index];
   float coolingPerHour = degAboveAmbient / R_COOLING;
-  // if(degAboveAmbient < 0) coolingPerHour *= -1;
 
   if(_cio.states[HEATREDSTATE])
   {
@@ -243,6 +230,16 @@ void BWC::_calcVirtualTemp()
   }
   float elapsed_hours = _virtualTempFix_age / 3600.0 / 1000.0;
   float newvt = _virtualTempFix + netRisePerHour * elapsed_hours;
+
+  // clamp VT to +/- 1 from measured temperature if pump is running
+  if(_cio.states[PUMPSTATE])
+  {
+    float dev = newvt-_cio.states[TEMPERATURE];
+    if(dev > 0.99) dev = 0.99;
+    if(dev < -0.99) dev = -0.99;
+    newvt = _cio.states[TEMPERATURE] + dev;
+  }
+
   // Rebase start of calculation from new integer temperature
   if(int(_virtualTemp) != int(newvt))
   {
@@ -310,13 +307,6 @@ void BWC::_updateVirtualTempFix_ontempchange()
   // int index = abs(int(degAboveAmbient));
   // can't calibrate if ambient ~ virtualtemp
   if(abs(degAboveAmbient) <= 1) return;
-  // if(index < 20)
-  // {
-  //   //float tempdiff = abs(_virtualTempFix - _virtualTemp);  tempdiff is 1! Do not calibrate with a virtual temp.
-  //   float newdph = conversion*3600000.0 / _cio.state_age[TEMPERATURE];
-  //   if(newdph < (3.0/conversion)) _coolingDegPerHourArray[index] = newdph; //treat superfast rate of change as anomaly and discard it
-  //   saveCoolArray();
-  // }
   R_COOLING = (_cio.state_age[TEMPERATURE]/3600000.0) / log((conversion*degAboveAmbient) / (conversion*(degAboveAmbient - _cio.deltaTemp)));
 }
 
@@ -752,7 +742,6 @@ void BWC::setJSONSettings(String message){
   _audio = doc["AUDIO"];
   _restoreStatesOnStart = doc["RESTORE"];
   saveSettings();
-  saveCoolArray();//*******just for debug
 }
 
 String BWC::getJSONCommandQueue(){
@@ -831,6 +820,7 @@ void BWC::_loadSettings(){
   _energyTotal = doc["KWH"];
   _energyDaily = doc["KWHD"];
   _restoreStatesOnStart = doc["RESTORE"];
+  if(doc.containsKey("R")) R_COOLING = doc["R"]; //else use default
   file.close();
 }
 
@@ -880,6 +870,7 @@ void BWC::saveSettings(){
   doc["KWHD"] = _energyDaily;
   doc["SAVETIME"] = DateTime.format(DateFormatter::SIMPLE);
   doc["RESTORE"] = _restoreStatesOnStart;
+  doc["R"] = R_COOLING;
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
@@ -917,37 +908,6 @@ void BWC::_loadCommandQueue(){
 
   file.close();
 }
-
-void BWC::_loadCoolArray(){
-  for(unsigned int i = 0; i < sizeof(_coolingDegPerHourArray)/sizeof(float); i++)
-  {
-    _coolingDegPerHourArray[i] = i/20.0;
-  }
-  return;
-
-  File file = LittleFS.open("coolarray.json", "r");
-  if (!file) {
-    Serial.println(F("Failed to read coolarray.json"));
-    return;
-  }
-
-  DynamicJsonDocument doc(1024);
-  // Deserialize the JSON document
-  DeserializationError error = deserializeJson(doc, file);
-  if (error) {
-    Serial.println(F("Failed to deserialize coolarray.json, using default."));
-    file.close();
-    return;
-  }
-
-  // Set the values in the variables
-  for(int i = 0; i < 20; i++){
-    _coolingDegPerHourArray[i] = doc["array"][i];
-  }
-
-  file.close();
-}
-
 
 void BWC::_saveCommandQueue(){
   //kill the dog
@@ -1070,35 +1030,6 @@ void BWC::saveEventlog(){
   //revive the dog
   // ESP.wdtEnable(0);
 
-}
-
-void BWC::saveCoolArray(){
-  //kill the dog
-  // ESP.wdtDisable();
-  ESP.wdtFeed();
-  File file = LittleFS.open("coolarray.json", "w");
-  if (!file) {
-    Serial.println(F("Failed to save coolarray.json"));
-    return;
-  }
-
-  DynamicJsonDocument doc(1024);
-
-  doc["UTC"] = DateTime.format(DateFormatter::SIMPLE);
-  // Set the values in the document
-  for(int i = 0; i < 20; i++)
-  {
-    doc["array"][i] = _coolingDegPerHourArray[i];
-  }
-  //copyArray(_coolingDegPerHourArray, doc.to<JsonArray>());
-
-  // Serialize JSON to file
-  if (serializeJson(doc, file) == 0) {
-    Serial.println(F("Failed to serialize coolarray.json"));
-  }
-  file.close();
-  //revive the dog
-  // ESP.wdtEnable(0);
 }
 
 void BWC::saveRebootInfo(){

@@ -32,7 +32,6 @@ class BWC {
     bool qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval);
     bool newData();
     void saveEventlog();
-    void saveCoolArray();
     String getJSONStates();
     String getJSONTimes();
     String getJSONSettings();
@@ -105,14 +104,12 @@ class BWC {
     void _startNTP();
     void _loadSettings();
     void _loadCommandQueue();
-    void _loadCoolArray();
     void _saveCommandQueue();
     void _updateTimes();
     void _restoreStates();
     void _saveStates();
     int _CodeToButton(uint16_t val);
     float _estHeatingTime();
-    float _coolingDegPerHourArray[20];
     float R_COOLING = 20;
     int _ambient_temp; //always in C internally
     float _heatingDegPerHour = 1.5; //always in C internally
