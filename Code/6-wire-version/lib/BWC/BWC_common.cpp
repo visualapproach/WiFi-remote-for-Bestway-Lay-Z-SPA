@@ -232,7 +232,7 @@ void BWC::_calcVirtualTemp()
   float newvt = _virtualTempFix + netRisePerHour * elapsed_hours;
 
   // clamp VT to +/- 1 from measured temperature if pump is running
-  if(_cio.states[PUMPSTATE])
+  if(_cio.states[PUMPSTATE] && (_cio.state_age[PUMPSTATE] < 5*60000))
   {
     float dev = newvt-_cio.states[TEMPERATURE];
     if(dev > 0.99) dev = 0.99;
@@ -304,10 +304,9 @@ void BWC::_updateVirtualTempFix_ontempchange()
   if(_cio.deltaTemp > 0 && _virtualTemp > _ambient_temp) return; //temp is rising when it should be falling. Bail out
   if(_cio.deltaTemp < 0 && _virtualTemp < _ambient_temp) return; //temp is falling when it should be rising. Bail out
   float degAboveAmbient = _virtualTemp - _ambient_temp;
-  // int index = abs(int(degAboveAmbient));
   // can't calibrate if ambient ~ virtualtemp
   if(abs(degAboveAmbient) <= 1) return;
-  R_COOLING = (_cio.state_age[TEMPERATURE]/3600000.0) / log((conversion*degAboveAmbient) / (conversion*(degAboveAmbient - _cio.deltaTemp)));
+  R_COOLING = (_cio.state_age[TEMPERATURE]/3600000.0) / log((conversion*degAboveAmbient) / (conversion*(degAboveAmbient + _cio.deltaTemp)));
 }
 
 //Called on heater state change
