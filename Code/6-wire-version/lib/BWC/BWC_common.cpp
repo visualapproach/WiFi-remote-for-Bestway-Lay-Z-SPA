@@ -232,7 +232,7 @@ void BWC::_calcVirtualTemp()
   float newvt = _virtualTempFix + netRisePerHour * elapsed_hours;
 
   // clamp VT to +/- 1 from measured temperature if pump is running
-  if(_cio.states[PUMPSTATE] && (_cio.state_age[PUMPSTATE] < 5*60000))
+  if(_cio.states[PUMPSTATE] && (_cio.state_age[PUMPSTATE] > 5*60000))
   {
     float dev = newvt-_cio.states[TEMPERATURE];
     if(dev > 0.99) dev = 0.99;
