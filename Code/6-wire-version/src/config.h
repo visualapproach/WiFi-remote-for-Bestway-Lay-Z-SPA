@@ -4,6 +4,7 @@
 #define DEVICE_NAME "layzspa"
 #define FW_VERSION "2022-07-21"
 #define HA_PREFIX "homeassistant"
+#define PROM_NAMESPACE "layzspa"
 
 /*
  * Miscellaneous

@@ -111,6 +111,7 @@ void handleDir();
 void handleFileUpload();
 void handleFileRemove();
 void handleRestart();
+void handlePrometheusMetrics();
 
 void startMqtt();
 void mqttCallback(char* topic, byte* payload, unsigned int length);
