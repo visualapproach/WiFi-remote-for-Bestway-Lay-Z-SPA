@@ -1293,7 +1293,6 @@ void handlePrometheusMetrics()
              bwc.getState(HEATSTATE),
              bwc.getState(PUMPSTATE),
              bwc.getState(JETSSTATE),
-             bwc.getState(HEATSTATE),
              bwc.getState(BUBBLESSTATE),
              bwc.getState(POWERSTATE),
              bwc.getState(LOCKEDSTATE),
