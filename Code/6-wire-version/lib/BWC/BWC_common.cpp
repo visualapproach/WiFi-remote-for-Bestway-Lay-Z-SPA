@@ -27,25 +27,6 @@ void BWC::begin(void){
   begin2();
 }
 
-//overloaded function if user want to manually use different pinout
-void BWC::begin(
-  //left symbol is for type1, right for type2
-      int cio_data_td_pin,
-      int cio_clk_pin,
-      int cio_cs_ld_pin,
-      int dsp_data_td_pin,
-      int dsp_clk_pin,
-      int dsp_cs_ld_pin,
-      int dsp_audio_pin
-      )
-{
-  //start CIO and DSP modules
-  _cio.begin(cio_data_td_pin, cio_clk_pin, cio_cs_ld_pin);
-  _dsp.begin(dsp_data_td_pin, dsp_clk_pin, dsp_cs_ld_pin, dsp_audio_pin);
-  begin2();
-}
-
-
 void BWC::begin2(){
   //Initialize variables
   _dspBrightness = 7; //default = max brightness
@@ -66,7 +47,6 @@ void BWC::begin2(){
   _loadSettings();
   _loadCommandQueue();
   _restoreStates();
-  _loadCoolArray();
   if(_audio) _dsp.playIntro();
   //_dsp.LEDshow();
   saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
@@ -88,7 +68,7 @@ void BWC::stop(){
 void BWC::loop(){
   //feed the dog
   ESP.wdtFeed();
-  ESP.wdtDisable();
+  // ESP.wdtDisable();
 
   _timestamp = DateTime.now();
 
@@ -131,13 +111,26 @@ void BWC::loop(){
 
   _handleStateChanges();
   _calcVirtualTemp();
-  ESP.wdtEnable(0);
+  // ESP.wdtEnable(0);
 }
 
 void BWC::_handleStateChanges()
 {
   //not used now, but possibility to take action some time after the change occured
   //static bool delayedAction[14];
+  if(_cio.state_changed[UNITSTATE])
+  {
+    if(_cio.states[UNITSTATE])
+    {
+      _cio.states[TARGET] = round(_F2C(_cio.states[TARGET]));
+    }
+    else
+    {
+      _cio.states[TARGET] = round(_C2F(_cio.states[TARGET]));
+    }
+    _sliderTarget = _cio.states[TARGET];
+  }
+
   // Save these changes so we can restore states on reboot
   if(_cio.state_changed[UNITSTATE] || _cio.state_changed[HEATSTATE] || _cio.state_changed[PUMPSTATE])
   {
@@ -174,19 +167,17 @@ void BWC::_handleStateChanges()
 // return how many hours until pool is ready
 float BWC::_estHeatingTime()
 {
-  if(_virtualTemp > _cio.states[TARGET]) return -2;  //Let us know when temp has fallen to target
+  int targetInC = _cio.states[TARGET];
+  if(!_cio.states[UNITSTATE]) targetInC = _F2C(targetInC);
+  if(_virtualTemp > targetInC) return -2;  //Let us know when temp has fallen to target
 
   float degAboveAmbient = _virtualTemp - _ambient_temp;
-  int index = abs(int(degAboveAmbient));
-  if(index > 19) index = 19;  //prevent index out of bounds
   float fraction = 1.0 - (degAboveAmbient - floor(degAboveAmbient));
-  int deltaTemp = _cio.states[TARGET] - _virtualTemp;
+  int deltaTemp = targetInC - _virtualTemp;
   
   //integrate the time needed to reach target
   //how long to next integer temp
-  float coolingPerHour = _coolingDegPerHourArray[index];
-  //mirror the curve below ambient temp (there is a warming effect instead of cooling)
-  if(degAboveAmbient < 0) coolingPerHour *= -1;
+  float coolingPerHour = degAboveAmbient / R_COOLING;
   float netRisePerHour;
   if(_cio.states[HEATREDSTATE])
   {
@@ -201,11 +192,7 @@ float BWC::_estHeatingTime()
   for(int i = 1; i <= deltaTemp; i++)
   {
     degAboveAmbient = _virtualTemp + i - _ambient_temp;
-    index = abs(int(degAboveAmbient));
-    if(index > 19) index = 19;
-    coolingPerHour = _coolingDegPerHourArray[index];
-    //mirror the curve below ambient temp (there is a warming effect instead of cooling)
-    if(degAboveAmbient < 0) coolingPerHour *= -1;
+    coolingPerHour = degAboveAmbient / R_COOLING;
     if(_cio.states[HEATREDSTATE])
     {
       netRisePerHour = _heatingDegPerHour - coolingPerHour;
@@ -225,15 +212,13 @@ float BWC::_estHeatingTime()
   else return -1;
 }
 
+//virtual temp is always C in this code and will be converted when sending externally
 void BWC::_calcVirtualTemp()
 {
   // calculate from last updated VTFix.
   float netRisePerHour;
   float degAboveAmbient = _virtualTemp - _ambient_temp;
-  int index = abs(int(degAboveAmbient));
-  if(index > 19) index = 19;  //prevent index out of bounds
-  float coolingPerHour = _coolingDegPerHourArray[index];
-  if(degAboveAmbient < 0) coolingPerHour *= -1;
+  float coolingPerHour = degAboveAmbient / R_COOLING;
 
   if(_cio.states[HEATREDSTATE])
   {
@@ -245,6 +230,16 @@ void BWC::_calcVirtualTemp()
   }
   float elapsed_hours = _virtualTempFix_age / 3600.0 / 1000.0;
   float newvt = _virtualTempFix + netRisePerHour * elapsed_hours;
+
+  // clamp VT to +/- 1 from measured temperature if pump is running
+  if(_cio.states[PUMPSTATE] && (_cio.state_age[PUMPSTATE] > 5*60000))
+  {
+    float dev = newvt-_cio.states[TEMPERATURE];
+    if(dev > 0.99) dev = 0.99;
+    if(dev < -0.99) dev = -0.99;
+    newvt = _cio.states[TEMPERATURE] + dev;
+  }
+
   // Rebase start of calculation from new integer temperature
   if(int(_virtualTemp) != int(newvt))
   {
@@ -252,22 +247,35 @@ void BWC::_calcVirtualTemp()
     _virtualTempFix_age = 0;
   }
   _virtualTemp = newvt;
-  // Serial.printf("DAA: %f\t", degAboveAmbient);
-  // Serial.printf("index: %d\t", index);
-  // Serial.printf("CPH: %f\t", coolingPerHour);
-  // Serial.printf("NRPH: %f\t", netRisePerHour);
-  // Serial.printf("EH: %f\t", elapsed_hours);
-  // Serial.printf("VTM: %f\t", _virtualTemp);
-  // Serial.printf("VTMF: %f\n", _virtualTempFix);
+
+  /* Using Newtons law of cooling
+      T(t) = Tenv + (T(0) - Tenv)*e^(-t/r)
+      r = -t / ln( (T(t)-Tenv) / (T(0)-Tenv) )
+      dT/dt = (T(t) - Tenv) / r
+      ----------------------------------------
+      T(t) : Temperature at time t
+      Tenv : _ambient_temp (considered constant)
+      T(0) : Temperature at time 0 (_virtualTempFix)
+      e    : natural number 2,71828182845904
+      r    : a constant we need to find out by measurements
+  */
+  
 }
 
 //Called on temp change
 void BWC::_updateVirtualTempFix_ontempchange()
 {
+  int tempInC = _cio.states[TEMPERATURE];
+  float conversion = 1;
+  if(!_cio.states[UNITSTATE]) {
+    tempInC = _F2C(tempInC);
+    conversion = _F2C(1);
+  }
   //startup init
-  if(_virtualTempFix == -99)
+  if(_virtualTempFix < -10)
   {
-    _virtualTempFix = _cio.states[TEMPERATURE];
+    _virtualTempFix = tempInC;
+    _virtualTemp = _virtualTempFix;
     _virtualTempFix_age = 0;
     return;
   }
@@ -278,8 +286,8 @@ void BWC::_updateVirtualTempFix_ontempchange()
   //readings are only valid if pump is running and has been running for 5 min.
   if(!_cio.states[PUMPSTATE] || (_cio.state_age[PUMPSTATE] < 5*60000)) return;
 
-  _virtualTemp = _cio.states[TEMPERATURE];
-  _virtualTempFix = _cio.states[TEMPERATURE];
+  _virtualTemp = tempInC;
+  _virtualTempFix = tempInC;
   _virtualTempFix_age = 0;  
   /*
   update_coolingDegPerHourArray
@@ -296,14 +304,9 @@ void BWC::_updateVirtualTempFix_ontempchange()
   if(_cio.deltaTemp > 0 && _virtualTemp > _ambient_temp) return; //temp is rising when it should be falling. Bail out
   if(_cio.deltaTemp < 0 && _virtualTemp < _ambient_temp) return; //temp is falling when it should be rising. Bail out
   float degAboveAmbient = _virtualTemp - _ambient_temp;
-  int index = abs(int(degAboveAmbient));
-  if(index < 20)
-  {
-    //float tempdiff = abs(_virtualTempFix - _virtualTemp);  tempdiff is 1! Do not calibrate with a virtual temp.
-    float newdph = 3600000.0 / _cio.state_age[TEMPERATURE];
-    if(newdph < 3) _coolingDegPerHourArray[index] = newdph; //treat superfast rate of change as anomaly and discard it
-    saveCoolArray();
-  }
+  // can't calibrate if ambient ~ virtualtemp
+  if(abs(degAboveAmbient) <= 1) return;
+  R_COOLING = (_cio.state_age[TEMPERATURE]/3600000.0) / log((conversion*degAboveAmbient) / (conversion*(degAboveAmbient + _cio.deltaTemp)));
 }
 
 //Called on heater state change
@@ -313,10 +316,11 @@ void BWC::_updateVirtualTempFix_onheaterchange()
   _virtualTempFix_age = 0;
 }
 
-void BWC::setAmbientTemperature(int64_t amb)
+void BWC::setAmbientTemperature(int64_t amb, bool unit)
 {
-  // Serial.println("***setAmbientTemperature");
   _ambient_temp = (int)amb;
+  if(!unit) _ambient_temp = _F2C(_ambient_temp);
+
   _virtualTempFix = _virtualTemp;
   _virtualTempFix_age = 0;
 }
@@ -500,27 +504,8 @@ void BWC::_handleCommandQ(void) {
           }
         case SETUNIT:
           unlock();
-          /* 
-            Quick convert temperature to other unit. 
-            This will also be done automatically in 10 seconds.
-            But we are impatient.
-          */
-          if(_commandQ[0][1] && !_cio.states[UNITSTATE])
-          {
-            //F to C
-            _cio.states[TEMPERATURE] = round((_cio.states[TEMPERATURE]-32)/1.8);
-            _cio.states[TARGET] = round((_cio.states[TARGET]-32)/1.8);
-          }
-          if(!_commandQ[0][1] && _cio.states[UNITSTATE])
-          {
-            //C to F
-            _cio.states[TEMPERATURE] = round((_cio.states[TEMPERATURE]*1.8)+32);
-            _cio.states[TARGET] = round((_cio.states[TARGET]*1.8)+32);
-          }
           _qButton(UNIT, UNITSTATE, _commandQ[0][1], 5000);
           _qButton(NOBTN, CHAR3, 0xFF, 300);
-          //_qButton(UP, CHAR3, _commandQ[0][1], 500);
-          _sliderTarget = 0; //force update
           break;
         case SETBUBBLES:
           unlock();
@@ -551,7 +536,7 @@ void BWC::_handleCommandQ(void) {
           _pumptime_ms = 0;
           _heatingtime_ms = 0;
           _airtime_ms = 0;
-          _cost = 0;
+          _energyTotal = 0;
           _saveSettingsNeeded = true;
           _cio.dataAvailable = true;
           break;
@@ -575,8 +560,14 @@ void BWC::_handleCommandQ(void) {
         case SETBEEP:
           _commandQ[0][1] == 0 ? _dsp.beep2() : _dsp.playIntro();
           break;
-        case SETAMBIENT:
-          setAmbientTemperature(_commandQ[0][1]);
+        case SETAMBIENTF:
+          setAmbientTemperature(_commandQ[0][1], false);
+          break;
+        case SETAMBIENTC:
+          setAmbientTemperature(_commandQ[0][1], true);
+          break;
+        case RESETDAILY:
+          _energyDaily = 0;
           break;
       }
       //If interval > 0 then append to commandQ with updated xtime.
@@ -606,57 +597,57 @@ String BWC::getJSONStates() {
     // Use arduinojson.org/assistant to compute the capacity.
   //feed the dog
   ESP.wdtFeed();
-    DynamicJsonDocument doc(1536);
+  DynamicJsonDocument doc(1536);
 
-    // Set the values in the document
-    doc["CONTENT"] = "STATES";
-    doc["TIME"] = _timestamp;
-    doc["LCK"] = _cio.states[LOCKEDSTATE];
-    doc["PWR"] = _cio.states[POWERSTATE];
-    doc["UNT"] = _cio.states[UNITSTATE];
-    doc["AIR"] = _cio.states[BUBBLESSTATE];
-    doc["GRN"] = _cio.states[HEATGRNSTATE];
-    doc["RED"] = _cio.states[HEATREDSTATE];
-    doc["FLT"] = _cio.states[PUMPSTATE];
-    doc["CH1"] = _cio.states[CHAR1];
-    doc["CH2"] = _cio.states[CHAR2];
-    doc["CH3"] = _cio.states[CHAR3];
-    doc["HJT"] = _cio.states[JETSSTATE];
-    doc["BRT"] = _dspBrightness;
+  // Set the values in the document
+  doc["CONTENT"] = "STATES";
+  doc["TIME"] = _timestamp;
+  doc["LCK"] = _cio.states[LOCKEDSTATE];
+  doc["PWR"] = _cio.states[POWERSTATE];
+  doc["UNT"] = _cio.states[UNITSTATE];
+  doc["AIR"] = _cio.states[BUBBLESSTATE];
+  doc["GRN"] = _cio.states[HEATGRNSTATE];
+  doc["RED"] = _cio.states[HEATREDSTATE];
+  doc["FLT"] = _cio.states[PUMPSTATE];
+  doc["CH1"] = _cio.states[CHAR1];
+  doc["CH2"] = _cio.states[CHAR2];
+  doc["CH3"] = _cio.states[CHAR3];
+  doc["HJT"] = _cio.states[JETSSTATE];
+  doc["BRT"] = _dspBrightness;
+  doc["TGT"] = _cio.states[TARGET];
+  doc["TMP"] = _cio.states[TEMPERATURE];
+  doc["VTF"] = _virtualTempFix; // **************************REMOVE THIS LINE
+  doc["VTMC"] = _virtualTemp;
+  doc["VTMF"] = _C2F(_virtualTemp);
+  doc["AMBC"] = _ambient_temp;
+  doc["AMBF"] = round(_C2F(_ambient_temp));
+  if(_cio.states[UNITSTATE])
+  {
+    //celsius
     doc["AMB"] = _ambient_temp;
-    doc["TGT"] = _cio.states[TARGET];
-    doc["TMP"] = _cio.states[TEMPERATURE];
     doc["VTM"] = _virtualTemp;
-    doc["VTF"] = _virtualTempFix; // **************************REMOVE THIS LINE
-    if(_cio.states[UNITSTATE])
-    {
-      //celsius
-    doc["AMBC"] = _ambient_temp;
     doc["TGTC"] = _cio.states[TARGET];
     doc["TMPC"] = _cio.states[TEMPERATURE];
-    doc["VTMC"] = _virtualTemp;
-    doc["AMBF"] = round(_C2F((float)_ambient_temp));
     doc["TGTF"] = round(_C2F((float)_cio.states[TARGET]));
     doc["TMPF"] = round(_C2F((float)_cio.states[TEMPERATURE]));
     doc["VTMF"] = _C2F(_virtualTemp);
-    }
-    else
-    {
-      //farenheit
-    doc["AMBF"] = _ambient_temp;
+  }
+  else
+  {
+    //farenheit
+    doc["AMB"] = round(_C2F(_ambient_temp));
+    doc["VTM"] = _C2F(_virtualTemp);
     doc["TGTF"] = _cio.states[TARGET];
     doc["TMPF"] = _cio.states[TEMPERATURE];
-    doc["VTMF"] = _virtualTemp;
-    doc["AMBC"] = round(_F2C((float)_ambient_temp));
     doc["TGTC"] = round(_F2C((float)_cio.states[TARGET]));
     doc["TMPC"] = round(_F2C((float)_cio.states[TEMPERATURE]));
-    doc["VTMC"] = _F2C(_virtualTemp);
-    }
+    doc["VTMC"] = _virtualTemp;
+  }
 
-    // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-      jsonmsg = "{\"error\": \"Failed to serialize message\"}";
+  // Serialize JSON to string
+  String jsonmsg;
+  if (serializeJson(doc, jsonmsg) == 0) {
+    jsonmsg = "{\"error\": \"Failed to serialize message\"}";
   }
   return jsonmsg;
 }
@@ -667,35 +658,37 @@ String BWC::getJSONTimes() {
     // Use arduinojson.org/assistant to compute the capacity.
   //feed the dog
   ESP.wdtFeed();
-    DynamicJsonDocument doc(1024);
+  DynamicJsonDocument doc(1024);
 
-    // Set the values in the document
-    doc["CONTENT"] = "TIMES";
-    doc["TIME"] = _timestamp;
-    doc["CLTIME"] = _cltime;
-    doc["FTIME"] = _ftime;
-    doc["UPTIME"] = _uptime + _uptime_ms/1000;
-    doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;    
-    doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
-    doc["AIRTIME"] = _airtime + _airtime_ms/1000;
-    doc["JETTIME"] = _jettime + _jettime_ms/1000;
-    doc["COST"] = _cost;
-    doc["FINT"] = _finterval;
-    doc["CLINT"] = _clinterval;
-    doc["KWH"] = _cost/_price;
-    doc["TTTT"] = _tttt;
-    float t2r = _estHeatingTime();
-    String t2r_string = String(t2r);
-    if(t2r == -2) t2r_string = F("Already");
-    if(t2r == -1) t2r_string = F("Never");
-    doc["T2R"] = t2r_string;
-    doc["MINCLK"] = _cio.clk_per;
-    _cio.clk_per = 1000;  //reset minimum clock period
+  // Set the values in the document
+  doc["CONTENT"] = "TIMES";
+  doc["TIME"] = _timestamp;
+  doc["CLTIME"] = _cltime;
+  doc["FTIME"] = _ftime;
+  doc["UPTIME"] = _uptime + _uptime_ms/1000;
+  doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;    
+  doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
+  doc["AIRTIME"] = _airtime + _airtime_ms/1000;
+  doc["JETTIME"] = _jettime + _jettime_ms/1000;
+  doc["COST"] = _energyTotal * _price;
+  doc["FINT"] = _finterval;
+  doc["CLINT"] = _clinterval;
+  doc["KWH"] = _energyTotal;
+  doc["KWHD"] = _energyDaily;
+  doc["WATT"] = _energyPower;
+  doc["TTTT"] = _tttt;
+  float t2r = _estHeatingTime();
+  String t2r_string = String(t2r);
+  if(t2r == -2) t2r_string = F("Already");
+  if(t2r == -1) t2r_string = F("Never");
+  doc["T2R"] = t2r_string;
+  doc["MINCLK"] = _cio.clk_per;
+  _cio.clk_per = 1000;  //reset minimum clock period
 
-    // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-      jsonmsg = "{\"error\": \"Failed to serialize message\"}";
+  // Serialize JSON to string
+  String jsonmsg;
+  if (serializeJson(doc, jsonmsg) == 0) {
+    jsonmsg = "{\"error\": \"Failed to serialize message\"}";
   }
   return jsonmsg;
 }
@@ -706,31 +699,31 @@ String BWC::getJSONSettings(){
     // Use arduinojson.org/assistant to compute the capacity.
   //feed the dog
   ESP.wdtFeed();
-    DynamicJsonDocument doc(1024);
+  DynamicJsonDocument doc(1024);
 
-    // Set the values in the document
-    doc["CONTENT"] = "SETTINGS";
-    doc["TIMEZONE"] = _timezone;
-    doc["PRICE"] = _price;
-    doc["FINT"] = _finterval;
-    doc["CLINT"] = _clinterval;
-    doc["AUDIO"] = _audio;
-    doc["REBOOTINFO"] = ESP.getResetReason();
-    doc["REBOOTTIME"] = DateTime.getBootTime();
-    doc["RESTORE"] = _restoreStatesOnStart;
-    doc["MODEL"] = MYMODEL;
+  // Set the values in the document
+  doc["CONTENT"] = "SETTINGS";
+  doc["TIMEZONE"] = _timezone;
+  doc["PRICE"] = _price;
+  doc["FINT"] = _finterval;
+  doc["CLINT"] = _clinterval;
+  doc["AUDIO"] = _audio;
+  doc["REBOOTINFO"] = ESP.getResetReason();
+  doc["REBOOTTIME"] = DateTime.getBootTime();
+  doc["RESTORE"] = _restoreStatesOnStart;
+  doc["MODEL"] = MYMODEL;
 
-    // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-      jsonmsg = "{\"error\": \"Failed to serialize message\"}";
+  // Serialize JSON to string
+  String jsonmsg;
+  if (serializeJson(doc, jsonmsg) == 0) {
+    jsonmsg = "{\"error\": \"Failed to serialize message\"}";
   }
   return jsonmsg;
 }
 
 void BWC::setJSONSettings(String message){
   //feed the dog
-  ESP.wdtFeed();
+  // ESP.wdtFeed();
   DynamicJsonDocument doc(1024);
 
   // Deserialize the JSON document
@@ -748,7 +741,6 @@ void BWC::setJSONSettings(String message){
   _audio = doc["AUDIO"];
   _restoreStatesOnStart = doc["RESTORE"];
   saveSettings();
-  saveCoolArray();//*******just for debug
 }
 
 String BWC::getJSONCommandQueue(){
@@ -824,7 +816,10 @@ void BWC::_loadSettings(){
   _finterval = doc["FINT"];
   _clinterval = doc["CLINT"];
   _audio = doc["AUDIO"];
+  _energyTotal = doc["KWH"];
+  _energyDaily = doc["KWHD"];
   _restoreStatesOnStart = doc["RESTORE"];
+  if(doc.containsKey("R")) R_COOLING = doc["R"]; //else use default
   file.close();
 }
 
@@ -838,7 +833,8 @@ void BWC::saveSettingsFlag(){
 
 void BWC::saveSettings(){
   //kill the dog
-  ESP.wdtDisable();
+  // ESP.wdtDisable();
+  ESP.wdtFeed();
   _saveSettingsNeeded = false;
   File file = LittleFS.open("settings.txt", "w");
   if (!file) {
@@ -869,8 +865,11 @@ void BWC::saveSettings(){
   doc["FINT"] = _finterval;
   doc["CLINT"] = _clinterval;
   doc["AUDIO"] = _audio;
+  doc["KWH"] = _energyTotal;
+  doc["KWHD"] = _energyDaily;
   doc["SAVETIME"] = DateTime.format(DateFormatter::SIMPLE);
   doc["RESTORE"] = _restoreStatesOnStart;
+  doc["R"] = R_COOLING;
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
@@ -878,7 +877,7 @@ void BWC::saveSettings(){
   }
   file.close();
   //revive the dog
-  ESP.wdtEnable(0);
+  // ESP.wdtEnable(0);
 }
 
 void BWC::_loadCommandQueue(){
@@ -909,40 +908,10 @@ void BWC::_loadCommandQueue(){
   file.close();
 }
 
-void BWC::_loadCoolArray(){
-  for(unsigned int i = 0; i < sizeof(_coolingDegPerHourArray)/sizeof(float); i++)
-  {
-    _coolingDegPerHourArray[i] = i/20.0;
-  }
-  return;
-
-  File file = LittleFS.open("coolarray.json", "r");
-  if (!file) {
-    Serial.println(F("Failed to read coolarray.json"));
-    return;
-  }
-
-  DynamicJsonDocument doc(1024);
-  // Deserialize the JSON document
-  DeserializationError error = deserializeJson(doc, file);
-  if (error) {
-    Serial.println(F("Failed to deserialize coolarray.json, using default."));
-    file.close();
-    return;
-  }
-
-  // Set the values in the variables
-  for(int i = 0; i < 20; i++){
-    _coolingDegPerHourArray[i] = doc["array"][i];
-  }
-
-  file.close();
-}
-
-
 void BWC::_saveCommandQueue(){
   //kill the dog
-  ESP.wdtDisable();
+  // ESP.wdtDisable();
+  ESP.wdtFeed();
   File file = LittleFS.open("cmdq.txt", "w");
   if (!file) {
     Serial.println(F("Failed to save cmdq.txt"));
@@ -966,7 +935,7 @@ void BWC::_saveCommandQueue(){
   }
   file.close();
   //revive the dog
-  ESP.wdtEnable(0);
+  // ESP.wdtEnable(0);
 
 }
 
@@ -982,8 +951,8 @@ void BWC::reloadSettings(){
 
 void BWC::_saveStates() {
   //kill the dog
-  ESP.wdtDisable();
-
+  // ESP.wdtDisable();
+  ESP.wdtFeed();
   _saveStatesNeeded = false;
   File file = LittleFS.open("states.txt", "w");
   if (!file) {
@@ -1004,7 +973,7 @@ void BWC::_saveStates() {
   }
   file.close();
   //revive the dog
-  ESP.wdtEnable(0);
+  // ESP.wdtEnable(0);
 }
 
 void BWC::_restoreStates() {
@@ -1036,7 +1005,8 @@ void BWC::_restoreStates() {
 
 void BWC::saveEventlog(){
   //kill the dog
-  ESP.wdtDisable();
+  // ESP.wdtDisable();
+  ESP.wdtFeed();
   File file = LittleFS.open("eventlog.txt", "a");
   if (!file) {
     Serial.println(F("Failed to save eventlog.txt"));
@@ -1057,36 +1027,8 @@ void BWC::saveEventlog(){
   }
   file.close();
   //revive the dog
-  ESP.wdtEnable(0);
+  // ESP.wdtEnable(0);
 
-}
-
-void BWC::saveCoolArray(){
-  //kill the dog
-  ESP.wdtDisable();
-  File file = LittleFS.open("coolarray.json", "w");
-  if (!file) {
-    Serial.println(F("Failed to save coolarray.json"));
-    return;
-  }
-
-  DynamicJsonDocument doc(1024);
-
-  doc["UTC"] = DateTime.format(DateFormatter::SIMPLE);
-  // Set the values in the document
-  for(int i = 0; i < 20; i++)
-  {
-    doc["array"][i] = _coolingDegPerHourArray[i];
-  }
-  //copyArray(_coolingDegPerHourArray, doc.to<JsonArray>());
-
-  // Serialize JSON to file
-  if (serializeJson(doc, file) == 0) {
-    Serial.println(F("Failed to serialize coolarray.json"));
-  }
-  file.close();
-  //revive the dog
-  ESP.wdtEnable(0);
 }
 
 void BWC::saveRebootInfo(){
@@ -1150,13 +1092,20 @@ void BWC::_updateTimes(){
     _uptime_ms = 0;
   }
 
-  _cost = _price*(
-                  (_heatingtime+_heatingtime_ms/1000)/3600.0 * 1900 + //s -> h ->Wh
-                  (_pumptime+_pumptime_ms/1000)/3600.0 * 40 +
-                  (_airtime+_airtime_ms/1000)/3600.0 * 800 +
-                  (_uptime+_uptime_ms/1000)/3600.0 * 2 +
-                  (_jettime+_jettime_ms/1000)/3600.0 * 400
-                  )/1000.0; //Wh -> kWh
+  // watts, kWh today, total kWh
+  float heatingEnergy = (_heatingtime+_heatingtime_ms/1000)/3600.0 * HEATERPOWER;
+  float pumpEnergy = (_pumptime+_pumptime_ms/1000)/3600.0 * PUMPPOWER;
+  float airEnergy = (_airtime+_airtime_ms/1000)/3600.0 * AIRPOWER;
+  float idleEnergy = (_uptime+_uptime_ms/1000)/3600.0 * IDLEPOWER;
+  float jetEnergy = (_jettime+_jettime_ms/1000)/3600.0 * JETPOWER;
+  _energyTotal = (heatingEnergy + pumpEnergy + airEnergy + idleEnergy + jetEnergy)/1000; //Wh -> kWh
+  _energyPower = _cio.states[HEATREDSTATE] * HEATERPOWER;
+  _energyPower += _cio.states[PUMPSTATE] * PUMPPOWER;
+  _energyPower += _cio.states[BUBBLESSTATE] * AIRPOWER;
+  _energyPower += IDLEPOWER;
+  _energyPower += _cio.states[JETSSTATE] * JETPOWER;
+  
+  _energyDaily += (elapsedtime_ms / 1000.0) / 3600.0 * _energyPower / 1000.0;
 }
 
 void BWC::print(String txt){

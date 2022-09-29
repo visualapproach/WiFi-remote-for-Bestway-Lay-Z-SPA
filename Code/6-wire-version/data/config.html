@@ -87,7 +87,9 @@
               <option value="11">Set hydrojets (0/1)</option>
               <option value="12">Set display brightness (0-8)</option>
               <option value="13">Set beep (0/1)</option>
-              <option value="14">Set ambient temp (any integer)</option>
+              <option value="14">Set ambient temp F (any integer)</option>
+              <option value="15">Set ambient temp C (any integer)</option>
+              <option value="16">Reset daily meter (any integer)</option>
               </select>
           </td>
         </tr>
@@ -138,10 +140,12 @@ const resetfilter = 10;
 const setjets = 11;
 const setbrightness = 12;
 const setbeep = 13;
-const setambient = 14;
+const setambientf = 14;
+const setambientc = 15;
+const resetdaily = 16;
 
 const commandlist = ["Set target", "Set unit", "Set bubbles", "Set heat", "Set pump", "Reset queue", "Reboot ESP", 
-                      "Internal cmd", "Reset times", "Reset Cl timer", "Reset filter timer", "Set jets", "Set brightness", "Beep", "Set ambient temp."];
+                      "Internal cmd", "Reset times", "Reset Cl timer", "Reset filter timer", "Set jets", "Set brightness", "Beep", "Set ambient temp F.", "Set ambient temp C.", "Reset daily meter"];
 
 function loadconfig(){
   const Http = new XMLHttpRequest();
