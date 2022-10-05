@@ -526,6 +526,8 @@ void startHttpServer()
   }, handleFileUpload);
   server.on(F("/remove.html"), HTTP_POST, handleFileRemove);
   server.on(F("/restart/"), handleRestart);
+  server.on(F("/metrics"), handlePrometheusMetrics);  //prometheus metrics 
+
   // if someone requests any other file or page, go to function 'handleNotFound'
   // and check if the file exists
   server.onNotFound(handleNotFound);
@@ -1234,7 +1236,6 @@ void handleRestart()
   ESP.restart();
   delay(3000);
 }
-
 
 
 /**
@@ -2415,4 +2416,71 @@ void printStackSize()
     Serial.println (stack_start - &stack);
     Serial.print (F("free heap "));
     Serial.println ((long)ESP.getFreeHeap());
+}
+
+/**
+ * prometheus related functions and char buffers
+ * @author svanscho
+ */
+
+static size_t const BUFSIZE = 2048;
+char response[BUFSIZE];
+static char const *response_template =
+"# HELP " PROM_NAMESPACE "_info Metadata about the device.\n"
+"# TYPE " PROM_NAMESPACE "_info gauge\n"
+"# UNIT " PROM_NAMESPACE "_info \n"
+PROM_NAMESPACE "_info{version=\"%s\",name=\"%s\"} 1\n"
+"# HELP " PROM_NAMESPACE "_temperature_celcius Water temperature.\n"
+"# TYPE " PROM_NAMESPACE "_temperature_celcius gauge\n"
+"# UNIT " PROM_NAMESPACE "_temperature_celcius \u00B0C\n"
+PROM_NAMESPACE "_temperature_celcius %d\n"
+"# HELP " PROM_NAMESPACE "_target_temperature_celcius Water target temperature.\n"
+"# TYPE " PROM_NAMESPACE "_target_temperature_celcius gauge\n"
+"# UNIT " PROM_NAMESPACE "_target_temperature_celcius \u00B0C\n"
+PROM_NAMESPACE "_target_temperature_celcius %d\n"
+"# HELP " PROM_NAMESPACE "_heater_state Heater state.\n"
+"# TYPE " PROM_NAMESPACE "_heater_state gauge\n"
+"# UNIT " PROM_NAMESPACE "_heater_state\n"
+PROM_NAMESPACE "_heater_state %d\n"
+"# HELP " PROM_NAMESPACE "_pump_state Pump state.\n"
+"# TYPE " PROM_NAMESPACE "_pump_state gauge\n"
+"# UNIT " PROM_NAMESPACE "_pump_state\n"
+PROM_NAMESPACE "_pump_state %d\n"
+"# HELP " PROM_NAMESPACE "_jets_state Jets state.\n"
+"# TYPE " PROM_NAMESPACE "_jets_state gauge\n"
+"# UNIT " PROM_NAMESPACE "_jets_state\n"
+PROM_NAMESPACE "_jets_state %d\n"
+"# HELP " PROM_NAMESPACE "_bubbles_state Bubbles state.\n"
+"# TYPE " PROM_NAMESPACE "_bubbles_state gauge\n"
+"# UNIT " PROM_NAMESPACE "_bubbles_state\n"
+PROM_NAMESPACE "_bubbles_state %d\n"
+"# HELP " PROM_NAMESPACE "_power_state Bubbles state.\n"
+"# TYPE " PROM_NAMESPACE "_power_state gauge\n"
+"# UNIT " PROM_NAMESPACE "_power_state\n"
+PROM_NAMESPACE "_power_state %d\n"
+"# HELP " PROM_NAMESPACE "_locked_state Locked state.\n"
+"# TYPE " PROM_NAMESPACE "_locked_state gauge\n"
+"# UNIT " PROM_NAMESPACE "_locked_state\n"
+PROM_NAMESPACE "_locked_state %d\n"
+"# HELP " PROM_NAMESPACE "_unit_state Unit state.\n"
+"# TYPE " PROM_NAMESPACE "_unit_state gauge\n"
+"# UNIT " PROM_NAMESPACE "_unit_state\n"
+PROM_NAMESPACE "_unit_state %d\n";
+
+/**
+ * response for /metrics/
+ */
+void handlePrometheusMetrics()
+{
+    snprintf(response, BUFSIZE, response_template, FW_VERSION, DEVICE_NAME, 
+             bwc.getState(TEMPERATURE), 
+             bwc.getState(TARGET), 
+             bwc.getState(HEATSTATE),
+             bwc.getState(PUMPSTATE),
+             bwc.getState(JETSSTATE),
+             bwc.getState(BUBBLESSTATE),
+             bwc.getState(POWERSTATE),
+             bwc.getState(LOCKEDSTATE),
+             bwc.getState(UNITSTATE));
+    server.send(200, "text/plain; charset=utf-8", response);
 }
