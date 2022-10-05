@@ -26,7 +26,7 @@ class BWC {
 
   public:
     BWC();
-    void begin(void); 
+    void begin(void);
     void begin2();
     void loop();
     bool qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval);
@@ -58,6 +58,7 @@ class BWC {
     CIO _cio;
     DSP _dsp;
     uint8_t _dspBrightness;
+    int16_t override_dsp_brt_timer;
     int64_t _commandQ[MAXCOMMANDS][4]; //64 bits to house both timestamp > 15 years in future, and negative values
     int _qCommandLen = 0;  //length of commandQ
     int32_t _buttonQ[MAXBUTTONS][4];

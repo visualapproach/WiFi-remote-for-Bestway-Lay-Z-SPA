@@ -76,6 +76,11 @@ void BWC::loop(){
   for(unsigned int i = 0; i < sizeof(_dsp.payload); i++){
     _dsp.payload[i] = _cio.payload[i];
   }
+  //override_dsp_brt_timer is set to 5000 ms after physical button is touched.
+  //it is decremented in updateTimes()
+  //so display will be bright 5 secs after a buttoon press
+  uint8_t brt = _dspBrightness;
+  if(override_dsp_brt_timer > 0) brt = 8;
   _dsp.updateDSP(_dspBrightness);
   _updateTimes();
   //update cio public payload
@@ -106,7 +111,7 @@ void BWC::loop(){
   int dtime = _tttt_time1 - _tttt_time0;
   if(dtemp != 0 && abs(dtemp)<2) {        //if dtemp is larger we probably have a bad reading
     _tttt_calculated = (target-_tttt_temp1) * dtime/dtemp;
-  } 
+  }
   _tttt = _tttt_calculated - _timestamp + _tttt_time1;
 
   _handleStateChanges();
@@ -174,7 +179,7 @@ float BWC::_estHeatingTime()
   float degAboveAmbient = _virtualTemp - _ambient_temp;
   float fraction = 1.0 - (degAboveAmbient - floor(degAboveAmbient));
   int deltaTemp = targetInC - _virtualTemp;
-  
+
   //integrate the time needed to reach target
   //how long to next integer temp
   float coolingPerHour = degAboveAmbient / R_COOLING;
@@ -259,7 +264,7 @@ void BWC::_calcVirtualTemp()
       e    : natural number 2,71828182845904
       r    : a constant we need to find out by measurements
   */
-  
+
 }
 
 //Called on temp change
@@ -288,7 +293,7 @@ void BWC::_updateVirtualTempFix_ontempchange()
 
   _virtualTemp = tempInC;
   _virtualTempFix = tempInC;
-  _virtualTempFix_age = 0;  
+  _virtualTempFix_age = 0;
   /*
   update_coolingDegPerHourArray
   Measured temp has changed by 1 degree over a certain time
@@ -342,7 +347,7 @@ void BWC::saveDebugInfo(String s){
   if (serializeJson(doc, file) == 0) {
     Serial.println(F("Failed to write debug.txt"));
   }
-  file.close();  
+  file.close();
 }
 
 
@@ -384,14 +389,14 @@ void BWC::_handleButtonQ(void) {
       }
       _qButtonLen--;
       _cio.button = ButtonCodes[NOBTN];
-    } 
-    else 
+    }
+    else
     {
       //set buttoncode
       _cio.button = ButtonCodes[_buttonQ[0][0]];
     }
   }
-  else 
+  else
   {
     static uint16_t prevbtn = ButtonCodes[NOBTN];
     //no queue so let dsp value through
@@ -409,6 +414,8 @@ void BWC::_handleButtonQ(void) {
       //store pressed buttons sequence
       for(int i = 0; i < 3; i++) _btnSequence[i] = _btnSequence[i+1];
       _btnSequence[3] = index;
+      //set display brightness to max for 5 secs
+      override_dsp_brt_timer = 5000;
     }
     prevbtn = pressedButton;
   }
@@ -417,9 +424,9 @@ void BWC::_handleButtonQ(void) {
 //check for special button sequence
 bool BWC::getBtnSeqMatch()
 {
-  if( _btnSequence[0] == POWER && 
-      _btnSequence[1] == LOCK && 
-      _btnSequence[2] == TIMER && 
+  if( _btnSequence[0] == POWER &&
+      _btnSequence[1] == LOCK &&
+      _btnSequence[2] == TIMER &&
       _btnSequence[3] == POWER)
   {
     return true;
@@ -477,7 +484,7 @@ void BWC::_handleCommandQ(void) {
   //cmp time with xtime. If more, then execute (adding buttons to buttonQ).
 
     if (_timestamp >= _commandQ[0][2]){
-      switch (_commandQ[0][0]) 
+      switch (_commandQ[0][0])
       {
         case SETTARGET:
           {
@@ -666,7 +673,7 @@ String BWC::getJSONTimes() {
   doc["CLTIME"] = _cltime;
   doc["FTIME"] = _ftime;
   doc["UPTIME"] = _uptime + _uptime_ms/1000;
-  doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;    
+  doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;
   doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
   doc["AIRTIME"] = _airtime + _airtime_ms/1000;
   doc["JETTIME"] = _jettime + _jettime_ms/1000;
@@ -1092,6 +1099,8 @@ void BWC::_updateTimes(){
     _uptime_ms = 0;
   }
 
+  if(override_dsp_brt_timer > 0) override_dsp_brt_timer -= elapsedtime_ms; //counts down to or below zero
+
   // watts, kWh today, total kWh
   float heatingEnergy = (_heatingtime+_heatingtime_ms/1000)/3600.0 * HEATERPOWER;
   float pumpEnergy = (_pumptime+_pumptime_ms/1000)/3600.0 * PUMPPOWER;
@@ -1104,7 +1113,7 @@ void BWC::_updateTimes(){
   _energyPower += _cio.states[BUBBLESSTATE] * AIRPOWER;
   _energyPower += IDLEPOWER;
   _energyPower += _cio.states[JETSSTATE] * JETPOWER;
-  
+
   _energyDaily += (elapsedtime_ms / 1000.0) / 3600.0 * _energyPower / 1000.0;
 }
 
