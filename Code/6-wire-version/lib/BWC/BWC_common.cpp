@@ -81,7 +81,7 @@ void BWC::loop(){
   //so display will be bright 5 secs after a buttoon press
   uint8_t brt = _dspBrightness;
   if(override_dsp_brt_timer > 0) brt = 8;
-  _dsp.updateDSP(_dspBrightness);
+  _dsp.updateDSP(brt);
   _updateTimes();
   //update cio public payload
   _cio.loop();
