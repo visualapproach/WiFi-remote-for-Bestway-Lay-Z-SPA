@@ -47,7 +47,10 @@ enum Commands: byte
   RESETFTIMER,
   SETJETS,
   SETGODMODE,
-  SETFULLPOWER
+  SETFULLPOWER,
+  SETAMBIENTF,
+  SETAMBIENTC,
+  RESETDAILY
 };
 
 enum ToggleButtons: byte
@@ -61,11 +64,11 @@ enum ToggleButtons: byte
 const int MAXCOMMANDS = 11;
 const int MAXBUTTONS = 33;
 
-const int IDLE_WATTS = 2;
-const int PUMP_WATTS = 40;
-const int HEATER_WATTS = 1900;
-const int BUBBLES_WATTS = 800;
-const int JETS_WATTS = 800;
+const int IDLEPOWER = 2;
+const int PUMPPOWER = 40;
+const int HEATERPOWER = 1900;
+const int AIRPOWER = 800;
+const int JETPOWER = 800;
 
 #ifdef NO54173
 /*combination matrix

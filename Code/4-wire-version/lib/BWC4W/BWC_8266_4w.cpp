@@ -374,7 +374,7 @@ void BWC::_handleCommandQ(void) {
           _airtime_ms = 0;
           _jettime_ms = 0;
           _cost = 0;
-          _kwh = 0;
+          _energyTotal = 0;
           _saveSettingsNeeded = true;    
           _cio.dataAvailable = true;
           break;
@@ -422,6 +422,10 @@ void BWC::_handleCommandQ(void) {
           else
             _cio.heatbitmask = HEATBITMASK1;
           break;
+        case RESETDAILY:
+          _energyDaily = 0;
+          break;
+
       }
       //If interval > 0 then append to commandQ with updated xtime.
       if(_commandQ[0][3] > 0) qCommand(_commandQ[0][0],_commandQ[0][1],_commandQ[0][2]+_commandQ[0][3],_commandQ[0][3]);
@@ -489,26 +493,28 @@ String BWC::getJSONTimes() {
   ESP.wdtFeed();
     DynamicJsonDocument doc(1024);
 
-    // Set the values in the document
-    doc["CONTENT"] = "TIMES";
-    doc["TIME"] = _timestamp;
-    doc["CLTIME"] = _cltime;
-    doc["FTIME"] = _ftime;
-    doc["UPTIME"] = _uptime + _uptime_ms/1000;
-    doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;
-    doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
-    doc["AIRTIME"] = _airtime + _airtime_ms/1000;
-    doc["JETTIME"] = _jettime + _jettime_ms/1000;
-    doc["KWH"] = _kwh;
-    doc["COST"] = _cost;
-    doc["FINT"] = _finterval;
-    doc["CLINT"] = _clinterval;
-    doc["TTTT"] = _tttt;
+  // Set the values in the document
+  doc["CONTENT"] = "TIMES";
+  doc["TIME"] = _timestamp;
+  doc["CLTIME"] = _cltime;
+  doc["FTIME"] = _ftime;
+  doc["UPTIME"] = _uptime + _uptime_ms/1000;
+  doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;
+  doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
+  doc["AIRTIME"] = _airtime + _airtime_ms/1000;
+  doc["JETTIME"] = _jettime + _jettime_ms/1000;
+  doc["COST"] = _energyTotal * _price;
+  doc["KWH"] = _energyTotal;
+  doc["KWHD"] = _energyDaily;
+  doc["WATT"] = _energyPower;
+  doc["FINT"] = _finterval;
+  doc["CLINT"] = _clinterval;
+  doc["TTTT"] = _tttt;
 
-    // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-      jsonmsg = "{\"error\": \"Failed to serialize message\"}";
+  // Serialize JSON to string
+  String jsonmsg;
+  if (serializeJson(doc, jsonmsg) == 0) {
+    jsonmsg = "{\"error\": \"Failed to serialize message\"}";
   }
   return jsonmsg;
 }
@@ -682,6 +688,8 @@ void BWC::_loadSettings(){
   _finterval = doc["FINT"];
   _clinterval = doc["CLINT"];
   _audio = doc["AUDIO"];
+  _energyTotal = doc["KWH"];
+  _energyDaily = doc["KWHD"];
   file.close();
 }
 
@@ -730,6 +738,8 @@ void BWC::saveSettings(){
   doc["FINT"] = _finterval;
   doc["CLINT"] = _clinterval;
   doc["AUDIO"] = _audio;
+  doc["KWH"] = _energyTotal;
+  doc["KWHD"] = _energyDaily;
   doc["SAVETIME"] = DateTime.format(DateFormatter::SIMPLE);
 
   // Serialize JSON to file
@@ -900,13 +910,20 @@ void BWC::_updateTimes(){
     _uptime_ms = 0;
   }
   
-  _kwh =  (HEATER_WATTS * (_heatingtime+_heatingtime_ms/1000) / 3600 +
-          PUMP_WATTS * (_pumptime+_pumptime_ms/1000) / 3600 +
-          BUBBLES_WATTS * (_airtime+_airtime_ms/1000) / 3600 +
-          JETS_WATTS * (_jettime+_jettime_ms/1000) / 3600 +
-          IDLE_WATTS * (_uptime+_uptime_ms/1000) / 3600) / 
-          1000.0; //Wh -> kWh
-  _cost = _price*_kwh;
+  // watts, kWh today, total kWh
+  float heatingEnergy = (_heatingtime+_heatingtime_ms/1000)/3600.0 * HEATERPOWER;
+  float pumpEnergy = (_pumptime+_pumptime_ms/1000)/3600.0 * PUMPPOWER;
+  float airEnergy = (_airtime+_airtime_ms/1000)/3600.0 * AIRPOWER;
+  float idleEnergy = (_uptime+_uptime_ms/1000)/3600.0 * IDLEPOWER;
+  float jetEnergy = (_jettime+_jettime_ms/1000)/3600.0 * JETPOWER;
+  _energyTotal = (heatingEnergy + pumpEnergy + airEnergy + idleEnergy + jetEnergy)/1000; //Wh -> kWh
+  _energyPower = _cio.states[HEATREDSTATE] * HEATERPOWER;
+  _energyPower += _cio.states[PUMPSTATE] * PUMPPOWER;
+  _energyPower += _cio.states[BUBBLESSTATE] * AIRPOWER;
+  _energyPower += IDLEPOWER;
+  _energyPower += _cio.states[JETSSTATE] * JETPOWER;
+  
+  _energyDaily += (elapsedtime / 1000.0) / 3600.0 * _energyPower / 1000.0;
 }
 
 void BWC::print(String txt){

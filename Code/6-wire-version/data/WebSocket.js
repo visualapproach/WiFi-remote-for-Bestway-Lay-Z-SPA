@@ -16,8 +16,10 @@ const cmd = {
 	resetTimerFilter: 10,
 	toggleHydroJets: 11,
 	setBrightness: 12,
-  setBeep: 13,
-  setAmbient: 14
+	setBeep: 13,
+	setAmbient: 15,
+	setAmbientF: 14,
+	setAmbientC: 15
 };
 
 // button element ID mapping
@@ -113,20 +115,25 @@ function handlemsg(e)
 		// temperature
 		document.getElementById('temp').min = (msgobj.UNT ? 20 : 68);
 		document.getElementById('temp').max = (msgobj.UNT ? 40 : 104);
+		document.getElementById('amb').min = (msgobj.UNT ? -10 : 14);;
+		document.getElementById('amb').max = (msgobj.UNT ? 50 : 122);;
 		document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
 		document.getElementById('vtlabel').innerHTML = msgobj.VTM.toFixed(2).toString();
 		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
 
 		// buttons
 		document.getElementById('AIR').checked = msgobj.AIR;
-		document.getElementById('UNT').checked = msgobj.UNT;
+		if(document.getElementById('UNT').checked != msgobj.UNT) {
+			document.getElementById('UNT').checked = msgobj.UNT;
+			initSlider = true;
+		}
 		document.getElementById('FLT').checked = msgobj.FLT;
 		document.getElementById('HJT').checked = msgobj.HJT;
 		document.getElementById('HTR').checked = msgobj.RED || msgobj.GRN;
 
 		// heater button color
 		document.getElementById('htrspan').style = "background-color: #" + ((msgobj.RED) ? 'FF0000' : ((msgobj.GRN) ? '00FF00' : 'CCC'));
-		
+
 		// display
 		document.getElementById('dsp').innerHTML = "[" + String.fromCharCode(msgobj.CH1,msgobj.CH2,msgobj.CH3)+ "]";
 		document.getElementById('dsp').style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(parseInt(msgobj.BRT)+1)), 0, 0);
@@ -148,7 +155,7 @@ function handlemsg(e)
 	{
 		var date = new Date(msgobj.TIME * 1000);
 		document.getElementById('time').innerHTML = date.toLocaleString();
-		
+
 		// chlorine add reset timer
 		var clDate = (Date.now()/1000-msgobj.CLTIME)/(24*3600.0);
 		document.getElementById('cltimer').innerHTML = clDate.toFixed(2);
@@ -158,7 +165,7 @@ function handlemsg(e)
 		var fDate = (Date.now()/1000-msgobj.FTIME)/(24*3600.0);
 		document.getElementById('ftimer').innerHTML = fDate.toFixed(2);
 		document.getElementById('ftimerbtn').className = (fDate > msgobj.FINT ? "button_red" : "button");
-		
+
 		// statistics
 		document.getElementById('heatingtime').innerHTML = s2dhms(msgobj.HEATINGTIME);
 		document.getElementById('uptime').innerHTML = s2dhms(msgobj.UPTIME);
@@ -213,13 +220,16 @@ function sendCommand(val)
 	else if (val == 'setAmbient')
 	{
 		value = parseInt(document.getElementById('amb').value);
+		if(document.getElementById("UNT").checked) val = 'setAmbientC';
+		else val = 'setAmbientF';
 		document.getElementById("sliderAmbVal").innerHTML = value.toString();
 	}
 	else if (eid[val] && (val == 'toggleUnit' || val == 'toggleBubbles' || val == 'toggleHeater' || val == 'togglePump' || val == 'toggleHydroJets'))
 	{
 		value = document.getElementById(eid[val]).checked;
+		initSlider = true;
 	}
-	
+
 	var obj = {};
 	obj["CMD"] = cmd[val];
 	obj["VALUE"] = value;
