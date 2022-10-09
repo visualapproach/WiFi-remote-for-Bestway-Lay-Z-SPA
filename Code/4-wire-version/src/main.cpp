@@ -11,14 +11,14 @@ void setup()
   bwc.begin(); //no params = default pins
   //#bwc.loop();
   //Default pins:
-  // bwc.begin(			
-			// int cio_cs_pin 		= D1, 
-			// int cio_data_pin 	= D7, 
-			// int cio_clk_pin 		= D2, 
-			// int dsp_cs_pin 		= D3, 
-			// int dsp_data_pin 	= D5, 
-			// int dsp_clk_pin 		= D4, 
-			// int dsp_audio_pin 	= D6 
+  // bwc.begin(
+			// int cio_cs_pin 		= D1,
+			// int cio_data_pin 	= D7,
+			// int cio_clk_pin 		= D2,
+			// int dsp_cs_pin 		= D3,
+			// int dsp_data_pin 	= D5,
+			// int dsp_clk_pin 		= D4,
+			// int dsp_audio_pin 	= D6
 			// );
 	//example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
 
@@ -34,7 +34,7 @@ void setup()
   // needs to be loaded here for reading the wifi.json
   LittleFS.begin();
   loadWifi();
-  
+
   startWiFi();
   startNTP();
   startOTA();
@@ -58,7 +58,7 @@ void loop()
     looptime = ms - prevlooptime;
     looptime_min = min(looptime, looptime_min);
     looptime_max = max(looptime, looptime_max);
-  } 
+  }
   prevlooptime = ms;
   firstloopdone = true;
   // We need this self-destructing info several times, so save it locally
@@ -89,7 +89,7 @@ void loop()
         sendMQTT();
       }
     }
-    
+
     // web socket
     if (newData)
     {
@@ -175,7 +175,7 @@ void handleAUX()
      bwc.qCommand(SETPUMP, 0, 0, 0);         // change to SETHEATER if you want the pump to continue filtering
      runonce = true;
    }
-  
+
    //Switch the output pin when temperature is below or above 30
    //Don't load the pin above specs (a few mA)
    if (bwc.getState(TEMPERATURE) < 30){
@@ -274,7 +274,7 @@ void sendMQTT()
     //Serial.println(F("MQTT > times not published"));
   }
 
-  
+
   //send other info
   json = getOtherInfo();
   if (mqttClient.publish((String(mqttBaseTopic) + "/other").c_str(), String(json).c_str(), true))
@@ -471,15 +471,15 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
         }
 
         // Copy values from the JsonDocument to the Config
-        uint32_t command = doc["CMD"];
-        uint32_t value = doc["VALUE"];
-        uint32_t xtime = doc["XTIME"];
-        uint32_t interval = doc["INTERVAL"];
+        int64_t command = doc["CMD"];
+        int64_t value = doc["VALUE"];
+        int64_t xtime = doc["XTIME"];
+        int64_t interval = doc["INTERVAL"];
         //add command to the command queue
         bwc.qCommand(command, value, xtime, interval);
       }
       break;
-      
+
     default:
       break;
   }
@@ -557,7 +557,7 @@ bool handleFileRead(String path)
       server.requestAuthentication();
     }
   }
-  
+
   Serial.println("HTTP > request: " + path);
   // If a folder is requested, send the index file
   if (path.endsWith("/"))
@@ -654,10 +654,10 @@ void handleAddCommand()
     return;
   }
 
-  uint32_t command = doc["CMD"];
-  uint32_t value = doc["VALUE"];
-  uint32_t xtime = doc["XTIME"];
-  uint32_t interval = doc["INTERVAL"];
+  int64_t command = doc["CMD"];
+  int64_t value = doc["VALUE"];
+  int64_t xtime = doc["XTIME"];
+  int64_t interval = doc["INTERVAL"];
 
   bwc.qCommand(command, value, xtime, interval);
 
@@ -767,7 +767,7 @@ void saveWifi()
 void handleGetWifi()
 {
   if (!checkHttpPost(server.method())) return;
-  
+
   DynamicJsonDocument doc(1024);
 
   doc["enableAp"] = enableAp;
@@ -777,7 +777,7 @@ void handleGetWifi()
   {
     doc["apPwd"] = apPwd;
   }
-  
+
   doc["enableStaticIp4"] = enableStaticIp4;
   doc["ip4Address"][0] = ip4Address[0];
   doc["ip4Address"][1] = ip4Address[1];
@@ -914,7 +914,7 @@ void loadMqtt()
     file.close();
     return;
   }
-  
+
   useMqtt = doc["enableMqtt"];
   mqttIpAddress[0] = doc["mqttIpAddress"][0];
   mqttIpAddress[1] = doc["mqttIpAddress"][1];
@@ -968,7 +968,7 @@ void saveMqtt()
 void handleGetMqtt()
 {
   if (!checkHttpPost(server.method())) return;
-  
+
   DynamicJsonDocument doc(1024);
 
   doc["enableMqtt"] = useMqtt;
@@ -1132,10 +1132,10 @@ void handleFileRemove()
   {
     path = "/" + path;
   }
-  
+
   Serial.print(F("handleFileRemove Name: "));
   Serial.println(path);
-  
+
   if (LittleFS.exists(path) && LittleFS.remove(path))
   {
     Serial.print(F("handleFileRemove success: "));
@@ -1225,10 +1225,10 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
       return;
     }
 
-    uint32_t command = doc["CMD"];
-    uint32_t value = doc["VALUE"];
-    uint32_t xtime = doc["XTIME"];
-    uint32_t interval = doc["INTERVAL"];
+    int64_t command = doc["CMD"];
+    int64_t value = doc["VALUE"];
+    int64_t xtime = doc["XTIME"];
+    int64_t interval = doc["INTERVAL"];
     bwc.qCommand(command, value, xtime, interval);
   }
 }
@@ -1257,10 +1257,10 @@ void mqttConnect()
   {
     Serial.println(F("success!"));
     mqtt_connect_count++;
-    
+
     // update MQTT every X seconds. (will also be updated on state changes)
     updateMqttTimer.attach(mqttTelemetryInterval, []{ sendMQTTFlag = true; });
-    
+
     // These all have the Retained flag set to true, so that the value is stored on the server and can be retrieved at any point
     // Check the 'Status' topic to see that the device is still online before relying on the data from these retained topics
     mqttClient.publish((String(mqttBaseTopic) + "/Status").c_str(), "Alive", true);
@@ -1286,7 +1286,7 @@ void mqttConnect()
 }
 
 void setupHA()
-{  
+{
   String topic;
   String payload;
   String mychipid = String((unsigned int)ESP.getChipId());
@@ -1811,7 +1811,7 @@ void setupHA()
   Serial.println(payload);
   doc.clear();
   doc.garbageCollect();
-	
+
   // spa heat regulation switch
   doc["dev"] = devicedoc["dev"];
   payload = "";
@@ -2098,7 +2098,7 @@ void setupHA()
   // doc.clear();
   // doc.garbageCollect();
 
-  // spa temperature sensor 
+  // spa temperature sensor
   doc["dev"] = devicedoc["dev"];
   payload = "";
   topic = String(HA_PREFIX) + F("/sensor/layzspa_4w_temp/config");
@@ -2202,7 +2202,7 @@ void setupHA()
 //   doc.clear();
 //   doc.garbageCollect();
 
-  // spa target temperature sensor 
+  // spa target temperature sensor
   doc["dev"] = devicedoc["dev"];
   payload = "";
   topic = String(HA_PREFIX) + F("/sensor/layzspa_4w_target_temp/config");

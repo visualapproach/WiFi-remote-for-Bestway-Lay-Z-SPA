@@ -65,6 +65,13 @@
           <td style="width:20%;text-align:right" id="sliderTempVal">n/a</td>
         </tr>
       </table>
+			<table>
+				<tr>
+					<td style="width:40%;white-space:nowrap;">Set ambient temp:</td>
+					<td style="width:40%"><input type="range" id="amb" min="-10" max="50" step="1" value="20" onmouseup="sendCommand('setAmbient')" ontouchend="sendCommand('setAmbient')"></td>
+					<td style="width:20%;text-align:right" id="sliderAmbVal">n/a</td>
+				</tr>
+			</table>
       <table class="fixed">
         <tr>
           <td><div id="airtitle">Bubbles</div></td>
@@ -120,7 +127,7 @@
         </tr>
       </table>
     </section>
-  
+
     <section>
       <h2>Timer:</h2>
       <table>
@@ -134,7 +141,7 @@
         </tr>
       </table>
     </section>
-  
+
     <section>
       <h2>Totals:</h2>
       <table class="fixed">
@@ -146,6 +153,10 @@
           <td>Heating Est.:</td>
           <td><span id="tttt">n/a</span></td>
         </tr>
+				<tr>
+					<td>Ready in (hours):</td>
+					<td><span id="t2r">n/a</span></td>
+				</tr>
         <tr>
           <td>Uptime:</td>
           <td><span id="uptime">n/a</span></td>
@@ -171,7 +182,8 @@
           <td><span id="cost">n/a</span></td>
         </tr>
         <tr>
-          <td colspan="2" class="center"><button id="reset" class="button" onclick="sendCommand('resetTotals')">Reset</button></td>
+          <td colspan="1" class="left"><button id="reset" class="button" onclick="sendCommand('resetTotals')">Reset</button></td>
+					<td><button id="help" class="button" onclick="alert('Time: ESP sends UTC. Browser converts to Local.\nHeating est: old naive way to estimate when target temp is reached.\nReady in: new way of estimating time to ready. Works best if given actual ambient temperature from for example HA.\nUptime: how long ESP has been running since reset. Rebooting will continue counting.\n Virtual temp: ESP attempts to keep track of water temperature even when pump is stopped and the temperature drops in the pump while the large body of water cools slower. Uses ambient temperature.')">?</button></td>
         </tr>
       </table>
     </section>
