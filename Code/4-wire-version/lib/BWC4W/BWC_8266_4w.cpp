@@ -391,8 +391,10 @@ void BWC::_updateVirtualTempFix_ontempchange()
   // We can only know something about rate of change if we had continous cooling since last update
   // (Nobody messed with the heater during the 1 degree change)
   if(_cio.state_age[HEATREDSTATE] < _cio.state_age[TEMPERATURE]) return;
+  // It seems that the temp sensor is oscillating before deciding there is a new temp. Filter out changes faster than 30 min
+  if(_cio.state_age[TEMPERATURE] < 1800 * 1000) return;
   // rate of heating is not subject to change (fixed wattage and pool size) so do this only if cooling
-  // no check for bubbles in this version (as in 6-wire)
+  // TODO: check for bubbles/jets in this version (as in 6-wire)
   if(_cio.states[HEATREDSTATE]) return;
   if(_cio.deltaTemp > 0 && _virtualTemp > _ambient_temp) return; //temp is rising when it should be falling. Bail out
   if(_cio.deltaTemp < 0 && _virtualTemp < _ambient_temp) return; //temp is falling when it should be rising. Bail out
