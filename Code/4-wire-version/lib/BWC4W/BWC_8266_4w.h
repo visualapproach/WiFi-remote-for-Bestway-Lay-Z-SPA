@@ -38,9 +38,10 @@ class CIO {
     void loop(void);
     void updatePayload();
     void updateStates();
+    void trackStateChanges();
     bool dataAvailable = false;
     bool GODMODE = false;
-    uint8_t states[15];
+    uint8_t states[15], oldStates[15];
     uint32_t state_age[15];
     bool state_changed[15];
     int deltaTemp;
@@ -61,6 +62,7 @@ class CIO {
     uint8_t dismissed_from_DSP_buf[7];  //DSP to ESP. We can ignore this message and send our own when ESP is in charge.
     uint8_t dismissed_cio_len;
     uint8_t dismissed_dsp_len;
+    uint32_t badCIO_checksum, badDSP_checksum;
 
   private:
 

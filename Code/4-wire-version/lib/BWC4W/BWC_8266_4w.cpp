@@ -39,17 +39,10 @@ void CIO::loop(void) {
       if(from_CIO_buf[CIO_CHECKSUMINDEX] == calculatedChecksum)
       {
         for(int i = 0; i < PAYLOADSIZE; i++){
-          if(to_DSP_buf[i] != from_CIO_buf[i]) dataAvailable = true;
+          //if(to_DSP_buf[i] != from_CIO_buf[i]) dataAvailable = true;
           to_DSP_buf[i] = from_CIO_buf[i];
         }
-
-        uint8_t newtemp = from_CIO_buf[TEMPINDEX];
-        if(newtemp != states[TEMPERATURE])
-        {
-          deltaTemp = newtemp - states[TEMPERATURE];
-          states[TEMPERATURE] = from_CIO_buf[TEMPINDEX];
-          state_changed[TEMPERATURE] = true;
-        }
+        states[TEMPERATURE] = from_CIO_buf[TEMPINDEX];
         states[ERROR] =       from_CIO_buf[ERRORINDEX];
         cio_tx_ok = true;  //show the user that this line works (appears to work)
         //check if cio send error msg
@@ -64,6 +57,9 @@ void CIO::loop(void) {
           states[CHAR2] = (char)(48+(from_CIO_buf[ERRORINDEX]/10));
           states[CHAR3] = (char)(48+(from_CIO_buf[ERRORINDEX]%10));
         }
+      } else
+      {
+        badCIO_checksum++;
       }
     }
     else
@@ -116,33 +112,48 @@ void CIO::loop(void) {
     }
     else
     {
-      digitalWrite(D4, HIGH);  //LED on indicates bad message
+      badDSP_checksum++;
+      //digitalWrite(D4, HIGH);  //LED on indicates bad message
     }
     cio_serial.write(to_CIO_buf, PAYLOADSIZE);
+  }
+  //track state changes
+  trackStateChanges();
+}
+
+void CIO::trackStateChanges()
+{
+  for(int i = 0; i < 15; i++)
+  {
+    if(oldStates[i] != states[i])
+    {
+      state_changed[i] = true;
+      dataAvailable = true;
+    }
+  }
+
+  if(state_changed[TEMPERATURE])
+  {
+    deltaTemp = states[TEMPERATURE] - oldStates[TEMPERATURE];
+  }
+
+  for(int i = 0; i < 15; i++)
+  {
+    oldStates[i] = states[i];
   }
 }
 
 void CIO::updateStates(){
-  static uint8_t prevchksum;
+  //static uint8_t prevchksum;
   //extract information from payload to a better format
   states[BUBBLESSTATE] = (from_DSP_buf[COMMANDINDEX] & BUBBLESBITMASK) > 0;
   states[HEATGRNSTATE] = 2;                           //unknowable in antigodmode
-  bool state = (from_DSP_buf[COMMANDINDEX] & (HEATBITMASK1|HEATBITMASK2)) > 0;
-  if(state != states[HEATREDSTATE])
-  {
-    states[HEATREDSTATE] = state;
-    state_changed[HEATREDSTATE] = true;
-  }
+  states[HEATREDSTATE] = (from_DSP_buf[COMMANDINDEX] & (HEATBITMASK1|HEATBITMASK2)) > 0;
   states[HEATSTATE] = 2;                              //unknowable in antigodmode
-  state = (from_DSP_buf[COMMANDINDEX] & PUMPBITMASK) > 0;
-  if(state != states[PUMPSTATE])
-  {
-    states[PUMPSTATE] = state;
-    state_changed[PUMPSTATE] = true;
-  }
+  states[PUMPSTATE] = (from_DSP_buf[COMMANDINDEX] & PUMPBITMASK) > 0;
   states[JETSSTATE] = (from_DSP_buf[COMMANDINDEX] & JETSBITMASK) > 0;
-  if(from_DSP_buf[DSP_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
-  prevchksum = from_DSP_buf[DSP_CHECKSUMINDEX];
+  //if(from_DSP_buf[DSP_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
+  //prevchksum = from_DSP_buf[DSP_CHECKSUMINDEX];
 }
 
 void CIO::updatePayload(){
@@ -394,8 +405,8 @@ void BWC::_updateVirtualTempFix_ontempchange()
   // It seems that the temp sensor is oscillating before deciding there is a new temp. Filter out changes faster than 30 min
   if(_cio.state_age[TEMPERATURE] < 1800 * 1000) return;
   // rate of heating is not subject to change (fixed wattage and pool size) so do this only if cooling
-  // TODO: check for bubbles/jets in this version (as in 6-wire)
-  if(_cio.states[HEATREDSTATE]) return;
+  // TODO: check for jets? Does it affect the temperature?
+  if(_cio.states[HEATREDSTATE] || _cio.states[BUBBLESSTATE] || (_cio.state_age[BUBBLESSTATE] < _cio.state_age[TEMPERATURE])) return;
   if(_cio.deltaTemp > 0 && _virtualTemp > _ambient_temp) return; //temp is rising when it should be falling. Bail out
   if(_cio.deltaTemp < 0 && _virtualTemp < _ambient_temp) return; //temp is falling when it should be rising. Bail out
   float degAboveAmbient = _virtualTemp - _ambient_temp;
@@ -691,6 +702,8 @@ String BWC::getJSONStates() {
   doc["JET"] = _cio.states[JETSSTATE];
   doc["ERR"] = _cio.states[ERROR];
   doc["GOD"] = _cio.GODMODE;
+  doc["BCC"] = _cio.badCIO_checksum;  //counter
+  doc["BDC"] = _cio.badDSP_checksum;  //counter
   doc["VTF"] = _virtualTempFix; // **************************REMOVE THIS LINE
   doc["VTMC"] = _virtualTemp;
   doc["VTMF"] = _C2F(_virtualTemp);
