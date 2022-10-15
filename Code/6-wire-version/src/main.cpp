@@ -20,14 +20,14 @@ void setup()
   bwc.begin(); //no params = default pins
   //bwc.loop();
   //Default pins:
-  // bwc.begin(      
-      // int cio_cs_pin     = D1, 
-      // int cio_data_pin   = D7, 
-      // int cio_clk_pin     = D2, 
-      // int dsp_cs_pin     = D3, 
-      // int dsp_data_pin   = D5, 
-      // int dsp_clk_pin     = D4, 
-      // int dsp_audio_pin   = D6 
+  // bwc.begin(
+      // int cio_cs_pin     = D1,
+      // int cio_data_pin   = D7,
+      // int cio_clk_pin     = D2,
+      // int dsp_cs_pin     = D3,
+      // int dsp_data_pin   = D5,
+      // int dsp_clk_pin     = D4,
+      // int dsp_audio_pin   = D6
       // );
   //example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
 
@@ -46,7 +46,7 @@ void setup()
   // needs to be loaded here for reading the wifi.json
   LittleFS.begin();
   loadWifi();
-  
+
   startWiFi();
   startNTP();
   startOTA();
@@ -75,7 +75,7 @@ void loop()
     server.handleClient();
     // listen for OTA events
     ArduinoOTA.handle();
-    
+
     // MQTT
     if (enableMqtt && mqttClient.loop())
     {
@@ -93,7 +93,7 @@ void loop()
         sendMQTTFlag = false;
       }
     }
-    
+
     // web socket
     if (newData)
     {
@@ -165,7 +165,7 @@ void loop()
   {
     resetWiFi();
     ESP.reset();
-  } 
+  }
   //handleAUX();
 
   // You can add own code here, but don't stall!
@@ -188,7 +188,7 @@ void handleAUX()
      bwc.qCommand(SETPUMP, 0, 0, 0);         // change to SETHEATER if you want the pump to continue filtering
      runonce = true;
    }
-  
+
    //Switch the output pin when temperature is below or above 30
    //Don't load the pin above specs (a few mA)
    if (bwc.getState(TEMPERATURE) < 30){
@@ -430,11 +430,11 @@ void stopall()
   updateMqttTimer.detach();
   periodicTimer.detach();
   updateWSTimer.detach();
+  bwc.saveSettings();
   LittleFS.end();
   server.stop();
   webSocket.close();
   mqttClient.disconnect();
-  bwc.saveSettings();
 }
 
 
@@ -495,7 +495,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
         bwc.qCommand(command, value, xtime, interval);
       }
       break;
-      
+
     default:
       break;
   }
@@ -526,7 +526,7 @@ void startHttpServer()
   }, handleFileUpload);
   server.on(F("/remove.html"), HTTP_POST, handleFileRemove);
   server.on(F("/restart/"), handleRestart);
-  server.on(F("/metrics"), handlePrometheusMetrics);  //prometheus metrics 
+  server.on(F("/metrics"), handlePrometheusMetrics);  //prometheus metrics
 
   // if someone requests any other file or page, go to function 'handleNotFound'
   // and check if the file exists
@@ -618,7 +618,7 @@ bool handleFileRead(String path)
       server.requestAuthentication();
     }
   }
-  
+
   Serial.println("HTTP > request: " + path);
   // If a folder is requested, send the index file
   if (path.endsWith("/"))
@@ -830,7 +830,7 @@ void saveWifi()
 void handleGetWifi()
 {
   if (!checkHttpPost(server.method())) return;
-  
+
   DynamicJsonDocument doc(1024);
 
   doc["enableAp"] = enableAp;
@@ -841,7 +841,7 @@ void handleGetWifi()
   {
     doc["apPwd"] = apPwd;
   }
-  
+
   doc["enableStaticIp4"] = enableStaticIp4;
   doc["ip4Address"][0] = ip4Address[0];
   doc["ip4Address"][1] = ip4Address[1];
@@ -984,7 +984,7 @@ void loadMqtt()
     file.close();
     return;
   }
-  
+
   useMqtt = doc["enableMqtt"];
   mqttIpAddress[0] = doc["mqttIpAddress"][0];
   mqttIpAddress[1] = doc["mqttIpAddress"][1];
@@ -1038,7 +1038,7 @@ void saveMqtt()
 void handleGetMqtt()
 {
   if (!checkHttpPost(server.method())) return;
-  
+
   DynamicJsonDocument doc(1024);
 
   doc["enableMqtt"] = useMqtt;
@@ -1096,7 +1096,7 @@ void handleSetMqtt()
   mqttTelemetryInterval = doc["mqttTelemetryInterval"];
 
   server.send(200, "text/plain", "");
-  
+
   saveMqtt();
   startMqtt();
 }
@@ -1200,10 +1200,10 @@ void handleFileRemove()
   {
     path = "/" + path;
   }
-  
+
   Serial.print(F("handleFileRemove Name: "));
   Serial.println(path);
-  
+
   if (LittleFS.exists(path) && LittleFS.remove(path))
   {
     Serial.print(F("handleFileRemove success: "));
@@ -1351,7 +1351,7 @@ void mqttConnect()
 }
 
 void setupHA()
-{  
+{
   String topic;
   String payload;
   String mychipid = String((unsigned int)ESP.getChipId());
@@ -2472,9 +2472,9 @@ PROM_NAMESPACE "_unit_state %d\n";
  */
 void handlePrometheusMetrics()
 {
-    snprintf(response, BUFSIZE, response_template, FW_VERSION, DEVICE_NAME, 
-             bwc.getState(TEMPERATURE), 
-             bwc.getState(TARGET), 
+    snprintf(response, BUFSIZE, response_template, FW_VERSION, DEVICE_NAME,
+             bwc.getState(TEMPERATURE),
+             bwc.getState(TARGET),
              bwc.getState(HEATSTATE),
              bwc.getState(PUMPSTATE),
              bwc.getState(JETSSTATE),
