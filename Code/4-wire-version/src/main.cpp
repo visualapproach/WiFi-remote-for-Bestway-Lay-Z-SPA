@@ -1168,7 +1168,7 @@ void handleRestart()
   updateWSTimer.detach();
   //bwc.stop(); // TODO: 6-wire only(?)
   bwc.saveSettings();
-
+  delay(1000);
   Serial.println(F("ESP restart ..."));
   ESP.restart();
 }
