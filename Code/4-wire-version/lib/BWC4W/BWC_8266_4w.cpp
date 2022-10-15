@@ -158,24 +158,10 @@ void CIO::updateStates(){
 
 void CIO::updatePayload(){
   //alter payload to CIO to reflect user setting (GODMODE)
-  //this is a simple thermostat with hysteresis. Will heat until target+1 and then cool until target-1
-  static uint8_t prevchksum;
-  static uint8_t hysteresis = 0;
-  if(states[HEATSTATE] && ( (states[TEMPERATURE] + hysteresis) <= states[TARGET]) ){
-    states[HEATREDSTATE] = 1; //on
-    hysteresis = 0;
-  } else {
-    states[HEATREDSTATE] = 0; //off
-    hysteresis = 1;
-  }
-
-  //antifreeze
-  if(states[TEMPERATURE] < 10) states[HEATREDSTATE] = 1;
 
   states[HEATGRNSTATE] = !states[HEATREDSTATE] && states[HEATSTATE];
   to_CIO_buf[COMMANDINDEX] =  (states[HEATREDSTATE] * heatbitmask)    |
                               (states[JETSSTATE] * JETSBITMASK)       |
-                              (states[PUMPSTATE] * PUMPBITMASK)       |
                               (states[BUBBLESSTATE] * BUBBLESBITMASK) |
                               (states[PUMPSTATE] * PUMPBITMASK);
   if(to_CIO_buf[COMMANDINDEX] > 0) to_CIO_buf[COMMANDINDEX] |= POWERBITMASK;
@@ -183,8 +169,8 @@ void CIO::updatePayload(){
   //calc checksum -> byte5
   //THIS NEEDS TO BE IMPROVED IF OTHER CHECKSUMS IS USED (FOR OTHER BYTES in different models)
   to_CIO_buf[CIO_CHECKSUMINDEX] = to_CIO_buf[1] + to_CIO_buf[2] + to_CIO_buf[3] + to_CIO_buf[4];
-  if(to_CIO_buf[CIO_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
-  prevchksum = to_CIO_buf[CIO_CHECKSUMINDEX];
+  //if(to_CIO_buf[CIO_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
+  //prevchksum = to_CIO_buf[CIO_CHECKSUMINDEX];
 }
 
 
@@ -243,7 +229,43 @@ void BWC::loop(){
 
   _handleStateChanges();
   _calcVirtualTemp();
+  //this is a simple thermostat with hysteresis. Will heat until target+1 and then cool until target-1
+  static uint8_t hysteresis = 0;
+  if(_cio.states[HEATSTATE])
+  {
+    if( (_cio.states[TEMPERATURE] + hysteresis) <= _cio.states[TARGET])
+    {
+      if(!_cio.states[HEATREDSTATE])
+      {
+        _cio.heatbitmask = HEATBITMASK1; //slow start
+        _cio.states[HEATREDSTATE] = 1;   //on
+        qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
+      }
+      hysteresis = 0;
+    }
+    else
+    {
+      _cio.states[HEATREDSTATE] = 0; //off
+      hysteresis = 1;
+    }
+  }
 
+  // Antifreeze. Will start pump and heater and set target temperature to 10.
+  // Pump will run until manually turned off.
+  if(_cio.states[TEMPERATURE] < 10) {
+    // _cio.states[HEATREDSTATE] = 1;
+    // _cio.states[PUMPSTATE] = 1;
+    if(!_cio.states[HEATSTATE])
+    {
+      qCommand(SETHEATER, 1, 0, 0);
+      qCommand(SETTARGET, 10, 0, 0);
+    }
+  }
+  //avoid overtemp
+  if(_cio.states[TEMPERATURE] > 41) {
+    // _cio.states[HEATREDSTATE] = 0;
+    if(_cio.states[HEATSTATE]) qCommand(SETHEATER, 0, 0, 0);
+  }
 }
 
 /*  virtual temp functions  */
