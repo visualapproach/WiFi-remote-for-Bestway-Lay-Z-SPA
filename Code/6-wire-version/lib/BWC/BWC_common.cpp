@@ -138,7 +138,7 @@ void BWC::_handleNotification()
   /* only notify for these commands*/
   if(!(_commandQ[0][0] == SETBUBBLES || _commandQ[0][0] == SETHEATER || _commandQ[0][0] == SETJETS || _commandQ[0][0] == SETPUMP)) return;
 
-  _dsp.beep3(3000 - next_notification_time*64);
+  if(_audio) _dsp.beep3(3000 - next_notification_time*64);
   _dsp.textOut("--" + String(next_notification_time) + "--");
   if(next_notification_time == 1)
     next_notification_time = notification_time; //reset "alarm"
