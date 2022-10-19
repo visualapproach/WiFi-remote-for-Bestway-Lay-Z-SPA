@@ -53,6 +53,8 @@ class BWC {
     bool getBtnSeqMatch();
     void setAmbientTemperature(int64_t amb, bool unit);
     void unlock(void);
+    bool notify;
+    int notification_time, next_notification_time;
 
   private:
     CIO _cio;
@@ -63,7 +65,7 @@ class BWC {
     int _qCommandLen = 0;  //length of commandQ
     int32_t _buttonQ[MAXBUTTONS][4];
     int _qButtonLen = 0;  //length of buttonQ
-    uint32_t _timestamp;
+    uint32_t _timestamp; // seconds
     uint32_t _cltime;
     uint32_t _ftime;
     uint32_t _uptime;
@@ -124,6 +126,7 @@ class BWC {
     float _C2F(float c);
     float _F2C(float f);
     bool _newDataToSend = false;
+    void _handleNotification();
 };
 
 #endif

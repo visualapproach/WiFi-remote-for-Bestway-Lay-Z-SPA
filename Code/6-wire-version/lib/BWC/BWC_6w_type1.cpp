@@ -47,7 +47,7 @@ void CIO::loop(void) {
   {
     buttonReleaseTime = millis(); //updated as long as buttons are pressed
     capturePhase = readtarget;
-  } 
+  }
   //require two consecutive messages to be equal before registering
   static uint8_t prev_checksum = 0;
   uint8_t checksum = 0;
@@ -58,7 +58,7 @@ void CIO::loop(void) {
     prev_checksum = checksum;
     return;
   }
-  
+
   //copy private array to public array
   for(unsigned int i = 0; i < sizeof(payload); i++){
     payload[i] = _payload[i];
@@ -130,7 +130,7 @@ void CIO::loop(void) {
   if(states[CHAR1] == '*' || states[CHAR2] == '*' || states[CHAR3] == '*') return;
   //Error or user plays with timer button - exit (error notification can be dealt with in main.cpp or elsewhere)
   if(states[CHAR1] == 'E' || states[CHAR3] == 'H' || states[CHAR3] == ' ') return;
-  
+
   //Stop expecting target temp after timeout
   if((millis()-buttonReleaseTime) > 2000) capturePhase = uncertain;
   if((millis()-buttonReleaseTime) > 6000) capturePhase = readtemperature;
@@ -250,7 +250,7 @@ void IRAM_ATTR CIO::clkHandler(void) {
     if (_bitCount == 8) {
       _bitCount = 0;
       //We have received the header for 11 data bytes to come
-      if (_CIO_cmd_matches == 2)  
+      if (_CIO_cmd_matches == 2)
       {
         if(_byteCount < 11)
         {
@@ -331,8 +331,8 @@ void DSP::updateDSP(uint8_t brightness) {
     if(brightness > 0)
     {
       enableLED = DSP_DIM_ON;
-      brightness -= 1; 
-    } 
+      brightness -= 1;
+    }
     delayMicroseconds(30);
     digitalWrite(_CS_PIN, LOW); //start of packet
     _sendBitsToDSP(DSP_CMD1_MODE6_11_7, 8);
@@ -457,4 +457,9 @@ void DSP::beep2() {
   noTone(_AUDIO_PIN);
 }
 
-
+void DSP::beep3(int frq)
+{
+  tone(_AUDIO_PIN, frq, 200);
+  delay(200);
+  noTone(_AUDIO_PIN);
+}

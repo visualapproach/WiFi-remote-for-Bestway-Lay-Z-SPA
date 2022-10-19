@@ -120,6 +120,7 @@ class DSP {
     void playIntro();
     void beep();
     void beep2();
+    void beep3(int frq);
 
   private:
     void _sendBitsToDSP(uint32_t outBits, int bitsToSend);

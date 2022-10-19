@@ -17,6 +17,8 @@ void setup()
   digitalWrite(myoutputpin, LOW);
   Serial.begin(115200);    //As if you connected serial to your pump...
   //Serial.setDebugOutput(true);
+  bwc.notify = notify;
+  bwc.notification_time = notification_time;
   bwc.begin(); //no params = default pins
   //bwc.loop();
   //Default pins:
