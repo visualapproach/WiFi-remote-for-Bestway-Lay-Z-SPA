@@ -231,7 +231,7 @@ void BWC::loop(){
   _calcVirtualTemp();
   //this is a simple thermostat with hysteresis. Will heat until target+1 and then cool until target-1
   static uint8_t hysteresis = 0;
-  if(_cio.states[HEATSTATE])
+  if(_cio.states[HEATSTATE] == 1) // in "normal" mode heatstate will be 2 (unknowable)
   {
     if( (_cio.states[TEMPERATURE] + hysteresis) <= _cio.states[TARGET])
     {
@@ -250,9 +250,13 @@ void BWC::loop(){
     }
   }
 
-  // Antifreeze. Will start pump and heater and set target temperature to 10.
-  // Pump will run until manually turned off.
-  if(_cio.states[TEMPERATURE] < 10) {
+  /*
+    Antifreeze. This will only run in GODMODE.
+    In normal mode the pump should behave as from factory.
+    - Will start pump and heater and set target temperature to 10.
+    - Pump will run until "manually" turned off. (From GUI or MQTT)
+  */
+  if((_cio.states[TEMPERATURE] < 10) && _cio.GODMODE) {
     // _cio.states[HEATREDSTATE] = 1;
     // _cio.states[PUMPSTATE] = 1;
     if(!_cio.states[HEATSTATE])
@@ -261,11 +265,20 @@ void BWC::loop(){
       qCommand(SETTARGET, 10, 0, 0);
     }
   }
-  //avoid overtemp
-  if(_cio.states[TEMPERATURE] > 41) {
+
+  /*
+    Anti overtemp
+  */
+  if((_cio.states[TEMPERATURE] > 41) && _cio.GODMODE) {
     // _cio.states[HEATREDSTATE] = 0;
     if(_cio.states[HEATSTATE]) qCommand(SETHEATER, 0, 0, 0);
   }
+
+  /*
+  // Alternative solution. Hands off if temperature goes extreme.
+  if((_cio.states[TEMPERATURE] < 10) || (_cio.states[TEMPERATURE] > 41))
+    qCommand(SETGODMODE, 0, 0, 0);
+  */
 }
 
 /*  virtual temp functions  */
@@ -273,6 +286,8 @@ void BWC::loop(){
 void BWC::_handleStateChanges()
 {
   //if(delayedAction[TEMPERATURE] && (_cio.state_age[TEMPERATURE] > 500))
+
+  // update virtualtempfix to the new measurement
   if(_cio.state_changed[TEMPERATURE])
   {
     _updateVirtualTempFix_ontempchange();
