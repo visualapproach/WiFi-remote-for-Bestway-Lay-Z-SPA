@@ -161,6 +161,9 @@ class BWC {
     void _saveCommandQueue();
     void _saveRebootInfo();
     void _updateTimes();
+    void _regulateTemp();
+    void _antifreeze();
+    void _antiboil();
 };
 
 #endif
