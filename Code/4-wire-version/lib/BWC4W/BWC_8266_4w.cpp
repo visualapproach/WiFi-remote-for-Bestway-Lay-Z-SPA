@@ -24,7 +24,6 @@ void CIO::begin() {
 }
 
 void CIO::loop(void) {
-  digitalWrite(D4, LOW);  //LED off
   //check if CIO has sent a message
   int msglen = 0;
   if(cio_serial.available())
@@ -62,24 +61,6 @@ void CIO::loop(void) {
         badCIO_checksum++;
       }
     }
-    else
-    {
-      //digitalWrite(D4, HIGH);  //LED on indicates bad message
-    }
-    /* debug
-    else
-    {
-      if(msglen)
-      {
-        dataAvailable = true;
-        for(int i = 0; i < msglen; i++)
-        {
-        dismissed_from_CIO_buf[i] = from_CIO_buf[i];
-        }
-        dismissed_cio_len = msglen;
-      }
-    }
-    */
     // Do stuff here if you want to alter the message
     // Send last good message to DSP
     dsp_serial.write(to_DSP_buf, PAYLOADSIZE);
@@ -113,7 +94,6 @@ void CIO::loop(void) {
     else
     {
       badDSP_checksum++;
-      //digitalWrite(D4, HIGH);  //LED on indicates bad message
     }
     cio_serial.write(to_CIO_buf, PAYLOADSIZE);
   }

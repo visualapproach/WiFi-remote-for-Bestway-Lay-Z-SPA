@@ -42,9 +42,11 @@ void setup()
   startWebSocket();
   startMqtt();
 
-  //feedback moved to JSON "BCC" (bad cio checksum) and "BDC" (display)
-  //pinMode(D4, OUTPUT);  //built in LED for some feedback
-  digitalWrite(D4, LOW);
+  /*
+    Blinking LED feedback removed.
+    See JSON "BCC" (bad cio checksum) and
+    "BDC" (display) messages instead
+  */
 
   Serial.println(F("End of setup()"));
 }
