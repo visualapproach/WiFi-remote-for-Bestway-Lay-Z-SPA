@@ -302,7 +302,7 @@ void DSP::updateDSP(uint8_t brightness) {
   }
 }
 
-void DSP::textOut(String txt) {
+void DSP::textOut(const String& txt) {
   int len = txt.length();
   if (len >= 3) {
     for (int i = 0; i < len - 2; i++) {

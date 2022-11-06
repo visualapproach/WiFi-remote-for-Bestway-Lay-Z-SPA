@@ -35,9 +35,9 @@ class BWC {
     String getJSONStates();
     String getJSONTimes();
     String getJSONSettings();
-    void setJSONSettings(String message);
+    void setJSONSettings(const String& message);
     String getJSONCommandQueue();
-    void print(String txt);
+    void print(const String& txt);
     uint8_t getState(int state);
     Ticker saveSettingsTimer;
     void saveSettingsFlag();

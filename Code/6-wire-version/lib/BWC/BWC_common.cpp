@@ -762,7 +762,7 @@ String BWC::getJSONSettings(){
   return jsonmsg;
 }
 
-void BWC::setJSONSettings(String message){
+void BWC::setJSONSettings(const String& message){
   //feed the dog
   // ESP.wdtFeed();
   DynamicJsonDocument doc(1024);
@@ -1151,7 +1151,7 @@ void BWC::_updateTimes(){
   _energyDaily += (elapsedtime_ms / 1000.0) / 3600.0 * _energyPower / 1000.0;
 }
 
-void BWC::print(String txt){
+void BWC::print(const String& txt){
   _dsp.textOut(txt);
 }
 

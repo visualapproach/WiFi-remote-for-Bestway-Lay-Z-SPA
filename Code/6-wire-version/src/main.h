@@ -91,7 +91,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len);
 void startHttpServer();
 void handleHWtest();
 void handleNotFound();
-String getContentType(String filename);
+String getContentType(const String& filename);
 bool handleFileRead(String path);
 void handleGetConfig();
 void handleSetConfig();
@@ -117,6 +117,6 @@ void startMqtt();
 void mqttCallback(char* topic, byte* payload, unsigned int length);
 void mqttConnect();
 void setupHA();
-void printStackSize();
+void handleESPInfo();
 
 #warning "Don't forget to upload file system also"

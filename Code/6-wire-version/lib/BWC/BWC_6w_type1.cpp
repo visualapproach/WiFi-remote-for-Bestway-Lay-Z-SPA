@@ -358,7 +358,7 @@ void DSP::updateDSP(uint8_t brightness) {
   }
 }
 
-void DSP::textOut(String txt) {
+void DSP::textOut(const String& txt) {
   int len = txt.length();
   //Set CMD3 (address 00H)
   payload[0] = 0xC0;
