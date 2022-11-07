@@ -715,7 +715,7 @@ String BWC::getJSONTimes() {
   doc["FINT"] = _finterval;
   doc["CLINT"] = _clinterval;
   doc["KWH"] = _energyTotal;
-  doc["KWHD"] = _energyDaily;
+  doc["KWHD"] = _energyDaily / 3600000.0; //Ws -> kWh
   doc["WATT"] = _energyPower;
   doc["TTTT"] = _tttt;
   float t2r = _estHeatingTime();
@@ -1148,7 +1148,7 @@ void BWC::_updateTimes(){
   _energyPower += IDLEPOWER;
   _energyPower += _cio.states[JETSSTATE] * JETPOWER;
 
-  _energyDaily += (elapsedtime_ms / 1000.0) / 3600.0 * _energyPower / 1000.0;
+  _energyDaily += elapsedtime_ms * _energyPower / 1000.0;
 }
 
 void BWC::print(const String& txt){

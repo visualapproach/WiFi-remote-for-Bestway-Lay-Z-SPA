@@ -2420,13 +2420,13 @@ void handleESPInfo()
   char response[BUFSIZE];
   char const *response_template = 
   "Stack size:          %u \n"
-  "Heapsize:            %u \n"
+  "Free Heap:           %u \n"
   "Core version:        %s \n"
   "CPU fq:              %u MHz\n"
   "Cycle count:         %u \n"
   "Free cont stack:     %u \n"
-  "Sketch space:        %u \n"
-  "Free sketch sp.:     %u \n"
+  "Sketch size:         %u \n"
+  "Free sketch space:   %u \n"
   "Max free block size: %u \n";
 
   snprintf(response, BUFSIZE, response_template, 
