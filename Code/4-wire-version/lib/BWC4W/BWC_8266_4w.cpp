@@ -798,7 +798,7 @@ String BWC::getJSONTimes() {
   doc["JETTIME"] = _jettime + _jettime_ms/1000;
   doc["COST"] = _energyTotal * _price;
   doc["KWH"] = _energyTotal;
-  doc["KWHD"] = _energyDaily;
+  doc["KWHD"] = _energyDaily / 3600000; //Ws -> kWh
   doc["WATT"] = _energyPower;
   doc["FINT"] = _finterval;
   doc["CLINT"] = _clinterval;
@@ -1229,7 +1229,7 @@ void BWC::_updateTimes(){
   _energyPower += IDLEPOWER;
   _energyPower += _cio.states[JETSSTATE] * JETPOWER;
 
-  _energyDaily += (elapsedtime_ms / 1000.0) / 3600.0 * _energyPower / 1000.0;
+  _energyDaily += elapsedtime_ms * _energyPower / 1000.0;
 }
 
 void BWC::print(String txt){

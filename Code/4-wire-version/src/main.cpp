@@ -1,8 +1,14 @@
 #include "main.h"
 
+// initial stack
+char *stack_start;
+
 void setup()
 {
-  // put your setup code here, to run once:
+  // init record of stack
+  char stack;
+  stack_start = &stack;
+
   pinMode(solarpin, INPUT_PULLUP);
   pinMode(myoutputpin, OUTPUT);
   digitalWrite(myoutputpin, LOW);
@@ -512,7 +518,7 @@ void startHttpServer()
   }, handleFileUpload);
   server.on(F("/remove.html"), HTTP_POST, handleFileRemove);
   server.on(F("/restart/"), handleRestart);
-  server.on(F("/version"), HTTP_GET, []() {server.send(200, "text/plain", LEGACY_NAME);}); // TODO: why 4-wire only?
+  server.on(F("/info/"), handleESPInfo);
   // if someone requests any other file or page, go to function 'handleNotFound'
   // and check if the file exists
   server.onNotFound(handleNotFound);
@@ -1175,7 +1181,36 @@ void handleRestart()
   ESP.restart();
 }
 
+void handleESPInfo()
+{
+  char stack;
+  uint32_t stacksize = stack_start - &stack;
+  size_t const BUFSIZE = 1024;
+  char response[BUFSIZE];
+  char const *response_template = 
+  "Stack size:          %u \n"
+  "Free Heap:           %u \n"
+  "Core version:        %s \n"
+  "CPU fq:              %u MHz\n"
+  "Cycle count:         %u \n"
+  "Free cont stack:     %u \n"
+  "Sketch size:         %u \n"
+  "Free sketch space:   %u \n"
+  "Max free block size: %u \n";
 
+  snprintf(response, BUFSIZE, response_template, 
+    stacksize,
+    ESP.getFreeHeap(),
+    ESP.getCoreVersion(),
+    ESP.getCpuFreqMHz(),
+    ESP.getCycleCount(),
+    ESP.getFreeContStack(),
+    ESP.getSketchSize(),
+    ESP.getFreeSketchSpace(),
+    ESP.getMaxFreeBlockSize() );
+    server.send(200, "text/plain; charset=utf-8", response);
+
+}
 
 /**
  * MQTT setup and connect
