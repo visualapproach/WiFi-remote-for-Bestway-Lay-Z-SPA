@@ -1167,7 +1167,8 @@ void BWC::_saveRebootInfo(){
   DynamicJsonDocument doc(1024);
 
   // Set the values in the document
-  doc["BOOTINFO"] = ESP.getResetReason() + " " + DateTime.format(DateFormatter::SIMPLE);
+  reboottime = DateTime.format(DateFormatter::SIMPLE);
+  doc["BOOTINFO"] = ESP.getResetReason() + " " + reboottime;
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {

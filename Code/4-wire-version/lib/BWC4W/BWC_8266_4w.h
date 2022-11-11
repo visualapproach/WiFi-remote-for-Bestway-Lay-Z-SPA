@@ -92,6 +92,7 @@ class BWC {
     String encodeBufferToString(uint8_t buf[7]);
     String getSerialBuffers();
     void setAmbientTemperature(int64_t amb, bool unit);
+    String reboottime;
 
   private:
     CIO _cio;
