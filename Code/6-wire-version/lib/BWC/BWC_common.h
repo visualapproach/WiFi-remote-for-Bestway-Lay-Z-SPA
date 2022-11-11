@@ -55,6 +55,7 @@ class BWC {
     void unlock(void);
     bool notify;
     int notification_time, next_notification_time;
+    String reboottime;
 
   private:
     CIO _cio;

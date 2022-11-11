@@ -1339,7 +1339,7 @@ void mqttConnect()
     mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());
     mqttClient.loop();
 
-    mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), DateTime.format(DateFormatter::ISO8601).c_str(), true);
+    mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), bwc.reboottime.c_str(), true);
     mqttClient.publish((String(mqttBaseTopic) + "/reboot_reason").c_str(), ESP.getResetReason().c_str(), true);
     mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), bwc.getButtonName().c_str(), true);
     mqttClient.loop();
@@ -2418,7 +2418,7 @@ void handleESPInfo()
   uint32_t stacksize = stack_start - &stack;
   size_t const BUFSIZE = 1024;
   char response[BUFSIZE];
-  char const *response_template = 
+  char const *response_template =
   "Stack size:          %u \n"
   "Free Heap:           %u \n"
   "Core version:        %s \n"
@@ -2429,7 +2429,7 @@ void handleESPInfo()
   "Free sketch space:   %u \n"
   "Max free block size: %u \n";
 
-  snprintf(response, BUFSIZE, response_template, 
+  snprintf(response, BUFSIZE, response_template,
     stacksize,
     ESP.getFreeHeap(),
     ESP.getCoreVersion(),
