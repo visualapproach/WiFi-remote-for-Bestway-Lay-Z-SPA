@@ -147,11 +147,12 @@ class DSP {
     void begin(int dsp_data_pin, int dsp_clk_pin, int dsp_cs_pin, int dsp_audio_pin);
     uint16_t getButton(void);
     void updateDSP(uint8_t brightness);
-    void textOut(String txt);
+    void textOut(const String& txt);
     void LEDshow();
     void playIntro();
     void beep();
     void beep2();
+    void beep3(int frq);
 
   private:
     void _sendBitsToDSP(uint32_t outBits, int bitsToSend);

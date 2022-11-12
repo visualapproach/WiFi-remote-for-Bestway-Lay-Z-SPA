@@ -103,11 +103,11 @@ function handlemsg(e)
     ]
     document.getElementById('mqtt').innerHTML = "MQTT: " + mqtt_states[msgobj.MQTT + 4];
 
-    
+
     document.getElementById('jetstitle').style.display = (msgobj.HASJETS ? 'inherit' : 'none');
     document.getElementById('jetsbutton').style.display = (msgobj.HASJETS ? 'inherit' : 'none');
     document.getElementById('jetstotals').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
-    
+
     document.getElementById('airtitle').style.display = (msgobj.HASAIR ? 'inherit' : 'none');
     document.getElementById('airbutton').style.display = (msgobj.HASAIR ? 'inherit' : 'none');
     document.getElementById('airtotals').style.display = (msgobj.HASAIR ? 'table-row' : 'none');
@@ -123,12 +123,18 @@ function handlemsg(e)
     // temperature
     document.getElementById('temp').min = (msgobj.UNT ? 20 : 68);
     document.getElementById('temp').max = (msgobj.UNT ? 40 : 104);
+		document.getElementById('amb').min = (msgobj.UNT ? -10 : 14);;
+		document.getElementById('amb').max = (msgobj.UNT ? 50 : 122);;
     document.getElementById('atlabel').innerHTML = (msgobj.UNT ? msgobj.TMP.toString() : String(msgobj.TMP * 1.8 + 32));
+		document.getElementById('vtlabel').innerHTML = (msgobj.UNT ? msgobj.VTM.toFixed(2).toString() : String(msgobj.VTM * 1.8 + 32).toFixed(2).toString());
     document.getElementById('ttlabel').innerHTML = (msgobj.UNT ? msgobj.TGT.toString() : String(msgobj.TGT * 1.8 + 32));
 
     // buttons
     document.getElementById('AIR').checked = msgobj.AIR;
-    document.getElementById('UNT').checked = msgobj.UNT;
+		if(document.getElementById('UNT').checked != msgobj.UNT) {
+			document.getElementById('UNT').checked = msgobj.UNT;
+			initSlider = true;
+		}
     document.getElementById('FLT').checked = msgobj.FLT;
     document.getElementById('JET').checked = msgobj.JET;
     document.getElementById('GOD').checked = msgobj.GOD;
@@ -140,7 +146,7 @@ function handlemsg(e)
     else if (msgobj.RED == 1) heaterColor = "FF0000";
     else if (msgobj.GRN == 1) heaterColor = "00FF00";
     document.getElementById('htrspan').style = "background-color: #" + heaterColor;
-    
+
     // display
     document.getElementById('dsp').innerHTML = "[" + String.fromCharCode(msgobj.CH1,msgobj.CH2,msgobj.CH3)+ "]";
     //document.getElementById('dsp').style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(parseInt(msgobj.BRT)+1)), 0, 0);
@@ -149,10 +155,12 @@ function handlemsg(e)
     if (initSlider)
     {
       document.getElementById('temp').value = msgobj.TGT;
+			document.getElementById('amb').value = msgobj.AMB;
       //document.getElementById('brt').value = msgobj.BRT;
       initSlider = false;
     }
     document.getElementById('sliderTempVal').innerHTML = document.getElementById('temp').value.toString();
+		document.getElementById('sliderAmbVal').innerHTML = document.getElementById('amb').value.toString();
     //document.getElementById('sliderBrtVal').innerHTML = document.getElementById('brt').value.toString();
   }
 
@@ -160,7 +168,7 @@ function handlemsg(e)
   {
     var date = new Date(msgobj.TIME * 1000);
     document.getElementById('time').innerHTML = date.toLocaleString();
-    
+
     // chlorine add reset timer
     var clDate = (Date.now()/1000-msgobj.CLTIME)/(24*3600.0);
     document.getElementById('cltimer').innerHTML = clDate.toFixed(2);
@@ -170,7 +178,7 @@ function handlemsg(e)
     var fDate = (Date.now()/1000-msgobj.FTIME)/(24*3600.0);
     document.getElementById('ftimer').innerHTML = fDate.toFixed(2);
     document.getElementById('ftimerbtn').className = (fDate > msgobj.FINT ? "button_red" : "button");
-    
+
     // statistics
     document.getElementById('heatingtime').innerHTML = s2dhms(msgobj.HEATINGTIME);
     document.getElementById('uptime').innerHTML = s2dhms(msgobj.UPTIME);
@@ -178,6 +186,7 @@ function handlemsg(e)
     document.getElementById('filtertime').innerHTML = s2dhms(msgobj.PUMPTIME);
     document.getElementById('jettime').innerHTML = s2dhms(msgobj.JETTIME);
     document.getElementById('cost').innerHTML = (msgobj.COST).toFixed(2);
+    document.getElementById('t2r').innerHTML = (msgobj.T2R);
     document.getElementById('tttt').innerHTML = (msgobj.TTTT/3600).toFixed(2) + "h<br>(" + new Date(msgobj.TIME * 1000 + msgobj.TTTT * 1000).toLocaleString() + ")";
   }
 };
@@ -244,7 +253,7 @@ function sendCommand(val)
   {
     value = document.getElementById(eid[val]).checked;
   }
-  
+
   var obj = {};
   obj["CMD"] = cmd[val];
   obj["VALUE"] = value;

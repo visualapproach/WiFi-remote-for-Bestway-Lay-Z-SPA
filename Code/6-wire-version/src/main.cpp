@@ -17,17 +17,19 @@ void setup()
   digitalWrite(myoutputpin, LOW);
   Serial.begin(115200);    //As if you connected serial to your pump...
   //Serial.setDebugOutput(true);
+  bwc.notify = notify;
+  bwc.notification_time = notification_time;
   bwc.begin(); //no params = default pins
   //bwc.loop();
   //Default pins:
-  // bwc.begin(      
-      // int cio_cs_pin     = D1, 
-      // int cio_data_pin   = D7, 
-      // int cio_clk_pin     = D2, 
-      // int dsp_cs_pin     = D3, 
-      // int dsp_data_pin   = D5, 
-      // int dsp_clk_pin     = D4, 
-      // int dsp_audio_pin   = D6 
+  // bwc.begin(
+      // int cio_cs_pin     = D1,
+      // int cio_data_pin   = D7,
+      // int cio_clk_pin     = D2,
+      // int dsp_cs_pin     = D3,
+      // int dsp_data_pin   = D5,
+      // int dsp_clk_pin     = D4,
+      // int dsp_audio_pin   = D6
       // );
   //example: bwc.begin(D1, D2, D3, D4, D5, D6, D7);
 
@@ -46,7 +48,7 @@ void setup()
   // needs to be loaded here for reading the wifi.json
   LittleFS.begin();
   loadWifi();
-  
+
   startWiFi();
   startNTP();
   startOTA();
@@ -75,7 +77,7 @@ void loop()
     server.handleClient();
     // listen for OTA events
     ArduinoOTA.handle();
-    
+
     // MQTT
     if (enableMqtt && mqttClient.loop())
     {
@@ -93,7 +95,7 @@ void loop()
         sendMQTTFlag = false;
       }
     }
-    
+
     // web socket
     if (newData)
     {
@@ -165,7 +167,7 @@ void loop()
   {
     resetWiFi();
     ESP.reset();
-  } 
+  }
   //handleAUX();
 
   // You can add own code here, but don't stall!
@@ -188,7 +190,7 @@ void handleAUX()
      bwc.qCommand(SETPUMP, 0, 0, 0);         // change to SETHEATER if you want the pump to continue filtering
      runonce = true;
    }
-  
+
    //Switch the output pin when temperature is below or above 30
    //Don't load the pin above specs (a few mA)
    if (bwc.getState(TEMPERATURE) < 30){
@@ -430,11 +432,11 @@ void stopall()
   updateMqttTimer.detach();
   periodicTimer.detach();
   updateWSTimer.detach();
+  bwc.saveSettings();
   LittleFS.end();
   server.stop();
   webSocket.close();
   mqttClient.disconnect();
-  bwc.saveSettings();
 }
 
 
@@ -495,7 +497,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
         bwc.qCommand(command, value, xtime, interval);
       }
       break;
-      
+
     default:
       break;
   }
@@ -526,7 +528,8 @@ void startHttpServer()
   }, handleFileUpload);
   server.on(F("/remove.html"), HTTP_POST, handleFileRemove);
   server.on(F("/restart/"), handleRestart);
-  server.on(F("/metrics"), handlePrometheusMetrics);  //prometheus metrics 
+  server.on(F("/metrics"), handlePrometheusMetrics);  //prometheus metrics
+  server.on(F("/info/"), handleESPInfo);
 
   // if someone requests any other file or page, go to function 'handleNotFound'
   // and check if the file exists
@@ -594,7 +597,7 @@ void handleNotFound()
 /**
  * determine the filetype of a given filename, based on the extension
  */
-String getContentType(String filename)
+String getContentType(const String& filename)
 {
   if (filename.endsWith(".html")) return "text/html";
   else if (filename.endsWith(".css")) return "text/css";
@@ -618,7 +621,7 @@ bool handleFileRead(String path)
       server.requestAuthentication();
     }
   }
-  
+
   Serial.println("HTTP > request: " + path);
   // If a folder is requested, send the index file
   if (path.endsWith("/"))
@@ -830,7 +833,7 @@ void saveWifi()
 void handleGetWifi()
 {
   if (!checkHttpPost(server.method())) return;
-  
+
   DynamicJsonDocument doc(1024);
 
   doc["enableAp"] = enableAp;
@@ -841,7 +844,7 @@ void handleGetWifi()
   {
     doc["apPwd"] = apPwd;
   }
-  
+
   doc["enableStaticIp4"] = enableStaticIp4;
   doc["ip4Address"][0] = ip4Address[0];
   doc["ip4Address"][1] = ip4Address[1];
@@ -984,7 +987,7 @@ void loadMqtt()
     file.close();
     return;
   }
-  
+
   useMqtt = doc["enableMqtt"];
   mqttIpAddress[0] = doc["mqttIpAddress"][0];
   mqttIpAddress[1] = doc["mqttIpAddress"][1];
@@ -1038,7 +1041,7 @@ void saveMqtt()
 void handleGetMqtt()
 {
   if (!checkHttpPost(server.method())) return;
-  
+
   DynamicJsonDocument doc(1024);
 
   doc["enableMqtt"] = useMqtt;
@@ -1096,7 +1099,7 @@ void handleSetMqtt()
   mqttTelemetryInterval = doc["mqttTelemetryInterval"];
 
   server.send(200, "text/plain", "");
-  
+
   saveMqtt();
   startMqtt();
 }
@@ -1200,10 +1203,10 @@ void handleFileRemove()
   {
     path = "/" + path;
   }
-  
+
   Serial.print(F("handleFileRemove Name: "));
   Serial.println(path);
-  
+
   if (LittleFS.exists(path) && LittleFS.remove(path))
   {
     Serial.print(F("handleFileRemove success: "));
@@ -1336,7 +1339,7 @@ void mqttConnect()
     mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());
     mqttClient.loop();
 
-    mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), DateTime.format(DateFormatter::ISO8601).c_str(), true);
+    mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), bwc.reboottime.c_str(), true);
     mqttClient.publish((String(mqttBaseTopic) + "/reboot_reason").c_str(), ESP.getResetReason().c_str(), true);
     mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), bwc.getButtonName().c_str(), true);
     mqttClient.loop();
@@ -1351,7 +1354,7 @@ void mqttConnect()
 }
 
 void setupHA()
-{  
+{
   String topic;
   String payload;
   String mychipid = String((unsigned int)ESP.getChipId());
@@ -2409,13 +2412,35 @@ void setupHA()
 
 }
 
-void printStackSize()
+void handleESPInfo()
 {
-    char stack;
-    Serial.print (F("stack size "));
-    Serial.println (stack_start - &stack);
-    Serial.print (F("free heap "));
-    Serial.println ((long)ESP.getFreeHeap());
+  char stack;
+  uint32_t stacksize = stack_start - &stack;
+  size_t const BUFSIZE = 1024;
+  char response[BUFSIZE];
+  char const *response_template =
+  "Stack size:          %u \n"
+  "Free Heap:           %u \n"
+  "Core version:        %s \n"
+  "CPU fq:              %u MHz\n"
+  "Cycle count:         %u \n"
+  "Free cont stack:     %u \n"
+  "Sketch size:         %u \n"
+  "Free sketch space:   %u \n"
+  "Max free block size: %u \n";
+
+  snprintf(response, BUFSIZE, response_template,
+    stacksize,
+    ESP.getFreeHeap(),
+    ESP.getCoreVersion(),
+    ESP.getCpuFreqMHz(),
+    ESP.getCycleCount(),
+    ESP.getFreeContStack(),
+    ESP.getSketchSize(),
+    ESP.getFreeSketchSpace(),
+    ESP.getMaxFreeBlockSize() );
+    server.send(200, "text/plain; charset=utf-8", response);
+
 }
 
 /**
@@ -2423,64 +2448,64 @@ void printStackSize()
  * @author svanscho
  */
 
-static size_t const BUFSIZE = 2048;
-char response[BUFSIZE];
-static char const *response_template =
-"# HELP " PROM_NAMESPACE "_info Metadata about the device.\n"
-"# TYPE " PROM_NAMESPACE "_info gauge\n"
-"# UNIT " PROM_NAMESPACE "_info \n"
-PROM_NAMESPACE "_info{version=\"%s\",name=\"%s\"} 1\n"
-"# HELP " PROM_NAMESPACE "_temperature_celcius Water temperature.\n"
-"# TYPE " PROM_NAMESPACE "_temperature_celcius gauge\n"
-"# UNIT " PROM_NAMESPACE "_temperature_celcius \u00B0C\n"
-PROM_NAMESPACE "_temperature_celcius %d\n"
-"# HELP " PROM_NAMESPACE "_target_temperature_celcius Water target temperature.\n"
-"# TYPE " PROM_NAMESPACE "_target_temperature_celcius gauge\n"
-"# UNIT " PROM_NAMESPACE "_target_temperature_celcius \u00B0C\n"
-PROM_NAMESPACE "_target_temperature_celcius %d\n"
-"# HELP " PROM_NAMESPACE "_heater_state Heater state.\n"
-"# TYPE " PROM_NAMESPACE "_heater_state gauge\n"
-"# UNIT " PROM_NAMESPACE "_heater_state\n"
-PROM_NAMESPACE "_heater_state %d\n"
-"# HELP " PROM_NAMESPACE "_pump_state Pump state.\n"
-"# TYPE " PROM_NAMESPACE "_pump_state gauge\n"
-"# UNIT " PROM_NAMESPACE "_pump_state\n"
-PROM_NAMESPACE "_pump_state %d\n"
-"# HELP " PROM_NAMESPACE "_jets_state Jets state.\n"
-"# TYPE " PROM_NAMESPACE "_jets_state gauge\n"
-"# UNIT " PROM_NAMESPACE "_jets_state\n"
-PROM_NAMESPACE "_jets_state %d\n"
-"# HELP " PROM_NAMESPACE "_bubbles_state Bubbles state.\n"
-"# TYPE " PROM_NAMESPACE "_bubbles_state gauge\n"
-"# UNIT " PROM_NAMESPACE "_bubbles_state\n"
-PROM_NAMESPACE "_bubbles_state %d\n"
-"# HELP " PROM_NAMESPACE "_power_state Bubbles state.\n"
-"# TYPE " PROM_NAMESPACE "_power_state gauge\n"
-"# UNIT " PROM_NAMESPACE "_power_state\n"
-PROM_NAMESPACE "_power_state %d\n"
-"# HELP " PROM_NAMESPACE "_locked_state Locked state.\n"
-"# TYPE " PROM_NAMESPACE "_locked_state gauge\n"
-"# UNIT " PROM_NAMESPACE "_locked_state\n"
-PROM_NAMESPACE "_locked_state %d\n"
-"# HELP " PROM_NAMESPACE "_unit_state Unit state.\n"
-"# TYPE " PROM_NAMESPACE "_unit_state gauge\n"
-"# UNIT " PROM_NAMESPACE "_unit_state\n"
-PROM_NAMESPACE "_unit_state %d\n";
-
 /**
  * response for /metrics/
  */
 void handlePrometheusMetrics()
 {
-    snprintf(response, BUFSIZE, response_template, FW_VERSION, DEVICE_NAME, 
-             bwc.getState(TEMPERATURE), 
-             bwc.getState(TARGET), 
-             bwc.getState(HEATSTATE),
-             bwc.getState(PUMPSTATE),
-             bwc.getState(JETSSTATE),
-             bwc.getState(BUBBLESSTATE),
-             bwc.getState(POWERSTATE),
-             bwc.getState(LOCKEDSTATE),
-             bwc.getState(UNITSTATE));
-    server.send(200, "text/plain; charset=utf-8", response);
+size_t const BUFSIZE = 2048;
+char response[BUFSIZE];
+char const *response_template =
+  "# HELP " PROM_NAMESPACE "_info Metadata about the device.\n"
+  "# TYPE " PROM_NAMESPACE "_info gauge\n"
+  "# UNIT " PROM_NAMESPACE "_info \n"
+  PROM_NAMESPACE "_info{version=\"%s\",name=\"%s\"} 1\n"
+  "# HELP " PROM_NAMESPACE "_temperature_celcius Water temperature.\n"
+  "# TYPE " PROM_NAMESPACE "_temperature_celcius gauge\n"
+  "# UNIT " PROM_NAMESPACE "_temperature_celcius \u00B0C\n"
+  PROM_NAMESPACE "_temperature_celcius %d\n"
+  "# HELP " PROM_NAMESPACE "_target_temperature_celcius Water target temperature.\n"
+  "# TYPE " PROM_NAMESPACE "_target_temperature_celcius gauge\n"
+  "# UNIT " PROM_NAMESPACE "_target_temperature_celcius \u00B0C\n"
+  PROM_NAMESPACE "_target_temperature_celcius %d\n"
+  "# HELP " PROM_NAMESPACE "_heater_state Heater state.\n"
+  "# TYPE " PROM_NAMESPACE "_heater_state gauge\n"
+  "# UNIT " PROM_NAMESPACE "_heater_state\n"
+  PROM_NAMESPACE "_heater_state %d\n"
+  "# HELP " PROM_NAMESPACE "_pump_state Pump state.\n"
+  "# TYPE " PROM_NAMESPACE "_pump_state gauge\n"
+  "# UNIT " PROM_NAMESPACE "_pump_state\n"
+  PROM_NAMESPACE "_pump_state %d\n"
+  "# HELP " PROM_NAMESPACE "_jets_state Jets state.\n"
+  "# TYPE " PROM_NAMESPACE "_jets_state gauge\n"
+  "# UNIT " PROM_NAMESPACE "_jets_state\n"
+  PROM_NAMESPACE "_jets_state %d\n"
+  "# HELP " PROM_NAMESPACE "_bubbles_state Bubbles state.\n"
+  "# TYPE " PROM_NAMESPACE "_bubbles_state gauge\n"
+  "# UNIT " PROM_NAMESPACE "_bubbles_state\n"
+  PROM_NAMESPACE "_bubbles_state %d\n"
+  "# HELP " PROM_NAMESPACE "_power_state Bubbles state.\n"
+  "# TYPE " PROM_NAMESPACE "_power_state gauge\n"
+  "# UNIT " PROM_NAMESPACE "_power_state\n"
+  PROM_NAMESPACE "_power_state %d\n"
+  "# HELP " PROM_NAMESPACE "_locked_state Locked state.\n"
+  "# TYPE " PROM_NAMESPACE "_locked_state gauge\n"
+  "# UNIT " PROM_NAMESPACE "_locked_state\n"
+  PROM_NAMESPACE "_locked_state %d\n"
+  "# HELP " PROM_NAMESPACE "_unit_state Unit state.\n"
+  "# TYPE " PROM_NAMESPACE "_unit_state gauge\n"
+  "# UNIT " PROM_NAMESPACE "_unit_state\n"
+  PROM_NAMESPACE "_unit_state %d\n";
+
+  snprintf(response, BUFSIZE, response_template, FW_VERSION, DEVICE_NAME,
+            bwc.getState(TEMPERATURE),
+            bwc.getState(TARGET),
+            bwc.getState(HEATSTATE),
+            bwc.getState(PUMPSTATE),
+            bwc.getState(JETSSTATE),
+            bwc.getState(BUBBLESSTATE),
+            bwc.getState(POWERSTATE),
+            bwc.getState(LOCKEDSTATE),
+            bwc.getState(UNITSTATE));
+  server.send(200, "text/plain; charset=utf-8", response);
 }

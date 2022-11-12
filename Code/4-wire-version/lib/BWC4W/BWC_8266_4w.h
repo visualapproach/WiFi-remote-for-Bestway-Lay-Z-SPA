@@ -38,10 +38,13 @@ class CIO {
     void loop(void);
     void updatePayload();
     void updateStates();
-
+    void trackStateChanges();
     bool dataAvailable = false;
     bool GODMODE = false;
-    uint8_t states[15];
+    uint8_t states[15], oldStates[15];
+    uint32_t state_age[15];
+    bool state_changed[15];
+    int deltaTemp;
     SoftwareSerial dsp_serial;
     SoftwareSerial cio_serial;
 
@@ -59,6 +62,7 @@ class CIO {
     uint8_t dismissed_from_DSP_buf[7];  //DSP to ESP. We can ignore this message and send our own when ESP is in charge.
     uint8_t dismissed_cio_len;
     uint8_t dismissed_dsp_len;
+    uint32_t badCIO_checksum, badDSP_checksum;
 
   private:
 
@@ -67,9 +71,9 @@ class CIO {
 class BWC {
 
   public:
-    void begin(void); 
+    void begin(void);
     void loop();
-    bool qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval);
+    bool qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval);
     bool newData();
     void saveEventlog();
     String getJSONStates();
@@ -87,10 +91,12 @@ class BWC {
     void reloadCommandQueue();
     String encodeBufferToString(uint8_t buf[7]);
     String getSerialBuffers();
+    void setAmbientTemperature(int64_t amb, bool unit);
+    String reboottime;
 
   private:
     CIO _cio;
-    uint32_t _commandQ[MAXCOMMANDS][4];
+    int64_t _commandQ[MAXCOMMANDS][4];
     int _qCommandLen = 0;    //length of commandQ
     uint32_t _buttonQ[MAXBUTTONS][4];
     int _qButtonLen = 0;  //length of buttonQ
@@ -114,7 +120,7 @@ class BWC {
     uint32_t _clinterval;
     uint32_t _audio;
     float _energyTotal;
-    float _energyDaily;
+    double _energyDaily; //Wattseconds internally
     int _energyPower;
     float _cost;
     float _kwh;
@@ -131,6 +137,21 @@ class BWC {
     int _tttt_temp1;    //temp after last change
     int _tttt;        //time to target temperature after subtracting running time since last calculation
     int _tttt_calculated;  //constant between calculations
+    //vt stuff
+    float _estHeatingTime();
+    float R_COOLING = 20;
+    int _ambient_temp; //always in C internally
+    float _heatingDegPerHour = 1.5; //always in C internally
+    float _virtualTemp; //=virtualtempfix+calculated diff, always in C internally
+    float _virtualTempFix; //last fixed data point to add or subtract temp from, always in C internally
+    uint32_t _virtualTempFix_age;
+    void _calcVirtualTemp();
+    void _updateVirtualTempFix_ontempchange();
+    void _updateVirtualTempFix_onheaterchange();
+    void _handleStateChanges();
+    //end vt
+    float _C2F(float c);
+    float _F2C(float f);
 
     void _qButton(uint32_t btn, uint32_t state, uint32_t value, uint32_t maxduration);
     void _handleCommandQ(void);
@@ -141,6 +162,9 @@ class BWC {
     void _saveCommandQueue();
     void _saveRebootInfo();
     void _updateTimes();
+    void _regulateTemp();
+    void _antifreeze();
+    void _antiboil();
 };
 
 #endif

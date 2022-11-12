@@ -24,7 +24,6 @@ void CIO::begin() {
 }
 
 void CIO::loop(void) {
-  digitalWrite(D4, LOW);  //LED off 
   //check if CIO has sent a message
   int msglen = 0;
   if(cio_serial.available())
@@ -39,10 +38,9 @@ void CIO::loop(void) {
       if(from_CIO_buf[CIO_CHECKSUMINDEX] == calculatedChecksum)
       {
         for(int i = 0; i < PAYLOADSIZE; i++){
-          if(to_DSP_buf[i] != from_CIO_buf[i]) dataAvailable = true;
+          //if(to_DSP_buf[i] != from_CIO_buf[i]) dataAvailable = true;
           to_DSP_buf[i] = from_CIO_buf[i];
         }
-
         states[TEMPERATURE] = from_CIO_buf[TEMPINDEX];
         states[ERROR] =       from_CIO_buf[ERRORINDEX];
         cio_tx_ok = true;  //show the user that this line works (appears to work)
@@ -58,26 +56,11 @@ void CIO::loop(void) {
           states[CHAR2] = (char)(48+(from_CIO_buf[ERRORINDEX]/10));
           states[CHAR3] = (char)(48+(from_CIO_buf[ERRORINDEX]%10));
         }
-      }    
-    } 
-    else
-    {
-      digitalWrite(D4, HIGH);  //LED on indicates bad message
-    }
-    /* debug 
-    else
-    {
-      if(msglen)
+      } else
       {
-        dataAvailable = true;
-        for(int i = 0; i < msglen; i++)
-        {
-        dismissed_from_CIO_buf[i] = from_CIO_buf[i];
-        }
-        dismissed_cio_len = msglen;
+        badCIO_checksum++;
       }
     }
-    */
     // Do stuff here if you want to alter the message
     // Send last good message to DSP
     dsp_serial.write(to_DSP_buf, PAYLOADSIZE);
@@ -110,14 +93,38 @@ void CIO::loop(void) {
     }
     else
     {
-      digitalWrite(D4, HIGH);  //LED on indicates bad message
+      badDSP_checksum++;
     }
     cio_serial.write(to_CIO_buf, PAYLOADSIZE);
+  }
+  //track state changes
+  trackStateChanges();
+}
+
+void CIO::trackStateChanges()
+{
+  for(int i = 0; i < 15; i++)
+  {
+    if(oldStates[i] != states[i])
+    {
+      state_changed[i] = true;
+      dataAvailable = true;
+    }
+  }
+
+  if(state_changed[TEMPERATURE])
+  {
+    deltaTemp = states[TEMPERATURE] - oldStates[TEMPERATURE];
+  }
+
+  for(int i = 0; i < 15; i++)
+  {
+    oldStates[i] = states[i];
   }
 }
 
 void CIO::updateStates(){
-  static uint8_t prevchksum;
+  //static uint8_t prevchksum;
   //extract information from payload to a better format
   states[BUBBLESSTATE] = (from_DSP_buf[COMMANDINDEX] & BUBBLESBITMASK) > 0;
   states[HEATGRNSTATE] = 2;                           //unknowable in antigodmode
@@ -125,39 +132,25 @@ void CIO::updateStates(){
   states[HEATSTATE] = 2;                              //unknowable in antigodmode
   states[PUMPSTATE] = (from_DSP_buf[COMMANDINDEX] & PUMPBITMASK) > 0;
   states[JETSSTATE] = (from_DSP_buf[COMMANDINDEX] & JETSBITMASK) > 0;
-  if(from_DSP_buf[DSP_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
-  prevchksum = from_DSP_buf[DSP_CHECKSUMINDEX];
+  //if(from_DSP_buf[DSP_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
+  //prevchksum = from_DSP_buf[DSP_CHECKSUMINDEX];
 }
 
 void CIO::updatePayload(){
   //alter payload to CIO to reflect user setting (GODMODE)
-  //this is a simple thermostat with hysteresis. Will heat until target+1 and then cool until target-1
-  static uint8_t prevchksum;
-  static uint8_t hysteresis = 0;
-  if(states[HEATSTATE] && ( (states[TEMPERATURE] + hysteresis) <= states[TARGET]) ){
-    states[HEATREDSTATE] = 1; //on
-    hysteresis = 0;
-  } else {
-    states[HEATREDSTATE] = 0; //off
-    hysteresis = 1;
-  }
-
-  //antifreeze
-  if(states[TEMPERATURE] < 10) states[HEATREDSTATE] = 1;
 
   states[HEATGRNSTATE] = !states[HEATREDSTATE] && states[HEATSTATE];
-  to_CIO_buf[COMMANDINDEX] =  (states[HEATREDSTATE] * heatbitmask)    |  
-                              (states[JETSSTATE] * JETSBITMASK)       | 
-                              (states[PUMPSTATE] * PUMPBITMASK)       |
-                              (states[BUBBLESSTATE] * BUBBLESBITMASK) | 
+  to_CIO_buf[COMMANDINDEX] =  (states[HEATREDSTATE] * heatbitmask)    |
+                              (states[JETSSTATE] * JETSBITMASK)       |
+                              (states[BUBBLESSTATE] * BUBBLESBITMASK) |
                               (states[PUMPSTATE] * PUMPBITMASK);
   if(to_CIO_buf[COMMANDINDEX] > 0) to_CIO_buf[COMMANDINDEX] |= POWERBITMASK;
 
   //calc checksum -> byte5
   //THIS NEEDS TO BE IMPROVED IF OTHER CHECKSUMS IS USED (FOR OTHER BYTES in different models)
   to_CIO_buf[CIO_CHECKSUMINDEX] = to_CIO_buf[1] + to_CIO_buf[2] + to_CIO_buf[3] + to_CIO_buf[4];
-  if(to_CIO_buf[CIO_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
-  prevchksum = to_CIO_buf[CIO_CHECKSUMINDEX];
+  //if(to_CIO_buf[CIO_CHECKSUMINDEX] != prevchksum) dataAvailable = true;
+  //prevchksum = to_CIO_buf[CIO_CHECKSUMINDEX];
 }
 
 
@@ -166,7 +159,7 @@ void BWC::begin(void){
   //_startNTP(); this is done from main.cpp
   LittleFS.begin();
   cio_tx_ok = false;
-  dsp_tx_ok = false;  
+  dsp_tx_ok = false;
   _cltime = 0;
   _ftime = 0;
   _uptime = 0;
@@ -189,6 +182,10 @@ void BWC::begin(void){
   _loadCommandQueue();
   _saveRebootInfo();
   saveSettingsTimer.attach(3600.0, std::bind(&BWC::saveSettingsFlag, this));
+
+  _ambient_temp = 20;
+  _virtualTempFix = -99;
+
 }
 
 void BWC::loop(){
@@ -209,17 +206,279 @@ void BWC::loop(){
   ESP.wdtEnable(0);
   cio_tx_ok = _cio.cio_tx_ok;
   dsp_tx_ok = _cio.dsp_tx_ok;
+
+  _handleStateChanges();
+  _calcVirtualTemp();
+  _regulateTemp();
 }
 
+void BWC::_regulateTemp()
+{
+  //this is a simple thermostat with hysteresis. Will heat until target+1 and then cool until target-1
+  static uint8_t hysteresis = 0;
+  if(!_cio.GODMODE) return;
+  if(!_cio.states[HEATSTATE])
+  {
+    _cio.states[HEATREDSTATE] = 0;
+    return;
+  }
 
-bool BWC::qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval) {
+  if(_cio.states[HEATSTATE])
+  {
+    if( (_cio.states[TEMPERATURE] + hysteresis) <= _cio.states[TARGET])
+    {
+      if(!_cio.states[HEATREDSTATE])
+      {
+        _cio.heatbitmask = HEATBITMASK1; //slow start
+        _cio.states[HEATREDSTATE] = 1;   //on
+        qCommand(SETFULLPOWER, 1, _timestamp + 10, 0);
+      }
+      hysteresis = 0;
+    }
+    else
+    {
+      _cio.states[HEATREDSTATE] = 0; //off
+      hysteresis = 1;
+    }
+  }
+}
+
+void BWC::_antifreeze()
+{
+  /*
+    Antifreeze. This will only run in GODMODE.
+    In normal mode the pump should behave as from factory.
+    - Will start pump and heater and set target temperature to 10.
+    - Pump will run until "manually" turned off. (From GUI or MQTT)
+  */
+  if(!_cio.GODMODE) return;
+  if(_cio.states[TEMPERATURE] < 10)
+  {
+    if(!_cio.states[HEATSTATE])
+    {
+      qCommand(SETHEATER, 1, 0, 0);
+      qCommand(SETTARGET, 10, 0, 0);
+    }
+  }
+}
+
+void BWC::_antiboil()
+{
+  /*
+    Anti overtemp
+  */
+  if(!_cio.GODMODE) return;
+  if(_cio.states[TEMPERATURE] > 41)
+  {
+    if(_cio.states[HEATSTATE]) qCommand(SETHEATER, 0, 0, 0);
+    // start pump to cool the interior of the pump? In that case uncomment this:
+    // qCommand(SETPUMP, 0, 0, 0);
+  }
+
+  /*
+  // Alternative solution to both antifreeze and antiboil; Hands off if temperature goes extreme.
+  if((_cio.states[TEMPERATURE] < 10) || (_cio.states[TEMPERATURE] > 41))
+    qCommand(SETGODMODE, 0, 0, 0);
+  */
+}
+
+/*  virtual temp functions  */
+
+void BWC::_handleStateChanges()
+{
+  //if(delayedAction[TEMPERATURE] && (_cio.state_age[TEMPERATURE] > 500))
+
+  // update virtualtempfix to the new measurement
+  if(_cio.state_changed[TEMPERATURE])
+  {
+    _updateVirtualTempFix_ontempchange();
+    //delayedAction[TEMPERATURE] = false;
+  }
+
+  // Store virtual temp data point
+  if(_cio.state_changed[HEATREDSTATE])
+  {
+    _updateVirtualTempFix_onheaterchange();
+  }
+
+  // Reset state ages for changed states
+  for(int i = 0; i < 15; i++)
+  {
+    if(_cio.state_changed[i])
+    {
+      _cio.state_changed[i] = false;
+      _cio.state_age[i] = 0;
+      //delayedAction[i] = true;
+    }
+  }
+}
+
+// return how many hours until pool is ready
+float BWC::_estHeatingTime()
+{
+  if(_virtualTemp > _cio.states[TARGET]) return -2;
+
+  float degAboveAmbient = _virtualTemp - _ambient_temp;
+  float fraction = 1.0 - (degAboveAmbient - floor(degAboveAmbient));
+  int tempdiff = _cio.states[TARGET] - _virtualTemp;
+
+  //integrate the time needed to reach target
+  //how long to next integer temp
+  float coolingPerHour = degAboveAmbient / R_COOLING;
+  float netRisePerHour;
+  if(_cio.states[HEATREDSTATE])
+  {
+    netRisePerHour = _heatingDegPerHour - coolingPerHour;
+  }
+  else
+  {
+    netRisePerHour = - coolingPerHour;
+  }
+  float hoursRemaining = fraction / netRisePerHour;
+  //iterate up to target
+  for(int i = 1; i <= tempdiff; i++)
+  {
+    degAboveAmbient = _virtualTemp + i - _ambient_temp;
+    coolingPerHour = degAboveAmbient / R_COOLING;
+    if(_cio.states[HEATREDSTATE])
+    {
+      netRisePerHour = _heatingDegPerHour - coolingPerHour;
+    }
+    else
+    {
+      netRisePerHour = - coolingPerHour;
+    }
+    if(netRisePerHour != 0)
+      hoursRemaining += 1 / netRisePerHour;
+    else
+      hoursRemaining = -1;
+  }
+
+  if(hoursRemaining >= 0)
+    return hoursRemaining;
+  else
+    return -1;
+}
+
+//virtual temp is always C in this code and will be converted when sending externally
+void BWC::_calcVirtualTemp()
+{
+  // calculate from last updated VTFix.
+  float netRisePerHour;
+  float degAboveAmbient = _virtualTemp - _ambient_temp;
+  float coolingPerHour = degAboveAmbient / R_COOLING;
+
+  if(_cio.states[HEATREDSTATE])
+  {
+    netRisePerHour = _heatingDegPerHour - coolingPerHour;
+  }
+  else
+  {
+    netRisePerHour = - coolingPerHour;
+  }
+  float elapsed_hours = _virtualTempFix_age / 3600.0 / 1000.0;
+  float newvt = _virtualTempFix + netRisePerHour * elapsed_hours;
+
+  // clamp VT to +/- 1 from measured temperature if pump is running
+  if(_cio.states[PUMPSTATE] && (_cio.state_age[PUMPSTATE] > 5*60000))
+  {
+    float dev = newvt-_cio.states[TEMPERATURE];
+    if(dev > 0.99) dev = 0.99;
+    if(dev < -0.99) dev = -0.99;
+    newvt = _cio.states[TEMPERATURE] + dev;
+  }
+
+  // Rebase start of calculation from new integer temperature
+  if(int(_virtualTemp) != int(newvt))
+  {
+    _virtualTempFix = newvt;
+    _virtualTempFix_age = 0;
+  }
+  _virtualTemp = newvt;
+
+  /* Using Newtons law of cooling
+      T(t) = Tenv + (T(0) - Tenv)*e^(-t/r)
+      r = -t / ln( (T(t)-Tenv) / (T(0)-Tenv) )
+      dT/dt = (T(t) - Tenv) / r
+      ----------------------------------------
+      T(t) : Temperature at time t
+      Tenv : _ambient_temp (considered constant)
+      T(0) : Temperature at time 0 (_virtualTempFix)
+      e    : natural number 2,71828182845904
+      r    : a constant we need to find out by measurements
+  */
+
+}
+
+//Called on temp change
+void BWC::_updateVirtualTempFix_ontempchange()
+{
+  //startup init
+  if(_virtualTempFix < -10)
+  {
+    _virtualTempFix = _cio.states[TEMPERATURE];
+    _virtualTemp = _virtualTempFix;
+    _virtualTempFix_age = 0;
+    return;
+  }
+
+  //Do not process if temperature changed > 1 degree (reading spikes)
+  if(abs(_cio.deltaTemp) != 1) return;
+
+  //readings are only valid if pump is running and has been running for 5 min.
+  if(!_cio.states[PUMPSTATE] || (_cio.state_age[PUMPSTATE] < 5*60000)) return;
+
+  _virtualTemp = _cio.states[TEMPERATURE];
+  _virtualTempFix = _cio.states[TEMPERATURE];
+  _virtualTempFix_age = 0;
+  /*
+  update_coolingDegPerHourArray
+  Measured temp has changed by 1 degree over a certain time
+  1 degree/(temperature age in ms / 3600 / 1000)hours = 3 600 000 / temperature age in ms
+  */
+
+  // We can only know something about rate of change if we had continous cooling since last update
+  // (Nobody messed with the heater during the 1 degree change)
+  if(_cio.state_age[HEATREDSTATE] < _cio.state_age[TEMPERATURE]) return;
+  // It seems that the temp sensor is oscillating before deciding there is a new temp. Filter out changes faster than 30 min
+  if(_cio.state_age[TEMPERATURE] < 1800 * 1000) return;
+  // rate of heating is not subject to change (fixed wattage and pool size) so do this only if cooling
+  // TODO: check for jets? Does it affect the temperature?
+  if(_cio.states[HEATREDSTATE] || _cio.states[BUBBLESSTATE] || (_cio.state_age[BUBBLESSTATE] < _cio.state_age[TEMPERATURE])) return;
+  if(_cio.deltaTemp > 0 && _virtualTemp > _ambient_temp) return; //temp is rising when it should be falling. Bail out
+  if(_cio.deltaTemp < 0 && _virtualTemp < _ambient_temp) return; //temp is falling when it should be rising. Bail out
+  float degAboveAmbient = _virtualTemp - _ambient_temp;
+  // can't calibrate if ambient ~ virtualtemp
+  if(abs(degAboveAmbient) <= 1) return;
+  R_COOLING = (_cio.state_age[TEMPERATURE]/3600000.0) / log((degAboveAmbient) / ((degAboveAmbient + _cio.deltaTemp)));
+}
+
+//Called on heater state change
+void BWC::_updateVirtualTempFix_onheaterchange()
+{
+  _virtualTempFix = _virtualTemp;
+  _virtualTempFix_age = 0;
+}
+
+void BWC::setAmbientTemperature(int64_t amb, bool unit)
+{
+  _ambient_temp = (int)amb;
+  if(!unit) _ambient_temp = _F2C(_ambient_temp);
+
+  _virtualTempFix = _virtualTemp;
+  _virtualTempFix_age = 0;
+}
+
+/*  end virtual temp functions*/
+
+bool BWC::qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval) {
   //handle special commands
   if(cmd == RESETQ){
     _qButtonLen = 0;
     _qCommandLen = 0;
     _saveCommandQueue();
     return true;
-  } 
+  }
 
   //add parameters to _commandQ[rows][parameter columns] and sort the array on xtime.
   int row = _qCommandLen;
@@ -231,7 +490,7 @@ bool BWC::qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval
       row = i;
       break;
     }
-  }  
+  }
   //make room for new row
   for (int i = _qCommandLen; i > (row); i--){
     _commandQ[i][0] = _commandQ[i-1][0];
@@ -252,9 +511,9 @@ bool BWC::qCommand(uint32_t cmd, uint32_t val, uint32_t xtime, uint32_t interval
 
 void BWC::_handleCommandQ(void) {
   bool restartESP = false;
-  if(_qCommandLen > 0) { 
+  if(_qCommandLen > 0) {
   //cmp time with xtime. If more, then execute (adding buttons to buttonQ).
-  
+
     if (_timestamp >= _commandQ[0][2]){
       switch (_commandQ[0][0]) {
 
@@ -284,7 +543,7 @@ void BWC::_handleCommandQ(void) {
           // _cio.states[BUBBLESSTATE] = _commandQ[0][1];
           // if(_commandQ[0][1]){
           // //bubbles is turned on. Limit H1, H2 and pump according to matrix
-          //   _cio.states[PUMPSTATE] = _cio.states[PUMPSTATE] && (COMB_MATRIX & 1<<1); 
+          //   _cio.states[PUMPSTATE] = _cio.states[PUMPSTATE] && (COMB_MATRIX & 1<<1);
           //   //lower the heating power (or turn it off if heatbitmask1 == 0)
           //   _cio.heatbitmask = (HEATBITMASK1 * ((COMB_MATRIX & 1<<8)>0)) | (HEATBITMASK2 * ((COMB_MATRIX & 1<<5)>0));
           //   //Keep jets state if allowed by the matrix (won't be turned on again automatically)
@@ -331,7 +590,7 @@ void BWC::_handleCommandQ(void) {
           //     _cio.states[BUBBLESSTATE] = _cio.states[BUBBLESSTATE] && (COMB_MATRIX & 1<<5);
           //     _cio.states[JETSSTATE] &= _cio.states[JETSSTATE] && (COMB_MATRIX & 1<<4);
           //   }
-          // } 
+          // }
           break;
 
         case SETPUMP:
@@ -354,12 +613,12 @@ void BWC::_handleCommandQ(void) {
           }
           break;
 
-        case REBOOTESP:        
+        case REBOOTESP:
           restartESP = true;
           break;
 
         case GETTARGET:
-          
+
           break;
 
         case RESETTIMES:
@@ -375,7 +634,7 @@ void BWC::_handleCommandQ(void) {
           _jettime_ms = 0;
           _cost = 0;
           _energyTotal = 0;
-          _saveSettingsNeeded = true;    
+          _saveSettingsNeeded = true;
           _cio.dataAvailable = true;
           break;
 
@@ -412,7 +671,7 @@ void BWC::_handleCommandQ(void) {
           _cio.states[HEATSTATE] = 0;
           _cio.dataAvailable = true;
           break;
-        
+
         case SETFULLPOWER:
           if(_commandQ[0][1]){
             if(ALLOWEDSTATES[_currentStateIndex][HEATTOGGLE] == 2) {
@@ -425,7 +684,12 @@ void BWC::_handleCommandQ(void) {
         case RESETDAILY:
           _energyDaily = 0;
           break;
-
+        case SETAMBIENTF:
+          setAmbientTemperature(_commandQ[0][1], false);
+          break;
+        case SETAMBIENTC:
+          setAmbientTemperature(_commandQ[0][1], true);
+          break;
       }
       //If interval > 0 then append to commandQ with updated xtime.
       if(_commandQ[0][3] > 0) qCommand(_commandQ[0][0],_commandQ[0][1],_commandQ[0][2]+_commandQ[0][3],_commandQ[0][3]);
@@ -448,39 +712,68 @@ void BWC::_handleCommandQ(void) {
     }
   }
 }
-  
+
 
 String BWC::getJSONStates() {
-    // Allocate a temporary JsonDocument
-    // Don't forget to change the capacity to match your requirements.
-    // Use arduinojson.org/assistant to compute the capacity.
+  // Allocate a temporary JsonDocument
+  // Don't forget to change the capacity to match your requirements.
+  // Use arduinojson.org/assistant to compute the capacity.
   //feed the dog
   ESP.wdtFeed();
-    DynamicJsonDocument doc(1024);
+  DynamicJsonDocument doc(1536);
 
-    // Set the values in the document
-    doc["CONTENT"] = "STATES";
-    doc["TIME"] = _timestamp;
-    doc["LCK"] = _cio.states[LOCKEDSTATE];
-    doc["PWR"] = _cio.states[POWERSTATE];
-    doc["UNT"] = _cio.states[UNITSTATE];
-    doc["AIR"] = _cio.states[BUBBLESSTATE];
-    doc["GRN"] = _cio.states[HEATGRNSTATE];
-    doc["RED"] = _cio.states[HEATREDSTATE];
-    doc["FLT"] = _cio.states[PUMPSTATE];
-    doc["TGT"] = _cio.states[TARGET];
-    doc["TMP"] = _cio.states[TEMPERATURE];
-    doc["CH1"] = _cio.states[CHAR1];
-    doc["CH2"] = _cio.states[CHAR2];
-    doc["CH3"] = _cio.states[CHAR3];
-    doc["JET"] = _cio.states[JETSSTATE];
-    doc["ERR"] = _cio.states[ERROR];
-    doc["GOD"] = _cio.GODMODE;
+  // Set the values in the document
+  doc["CONTENT"] = "STATES";
+  doc["TIME"] = _timestamp;
+  doc["LCK"] = _cio.states[LOCKEDSTATE];
+  doc["PWR"] = _cio.states[POWERSTATE];
+  doc["UNT"] = _cio.states[UNITSTATE];
+  doc["AIR"] = _cio.states[BUBBLESSTATE];
+  doc["GRN"] = _cio.states[HEATGRNSTATE];
+  doc["RED"] = _cio.states[HEATREDSTATE];
+  doc["FLT"] = _cio.states[PUMPSTATE];
+  doc["TGT"] = _cio.states[TARGET];
+  doc["TMP"] = _cio.states[TEMPERATURE];
+  doc["CH1"] = _cio.states[CHAR1];
+  doc["CH2"] = _cio.states[CHAR2];
+  doc["CH3"] = _cio.states[CHAR3];
+  doc["JET"] = _cio.states[JETSSTATE];
+  doc["ERR"] = _cio.states[ERROR];
+  doc["GOD"] = _cio.GODMODE;
+  doc["BCC"] = _cio.badCIO_checksum;  //counter
+  doc["BDC"] = _cio.badDSP_checksum;  //counter
+  doc["VTF"] = _virtualTempFix; // **************************REMOVE THIS LINE
+  doc["VTMC"] = _virtualTemp;
+  doc["VTMF"] = _C2F(_virtualTemp);
+  doc["AMBC"] = _ambient_temp;
+  doc["AMBF"] = round(_C2F(_ambient_temp));
+  if(_cio.states[UNITSTATE])
+  {
+    //celsius
+    doc["AMB"] = _ambient_temp;
+    doc["VTM"] = _virtualTemp;
+    doc["TGTC"] = _cio.states[TARGET];
+    doc["TMPC"] = _cio.states[TEMPERATURE];
+    doc["TGTF"] = round(_C2F((float)_cio.states[TARGET]));
+    doc["TMPF"] = round(_C2F((float)_cio.states[TEMPERATURE]));
+    doc["VTMF"] = _C2F(_virtualTemp);
+  }
+  else
+  {
+    //farenheit
+    doc["AMB"] = round(_C2F(_ambient_temp));
+    doc["VTM"] = _C2F(_virtualTemp);
+    doc["TGTF"] = _cio.states[TARGET];
+    doc["TMPF"] = _cio.states[TEMPERATURE];
+    doc["TGTC"] = round(_F2C((float)_cio.states[TARGET]));
+    doc["TMPC"] = round(_F2C((float)_cio.states[TEMPERATURE]));
+    doc["VTMC"] = _virtualTemp;
+  }
 
-    // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-      jsonmsg = "{\"error\": \"Failed to serialize message\"}";
+  // Serialize JSON to string
+  String jsonmsg;
+  if (serializeJson(doc, jsonmsg) == 0) {
+    jsonmsg = "{\"error\": \"Failed to serialize message\"}";
   }
   return jsonmsg;
 }
@@ -505,11 +798,16 @@ String BWC::getJSONTimes() {
   doc["JETTIME"] = _jettime + _jettime_ms/1000;
   doc["COST"] = _energyTotal * _price;
   doc["KWH"] = _energyTotal;
-  doc["KWHD"] = _energyDaily;
+  doc["KWHD"] = _energyDaily / 3600000; //Ws -> kWh
   doc["WATT"] = _energyPower;
   doc["FINT"] = _finterval;
   doc["CLINT"] = _clinterval;
   doc["TTTT"] = _tttt;
+  float t2r = _estHeatingTime();
+  String t2r_string = String(t2r);
+  if(t2r == -2) t2r_string = F("Already");
+  if(t2r == -1) t2r_string = F("Never");
+  doc["T2R"] = t2r_string;
 
   // Serialize JSON to string
   String jsonmsg;
@@ -536,13 +834,13 @@ String BWC::getJSONSettings(){
     doc["AUDIO"] = _audio;
     doc["REBOOTINFO"] = ESP.getResetReason();
     doc["REBOOTTIME"] = DateTime.getBootTime();
-    
+
     // Serialize JSON to string
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
       jsonmsg = "{\"error\": \"Failed to serialize message\"}";
   }
-  return jsonmsg;  
+  return jsonmsg;
 }
 
 void BWC::setJSONSettings(String message){
@@ -566,7 +864,7 @@ void BWC::setJSONSettings(String message){
   _finterval = doc["FINT"];
   _clinterval = doc["CLINT"];
   _audio = doc["AUDIO"];
-  saveSettings();  
+  saveSettings();
 }
 
 String BWC::getJSONCommandQueue(){
@@ -634,7 +932,7 @@ bool BWC::newData(){
   _cio.dataAvailable = false;
   return result;
 }
-  
+
 void BWC::_startNTP() {
   // setup this after wifi connected
   // you can use custom timezone,server and timeout
@@ -690,13 +988,14 @@ void BWC::_loadSettings(){
   _audio = doc["AUDIO"];
   _energyTotal = doc["KWH"];
   _energyDaily = doc["KWHD"];
+  if(doc.containsKey("R")) R_COOLING = doc["R"]; //else use default
   file.close();
 }
 
 void BWC::saveSettingsFlag(){
   //ticker fails if duration is more than 71 min. So we use a counter every 60 minutes
   if(++_tickerCount >= 3){
-    _saveSettingsNeeded = true;  
+    _saveSettingsNeeded = true;
     _tickerCount = 0;
   }
 }
@@ -741,6 +1040,7 @@ void BWC::saveSettings(){
   doc["KWH"] = _energyTotal;
   doc["KWHD"] = _energyDaily;
   doc["SAVETIME"] = DateTime.format(DateFormatter::SIMPLE);
+  doc["R"] = R_COOLING;
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
@@ -783,14 +1083,14 @@ void BWC::_loadCommandQueue(){
     _commandQ[i][3] = doc["INTERVAL"][i];
   }
 
-  file.close();    
+  file.close();
 }
 
 void BWC::_saveCommandQueue(){
   //kill the dog
   ESP.wdtFeed();
   ESP.wdtDisable();
-  
+
   _saveCmdqNeeded = false;
   File file = LittleFS.open("cmdq.txt", "w");
   if (!file) {
@@ -816,7 +1116,7 @@ void BWC::_saveCommandQueue(){
   if (serializeJson(doc, file) == 0) {
     Serial.println(F("Failed to write cmdq.txt"));
   }
-  file.close();  
+  file.close();
   //revive the dog
   ESP.wdtEnable(0);
 
@@ -848,7 +1148,7 @@ void BWC::saveEventlog(){
   if (serializeJson(doc, file) == 0) {
     Serial.println(F("Failed to write eventlog.txt"));
   }
-  file.close();    
+  file.close();
   //revive the dog
   ESP.wdtEnable(0);
 
@@ -867,36 +1167,43 @@ void BWC::_saveRebootInfo(){
   DynamicJsonDocument doc(1024);
 
   // Set the values in the document
-  doc["BOOTINFO"] = ESP.getResetReason() + " " + DateTime.format(DateFormatter::SIMPLE);
+  reboottime = DateTime.format(DateFormatter::SIMPLE);
+  doc["BOOTINFO"] = ESP.getResetReason() + " " + reboottime;
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
     Serial.println(F("Failed to write bootlog.txt"));
   }
   file.println();
-  file.close();  
+  file.close();
 }
 
 void BWC::_updateTimes(){
   uint32_t now = millis();
   static uint32_t prevtime;
-  int elapsedtime = now-prevtime;
+  int elapsedtime_ms = now-prevtime;
   prevtime = now;
-  if (elapsedtime < 0) return; //millis() rollover every 49 days
+  if (elapsedtime_ms < 0) return; //millis() rollover every 49 days
   if(_cio.states[HEATREDSTATE]){
-    _heatingtime_ms += elapsedtime;
+    _heatingtime_ms += elapsedtime_ms;
   }
   if(_cio.states[PUMPSTATE]){
-    _pumptime_ms += elapsedtime;
+    _pumptime_ms += elapsedtime_ms;
   }
   if(_cio.states[BUBBLESSTATE]){
-    _airtime_ms += elapsedtime;
+    _airtime_ms += elapsedtime_ms;
   }
   if(_cio.states[JETSSTATE]){
-    _jettime_ms += elapsedtime;
+    _jettime_ms += elapsedtime_ms;
   }
-  _uptime_ms += elapsedtime;
-  
+  _uptime_ms += elapsedtime_ms;
+  //(some of) these age-counters resets when the state changes
+  for(unsigned int i = 0; i < sizeof(_cio.state_age)/sizeof(uint32_t); i++)
+  {
+      _cio.state_age[i] += elapsedtime_ms;
+  }
+  _virtualTempFix_age += elapsedtime_ms;
+
   if(_uptime_ms > 1000000000){
     _heatingtime += _heatingtime_ms/1000;
     _pumptime += _pumptime_ms/1000;
@@ -909,7 +1216,7 @@ void BWC::_updateTimes(){
     _jettime_ms = 0;
     _uptime_ms = 0;
   }
-  
+
   // watts, kWh today, total kWh
   float heatingEnergy = (_heatingtime+_heatingtime_ms/1000)/3600.0 * HEATERPOWER;
   float pumpEnergy = (_pumptime+_pumptime_ms/1000)/3600.0 * PUMPPOWER;
@@ -922,8 +1229,8 @@ void BWC::_updateTimes(){
   _energyPower += _cio.states[BUBBLESSTATE] * AIRPOWER;
   _energyPower += IDLEPOWER;
   _energyPower += _cio.states[JETSSTATE] * JETPOWER;
-  
-  _energyDaily += (elapsedtime / 1000.0) / 3600.0 * _energyPower / 1000.0;
+
+  _energyDaily += elapsedtime_ms * _energyPower / 1000.0;
 }
 
 void BWC::print(String txt){
@@ -936,4 +1243,14 @@ uint8_t BWC::getState(int state){
 void BWC::reloadCommandQueue(){
     _loadCommandQueue();
     return;
+}
+
+float BWC::_C2F(float c)
+{
+  return c*1.8+32;
+}
+
+float BWC::_F2C(float f)
+{
+  return (f-32)/1.8;
 }

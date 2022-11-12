@@ -35,9 +35,9 @@ class BWC {
     String getJSONStates();
     String getJSONTimes();
     String getJSONSettings();
-    void setJSONSettings(String message);
+    void setJSONSettings(const String& message);
     String getJSONCommandQueue();
-    void print(String txt);
+    void print(const String& txt);
     uint8_t getState(int state);
     Ticker saveSettingsTimer;
     void saveSettingsFlag();
@@ -53,6 +53,9 @@ class BWC {
     bool getBtnSeqMatch();
     void setAmbientTemperature(int64_t amb, bool unit);
     void unlock(void);
+    bool notify;
+    int notification_time, next_notification_time;
+    String reboottime;
 
   private:
     CIO _cio;
@@ -63,7 +66,7 @@ class BWC {
     int _qCommandLen = 0;  //length of commandQ
     int32_t _buttonQ[MAXBUTTONS][4];
     int _qButtonLen = 0;  //length of buttonQ
-    uint32_t _timestamp;
+    uint32_t _timestamp; // seconds
     uint32_t _cltime;
     uint32_t _ftime;
     uint32_t _uptime;
@@ -82,7 +85,7 @@ class BWC {
     uint32_t _clinterval;
     bool _audio;
     float _energyTotal;
-    float _energyDaily;
+    double _energyDaily; //Wattseconds internally
     int _energyPower;
     bool _restoreStatesOnStart = false;
     bool _saveSettingsNeeded = false;
@@ -124,6 +127,7 @@ class BWC {
     float _C2F(float c);
     float _F2C(float f);
     bool _newDataToSend = false;
+    void _handleNotification();
 };
 
 #endif

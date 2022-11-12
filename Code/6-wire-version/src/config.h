@@ -2,7 +2,7 @@
 #include <ESP8266WiFi.h>
 
 #define DEVICE_NAME "layzspa"
-#define FW_VERSION "2022-10-08"
+#define FW_VERSION "2022-11-11"
 #define HA_PREFIX "homeassistant"
 #define PROM_NAMESPACE "layzspa"
 
@@ -113,3 +113,7 @@ String mqttClientId = DEVICE_NAME;
 String mqttBaseTopic = DEVICE_NAME;
 /** get or set the MQTT telemetry interval */
 int mqttTelemetryInterval = 600;
+
+/** Other feats */
+bool notify = false;
+int notification_time = 32;

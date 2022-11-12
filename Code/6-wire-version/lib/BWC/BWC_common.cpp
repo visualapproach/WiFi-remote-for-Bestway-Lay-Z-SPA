@@ -59,6 +59,8 @@ void BWC::begin2(){
 
   _ambient_temp = 20;
   _virtualTempFix = -99;
+
+  next_notification_time = notification_time;
 }
 
 void BWC::stop(){
@@ -117,6 +119,31 @@ void BWC::loop(){
   _handleStateChanges();
   _calcVirtualTemp();
   // ESP.wdtEnable(0);
+
+  _handleNotification();
+}
+
+void BWC::_handleNotification()
+{
+  /* user don't want a notification*/
+  if(!notify) return;
+  /* there is no upcoming command*/
+  if(_qCommandLen == 0)
+  {
+    next_notification_time = notification_time;
+    return;
+  }
+  /* not the time yet*/
+  if(_commandQ[0][2] - _timestamp > next_notification_time) return;
+  /* only notify for these commands*/
+  if(!(_commandQ[0][0] == SETBUBBLES || _commandQ[0][0] == SETHEATER || _commandQ[0][0] == SETJETS || _commandQ[0][0] == SETPUMP)) return;
+
+  if(_audio) _dsp.beep3(3000 - next_notification_time*64);
+  _dsp.textOut("--" + String(next_notification_time) + "--");
+  if(next_notification_time == 1)
+    next_notification_time = notification_time; //reset "alarm"
+  else
+    next_notification_time /= 2;
 }
 
 void BWC::_handleStateChanges()
@@ -239,10 +266,17 @@ void BWC::_calcVirtualTemp()
   // clamp VT to +/- 1 from measured temperature if pump is running
   if(_cio.states[PUMPSTATE] && (_cio.state_age[PUMPSTATE] > 5*60000))
   {
-    float dev = newvt-_cio.states[TEMPERATURE];
-    if(dev > 0.99) dev = 0.99;
-    if(dev < -0.99) dev = -0.99;
-    newvt = _cio.states[TEMPERATURE] + dev;
+    float tempInC = _cio.states[TEMPERATURE];
+    float limit = 0.99;
+    if(!_cio.states[UNITSTATE])
+    {
+      tempInC = _F2C(tempInC);
+      limit = 1/1.8;
+    }
+    float dev = newvt-tempInC;
+    if(dev > limit) dev = limit;
+    if(dev < -limit) dev = -limit;
+    newvt = tempInC + dev;
   }
 
   // Rebase start of calculation from new integer temperature
@@ -274,7 +308,7 @@ void BWC::_updateVirtualTempFix_ontempchange()
   float conversion = 1;
   if(!_cio.states[UNITSTATE]) {
     tempInC = _F2C(tempInC);
-    conversion = _F2C(1);
+    conversion = 1/1.8;
   }
   //startup init
   if(_virtualTempFix < -10)
@@ -681,7 +715,7 @@ String BWC::getJSONTimes() {
   doc["FINT"] = _finterval;
   doc["CLINT"] = _clinterval;
   doc["KWH"] = _energyTotal;
-  doc["KWHD"] = _energyDaily;
+  doc["KWHD"] = _energyDaily / 3600000.0; //Ws -> kWh
   doc["WATT"] = _energyPower;
   doc["TTTT"] = _tttt;
   float t2r = _estHeatingTime();
@@ -728,7 +762,7 @@ String BWC::getJSONSettings(){
   return jsonmsg;
 }
 
-void BWC::setJSONSettings(String message){
+void BWC::setJSONSettings(const String& message){
   //feed the dog
   // ESP.wdtFeed();
   DynamicJsonDocument doc(1024);
@@ -1048,7 +1082,8 @@ void BWC::saveRebootInfo(){
   DynamicJsonDocument doc(1024);
 
   // Set the values in the document
-  doc["BOOTINFO"] = ESP.getResetReason() + " " + DateTime.format(DateFormatter::SIMPLE);
+  reboottime = DateTime.format(DateFormatter::SIMPLE);
+  doc["BOOTINFO"] = ESP.getResetReason() + " " + reboottime;
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
@@ -1062,15 +1097,15 @@ void BWC::_updateTimes(){
   uint32_t now = millis();
   static uint32_t prevtime = now;
   int elapsedtime_ms = now-prevtime;
-  //(some of) these age-counters resets when the state changes
+  prevtime = now;
+ //(some of) these age-counters resets when the state changes
   for(unsigned int i = 0; i < sizeof(_cio.state_age)/sizeof(uint32_t); i++)
   {
       _cio.state_age[i] += elapsedtime_ms;
   }
   _virtualTempFix_age += elapsedtime_ms;
 
-  prevtime = now;
-  if (elapsedtime_ms < 0) return; //millis() rollover every 49 days
+  if (elapsedtime_ms < 0) return; //millis() rollover every 24,8 days
   if(_cio.states[HEATREDSTATE]){
     _heatingtime_ms += elapsedtime_ms;
   }
@@ -1114,10 +1149,10 @@ void BWC::_updateTimes(){
   _energyPower += IDLEPOWER;
   _energyPower += _cio.states[JETSSTATE] * JETPOWER;
 
-  _energyDaily += (elapsedtime_ms / 1000.0) / 3600.0 * _energyPower / 1000.0;
+  _energyDaily += elapsedtime_ms * _energyPower / 1000.0;
 }
 
-void BWC::print(String txt){
+void BWC::print(const String& txt){
   _dsp.textOut(txt);
 }
 
