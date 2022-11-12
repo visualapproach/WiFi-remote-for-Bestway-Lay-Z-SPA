@@ -85,7 +85,7 @@ class BWC {
     uint32_t _clinterval;
     bool _audio;
     float _energyTotal;
-    float _energyDaily; //Wattseconds internally
+    double _energyDaily; //Wattseconds internally
     int _energyPower;
     bool _restoreStatesOnStart = false;
     bool _saveSettingsNeeded = false;

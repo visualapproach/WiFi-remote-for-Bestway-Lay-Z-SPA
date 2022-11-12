@@ -120,7 +120,7 @@ class BWC {
     uint32_t _clinterval;
     uint32_t _audio;
     float _energyTotal;
-    float _energyDaily;
+    double _energyDaily; //Wattseconds internally
     int _energyPower;
     float _cost;
     float _kwh;

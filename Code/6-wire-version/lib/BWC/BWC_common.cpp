@@ -1097,7 +1097,7 @@ void BWC::_updateTimes(){
   uint32_t now = millis();
   static uint32_t prevtime = now;
   int elapsedtime_ms = now-prevtime;
-   prevtime = now;
+  prevtime = now;
  //(some of) these age-counters resets when the state changes
   for(unsigned int i = 0; i < sizeof(_cio.state_age)/sizeof(uint32_t); i++)
   {
@@ -1105,7 +1105,7 @@ void BWC::_updateTimes(){
   }
   _virtualTempFix_age += elapsedtime_ms;
 
-  if (elapsedtime_ms < 0) return; //millis() rollover every 49 days
+  if (elapsedtime_ms < 0) return; //millis() rollover every 24,8 days
   if(_cio.states[HEATREDSTATE]){
     _heatingtime_ms += elapsedtime_ms;
   }
