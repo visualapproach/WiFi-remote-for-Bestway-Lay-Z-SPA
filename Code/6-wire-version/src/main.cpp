@@ -547,7 +547,12 @@ void handleHWtest()
       delayMicroseconds(10);
       errors += digitalRead(dsppins[pin]) != state;
     }
-    result += "DSP input pin " + String(pin+2) + " " + String(errors) + " errors of 1000\n";
+    if(errors > 499)
+      result += "CIO to DSP pin " + String(pin+3) + " fail!";
+    else if(errors == 0)
+      result += "CIO to DSP pin " + String(pin+3) + " success!";
+    else
+      result += "CIO to DSP pin " + String(pin+3) + " " + String(errors/500) + "\% bad";
     errors = 0;
     delay(0);
   }
@@ -562,7 +567,12 @@ void handleHWtest()
       delayMicroseconds(10);
       errors += digitalRead(ciopins[pin]) != state;
     }
-    result += "CIO input pin " + String(pin+2) + " " + String(errors) + " errors of 1000\n";
+    if(errors > 499)
+      result += "CIO to DSP pin " + String(pin+3) + " fail!";
+    else if(errors == 0)
+      result += "CIO to DSP pin " + String(pin+3) + " success!";
+    else
+      result += "CIO to DSP pin " + String(pin+3) + " " + String(errors/500) + "\% bad";
     errors = 0;
     delay(0);
   }
