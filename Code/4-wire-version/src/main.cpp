@@ -1298,7 +1298,7 @@ void mqttConnect()
     mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());
     mqttClient.loop();
 
-    mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), reboottime.c_str(), true);
+    mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), bwc.reboottime.c_str(), true);
     mqttClient.publish((String(mqttBaseTopic) + "/reboot_reason").c_str(), ESP.getResetReason().c_str(), true);
     mqttClient.loop();
     sendMQTT();
