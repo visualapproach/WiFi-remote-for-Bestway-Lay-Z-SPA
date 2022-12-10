@@ -231,3 +231,53 @@ a.topnavicon {
   display: block;
   text-align: center;
 }
+
+/* tooltips */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltipbutton {
+  color: #fff;
+  background-color: #00508F;
+  width: 1.2em;
+  height: 1.2em;
+  display: inline-block;
+  border-radius: 100%;
+  font-size: 1em;
+  text-align: center;
+  text-decoration: none;
+  -webkit-box-shadow: inset -1px -1px 1px 0px rgba(0,0,0,0.25);
+  -moz-box-shadow: inset -1px -1px 1px 0px rgba(0,0,0,0.25);
+  box-shadow: inset -1px -1px 1px 0px rgba(0,0,0,0.25);
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 200px;
+  background-color: #757575;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 6px;
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  left: 110%;
+}
+
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 15px;
+  right: 100%;
+  margin-top: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent #757575 transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
