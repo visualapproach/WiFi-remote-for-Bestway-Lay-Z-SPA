@@ -54,13 +54,8 @@
         </tr>
         <!--
         <tr>
-          <td><label for="restore">Startup behaviour:</label></td>
-          <td>
-            <select id="restore">
-              <option value="0">Default (off)</option>
-              <option value="1">Last saved states</option>
-            </select>
-          </td>
+          <td><label for="restore">Restore last states on startup:</label></td>
+          <td><input type="checkbox" id="restore"></td>
         </tr>
         -->
         <tr>
@@ -132,8 +127,11 @@ const rebootesp = 6;
 const gettarget = 7;
 const setjets = 11;
 const setgodmode = 12;
-const commandlist = ["Set target", "Set unit", "Set bubbles", "Set heat", "Set pump", "Reset queue", "Reboot ESP", "Internal cmd", "resetTotals:", "resetTimerChlorine", "resetTimerFilter",  "Set jets", "Take Control", "Internal cmd", "Set ambient temp F.", "Set ambient temp C.", "Reset daily meter"];
-
+const commandlist = [
+  "Set target", "Set unit", "Set bubbles", "Set heat", "Set pump", "Reset queue", "Reboot ESP",
+  "Internal cmd", "resetTotals:", "resetTimerChlorine", "resetTimerFilter",  "Set jets", "Take Control",
+  "Internal cmd", "Set ambient temp F.", "Set ambient temp C.", "Reset daily meter"
+];
 
 function loadconfig(){
   const Http = new XMLHttpRequest();
@@ -149,8 +147,8 @@ function loadconfig(){
       document.getElementById("price").value = msgobj.PRICE.toString();
       document.getElementById("finterval").value = msgobj.FINT.toString();
       document.getElementById("clinterval").value = msgobj.CLINT.toString();
-      //document.getElementById("restore").value = Number(msgobj.RESTORE);
       document.getElementById("audio").checked = msgobj.AUDIO;
+      //document.getElementById("restore").checked = msgobj.RESTORE;
       var date = new Date(msgobj.REBOOTTIME * 1000);
       document.getElementById('lastboot').innerHTML = "Last boot: " + date.toLocaleString() + " " + msgobj.REBOOTINFO;
     }
@@ -199,8 +197,8 @@ function saveconfig(){
     "FINT":parseInt(document.getElementById("finterval").value),
     "CLINT":parseInt(document.getElementById("clinterval").value),
     "AUDIO":document.getElementById("audio").checked//,
-    //"RESTORE":parseInt(document.getElementById("restore").value)
-    }
+    //"RESTORE":document.getElementById("restore").checked
+  }
   Http.send(JSON.stringify(msgobj));
   console.log(msgobj);
   alert("Saved.");
