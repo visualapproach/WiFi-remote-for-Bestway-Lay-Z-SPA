@@ -4,6 +4,7 @@ var connection;
 // command mapping
 const cmd = {
 	setTarget: 0,
+	setTargetSelector: 0,
 	toggleUnit: 1,
 	toggleBubbles: 2,
 	toggleHeater: 3,
@@ -16,8 +17,10 @@ const cmd = {
 	resetTimerFilter: 10,
 	toggleHydroJets: 11,
 	setBrightness: 12,
+	setBrightnessSelector: 12,
 	setBeep: 13,
 	setAmbient: 15,
+	setAmbientSelector: 15,
 	setAmbientF: 14,
 	setAmbientC: 15
 };
@@ -31,8 +34,8 @@ const eid = {
 	toggleHydroJets: 'HJT'
 };
 
-// to be used for setting the slider position once after loading to original values
-var initSlider = true;
+// to be used for setting the control values once after loading original values from the web socket
+var initControlValues = true;
 
 // display brightness multiplier. lower value results lower brightness levels (1-30)
 const dspBrtMultiplier = 16;
@@ -47,7 +50,7 @@ function connect()
 	connection.onopen = function()
 	{
 		document.getElementById('header').style = "background-color: #00508F";
-		initSlider = true;
+		initControlValues = true;
 	};
 
 	connection.onerror = function(error)
@@ -101,7 +104,7 @@ function handlemsg(e)
 			"CONNECT_UNAUTHORIZED" // 5 / the client was not authorized to connect
 		]
 		document.getElementById('mqtt').innerHTML = "MQTT: " + mqtt_states[msgobj.MQTT + 4];
-		document.getElementById('fw').innerHTML = "Firmware version: " + msgobj.FW;
+		document.getElementById('fw').innerHTML = "Firmware: " + msgobj.FW;
 		document.getElementById('model').innerHTML = "Model: " + msgobj.MODEL;
 		document.getElementById('rssi').innerHTML = "RSSI: " + msgobj.RSSI;
 
@@ -113,42 +116,66 @@ function handlemsg(e)
 	if (msgobj.CONTENT == "STATES")
 	{
 		// temperature
-		document.getElementById('temp').min = (msgobj.UNT ? 20 : 68);
-		document.getElementById('temp').max = (msgobj.UNT ? 40 : 104);
-		document.getElementById('amb').min = (msgobj.UNT ? -10 : 14);;
-		document.getElementById('amb').max = (msgobj.UNT ? 50 : 122);;
 		document.getElementById('atlabel').innerHTML = msgobj.TMP.toString();
 		document.getElementById('vtlabel').innerHTML = msgobj.VTM.toFixed(2).toString();
 		document.getElementById('ttlabel').innerHTML = msgobj.TGT.toString();
 
 		// buttons
 		document.getElementById('AIR').checked = msgobj.AIR;
-		if(document.getElementById('UNT').checked != msgobj.UNT) {
+		if (document.getElementById('UNT').checked != msgobj.UNT)
+		{
 			document.getElementById('UNT').checked = msgobj.UNT;
-			initSlider = true;
+			initControlValues = true;
 		}
 		document.getElementById('FLT').checked = msgobj.FLT;
 		document.getElementById('HJT').checked = msgobj.HJT;
 		document.getElementById('HTR').checked = msgobj.RED || msgobj.GRN;
 
 		// heater button color
-		document.getElementById('htrspan').style = "background-color: #" + ((msgobj.RED) ? 'FF0000' : ((msgobj.GRN) ? '00FF00' : 'CCC'));
+		document.getElementById('htrspan').classList.remove('heateron');
+		document.getElementById('htrspan').classList.remove('heateroff');
+		if (msgobj.RED || msgobj.GRN)
+		{
+			document.getElementById('htrspan').classList.add((msgobj.RED) ? 'heateron' : ((msgobj.GRN) ? 'heateroff' : 'n-o-n-e'));
+		}
 
 		// display
-		document.getElementById('dsp').innerHTML = "[" + String.fromCharCode(msgobj.CH1,msgobj.CH2,msgobj.CH3)+ "]";
-		document.getElementById('dsp').style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(parseInt(msgobj.BRT)+1)), 0, 0);
+		document.getElementById('display').innerHTML = "[" + String.fromCharCode(msgobj.CH1,msgobj.CH2,msgobj.CH3)+ "]";
+		document.getElementById('display').style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(parseInt(msgobj.BRT)+1)), 0, 0);
 
-		// set slider values (once)
-		if (initSlider)
+		// set control values (once)
+		if (initControlValues)
 		{
+			var minTemp = (msgobj.UNT ? 20 : 68);
+			var maxTemp = (msgobj.UNT ? 40 : 104);
+			var minAmb = (msgobj.UNT ? -10 : 14);
+			var maxAmb = (msgobj.UNT ? 50 : 122);
+			document.getElementById('temp').min = minTemp;
+			document.getElementById('temp').max = maxTemp;
+			document.getElementById('selectorTemp').min = minTemp;
+			document.getElementById('selectorTemp').max = maxTemp;
+			document.getElementById('amb').min = minAmb;
+			document.getElementById('amb').max = maxAmb;
+			document.getElementById('selectorAmb').min = minAmb;
+			document.getElementById('selectorAmb').max = maxAmb;
+
 			document.getElementById('temp').value = msgobj.TGT;
-			document.getElementById('brt').value = msgobj.BRT;
 			document.getElementById('amb').value = msgobj.AMB;
-			initSlider = false;
+			document.getElementById('brt').value = msgobj.BRT;
+			document.getElementById('selectorTemp').value = msgobj.TGT;
+			document.getElementById('selectorAmb').value = msgobj.AMB;
+			document.getElementById('selectorBrt').value = msgobj.BRT;
+
+			initControlValues = false;
 		}
-		document.getElementById('sliderTempVal').innerHTML = document.getElementById('temp').value.toString();
-		document.getElementById('sliderBrtVal').innerHTML = document.getElementById('brt').value.toString();
-		document.getElementById('sliderAmbVal').innerHTML = document.getElementById('amb').value.toString();
+
+		document.getElementById('sliderTempVal').innerHTML = msgobj.TGT;
+		document.getElementById('sliderAmbVal').innerHTML = msgobj.AMB;
+		document.getElementById('sliderBrtVal').innerHTML = msgobj.BRT;
+		// document.getElementById('selectorTempVal').value = msgobj.TGT;
+		// document.getElementById('selectorAmbVal').value = msgobj.AMB;
+		// document.getElementById('selectorBrtVal').value = msgobj.BRT;
+
 	}
 
 	if (msgobj.CONTENT == "TIMES")
@@ -158,13 +185,15 @@ function handlemsg(e)
 
 		// chlorine add reset timer
 		var clDate = (Date.now()/1000-msgobj.CLTIME)/(24*3600.0);
-		document.getElementById('cltimer').innerHTML = clDate.toFixed(2);
-		document.getElementById('cltimerbtn').className = (clDate > msgobj.CLINT ? "button_red" : "button");
+		var clDateRound = Math.round(clDate);
+		document.getElementById('cltimer').innerHTML = clDateRound + ' day' + (clDateRound != 1 ? 's' : '');
+		document.getElementById('cltimerbtn').className = (clDate > msgobj.CLINT ? 'button_red' : 'button');
 
 		// filter change reset timer
 		var fDate = (Date.now()/1000-msgobj.FTIME)/(24*3600.0);
-		document.getElementById('ftimer').innerHTML = fDate.toFixed(2);
-		document.getElementById('ftimerbtn').className = (fDate > msgobj.FINT ? "button_red" : "button");
+		var fDateRound = Math.round(fDate);
+		document.getElementById('ftimer').innerHTML = fDateRound + ' day' + (fDateRound != 1 ? 's' : '');
+		document.getElementById('ftimerbtn').className = (fDate > msgobj.FINT ? 'button_red' : 'button');
 
 		// statistics
 		document.getElementById('heatingtime').innerHTML = s2dhms(msgobj.HEATINGTIME);
@@ -174,7 +203,7 @@ function handlemsg(e)
 		document.getElementById('jettime').innerHTML = s2dhms(msgobj.JETTIME);
 		document.getElementById('cost').innerHTML = (msgobj.COST).toFixed(2);
     document.getElementById('t2r').innerHTML = (msgobj.T2R);
-		document.getElementById('tttt').innerHTML = (msgobj.TTTT/3600).toFixed(2) + "h<br>(" + new Date(msgobj.TIME * 1000 + msgobj.TTTT * 1000).toLocaleString() + ")";
+		document.getElementById('tttt').innerHTML = (msgobj.TTTT/3600).toFixed(2) + 'h<br>(' + new Date(msgobj.TIME * 1000 + msgobj.TTTT * 1000).toLocaleString() + ')';
 	}
 };
 
@@ -205,29 +234,27 @@ function sendCommand(val)
 
 	// get and set value
 	var value = 0;
-	if (val == 'setTarget')
+	if (val == 'setTarget' || val == 'setTargetSelector')
 	{
-		value = parseInt(document.getElementById('temp').value);
+		value = parseInt(document.getElementById((val == 'setTarget') ? 'temp' : 'selectorTemp').value);
 		document.getElementById("sliderTempVal").innerHTML = value.toString();
 	}
-	else if (val == 'setBrightness')
+	else if (val == 'setAmbient' || val == 'setAmbientSelector')
 	{
-		value = parseInt(document.getElementById('brt').value);
-		document.getElementById("sliderBrtVal").innerHTML = value.toString();
-		document.getElementById("dsp").style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(value+1)), 0, 0);
-
-	}
-	else if (val == 'setAmbient')
-	{
-		value = parseInt(document.getElementById('amb').value);
-		if(document.getElementById("UNT").checked) val = 'setAmbientC';
-		else val = 'setAmbientF';
+		value = parseInt(document.getElementById((val == 'setTarget') ? 'amb' : 'selectorAmb').value);
 		document.getElementById("sliderAmbVal").innerHTML = value.toString();
+		val = 'setAmbient' + ((document.getElementById("UNT").checked) ? 'C' : 'F');
+	}
+	else if (val == 'setBrightness' || val == 'setBrightnessSelector')
+	{
+		value = parseInt(document.getElementById((val == 'setTarget') ? 'brt' : 'selectorBrt').value);
+		document.getElementById("sliderBrtVal").innerHTML = value.toString();
+		document.getElementById("display").style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(value+1)), 0, 0);
 	}
 	else if (eid[val] && (val == 'toggleUnit' || val == 'toggleBubbles' || val == 'toggleHeater' || val == 'togglePump' || val == 'toggleHydroJets'))
 	{
 		value = document.getElementById(eid[val]).checked;
-		initSlider = true;
+		initControlValues = true;
 	}
 
 	var obj = {};

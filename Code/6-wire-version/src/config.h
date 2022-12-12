@@ -13,6 +13,10 @@
 const bool hidePasswords = true;
 /** get the network hostname of the device (max. length 26) */
 const char *netHostname = DEVICE_NAME;
+/** no comment :-) */
+bool notify = false;
+/** no comment :-) */
+int notification_time = 32;
 
 /*
  * Web Server Authentication
@@ -33,6 +37,26 @@ const char *OTAName = DEVICE_NAME;
 const char *OTAPassword = "esp8266";
 
 /*
+ * Web UI Configuration
+ *
+ * You can modify this via Web UI.
+ */
+/** get or set the state of displaying the "Temperature" section */
+bool showSectionTemperature = true;
+/** get or set the state of displaying the "Display" section */
+bool showSectionDisplay = true;
+/** get or set the state of displaying the "Control" section */
+bool showSectionControl = true;
+/** get or set the state of displaying the "Buttons" section */
+bool showSectionButtons = true;
+/** get or set the state of displaying the "Timer" section */
+bool showSectionTimer = true;
+/** get or set the state of displaying the "Totals" section */
+bool showSectionTotals = true;
+/** get or set the state of displaying slider or selector */
+bool useControlSelector = false;
+
+/*
  * WiFi Configuration Manager
  *
  * A fresh/clean ESP needs WiFi credentials to be connected to a network.
@@ -48,8 +72,7 @@ const char *OTAPassword = "esp8266";
  *
  * WARNING: For the case you set 'enableWmApFallback=false' you could lock out
  *  yourself when loosing your home network. You would have to "Reset WiFi" but
- *  you are not able to connect to the Web GUI without a connection.
- *
+ *  you are not able to connect to the web ui without a connection.
  */
 /** get the state of the WiFi configuration manager fallback on wifi failures */
 bool enableWmApFallback = true;
@@ -65,7 +88,7 @@ const char *wmApPassword = "layzspam0dule";
  * When a connection was established successfully, the 'enableAp' get automatically
  *  the state 'true' including writing credentials to the "wifi.json".
  *
- * You can modify this via Web GUI.
+ * You can modify this via Web UI.
  */
 /** get or set the state of the specific access point configuration */
 bool enableAp = false;
@@ -77,7 +100,7 @@ String apPwd = "pwd";
 /*
  * WiFi Static IP
  *
- * You can modify this via Web GUI.
+ * You can modify this via Web UI.
  */
 /** get or set the state of the static IP setup */
 bool enableStaticIp4 = false;
@@ -95,7 +118,7 @@ IPAddress ip4DnsSecondary(8,8,4,4);
 /*
  * MQTT Server
  *
- * You can modify this via Web GUI.
+ * You can modify this via Web UI.
  */
 /** get or set the state of the MQTT server connection */
 bool useMqtt = false;
@@ -113,7 +136,3 @@ String mqttClientId = DEVICE_NAME;
 String mqttBaseTopic = DEVICE_NAME;
 /** get or set the MQTT telemetry interval */
 int mqttTelemetryInterval = 600;
-
-/** Other feats */
-bool notify = false;
-int notification_time = 32;

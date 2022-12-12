@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html ontouchmove>
 <head>
 	<title>Lay-Z-Spa Module</title>
 	<meta charset="utf-8">
@@ -22,6 +22,7 @@
 		<div class="topnav" id="topnav">
 			<a href="./" class="active">Home</a>
 			<a href="config.html">SPA Config</a>
+			<a href="webconfig.html">Web Config</a>
 			<a href="wifi.html">Network Config</a>
 			<a href="mqtt.html">MQTT Config</a>
 			<a href="/dir/">Directory</a>
@@ -31,7 +32,7 @@
 			<a href="javascript:void(0);" class="bgred" onclick="sendCommand('restartEsp')">Restart ESP</a>
 		</div>
 
-		<section style="position:relative">
+		<section id="sectionTemperature">
 			<div class="visualapproach"></div>
 			<h2>Temperature:</h2>
 			<table class="fixed">
@@ -54,49 +55,83 @@
 			</table>
 		</section>
 
-		<section>
+		<section id="sectionDisplay">
 			<table>
 				<tr>
-					<td colspan="2" class="center">
-						<h1 id="dsp" style="width:20%; margin:auto; text-align: center; background-color: #000; color: red;">[DSP]</h1>
+					<td class="center"><div id="display">[DSP]</div></td>
+				</tr>
+			</table>
+		</section>
+
+		<section id="sectionControl">
+			<h2>Control:</h2>
+			<table id="tableSlider">
+				<tr>
+					<td style="width:40%;white-space:nowrap;">Temperature</td>
+					<td style="width:50%"><input type="range" id="temp" min="20" max="40" step="1" value="20" onmouseup="sendCommand('setTarget')" ontouchend="sendCommand('setTarget')"></td>
+					<td style="width:10%;text-align:right" id="sliderTempVal">n/a</td>
+				</tr>
+				<tr>
+					<td style="white-space:nowrap;">Ambient Temp.</td>
+					<td><input type="range" id="amb" min="-10" max="50" step="1" value="20" onmouseup="sendCommand('setAmbient')" ontouchend="sendCommand('setAmbient')"></td>
+					<td style="text-align:right" id="sliderAmbVal">n/a</td>
+				</tr>
+				<tr>
+					<td style="white-space:nowrap;">Brightness</td>
+					<td><input type="range" id="brt" min="0" max="8" step="1" value="7" onmouseup="sendCommand('setBrightness')" ontouchend="sendCommand('setBrightness')"></td>
+					<td style="text-align:right" id="sliderBrtVal">n/a</td>
+				</tr>
+			</table>
+
+			<table id="tableSelector" class="fixed">
+				<tr>
+					<td class="center">Temperature</td>
+					<td class="center">Ambient Temperature</td>
+					<td class="center">Brightness</td>
+				</tr>
+				<tr>
+					<td class="center">
+						<div class="selector">
+							<button onclick="increaseNumber('selectorTemp');sendCommand('setTargetSelector')" class="selectorbutton selectortop">ᐱ</button>
+							<!-- <input id="selectorTempVal" value="20" type="hidden"> -->
+							<input id="selectorTemp" min="20" max="40" step="1" value="20" type="text" class="selectorvalue" readonly>
+							<span class="degree">°</span>
+							<button onclick="decreaseNumber('selectorTemp');sendCommand('setTargetSelector')" class="selectorbutton selectorbottom">ᐯ</button>
+						</div>
+					</td>
+					<td class="center">
+						<div class="selector">
+							<button onclick="increaseNumber('selectorAmb');sendCommand('setAmbientSelector')" class="selectorbutton selectortop">ᐱ</button>
+							<!-- <input id="selectorAmbVal" value="20" type="hidden"> -->
+							<input id="selectorAmb" min="-10" max="50" step="1" value="20" type="text" class="selectorvalue" readonly>
+							<span class="degree">°</span>
+							<button onclick="decreaseNumber('selectorAmb');sendCommand('setAmbientSelector')" class="selectorbutton selectorbottom">ᐯ</button>
+						</div>
+					</td>
+					<td class="center">
+						<div class="selector">
+							<button onclick="increaseNumber('selectorBrt');sendCommand('setBrightnessSelector')" class="selectorbutton selectortop">ᐱ</button>
+							<!-- <input id="selectorBrtVal" value="7" type="hidden"> -->
+							<input id="selectorBrt" min="0" max="8" step="1" value="7" type="text" class="selectorvalue" readonly>
+							<button onclick="decreaseNumber('selectorBrt');sendCommand('setBrightnessSelector')" class="selectorbutton selectorbottom">ᐯ</button>
+						</div>
 					</td>
 				</tr>
 			</table>
 		</section>
 
-		<section>
-			<h2>Control:</h2>
-			<table>
-				<tr>
-					<td style="width:40%;white-space:nowrap;">Set temperature:</td>
-					<td style="width:40%"><input type="range" id="temp" min="20" max="40" step="1" value="20" onmouseup="sendCommand('setTarget')" ontouchend="sendCommand('setTarget')"></td>
-					<td style="width:20%;text-align:right" id="sliderTempVal">n/a</td>
-				</tr>
-			</table>
-			<table>
-				<tr>
-					<td style="width:40%;white-space:nowrap;">Set brightness:</td>
-					<td style="width:40%"><input type="range" id="brt" min="0" max="8" step="1" value="7" onmouseup="sendCommand('setBrightness')" ontouchend="sendCommand('setBrightness')"></td>
-					<td style="width:20%;text-align:right" id="sliderBrtVal">n/a</td>
-				</tr>
-			</table>
-			<table>
-				<tr>
-					<td style="width:40%;white-space:nowrap;">Set ambient temp:</td>
-					<td style="width:40%"><input type="range" id="amb" min="-10" max="50" step="1" value="20" onmouseup="sendCommand('setAmbient')" ontouchend="sendCommand('setAmbient')"></td>
-					<td style="width:20%;text-align:right" id="sliderAmbVal">n/a</td>
-				</tr>
-			</table>
+		<section id="sectionButtons">
+			<h2>Buttons:</h2>
 			<table class="fixed">
 				<tr>
-					<td>Bubbles</td>
+					<td class="right"><label for="AIR">Bubbles</label></td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="AIR" onchange="sendCommand('toggleBubbles')">
 						<span class="slider round"></span>
 						</label>
 					</td>
-					<td>Heater</td>
+					<td class="right"><label for="HTR"></label>Heater</label></td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="HTR" onchange="sendCommand('toggleHeater')">
@@ -105,14 +140,14 @@
 					</td>
 				</tr>
 				<tr>
-					<td>Pump</td>
+					<td class="right"><label for="FLT"></label>Pump</label></td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="FLT" onchange="sendCommand('togglePump')">
 						<span class="slider round"></span>
 						</label>
 					</td>
-					<td>Unit (F/C)</td>
+					<td class="right"><label for="UNT"></label>Unit (F/C)</label></td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="UNT" onchange="sendCommand('toggleUnit')">
@@ -121,7 +156,7 @@
 					</td>
 				</tr>
 				<tr id="jets">
-					<td>Hydrojets</td>
+					<td class="right"><label for="HJT"></label>Hydrojets</label></td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="HJT" onchange="sendCommand('toggleHydroJets')">
@@ -134,21 +169,21 @@
 			</table>
 		</section>
 
-		<section>
+		<section id="sectionTimer">
 			<h2>Timer:</h2>
 			<table>
 				<tr>
-					<td>Last chlorine add was <span id="cltimer">n/a</span> day(s) ago.</td>
+					<td>Last chlorine add was <span id="cltimer">n/a</span> ago.</td>
 					<td><button id="cltimerbtn" class="button" onclick="sendCommand('resetTimerChlorine')">Reset</button></td>
 				</tr>
 				<tr>
-					<td>Last filter change was <span id="ftimer">n/a</span> day(s) ago.</td>
+					<td>Last filter change was <span id="ftimer">n/a</span> ago.</td>
 					<td><button id="ftimerbtn" class="button" onclick="sendCommand('resetTimerFilter')">Reset</button></td>
 				</tr>
 			</table>
 		</section>
 
-		<section>
+		<section id="sectionTotals">
 			<h2>Totals:</h2>
 			<table class="fixed">
 				<tr>
@@ -216,5 +251,32 @@
 			<p class="center"><span id="rssi">RSSI: loading status...</span></p>
 		</footer>
 	</div>
+
+<script>
+function loadWebConfig()
+{
+	const Http = new XMLHttpRequest();
+	const url = '/getwebconfig/';
+	Http.open("POST", url);
+	Http.send();
+	Http.onreadystatechange = function()
+	{
+		if (this.readyState == 4 && this.status == 200)
+		{
+			console.log(Http.responseText);
+			var json = JSON.parse(Http.responseText);
+			document.getElementById("sectionTemperature").style.display = (json.showSectionTemperature ? "block" : "none");
+			document.getElementById("sectionDisplay").style.display = (json.showSectionDisplay ? "block" : "none");
+			document.getElementById("sectionControl").style.display = (json.showSectionControl ? "block" : "none");
+			document.getElementById("sectionButtons").style.display = (json.showSectionButtons ? "block" : "none");
+			document.getElementById("sectionTimer").style.display = (json.showSectionTimer ? "block" : "none");
+			document.getElementById("sectionTotals").style.display = (json.showSectionTotals ? "block" : "none");
+			document.getElementById("tableSlider").style.display = (json.useControlSelector ? "none" : "table");
+			document.getElementById("tableSelector").style.display = (json.useControlSelector ? "table" : "none");
+		}
+	}
+}
+loadWebConfig();
+</script>
 </body>
 </html>

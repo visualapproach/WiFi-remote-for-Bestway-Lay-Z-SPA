@@ -21,6 +21,7 @@
 		<div class="topnav" id="topnav">
 			<a href="./">Home</a>
 			<a href="config.html">SPA Config</a>
+			<a href="webconfig.html">Web Config</a>
 			<a href="wifi.html" class="active">Network Config</a>
 			<a href="mqtt.html">MQTT Config</a>
 			<a href="/dir/">Directory</a>
@@ -132,14 +133,9 @@
 				Connect to it's access point and configure your WiFi (just like the first configuration).
         Don't forget to disable WiFi Manager AP again if you want it off.
 			</p>
-			<table>
-				<tr>
-					<td colspan="2" style="text-align:center">
-						<button id="save" class="button_red" onclick="resetWifi()">Reset WiFi</button>
-					</td>
-				</tr>
-			</table>
 		</section>
+
+		<footer class="center"><button id="save" class="button_red" onclick="resetWifi()">Reset WiFi</button></footer>
 	</div>
 
 <script>
