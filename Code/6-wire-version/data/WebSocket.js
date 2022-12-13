@@ -241,13 +241,13 @@ function sendCommand(val)
 	}
 	else if (val == 'setAmbient' || val == 'setAmbientSelector')
 	{
-		value = parseInt(document.getElementById((val == 'setTarget') ? 'amb' : 'selectorAmb').value);
+		value = parseInt(document.getElementById((val == 'setAmbient') ? 'amb' : 'selectorAmb').value);
 		document.getElementById("sliderAmbVal").innerHTML = value.toString();
 		val = 'setAmbient' + ((document.getElementById("UNT").checked) ? 'C' : 'F');
 	}
 	else if (val == 'setBrightness' || val == 'setBrightnessSelector')
 	{
-		value = parseInt(document.getElementById((val == 'setTarget') ? 'brt' : 'selectorBrt').value);
+		value = parseInt(document.getElementById((val == 'setBrightness') ? 'brt' : 'selectorBrt').value);
 		document.getElementById("sliderBrtVal").innerHTML = value.toString();
 		document.getElementById("display").style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(value+1)), 0, 0);
 	}
