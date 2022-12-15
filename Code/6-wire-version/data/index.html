@@ -88,16 +88,16 @@
 				<tr>
 					<td class="center">
 						<div class="selector">
-							<button onclick="increaseNumber('selectorTemp')" class="selectorbutton selectortop">ᐱ</button>
+							<button onclick="increaseNumber('selectorTemp');sendCommand('setTargetSelector')" class="selectorbutton selectortop">ᐱ</button>
 							<input id="selectorTemp" min="20" max="40" step="1" value="20" type="text" class="selectorvalue" onchange="sendCommand('setTargetSelector')"><span class="degree">°</span>
-							<button onclick="decreaseNumber('selectorTemp')" class="selectorbutton selectorbottom">ᐯ</button>
+							<button onclick="decreaseNumber('selectorTemp');sendCommand('setTargetSelector')" class="selectorbutton selectorbottom">ᐯ</button>
 						</div>
 					</td>
 					<td class="center">
 						<div class="selector">
-							<button onclick="increaseNumber('selectorAmb')" class="selectorbutton selectortop">ᐱ</button>
+							<button onclick="increaseNumber('selectorAmb');sendCommand('setAmbientSelector')" class="selectorbutton selectortop">ᐱ</button>
 							<input id="selectorAmb" min="-10" max="50" step="1" value="20" type="text" class="selectorvalue" onchange="sendCommand('setAmbientSelector')"><span class="degree">°</span>
-							<button onclick="decreaseNumber('selectorAmb')" class="selectorbutton selectorbottom">ᐯ</button>
+							<button onclick="decreaseNumber('selectorAmb');sendCommand('setAmbientSelector')" class="selectorbutton selectorbottom">ᐯ</button>
 						</div>
 					</td>
 					<td class="center">
