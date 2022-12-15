@@ -41,11 +41,7 @@
 					<td><span id="atlabel">n/a</span></td>
 				</tr>
 				<tr>
-					<td>
-						<div class="tooltip">Virtual: <span class="tooltipbutton">?</span>
-							<span class="tooltiptext">ESP attempts to keep track of water temperature even when pump is stopped and the temperature drops in the pump while the large body of water cools slower. Uses ambient temperature.</span>
-						</div>
-					</td>
+					<td>Virtual: <span data-text="ESP attempts to keep track of water temperature even when pump is stopped and the temperature drops in the pump while the large body of water cools slower. Uses ambient temperature." class="tooltip">?</span></td>
 					<td><span id="vtlabel">n/a</span></td>
 				</tr>
 				<tr>
@@ -67,17 +63,17 @@
 			<h2>Control:</h2>
 			<table id="tableSlider">
 				<tr>
-					<td style="width:40%;white-space:nowrap;">Temperature</td>
+					<td style="width:40%;">Temperature</td>
 					<td style="width:50%"><input type="range" id="temp" min="20" max="40" step="1" value="20" onmouseup="sendCommand('setTarget')" ontouchend="sendCommand('setTarget')"></td>
 					<td style="width:10%;text-align:right" id="sliderTempVal">n/a</td>
 				</tr>
 				<tr>
-					<td style="white-space:nowrap;">Ambient Temp.</td>
+					<td>Ambient Temp.</td>
 					<td><input type="range" id="amb" min="-10" max="50" step="1" value="20" onmouseup="sendCommand('setAmbient')" ontouchend="sendCommand('setAmbient')"></td>
 					<td style="text-align:right" id="sliderAmbVal">n/a</td>
 				</tr>
 				<tr>
-					<td style="white-space:nowrap;">Brightness</td>
+					<td>Brightness <span data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off)." class="tooltip">?</span></td>
 					<td><input type="range" id="brt" min="0" max="8" step="1" value="7" onmouseup="sendCommand('setBrightness')" ontouchend="sendCommand('setBrightness')"></td>
 					<td style="text-align:right" id="sliderBrtVal">n/a</td>
 				</tr>
@@ -87,7 +83,7 @@
 				<tr>
 					<td class="center">Temperature</td>
 					<td class="center">Ambient Temperature</td>
-					<td class="center">Brightness</td>
+					<td class="center">Brightness <span data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off)." class="tooltip left">?</span></td>
 				</tr>
 				<tr>
 					<td class="center">
@@ -187,35 +183,19 @@
 			<h2>Totals:</h2>
 			<table class="fixed">
 				<tr>
-					<td>
-						<div class="tooltip">Time: <span class="tooltipbutton">?</span>
-							<span class="tooltiptext">ESP sends UTC. Browser converts to Local.</span>
-						</div>
-					</td>
+					<td>Time: <span data-text="ESP sends UTC. Browser converts to Local." class="tooltip">?</span></td>
 					<td><span id="time">n/a</span></td>
 				</tr>
 				<tr>
-					<td>
-						<div class="tooltip">Heating Est.: <span class="tooltipbutton">?</span>
-							<span class="tooltiptext">Heating Estimation:<br />Old naive way to estimate when target temp is reached.</span>
-						</div>
-					</td>
+					<td>Heating Est.: <span data-text="Heating Estimation: Old naive way to estimate when target temp is reached." class="tooltip">?</span></td>
 					<td><span id="tttt">n/a</span></td>
 				</tr>
 				<tr>
-					<td>
-						<div class="tooltip">Ready in (hours): <span class="tooltipbutton">?</span>
-							<span class="tooltiptext">New way of estimating time to ready. Works best if given actual ambient temperature from for example HA.</span>
-						</div>
-					</td>
+					<td>Ready in (hours): <span data-text="New way of estimating time to ready. Works best if given actual ambient temperature from for example HA." class="tooltip">?</span></td>
 					<td><span id="t2r">n/a</span></td>
 				</tr>
 				<tr>
-					<td>
-						<div class="tooltip">Uptime: <span class="tooltipbutton">?</span>
-							<span class="tooltiptext">How long ESP has been running since reset. Rebooting will continue counting.</span>
-						</div>
-					</td>
+					<td>Uptime: <span data-text="How long ESP has been running since reset. Rebooting will continue counting." class="tooltip">?</span></td>
 					<td><span id="uptime">n/a</span></td>
 				</tr>
 				<tr>
