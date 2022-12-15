@@ -2,7 +2,7 @@
 var connection;
 
 // command mapping
-const cmd = {
+const cmdMap = {
 	setTarget: 0,
 	setTargetSelector: 0,
 	toggleUnit: 1,
@@ -26,7 +26,7 @@ const cmd = {
 };
 
 // button element ID mapping
-const eid = {
+const btnMap = {
 	toggleUnit: 'UNT',
 	toggleBubbles: 'AIR',
 	toggleHeater: 'HTR',
@@ -162,9 +162,6 @@ function handlemsg(e)
 			document.getElementById('temp').value = msgobj.TGT;
 			document.getElementById('amb').value = msgobj.AMB;
 			document.getElementById('brt').value = msgobj.BRT;
-			document.getElementById('selectorTemp').value = msgobj.TGT;
-			document.getElementById('selectorAmb').value = msgobj.AMB;
-			document.getElementById('selectorBrt').value = msgobj.BRT;
 
 			initControlValues = false;
 		}
@@ -172,10 +169,13 @@ function handlemsg(e)
 		document.getElementById('sliderTempVal').innerHTML = msgobj.TGT;
 		document.getElementById('sliderAmbVal').innerHTML = msgobj.AMB;
 		document.getElementById('sliderBrtVal').innerHTML = msgobj.BRT;
-		// document.getElementById('selectorTempVal').value = msgobj.TGT;
-		// document.getElementById('selectorAmbVal').value = msgobj.AMB;
-		// document.getElementById('selectorBrtVal').value = msgobj.BRT;
 
+		var elemSelectorTemp = document.getElementById('selectorTemp');
+		var elemSelectorAmb = document.getElementById('selectorAmb');
+		var elemSelectorBrt = document.getElementById('selectorBrt');
+		if (document.activeElement !== elemSelectorTemp) elemSelectorTemp.value = msgobj.TGT;
+		if (document.activeElement !== elemSelectorAmb) elemSelectorAmb.value = msgobj.AMB;
+		if (document.activeElement !== elemSelectorBrt) elemSelectorBrt.value = msgobj.BRT;
 	}
 
 	if (msgobj.CONTENT == "TIMES")
@@ -223,42 +223,51 @@ function s2dhms(val)
 	return days + "d " + hours.toString().pad("0", 2) + ":" + minutes.toString().pad("0", 2) + ":" + seconds.toString().pad("0", 2);
 }
 
-function sendCommand(val)
+function sendCommand(cmd)
 {
 	// check command
-	if (typeof(cmd[val]) == 'undefined')
+	if (typeof(cmdMap[cmd]) == 'undefined')
 	{
 		console.log("invalid command");
 		return;
 	}
 
+	// get the current unit (true=C, false=F)
+	var unit = (document.getElementById("UNT").checked);
+
 	// get and set value
 	var value = 0;
-	if (val == 'setTarget' || val == 'setTargetSelector')
+	if (cmd == 'setTarget' || cmd == 'setTargetSelector')
 	{
-		value = parseInt(document.getElementById((val == 'setTarget') ? 'temp' : 'selectorTemp').value);
+		value = parseInt(document.getElementById((cmd == 'setTarget') ? 'temp' : 'selectorTemp').value);
+		value = getProperValue(value, (unit ? 20 : 68), (unit ? 40 : 104));
 		document.getElementById("sliderTempVal").innerHTML = value.toString();
+		document.getElementById('selectorTemp').value = value.toString();
 	}
-	else if (val == 'setAmbient' || val == 'setAmbientSelector')
+	else if (cmd == 'setAmbient' || cmd == 'setAmbientSelector')
 	{
-		value = parseInt(document.getElementById((val == 'setAmbient') ? 'amb' : 'selectorAmb').value);
+		value = parseInt(document.getElementById((cmd == 'setAmbient') ? 'amb' : 'selectorAmb').value);
+		value = getProperValue(value, (unit ? -10 : 14), (unit ? 50 : 122));
 		document.getElementById("sliderAmbVal").innerHTML = value.toString();
-		val = 'setAmbient' + ((document.getElementById("UNT").checked) ? 'C' : 'F');
+		document.getElementById('selectorAmb').value = value.toString();
+		cmd = 'setAmbient' + (unit ? 'C' : 'F');
 	}
-	else if (val == 'setBrightness' || val == 'setBrightnessSelector')
+	else if (cmd == 'setBrightness' || cmd == 'setBrightnessSelector')
 	{
-		value = parseInt(document.getElementById((val == 'setBrightness') ? 'brt' : 'selectorBrt').value);
+		value = parseInt(document.getElementById((cmd == 'setBrightness') ? 'brt' : 'selectorBrt').value);
+		value = getProperValue(value, 0, 8);
 		document.getElementById("sliderBrtVal").innerHTML = value.toString();
+		document.getElementById('selectorBrt').value = value.toString();
 		document.getElementById("display").style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(value+1)), 0, 0);
 	}
-	else if (eid[val] && (val == 'toggleUnit' || val == 'toggleBubbles' || val == 'toggleHeater' || val == 'togglePump' || val == 'toggleHydroJets'))
+	else if (btnMap[cmd] && (cmd == 'toggleUnit' || cmd == 'toggleBubbles' || cmd == 'toggleHeater' || cmd == 'togglePump' || cmd == 'toggleHydroJets'))
 	{
-		value = document.getElementById(eid[val]).checked;
+		value = document.getElementById(btnMap[cmd]).checked;
 		initControlValues = true;
 	}
 
 	var obj = {};
-	obj["CMD"] = cmd[val];
+	obj["CMD"] = cmdMap[cmd];
 	obj["VALUE"] = value;
 	obj["XTIME"] = Math.floor(Date.now()/1000);
 	obj["INTERVAL"] = 0;
@@ -266,6 +275,11 @@ function sendCommand(val)
 	var json = JSON.stringify(obj);
 	connection.send(json);
 	console.log(json);
+}
+
+function getProperValue(val, min, max)
+{
+	return (val < min ? min : (val > max ? max : val));
 }
 
 function rgb(r, g, b)

@@ -389,7 +389,11 @@ a.topnavicon {
   /* opacity: 1; */
 }
 
-/* temperture selector */
+
+/**********************
+ * temperture selector
+\*/
+
 table#tableSelector {
   display: none;
 }
@@ -402,7 +406,7 @@ table#tableSelector {
   margin: auto;
 }
 
-button.selectorbutton {
+.selector .selectorbutton {
   width: 100%;
   height: 30px;
   color: #fff;
@@ -412,20 +416,20 @@ button.selectorbutton {
   cursor: pointer;
 }
 
-button.selectortop {
-  border-radius: 6px 6px 0 0;
-}
-
-button.selectorbottom {
-  border-radius: 0 0 6px 6px;
-}
-
-button.selectorbutton:hover {
+.selector .selectorbutton:hover {
   background-color: #0076d1;
   box-shadow: 0 0 3px #444;
 }
 
-input.selectorvalue {
+.selector .selectorbutton.selectortop {
+  border-radius: 6px 6px 0 0;
+}
+
+.selector .selectorbutton.selectorbottom {
+  border-radius: 0 0 6px 6px;
+}
+
+.selector .selectorvalue {
   width: 100%;
   height: 50px;
   border: none;
@@ -436,7 +440,7 @@ input.selectorvalue {
   padding: 0;
 }
 
-.degree {
+.selector .degree {
   position: absolute;
   top: 32px;
   right: 20px;
