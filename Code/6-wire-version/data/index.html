@@ -228,32 +228,11 @@
 	</div>
 
 <script>
-if (!localStorage.getItem('showSectionTemperature'))
+if (localStorage.getItem('showSectionTemperature'))
 {
-	loadWebConfig();
-} else {
 	setWebConfig();
 }
-
-function setWebConfig()
-{
-	var showSectionTemperature = localStorage.getItem('showSectionTemperature');
-	var showSectionDisplay = localStorage.getItem('showSectionDisplay');
-	var showSectionControl = localStorage.getItem('showSectionControl');
-	var showSectionButtons = localStorage.getItem('showSectionButtons');
-	var showSectionTimer = localStorage.getItem('showSectionTimer');
-	var showSectionTotals = localStorage.getItem('showSectionTotals');
-	var useControlSelector = localStorage.getItem('useControlSelector');
-
-	document.getElementById("sectionTemperature").style.display = (showSectionTemperature === 'true' ? "block" : "none");
-	document.getElementById("sectionDisplay").style.display = (showSectionDisplay === 'true' ? "block" : "none");
-	document.getElementById("sectionControl").style.display = (showSectionControl === 'true' ? "block" : "none");
-	document.getElementById("sectionButtons").style.display = (showSectionButtons === 'true' ? "block" : "none");
-	document.getElementById("sectionTimer").style.display = (showSectionTimer === 'true' ? "block" : "none");
-	document.getElementById("sectionTotals").style.display = (showSectionTotals === 'true' ? "block" : "none");
-	document.getElementById("tableSlider").style.display = (useControlSelector === 'true' ? "none" : "table");
-	document.getElementById("tableSelector").style.display = (useControlSelector === 'true' ? "table" : "none");
-}
+loadWebConfig();
 
 function loadWebConfig()
 {
@@ -277,6 +256,26 @@ function loadWebConfig()
 			setWebConfig();
 		}
 	}
+}
+
+function setWebConfig()
+{
+	var showSectionTemperature = localStorage.getItem('showSectionTemperature');
+	var showSectionDisplay = localStorage.getItem('showSectionDisplay');
+	var showSectionControl = localStorage.getItem('showSectionControl');
+	var showSectionButtons = localStorage.getItem('showSectionButtons');
+	var showSectionTimer = localStorage.getItem('showSectionTimer');
+	var showSectionTotals = localStorage.getItem('showSectionTotals');
+	var useControlSelector = localStorage.getItem('useControlSelector');
+
+	document.getElementById("sectionTemperature").style.display = (showSectionTemperature === 'true' ? "block" : "none");
+	document.getElementById("sectionDisplay").style.display = (showSectionDisplay === 'true' ? "block" : "none");
+	document.getElementById("sectionControl").style.display = (showSectionControl === 'true' ? "block" : "none");
+	document.getElementById("sectionButtons").style.display = (showSectionButtons === 'true' ? "block" : "none");
+	document.getElementById("sectionTimer").style.display = (showSectionTimer === 'true' ? "block" : "none");
+	document.getElementById("sectionTotals").style.display = (showSectionTotals === 'true' ? "block" : "none");
+	document.getElementById("tableSlider").style.display = (useControlSelector === 'true' ? "none" : "table");
+	document.getElementById("tableSelector").style.display = (useControlSelector === 'true' ? "table" : "none");
 }
 </script>
 </body>
