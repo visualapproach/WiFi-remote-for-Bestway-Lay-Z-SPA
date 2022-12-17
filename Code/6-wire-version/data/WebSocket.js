@@ -40,6 +40,11 @@ var initControlValues = true;
 // display brightness multiplier. lower value results lower brightness levels (1-30)
 const dspBrtMultiplier = 16;
 
+// update states
+updateTempState = false;
+updateAmbState = false;
+updateBrtState = false;
+
 // initial connect to the web socket
 connect();
 
@@ -170,12 +175,21 @@ function handlemsg(e)
 		document.getElementById('sliderAmbVal').innerHTML = msgobj.AMB;
 		document.getElementById('sliderBrtVal').innerHTML = msgobj.BRT;
 
+		// get selector elements
 		var elemSelectorTemp = document.getElementById('selectorTemp');
 		var elemSelectorAmb = document.getElementById('selectorAmb');
 		var elemSelectorBrt = document.getElementById('selectorBrt');
-		if (document.activeElement !== elemSelectorTemp) elemSelectorTemp.value = msgobj.TGT;
-		if (document.activeElement !== elemSelectorAmb) elemSelectorAmb.value = msgobj.AMB;
-		if (document.activeElement !== elemSelectorBrt) elemSelectorBrt.value = msgobj.BRT;
+
+		// change values only if element is not active (selected for input)
+		// also change only if an update is not in progress
+		if (document.activeElement !== elemSelectorTemp && !updateTempState) elemSelectorTemp.value = msgobj.TGT;
+		if (document.activeElement !== elemSelectorAmb && !updateAmbState) elemSelectorAmb.value = msgobj.AMB;
+		if (document.activeElement !== elemSelectorBrt && !updateBrtState) elemSelectorBrt.value = msgobj.BRT;
+
+		// reset update states when the set target matches the input
+		if (elemSelectorTemp.value == msgobj.TGT) updateTempState = false;
+		if (elemSelectorAmb.value == msgobj.AMB) updateAmbState = false;
+		if (elemSelectorBrt.value == msgobj.BRT) updateBrtState = false;
 	}
 
 	if (msgobj.CONTENT == "TIMES")
@@ -243,6 +257,7 @@ function sendCommand(cmd)
 		value = getProperValue(value, (unit ? 20 : 68), (unit ? 40 : 104));
 		document.getElementById("sliderTempVal").innerHTML = value.toString();
 		document.getElementById('selectorTemp').value = value.toString();
+		updateTempState = true;
 	}
 	else if (cmd == 'setAmbient' || cmd == 'setAmbientSelector')
 	{
@@ -251,6 +266,7 @@ function sendCommand(cmd)
 		document.getElementById("sliderAmbVal").innerHTML = value.toString();
 		document.getElementById('selectorAmb').value = value.toString();
 		cmd = 'setAmbient' + (unit ? 'C' : 'F');
+		updateAmbState = true;
 	}
 	else if (cmd == 'setBrightness' || cmd == 'setBrightnessSelector')
 	{
@@ -259,6 +275,7 @@ function sendCommand(cmd)
 		document.getElementById("sliderBrtVal").innerHTML = value.toString();
 		document.getElementById('selectorBrt').value = value.toString();
 		document.getElementById("display").style.color = rgb((255-(dspBrtMultiplier*8))+(dspBrtMultiplier*(value+1)), 0, 0);
+		updateBrtState = true;
 	}
 	else if (btnMap[cmd] && (cmd == 'toggleUnit' || cmd == 'toggleBubbles' || cmd == 'toggleHeater' || cmd == 'togglePump' || cmd == 'toggleHydroJets'))
 	{
