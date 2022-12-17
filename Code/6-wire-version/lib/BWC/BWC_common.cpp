@@ -85,19 +85,19 @@ void BWC::loop(){
   if(override_dsp_brt_timer > 0) brt = 8;
   _dsp.updateDSP(brt);
   _updateTimes();
-  //update cio public payload
-  _cio.loop();
   //manage command queue
   _handleCommandQ();
   //queue overrides real buttons
   _handleButtonQ();
+  //update cio public payload
+  _cio.loop();
   if(_saveEventlogNeeded) saveEventlog();
   if(_saveSettingsNeeded) saveSettings();
   if(_saveCmdqNeeded) _saveCommandQueue();
   //if set target command missed we need to correct that
-  if( (_cio.states[TARGET] != _sliderTarget) && (_qButtonLen == 0) && (_sliderTarget != 0) && (_sliderPrio) ) qCommand(SETTARGET, _sliderTarget, 0, 0);
+  if( (_cio.states[TARGET] != _sliderTarget) && (_buttonQLen == 0) && (_sliderTarget != 0) && (_sliderPrio) ) qCommand(SETTARGET, _sliderTarget, 0, 0);
   //if target temp is unknown, find out.
-  if( (_cio.states[TARGET] == 0) && (_qButtonLen == 0) ) qCommand(GETTARGET, (uint32_t)' ', 0, 0);
+  if( (_cio.states[TARGET] == 0) && (_buttonQLen == 0) ) qCommand(GETTARGET, (int64_t)' ', 0, 0);
 
   //calculate time (in seconds) to target temperature
   //these variables can change anytime in the interrupts so copy them first
@@ -398,12 +398,12 @@ int BWC::_CodeToButton(uint16_t val){
 }
 
 void BWC::_qButton(uint32_t btn, uint32_t state, uint32_t value, int32_t maxduration) {
-  if(_qButtonLen == MAXBUTTONS) return;  //maybe textout an error message if queue is full?
-  _buttonQ[_qButtonLen][0] = btn;
-  _buttonQ[_qButtonLen][1] = state;
-  _buttonQ[_qButtonLen][2] = value;
-  _buttonQ[_qButtonLen][3] = maxduration;
-  _qButtonLen++;
+  if(_buttonQLen == MAXBUTTONS) return;  //maybe textout an error message if queue is full?
+  _buttonQ[_buttonQLen][0] = btn;
+  _buttonQ[_buttonQLen][1] = state;
+  _buttonQ[_buttonQLen][2] = value;
+  _buttonQ[_buttonQLen][3] = maxduration;
+  _buttonQLen++;
 }
 
 void BWC::_handleButtonQ(void) {
@@ -412,7 +412,7 @@ void BWC::_handleButtonQ(void) {
 
   elapsedTime = millis() - prevMillis;
   prevMillis = millis();
-  if(_qButtonLen > 0)
+  if(_buttonQLen > 0)
   {
     // First subtract elapsed time from maxduration
     _buttonQ[0][3] -= elapsedTime;
@@ -420,13 +420,13 @@ void BWC::_handleButtonQ(void) {
     if( (_cio.states[_buttonQ[0][1]] == _buttonQ[0][2]) || (_buttonQ[0][3] <= 0) )
     {
       //remove row
-      for(int i = 0; i < _qButtonLen-1; i++){
+      for(int i = 0; i < _buttonQLen-1; i++){
         _buttonQ[i][0] = _buttonQ[i+1][0];
         _buttonQ[i][1] = _buttonQ[i+1][1];
         _buttonQ[i][2] = _buttonQ[i+1][2];
         _buttonQ[i][3] = _buttonQ[i+1][3];
       }
-      _qButtonLen--;
+      _buttonQLen--;
       _cio.button = ButtonCodes[NOBTN];
     }
     else
@@ -476,7 +476,7 @@ bool BWC::getBtnSeqMatch()
 bool BWC::qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval) {
   //handle special commands
   if(cmd == RESETQ){
-    _qButtonLen = 0;
+    _buttonQLen = 0;
     _qCommandLen = 0;
     _saveCmdqNeeded = true;
     return true;
@@ -570,7 +570,7 @@ void BWC::_handleCommandQ(void) {
       break;
     case GETTARGET:
       unlock();
-      _qButton(UP, CHAR3, 32, 500); //ignore desired value and wait for first blink. 32 = ' '
+      _qButton(UP, CHAR3, 0, 500); //ignore desired value and wait for first blink. 32 = ' '
       _qButton(NOBTN, CHAR1, 0xFF, 5000);  //block further presses until blinking stops
       break;
     case RESETTIMES:
@@ -728,6 +728,8 @@ String BWC::getJSONTimes() {
   doc["T2R"] = t2r_string;
   doc["MINCLK"] = _cio.clk_per;
   _cio.clk_per = 1000;  //reset minimum clock period
+  doc["bq"] = _buttonQ[0][0];
+  doc["bqlen"] = _buttonQLen;
 
   // Serialize JSON to string
   String jsonmsg;
@@ -1027,6 +1029,7 @@ void BWC::_saveStates() {
 }
 
 void BWC::_restoreStates() {
+  unlock();
   if(!_restoreStatesOnStart) return;
   File file = LittleFS.open("states.txt", "r");
   if (!file) {

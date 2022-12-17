@@ -46,7 +46,7 @@ void CIO::loop(void) {
   if ((button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN]))
   {
     buttonReleaseTime = millis(); //updated as long as buttons are pressed
-    capturePhase = readtarget;
+    if(states[POWERSTATE] && !states[LOCKEDSTATE]) capturePhase = readtarget;
   }
   //require two consecutive messages to be equal before registering
   static uint8_t prev_checksum = 0;

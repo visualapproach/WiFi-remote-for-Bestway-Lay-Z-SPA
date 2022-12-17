@@ -65,7 +65,7 @@ class BWC {
     int64_t _commandQ[MAXCOMMANDS][4]; //64 bits to house both timestamp > 15 years in future, and negative values
     int _qCommandLen = 0;  //length of commandQ
     int32_t _buttonQ[MAXBUTTONS][4];
-    int _qButtonLen = 0;  //length of buttonQ
+    int _buttonQLen = 0;  //length of buttonQ
     uint32_t _timestamp; // seconds
     uint32_t _cltime;
     uint32_t _ftime;
