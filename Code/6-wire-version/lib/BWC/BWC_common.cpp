@@ -93,6 +93,7 @@ void BWC::loop(){
   _handleButtonQ();
   if(_saveEventlogNeeded) saveEventlog();
   if(_saveSettingsNeeded) saveSettings();
+  if(_saveCmdqNeeded) _saveCommandQueue();
   //if set target command missed we need to correct that
   if( (_cio.states[TARGET] != _sliderTarget) && (_qButtonLen == 0) && (_sliderTarget != 0) && (_sliderPrio) ) qCommand(SETTARGET, _sliderTarget, 0, 0);
   //if target temp is unknown, find out.
@@ -150,17 +151,21 @@ void BWC::_handleStateChanges()
 {
   //not used now, but possibility to take action some time after the change occured
   //static bool delayedAction[14];
+
   if(_cio.state_changed[UNITSTATE])
   {
-    if(_cio.states[UNITSTATE])
+    if(_cio.states[TARGET] >= 20 && _cio.states[TARGET] <= 104)
     {
-      _cio.states[TARGET] = round(_F2C(_cio.states[TARGET]));
+      if(_cio.states[UNITSTATE])
+      {
+        _cio.states[TARGET] = round(_F2C(_cio.states[TARGET]));
+      }
+      else
+      {
+        _cio.states[TARGET] = round(_C2F(_cio.states[TARGET]));
+      }
+      _sliderTarget = _cio.states[TARGET];
     }
-    else
-    {
-      _cio.states[TARGET] = round(_C2F(_cio.states[TARGET]));
-    }
-    _sliderTarget = _cio.states[TARGET];
   }
 
   // Save these changes so we can restore states on reboot
@@ -473,7 +478,7 @@ bool BWC::qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval) {
   if(cmd == RESETQ){
     _qButtonLen = 0;
     _qCommandLen = 0;
-    _saveCommandQueue();
+    _saveCmdqNeeded = true;
     return true;
   }
 
@@ -502,7 +507,7 @@ bool BWC::qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval) {
   _commandQ[row][3] = interval;
   _qCommandLen++;
   delay(0);
-  _saveCommandQueue();
+  _saveCmdqNeeded = true;
   return true;
 }
 
@@ -514,120 +519,118 @@ void BWC::unlock()
 
 void BWC::_handleCommandQ(void) {
   bool restartESP = false;
-  if(_qCommandLen > 0) {
-  //cmp time with xtime. If more, then execute (adding buttons to buttonQ).
+  if(_qCommandLen < 1) return;
+  /* time for next command? */
+  if (_timestamp < _commandQ[0][2]) return;
 
-    if (_timestamp >= _commandQ[0][2]){
-      switch (_commandQ[0][0])
+  switch (_commandQ[0][0])
+  {
+    case SETTARGET:
       {
-        case SETTARGET:
-          {
-            unlock();
-            uint8_t impliedunitcelsius = _commandQ[0][1] < 41;
-            int diff;
-            int desiredvalue = _commandQ[0][1];
-            //pump is set to celsius but F given
-            if(_cio.states[UNITSTATE] && !impliedunitcelsius)
-              desiredvalue = (int)round(_F2C(_commandQ[0][1]));
-            //pump is set to farenheit but C given
-            if(!_cio.states[UNITSTATE] && impliedunitcelsius)
-              desiredvalue = (int)round(_C2F(_commandQ[0][1]));
-            diff = desiredvalue - (int)_cio.states[TARGET];
-            int pushtime = 500;
-            int releasetime = 300;
-            uint32_t updown;
-            diff<0 ? updown = DOWN : updown = UP;
-            _qButton(updown, CHAR1, 0xFF, pushtime);
-            _qButton(NOBTN, CHAR1, 0xFF, releasetime);
-            _sliderTarget = desiredvalue;
-            _sliderPrio = true;
-            break;
-          }
-        case SETUNIT:
-          unlock();
-          _qButton(UNIT, UNITSTATE, _commandQ[0][1], 5000);
-          _qButton(NOBTN, CHAR3, 0xFF, 300);
-          break;
-        case SETBUBBLES:
-          unlock();
-          _qButton(BUBBLES, BUBBLESSTATE, _commandQ[0][1], 5000);
-          break;
-        case SETHEATER:
-          unlock();
-          _qButton(HEAT, HEATSTATE, _commandQ[0][1], 5000);
-          break;
-        case SETPUMP:
-          unlock();
-          _qButton(PUMP, PUMPSTATE, _commandQ[0][1], 5000);
-          break;
-        case REBOOTESP:
-          restartESP = true;
-          break;
-        case GETTARGET:
-          unlock();
-          _qButton(UP, CHAR3, 32, 500); //ignore desired value and wait for first blink. 32 = ' '
-          _qButton(NOBTN, CHAR1, 0xFF, 5000);  //block further presses until blinking stops
-          break;
-        case RESETTIMES:
-          _uptime = 0;
-          _pumptime = 0;
-          _heatingtime = 0;
-          _airtime = 0;
-          _uptime_ms = 0;
-          _pumptime_ms = 0;
-          _heatingtime_ms = 0;
-          _airtime_ms = 0;
-          _energyTotal = 0;
-          _saveSettingsNeeded = true;
-          _cio.dataAvailable = true;
-          break;
-        case RESETCLTIMER:
-          _cltime = _timestamp;
-          _saveSettingsNeeded = true;
-          _cio.dataAvailable = true;
-          break;
-        case RESETFTIMER:
-          _ftime = _timestamp;
-          _saveSettingsNeeded = true;
-          _cio.dataAvailable = true;
-          break;
-        case SETJETS:
-          unlock();
-          _qButton(HYDROJETS, JETSSTATE, _commandQ[0][1], 5000);
-          break;
-        case SETBRIGHTNESS:
-          if(_commandQ[0][1] < 9) _dspBrightness = _commandQ[0][1];
-          break;
-        case SETBEEP:
-          _commandQ[0][1] == 0 ? _dsp.beep2() : _dsp.playIntro();
-          break;
-        case SETAMBIENTF:
-          setAmbientTemperature(_commandQ[0][1], false);
-          break;
-        case SETAMBIENTC:
-          setAmbientTemperature(_commandQ[0][1], true);
-          break;
-        case RESETDAILY:
-          _energyDaily = 0;
-          break;
+        unlock();
+        uint8_t impliedunitcelsius = _commandQ[0][1] < 41;
+        int diff;
+        int desiredvalue = _commandQ[0][1];
+        //pump is set to celsius but F given
+        if(_cio.states[UNITSTATE] && !impliedunitcelsius)
+          desiredvalue = (int)round(_F2C(_commandQ[0][1]));
+        //pump is set to farenheit but C given
+        if(!_cio.states[UNITSTATE] && impliedunitcelsius)
+          desiredvalue = (int)round(_C2F(_commandQ[0][1]));
+        diff = desiredvalue - (int)_cio.states[TARGET];
+        int pushtime = 500;
+        int releasetime = 300;
+        uint32_t updown;
+        diff<0 ? updown = DOWN : updown = UP;
+        _qButton(updown, CHAR1, 0xFF, pushtime);
+        _qButton(NOBTN, CHAR1, 0xFF, releasetime);
+        _sliderTarget = desiredvalue;
+        _sliderPrio = true;
+        break;
       }
-      //If interval > 0 then append to commandQ with updated xtime.
-      if(_commandQ[0][3] > 0) qCommand(_commandQ[0][0],_commandQ[0][1],_commandQ[0][2]+_commandQ[0][3],_commandQ[0][3]);
-      //remove from commandQ and decrease qCommandLen
-      for(int i = 0; i < _qCommandLen-1; i++){
-      _commandQ[i][0] = _commandQ[i+1][0];
-      _commandQ[i][1] = _commandQ[i+1][1];
-      _commandQ[i][2] = _commandQ[i+1][2];
-      _commandQ[i][3] = _commandQ[i+1][3];
-      }
-      _qCommandLen--;
-      _saveCommandQueue();
-      if(restartESP) {
-        saveSettings();
-        delay(3000);
-        ESP.restart();
-      }
-    }
+    case SETUNIT:
+      unlock();
+      _qButton(UNIT, UNITSTATE, _commandQ[0][1], 5000);
+      _qButton(NOBTN, CHAR3, 0xFF, 300);
+      break;
+    case SETBUBBLES:
+      unlock();
+      _qButton(BUBBLES, BUBBLESSTATE, _commandQ[0][1], 5000);
+      break;
+    case SETHEATER:
+      unlock();
+      _qButton(HEAT, HEATSTATE, _commandQ[0][1], 5000);
+      break;
+    case SETPUMP:
+      unlock();
+      _qButton(PUMP, PUMPSTATE, _commandQ[0][1], 5000);
+      break;
+    case REBOOTESP:
+      restartESP = true;
+      break;
+    case GETTARGET:
+      unlock();
+      _qButton(UP, CHAR3, 32, 500); //ignore desired value and wait for first blink. 32 = ' '
+      _qButton(NOBTN, CHAR1, 0xFF, 5000);  //block further presses until blinking stops
+      break;
+    case RESETTIMES:
+      _uptime = 0;
+      _pumptime = 0;
+      _heatingtime = 0;
+      _airtime = 0;
+      _uptime_ms = 0;
+      _pumptime_ms = 0;
+      _heatingtime_ms = 0;
+      _airtime_ms = 0;
+      _energyTotal = 0;
+      _saveSettingsNeeded = true;
+      _cio.dataAvailable = true;
+      break;
+    case RESETCLTIMER:
+      _cltime = _timestamp;
+      _saveSettingsNeeded = true;
+      _cio.dataAvailable = true;
+      break;
+    case RESETFTIMER:
+      _ftime = _timestamp;
+      _saveSettingsNeeded = true;
+      _cio.dataAvailable = true;
+      break;
+    case SETJETS:
+      unlock();
+      _qButton(HYDROJETS, JETSSTATE, _commandQ[0][1], 5000);
+      break;
+    case SETBRIGHTNESS:
+      if(_commandQ[0][1] < 9) _dspBrightness = _commandQ[0][1];
+      break;
+    case SETBEEP:
+      _commandQ[0][1] == 0 ? _dsp.beep2() : _dsp.playIntro();
+      break;
+    case SETAMBIENTF:
+      setAmbientTemperature(_commandQ[0][1], false);
+      break;
+    case SETAMBIENTC:
+      setAmbientTemperature(_commandQ[0][1], true);
+      break;
+    case RESETDAILY:
+      _energyDaily = 0;
+      break;
+  }
+  //If interval > 0 then append to commandQ with updated xtime.
+  if(_commandQ[0][3] > 0) qCommand(_commandQ[0][0],_commandQ[0][1],_commandQ[0][2]+_commandQ[0][3],_commandQ[0][3]);
+  //remove from commandQ and decrease qCommandLen
+  for(int i = 0; i < _qCommandLen-1; i++){
+  _commandQ[i][0] = _commandQ[i+1][0];
+  _commandQ[i][1] = _commandQ[i+1][1];
+  _commandQ[i][2] = _commandQ[i+1][2];
+  _commandQ[i][3] = _commandQ[i+1][3];
+  }
+  _qCommandLen--;
+  _saveCmdqNeeded = true;
+  if(restartESP) {
+    saveSettings();
+    delay(3000);
+    ESP.restart();
   }
 }
 
@@ -950,6 +953,7 @@ void BWC::_loadCommandQueue(){
 }
 
 void BWC::_saveCommandQueue(){
+  _saveCmdqNeeded = false;
   //kill the dog
   // ESP.wdtDisable();
   ESP.wdtFeed();
@@ -957,6 +961,8 @@ void BWC::_saveCommandQueue(){
   if (!file) {
     Serial.println(F("Failed to save cmdq.txt"));
     return;
+  } else {
+    Serial.println(F("Wrote cmdq.txt"));
   }
 
   DynamicJsonDocument doc(1024);
@@ -973,11 +979,14 @@ void BWC::_saveCommandQueue(){
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
     Serial.println(F("Failed to write cmdq.txt"));
+  } else {
+    String s;
+    serializeJson(doc, s);
+    Serial.println(s);
   }
   file.close();
   //revive the dog
   // ESP.wdtEnable(0);
-
 }
 
 void BWC::reloadCommandQueue(){

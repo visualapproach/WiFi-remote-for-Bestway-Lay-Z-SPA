@@ -40,7 +40,7 @@ void CIO::loop(void) {
   newData = false;
   static uint32_t buttonReleaseTime;
   enum Readmode: int {readtemperature, uncertain, readtarget};
-  static int capturePhase = readtemperature;
+  static Readmode capturePhase = readtemperature;
 
   //capture TARGET after UP/DOWN has been pressed...
   if ((button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN]))

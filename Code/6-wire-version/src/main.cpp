@@ -34,7 +34,7 @@ void setup()
   bootlogTimer.attach(5, []{ if(DateTime.isTimeValid()) {bwc.saveRebootInfo(); bootlogTimer.detach();} });
 
   // needs to be loaded here for reading files
-  LittleFS.begin();
+  // LittleFS.begin();
   loadWifi();
   loadWebConfig();
 
