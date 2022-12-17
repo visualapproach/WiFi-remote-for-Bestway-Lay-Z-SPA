@@ -25,3 +25,23 @@ function validatePassword(id) {
 	}
 	return true;
 }
+
+function increaseNumber(id) {
+	var x = document.getElementById(id);
+	var val = Number(x.value);
+	var max = x.max;
+  if (max > val) {
+    val += 1;
+    x.value = val;
+  }
+}
+
+function decreaseNumber(id) {
+	var x = document.getElementById(id);
+	var val = Number(x.value);
+	var min = x.min;
+  if (min < val) {
+    val -= 1;
+    x.value = val;
+   }
+}

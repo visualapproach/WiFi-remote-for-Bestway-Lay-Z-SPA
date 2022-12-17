@@ -12,6 +12,7 @@ div#site {
 }
 
 header, section, footer {
+  position: relative;
   padding: 6px;
 }
 
@@ -34,12 +35,16 @@ footer {
   font-size: 0.6em;
 }
 
-
-
-h1 {
-  margin: 4px 0 10px;
-  font-size: 1.4em;
+div#display {
+  width: 100px;
+  color: red;
+  font-size: 1.8em;
+  text-align: center;
+  border-radius: 34px;
+  background-color: black;
+  margin: 4px auto;
 }
+
 h2 {
   margin: 4px 0 10px;
   font-size: 1.1em;
@@ -60,6 +65,9 @@ table.fixed {
 .center {
   text-align: center;
 }
+.right {
+  text-align: right;
+}
 .small {
   font-size: 0.6em;
 }
@@ -74,11 +82,13 @@ table.fixed {
   text-decoration: none;
   border: none;
   color: white;
-  background-color: #0066BF;
+  background-color: #00508F;
   padding: 6px 24px;
   font-size: 16px;
   cursor: pointer;
-  box-shadow: 1px 1px 6px #555;
+  border: 2px solid white;
+  border-radius: 34px;
+  box-shadow: 1px 1px 2px #444;
   outline: none;
   margin: 4px auto;
   display: inline-block;
@@ -87,11 +97,11 @@ table.fixed {
   background-color: #bf0000;
 }
 .button:hover, .button_red:hover {
-  background-color: #719abe;
+  background-color: #0076d1;
   box-shadow: 1px 1px 3px #444;
 }
 .button_red:hover {
-  background-color: #be7171;
+  background-color: #ec0000;
 }
 
 div.visualapproach {
@@ -105,20 +115,83 @@ div.visualapproach {
   background-repeat: no-repeat;
 }
 
-
-
-input[type=range] {
-    -webkit-appearance: none;
-    outline: none;
-    border: 0;
-    width: 100%;
-    margin: 6px;
-    background: #ccc;
-    border-radius: 10px;
-    cursor: pointer;
+/* input range slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 34px;
+  background: #ccc;
+  border-radius: 34px;
+  padding: 0 4px;
+  margin: 0;
 }
 
-/*             SWITCH styles                 */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  background: #00508F;
+  cursor: ew-resize;
+  border: 2px solid white;
+  transition: background .3s ease-in-out;
+}
+
+input[type="range"]::-moz-range-thumb {
+  -webkit-appearance: none;
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  background: #00508F;
+  cursor: ew-resize;
+  border: 2px solid white;
+  transition: background .3s ease-in-out;
+}
+
+input[type="range"]::-ms-thumb {
+  -webkit-appearance: none;
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  background: #00508F;
+  cursor: ew-resize;
+  border: 2px solid white;
+  transition: background .3s ease-in-out;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: #00508F;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  background: #00508F;
+}
+
+input[type="range"]::-ms-thumb:hover {
+  background: #00508F;
+}
+
+/* Input Track */
+input[type=range]::-webkit-slider-runnable-track  {
+  -webkit-appearance: none;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+}
+
+input[type=range]::-moz-range-track {
+  -webkit-appearance: none;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+}
+
+input[type="range"]::-ms-track {
+  -webkit-appearance: none;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+}
 
 /* The switch - the box around the slider */
 .switch {
@@ -151,17 +224,18 @@ input[type=range] {
 .slider:before {
   position: absolute;
   content: "";
-  height: 26px;
-  width: 26px;
+  height: 22px;
+  width: 22px;
   left: 4px;
   bottom: 4px;
-  background-color: white;
+  background-color: #00508F;
+  border: 2px solid white;
   -webkit-transition: .4s;
   transition: .4s;
 }
 
 input:checked + .slider {
-  background-color: #00FF00;
+  background-color: #00508F;
 }
 
 input:focus + .slider {
@@ -172,6 +246,15 @@ input:checked + .slider:before {
   -webkit-transform: translateX(26px);
   -ms-transform: translateX(26px);
   transform: translateX(26px);
+  background-color: #ccc;
+}
+
+input:checked + .heateron:before {
+  background-color: red;
+}
+
+input:checked + .heateroff:before {
+  background-color: green;
 }
 
 /* Rounded sliders */
@@ -236,48 +319,131 @@ a.topnavicon {
 .tooltip {
   position: relative;
   display: inline-block;
-}
-
-.tooltip .tooltipbutton {
-  color: #fff;
-  background-color: #00508F;
   width: 1.2em;
   height: 1.2em;
-  display: inline-block;
-  border-radius: 100%;
   font-size: 1em;
   text-align: center;
   text-decoration: none;
+  color: #fff;
+  background-color: #00508F;
+  border-radius: 34%;
   -webkit-box-shadow: inset -1px -1px 1px 0px rgba(0,0,0,0.25);
   -moz-box-shadow: inset -1px -1px 1px 0px rgba(0,0,0,0.25);
   box-shadow: inset -1px -1px 1px 0px rgba(0,0,0,0.25);
 }
 
-.tooltip .tooltiptext {
-  visibility: hidden;
-  width: 200px;
-  background-color: #757575;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 6px;
+.tooltip:before {
+  content: attr(data-text);
   position: absolute;
+  top: 30%;
+  transform: translateY(-30%);
+  left: 100%;
+  margin-left: 15px;
+  width: 200px;
+  color: #444;
+  background: #ccc;
+  text-align: left;
+  padding: 6px;
+  border-radius: 14px;
+  border: 2px solid #00508F;
   z-index: 1;
-  top: -5px;
-  left: 110%;
+  /* display: none; */
+  visibility: hidden;
+  /* opacity: 0;
+  transition: .3s opacity; */
 }
 
-.tooltip .tooltiptext::after {
+.tooltip.left:before {
+  left: initial;
+  margin: initial;
+  right: 100%;
+  margin-right: 15px;
+}
+
+.tooltip:after {
   content: "";
   position: absolute;
-  top: 15px;
-  right: 100%;
-  margin-top: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent #757575 transparent transparent;
+  top: 30%;
+  transform: translateY(-30%);
+  left: 100%;
+  margin-left: -5px;
+  border: 10px solid #00508F;
+  border-color: transparent #00508F transparent transparent;
+  /* display: none; */
+  visibility: hidden;
+  /* opacity: 0;
+  transition: .3s opacity; */
 }
 
-.tooltip:hover .tooltiptext {
+.tooltip.left:after {
+  left: initial;
+  margin: initial;
+  right: 100%;
+  margin-right: -5px;
+  border-color: transparent transparent transparent #00508F;
+}
+
+.tooltip:hover:before, .tooltip:hover:after {
+  /* display: block; */
   visibility: visible;
+  /* opacity: 1; */
+}
+
+
+/**********************
+ * temperture selector
+\*/
+
+table#tableSelector {
+  display: none;
+}
+
+.selector {
+  position: relative;
+  width: 100px;
+  background-color: #ccc;
+  border-radius: 6px;
+  margin: auto;
+}
+
+.selector .selectorbutton {
+  width: 100%;
+  height: 30px;
+  color: #fff;
+  font-size: 20px;
+  background-color: #00508F;
+  border: none;
+  cursor: pointer;
+}
+
+.selector .selectorbutton:hover {
+  background-color: #0076d1;
+  box-shadow: 0 0 3px #444;
+}
+
+.selector .selectorbutton.selectortop {
+  border-radius: 6px 6px 0 0;
+}
+
+.selector .selectorbutton.selectorbottom {
+  border-radius: 0 0 6px 6px;
+}
+
+.selector .selectorvalue {
+  width: 100%;
+  height: 50px;
+  border: none;
+  color: #00508F;
+  font-size: 34px;
+  text-align: center;
+  background-color: #ccc;
+  padding: 0;
+}
+
+.selector .degree {
+  position: absolute;
+  top: 32px;
+  right: 20px;
+  font-size: 24px;
+  color: #00508F;
 }

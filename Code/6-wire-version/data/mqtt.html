@@ -21,6 +21,7 @@
 		<div class="topnav" id="topnav">
 			<a href="./">Home</a>
 			<a href="config.html">SPA Config</a>
+			<a href="webconfig.html">Web Config</a>
 			<a href="wifi.html">Network Config</a>
 			<a href="mqtt.html" class="active">MQTT Config</a>
 			<a href="/dir/">Directory</a>
@@ -70,11 +71,10 @@
 					<td>Telemetry Interval (s):</td>
 					<td><input type="text" id="mqttTelemetryInterval"></td>
 				</tr>
-				<tr>
-					<td colspan="2" style="text-align:center"><button id="save" class="button" onclick="saveConfig()">save</button></td>
-				</tr>
 			</table>
 		</section>
+
+		<footer class="center"><button id="save" class="button" onclick="saveConfig()">save</button></footer>
 	</div>
 
 <script>

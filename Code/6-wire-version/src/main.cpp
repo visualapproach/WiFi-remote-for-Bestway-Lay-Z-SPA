@@ -33,9 +33,10 @@ void setup()
   // when NTP time is valid we save bootlog.txt and this timer stops
   bootlogTimer.attach(5, []{ if(DateTime.isTimeValid()) {bwc.saveRebootInfo(); bootlogTimer.detach();} });
 
-  // needs to be loaded here for reading the wifi.json
+  // needs to be loaded here for reading files
   LittleFS.begin();
   loadWifi();
+  loadWebConfig();
 
   startWiFi();
   startNTP();
@@ -504,6 +505,8 @@ void startHttpServer()
   server.on(F("/setconfig/"), handleSetConfig);
   server.on(F("/getcommands/"), handleGetCommandQueue);
   server.on(F("/addcommand/"), handleAddCommand);
+  server.on(F("/getwebconfig/"), handleGetWebConfig);
+  server.on(F("/setwebconfig/"), handleSetWebConfig);
   server.on(F("/getwifi/"), handleGetWifi);
   server.on(F("/setwifi/"), handleSetWifi);
   server.on(F("/resetwifi/"), handleResetWifi);
@@ -675,7 +678,7 @@ void handleGetConfig()
 
 /**
  * response for /setconfig/
- * save spa config
+ * web server writes a json document
  */
 void handleSetConfig()
 {
@@ -722,6 +725,124 @@ void handleAddCommand()
   int64_t interval = doc["INTERVAL"];
 
   bwc.qCommand(command, value, xtime, interval);
+
+  server.send(200, "text/plain", "");
+}
+
+/**
+ * load "Web Config" json configuration from "webconfig.json"
+ */
+void loadWebConfig()
+{
+  DynamicJsonDocument doc(1024);
+
+  File file = LittleFS.open("webconfig.json", "r");
+  if (file)
+  {
+    DeserializationError error = deserializeJson(doc, file);
+    if (error)
+    {
+      Serial.println(F("Failed to deserialize webconfig.json"));
+      file.close();
+      return;
+    }
+  }
+  else
+  {
+    Serial.println(F("Failed to read webconfig.json. Using defaults."));
+  }
+
+  showSectionTemperature = (doc.containsKey("showSectionTemperature") ? doc["showSectionTemperature"] : true);
+  showSectionDisplay = (doc.containsKey("showSectionDisplay") ? doc["showSectionDisplay"] : true);
+  showSectionControl = (doc.containsKey("showSectionControl") ? doc["showSectionControl"] : true);
+  showSectionButtons = (doc.containsKey("showSectionButtons") ? doc["showSectionButtons"] : true);
+  showSectionTimer = (doc.containsKey("showSectionTimer") ? doc["showSectionTimer"] : true);
+  showSectionTotals = (doc.containsKey("showSectionTotals") ? doc["showSectionTotals"] : true);
+  useControlSelector = (doc.containsKey("useControlSelector") ? doc["useControlSelector"] : false);
+}
+
+/**
+ * save "Web Config" json configuration to "webconfig.json"
+ */
+void saveWebConfig()
+{
+  File file = LittleFS.open("webconfig.json", "w");
+  if (!file)
+  {
+    Serial.println(F("Failed to save webconfig.json"));
+    return;
+  }
+
+  DynamicJsonDocument doc(1024);
+
+  doc["showSectionTemperature"] = showSectionTemperature;
+  doc["showSectionDisplay"] = showSectionDisplay;
+  doc["showSectionControl"] = showSectionControl;
+  doc["showSectionButtons"] = showSectionButtons;
+  doc["showSectionTimer"] = showSectionTimer;
+  doc["showSectionTotals"] = showSectionTotals;
+  doc["useControlSelector"] = useControlSelector;
+
+  if (serializeJson(doc, file) == 0)
+  {
+    Serial.println(F("{\"error\": \"Failed to serialize file\"}"));
+  }
+  file.close();
+}
+
+/**
+ * response for /getwebconfig/
+ * web server prints a json document
+ */
+void handleGetWebConfig()
+{
+  if (!checkHttpPost(server.method())) return;
+
+  DynamicJsonDocument doc(1024);
+
+  doc["showSectionTemperature"] = showSectionTemperature;
+  doc["showSectionDisplay"] = showSectionDisplay;
+  doc["showSectionControl"] = showSectionControl;
+  doc["showSectionButtons"] = showSectionButtons;
+  doc["showSectionTimer"] = showSectionTimer;
+  doc["showSectionTotals"] = showSectionTotals;
+  doc["useControlSelector"] = useControlSelector;
+
+  String json;
+  if (serializeJson(doc, json) == 0)
+  {
+    json = "{\"error\": \"Failed to serialize message\"}";
+  }
+  server.send(200, "application/json", json);
+}
+
+/**
+ * response for /setwebconfig/
+ * web server writes a json document
+ */
+void handleSetWebConfig()
+{
+  if (!checkHttpPost(server.method())) return;
+
+  DynamicJsonDocument doc(1024);
+  String message = server.arg(0);
+  DeserializationError error = deserializeJson(doc, message);
+  if (error)
+  {
+    Serial.println(F("Failed to read config file"));
+    server.send(400, "text/plain", "Error deserializing message");
+    return;
+  }
+
+  showSectionTemperature = doc["showSectionTemperature"];
+  showSectionDisplay = doc["showSectionDisplay"];
+  showSectionControl = doc["showSectionControl"];
+  showSectionButtons = doc["showSectionButtons"];
+  showSectionTimer = doc["showSectionTimer"];
+  showSectionTotals = doc["showSectionTotals"];
+  useControlSelector = doc["useControlSelector"];
+
+  saveWebConfig();
 
   server.send(200, "text/plain", "");
 }
@@ -875,7 +996,7 @@ void handleGetWifi()
 
 /**
  * response for /setwifi/
- * web server prints a json document
+ * web server writes a json document
  */
 void handleSetWifi()
 {
@@ -1068,7 +1189,7 @@ void handleGetMqtt()
 
 /**
  * response for /setmqtt/
- * web server prints a json document
+ * web server writes a json document
  */
 void handleSetMqtt()
 {
