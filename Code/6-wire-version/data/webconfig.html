@@ -72,7 +72,7 @@ function loadWebConfig()
 {
 	const Http = new XMLHttpRequest();
 	const url = '/getwebconfig/';
-	Http.open("POST", url);
+	Http.open('POST', url);
 	Http.send();
 	Http.onreadystatechange = function()
 	{
@@ -80,35 +80,43 @@ function loadWebConfig()
 		{
 			console.log(Http.responseText);
 			var json = JSON.parse(Http.responseText);
-			document.getElementById("showSectionTemperature").checked = json.showSectionTemperature;
-			document.getElementById("showSectionDisplay").checked = json.showSectionDisplay;
-			document.getElementById("showSectionControl").checked = json.showSectionControl;
-			document.getElementById("showSectionButtons").checked = json.showSectionButtons;
-			document.getElementById("showSectionTimer").checked = json.showSectionTimer;
-			document.getElementById("showSectionTotals").checked = json.showSectionTotals;
-			document.getElementById("useControlSelector").checked = json.useControlSelector;
+			document.getElementById('showSectionTemperature').checked = json.showSectionTemperature;
+			document.getElementById('showSectionDisplay').checked = json.showSectionDisplay;
+			document.getElementById('showSectionControl').checked = json.showSectionControl;
+			document.getElementById('showSectionButtons').checked = json.showSectionButtons;
+			document.getElementById('showSectionTimer').checked = json.showSectionTimer;
+			document.getElementById('showSectionTotals').checked = json.showSectionTotals;
+			document.getElementById('useControlSelector').checked = json.useControlSelector;
 		}
 	}
 }
 
 function saveWebConfig()
 {
+	localStorage.setItem('showSectionTemperature', document.getElementById('showSectionTemperature').checked);
+	localStorage.setItem('showSectionDisplay', document.getElementById('showSectionDisplay').checked);
+	localStorage.setItem('showSectionControl', document.getElementById('showSectionControl').checked);
+	localStorage.setItem('showSectionButtons', document.getElementById('showSectionButtons').checked);
+	localStorage.setItem('showSectionTimer', document.getElementById('showSectionTimer').checked);
+	localStorage.setItem('showSectionTotals', document.getElementById('showSectionTotals').checked);
+	localStorage.setItem('useControlSelector', document.getElementById('useControlSelector').checked);
+
 	const Http = new XMLHttpRequest();
 	const url = '/setwebconfig/';
-	Http.open("POST", url);
+	Http.open('POST', url);
 	var msgobj = {
-		"showSectionTemperature":document.getElementById("showSectionTemperature").checked,
-		"showSectionDisplay":document.getElementById("showSectionDisplay").checked,
-		"showSectionControl":document.getElementById("showSectionControl").checked,
-		"showSectionButtons":document.getElementById("showSectionButtons").checked,
-		"showSectionTimer":document.getElementById("showSectionTimer").checked,
-		"showSectionTotals":document.getElementById("showSectionTotals").checked,
-		"useControlSelector":document.getElementById("useControlSelector").checked
+		'showSectionTemperature':document.getElementById('showSectionTemperature').checked,
+		'showSectionDisplay':document.getElementById('showSectionDisplay').checked,
+		'showSectionControl':document.getElementById('showSectionControl').checked,
+		'showSectionButtons':document.getElementById('showSectionButtons').checked,
+		'showSectionTimer':document.getElementById('showSectionTimer').checked,
+		'showSectionTotals':document.getElementById('showSectionTotals').checked,
+		'useControlSelector':document.getElementById('useControlSelector').checked
 	}
 	Http.send(JSON.stringify(msgobj));
 	console.log(msgobj);
-	alert("Saved.");
-	window.location.replace("/");
+	alert('Saved.');
+	window.location.replace('/');
 }
 </script>
 </body>

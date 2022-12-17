@@ -228,6 +228,33 @@
 	</div>
 
 <script>
+if (!localStorage.getItem('showSectionTemperature'))
+{
+	loadWebConfig();
+} else {
+	setWebConfig();
+}
+
+function setWebConfig()
+{
+	var showSectionTemperature = localStorage.getItem('showSectionTemperature');
+	var showSectionDisplay = localStorage.getItem('showSectionDisplay');
+	var showSectionControl = localStorage.getItem('showSectionControl');
+	var showSectionButtons = localStorage.getItem('showSectionButtons');
+	var showSectionTimer = localStorage.getItem('showSectionTimer');
+	var showSectionTotals = localStorage.getItem('showSectionTotals');
+	var useControlSelector = localStorage.getItem('useControlSelector');
+
+	document.getElementById("sectionTemperature").style.display = (showSectionTemperature === 'true' ? "block" : "none");
+	document.getElementById("sectionDisplay").style.display = (showSectionDisplay === 'true' ? "block" : "none");
+	document.getElementById("sectionControl").style.display = (showSectionControl === 'true' ? "block" : "none");
+	document.getElementById("sectionButtons").style.display = (showSectionButtons === 'true' ? "block" : "none");
+	document.getElementById("sectionTimer").style.display = (showSectionTimer === 'true' ? "block" : "none");
+	document.getElementById("sectionTotals").style.display = (showSectionTotals === 'true' ? "block" : "none");
+	document.getElementById("tableSlider").style.display = (useControlSelector === 'true' ? "none" : "table");
+	document.getElementById("tableSelector").style.display = (useControlSelector === 'true' ? "table" : "none");
+}
+
 function loadWebConfig()
 {
 	const Http = new XMLHttpRequest();
@@ -240,18 +267,17 @@ function loadWebConfig()
 		{
 			console.log(Http.responseText);
 			var json = JSON.parse(Http.responseText);
-			document.getElementById("sectionTemperature").style.display = (json.showSectionTemperature ? "block" : "none");
-			document.getElementById("sectionDisplay").style.display = (json.showSectionDisplay ? "block" : "none");
-			document.getElementById("sectionControl").style.display = (json.showSectionControl ? "block" : "none");
-			document.getElementById("sectionButtons").style.display = (json.showSectionButtons ? "block" : "none");
-			document.getElementById("sectionTimer").style.display = (json.showSectionTimer ? "block" : "none");
-			document.getElementById("sectionTotals").style.display = (json.showSectionTotals ? "block" : "none");
-			document.getElementById("tableSlider").style.display = (json.useControlSelector ? "none" : "table");
-			document.getElementById("tableSelector").style.display = (json.useControlSelector ? "table" : "none");
+			localStorage.setItem('showSectionTemperature', json.showSectionTemperature);
+			localStorage.setItem('showSectionDisplay', json.showSectionDisplay);
+			localStorage.setItem('showSectionControl', json.showSectionControl);
+			localStorage.setItem('showSectionButtons', json.showSectionButtons);
+			localStorage.setItem('showSectionTimer', json.showSectionTimer);
+			localStorage.setItem('showSectionTotals', json.showSectionTotals);
+			localStorage.setItem('useControlSelector', json.useControlSelector);
+			setWebConfig();
 		}
 	}
 }
-loadWebConfig();
 </script>
 </body>
 </html>
