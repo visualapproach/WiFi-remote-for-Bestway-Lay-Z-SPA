@@ -45,3 +45,19 @@ function decreaseNumber(id) {
     x.value = val;
    }
 }
+
+function buttonConfirm(elem, text='', timeout=3, reset=true)
+{
+	var originalText = elem.innerHTML;
+
+	elem.innerHTML = (text == '' ? '&check;' : text);
+	elem.disabled = true;
+
+	if (reset)
+	{
+		setTimeout(function(){
+			elem.innerHTML = originalText;
+			elem.disabled = false;
+		}, timeout*1000);
+	}
+}

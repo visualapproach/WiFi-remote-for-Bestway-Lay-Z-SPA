@@ -11,7 +11,7 @@
 	<script src="function.js" type="text/javascript"></script>
 </head>
 
-<body onload="loadConfig()">
+<body>
 	<div id="site">
 		<header>
 			<span>MQTT Config</span>
@@ -74,65 +74,66 @@
 			</table>
 		</section>
 
-		<footer class="center"><button id="save" class="button" onclick="saveConfig()">save</button></footer>
+		<footer class="center">
+			<button id="save" class="button" onclick="saveMqttConfig()">save</button>
+		</footer>
 	</div>
 
 <script>
-function loadConfig()
+loadMqttConfig();
+
+function loadMqttConfig()
 {
-	const Http = new XMLHttpRequest();
-	const url='/getmqtt/';
-	Http.open("POST", url);
-	Http.send();
-	Http.onreadystatechange = function()
+	var req = new XMLHttpRequest();
+	req.open('POST', '/getmqtt/');
+	req.send();
+	req.onreadystatechange = function()
 	{
 		if (this.readyState == 4 && this.status == 200)
 		{
-			console.log(Http.responseText);
-			var json = JSON.parse(Http.responseText);
-
-			document.getElementById("enableMqtt").checked = json.enableMqtt;
-			document.getElementById("mqttIpAddress1").value = json.mqttIpAddress[0];
-			document.getElementById("mqttIpAddress2").value = json.mqttIpAddress[1];
-			document.getElementById("mqttIpAddress3").value = json.mqttIpAddress[2];
-			document.getElementById("mqttIpAddress4").value = json.mqttIpAddress[3];
-			document.getElementById("mqttPort").value = json.mqttPort;
-			document.getElementById("mqttUsername").value = json.mqttUsername;
-			document.getElementById("mqttPassword").value = json.mqttPassword;
-			document.getElementById("mqttClientId").value = json.mqttClientId;
-			document.getElementById("mqttBaseTopic").value = json.mqttBaseTopic;
-			document.getElementById("mqttTelemetryInterval").value = json.mqttTelemetryInterval;
+			var json = JSON.parse(req.responseText);
+			console.log(json);
+			document.getElementById('enableMqtt').checked = json.enableMqtt;
+			document.getElementById('mqttIpAddress1').value = json.mqttIpAddress[0];
+			document.getElementById('mqttIpAddress2').value = json.mqttIpAddress[1];
+			document.getElementById('mqttIpAddress3').value = json.mqttIpAddress[2];
+			document.getElementById('mqttIpAddress4').value = json.mqttIpAddress[3];
+			document.getElementById('mqttPort').value = json.mqttPort;
+			document.getElementById('mqttUsername').value = json.mqttUsername;
+			document.getElementById('mqttPassword').value = json.mqttPassword;
+			document.getElementById('mqttClientId').value = json.mqttClientId;
+			document.getElementById('mqttBaseTopic').value = json.mqttBaseTopic;
+			document.getElementById('mqttTelemetryInterval').value = json.mqttTelemetryInterval;
 		}
 	}
 }
 
-function saveConfig()
+function saveMqttConfig()
 {
 	if (!validatePassword('mqttPassword')) return;
-	
-	const Http = new XMLHttpRequest();
-	const url='/setmqtt/';
-	Http.open("POST", url);
 
+	buttonConfirm(document.getElementById('save'));
+
+	var req = new XMLHttpRequest();
+	req.open('POST', '/setmqtt/');
 	var json = {
-		"enableMqtt":(document.getElementById("enableMqtt").checked),
-		"mqttIpAddress":[
-			parseInt(document.getElementById("mqttIpAddress1").value),
-			parseInt(document.getElementById("mqttIpAddress2").value),
-			parseInt(document.getElementById("mqttIpAddress3").value),
-			parseInt(document.getElementById("mqttIpAddress4").value)
+		'enableMqtt':(document.getElementById('enableMqtt').checked),
+		'mqttIpAddress':[
+			parseInt(document.getElementById('mqttIpAddress1').value),
+			parseInt(document.getElementById('mqttIpAddress2').value),
+			parseInt(document.getElementById('mqttIpAddress3').value),
+			parseInt(document.getElementById('mqttIpAddress4').value)
 		],
-		"mqttPort":parseInt(document.getElementById("mqttPort").value),
-		"mqttUsername":(document.getElementById("mqttUsername").value),
-		"mqttPassword":(document.getElementById("mqttPassword").value),
-		"mqttClientId":(document.getElementById("mqttClientId").value),
-		"mqttBaseTopic":(document.getElementById("mqttBaseTopic").value),
-		"mqttTelemetryInterval":(document.getElementById("mqttTelemetryInterval").value)
+		'mqttPort':parseInt(document.getElementById('mqttPort').value),
+		'mqttUsername':(document.getElementById('mqttUsername').value),
+		'mqttPassword':(document.getElementById('mqttPassword').value),
+		'mqttClientId':(document.getElementById('mqttClientId').value),
+		'mqttBaseTopic':(document.getElementById('mqttBaseTopic').value),
+		'mqttTelemetryInterval':(document.getElementById('mqttTelemetryInterval').value)
 	};
+	req.send(JSON.stringify(json));
+	document.getElementById('mqttPassword').value = '<enter password>';
 	console.log(json);
-	Http.send(JSON.stringify(json));
-	alert("Saved.");
-	window.location.replace("/mqtt.html");
 }
 </script>	
 </body>
