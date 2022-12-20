@@ -51,7 +51,7 @@ h2 {
 }
 
 p {
-  padding: 0;
+  padding: 3px 0;
   margin: 0;
 }
 
@@ -102,6 +102,11 @@ table.fixed {
 }
 .button_red:hover {
   background-color: #ec0000;
+}
+.button:disabled, .button_red:disabled {
+  background-color: green;
+  box-shadow: none;
+  cursor: default;
 }
 
 div.visualapproach {
