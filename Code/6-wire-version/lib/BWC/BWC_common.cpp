@@ -43,6 +43,8 @@ void BWC::begin2(){
   _clinterval = 14;
   _audio = true;
   _restoreStatesOnStart = false;
+  _ambient_temp = 20;
+  _virtualTempFix = -99;
   LittleFS.begin();
   _loadSettings();
   _loadCommandQueue();
@@ -56,10 +58,6 @@ void BWC::begin2(){
   _tttt_time1 = DateTime.now();
   _tttt_temp0 = 20;
   _tttt_temp1 = 20;
-
-  _ambient_temp = 20;
-  _virtualTempFix = -99;
-
   next_notification_time = notification_time;
 }
 
@@ -865,7 +863,11 @@ void BWC::_loadSettings(){
   _energyTotal = doc["KWH"];
   _energyDaily = doc["KWHD"];
   _restoreStatesOnStart = doc["RESTORE"];
+  /* these if statements is only necessary once after updating firmware */
   if(doc.containsKey("R")) R_COOLING = doc["R"]; //else use default
+  if(doc.containsKey("AMB")) _ambient_temp = doc["AMB"];
+  if(doc.containsKey("BRT")) _dspBrightness = doc["BRT"];
+
   file.close();
 }
 
@@ -916,6 +918,8 @@ void BWC::saveSettings(){
   doc["SAVETIME"] = DateTime.format(DateFormatter::SIMPLE);
   doc["RESTORE"] = _restoreStatesOnStart;
   doc["R"] = R_COOLING;
+  doc["AMB"] = _ambient_temp;
+  doc["BRT"] = _dspBrightness;
 
   // Serialize JSON to file
   if (serializeJson(doc, file) == 0) {
