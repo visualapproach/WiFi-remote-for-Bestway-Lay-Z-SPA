@@ -216,7 +216,7 @@ function handlemsg(e)
 		document.getElementById('filtertime').innerHTML = s2dhms(msgobj.PUMPTIME);
 		document.getElementById('jettime').innerHTML = s2dhms(msgobj.JETTIME);
 		document.getElementById('cost').innerHTML = (msgobj.COST).toFixed(2);
-    document.getElementById('t2r').innerHTML = (msgobj.T2R);
+		document.getElementById('t2r').innerHTML = (msgobj.T2R);
 		document.getElementById('tttt').innerHTML = (msgobj.TTTT/3600).toFixed(2) + 'h<br>(' + new Date(msgobj.TIME * 1000 + msgobj.TTTT * 1000).toLocaleString() + ')';
 	}
 };
@@ -247,7 +247,7 @@ function sendCommand(cmd)
 	}
 
 	// get the current unit (true=C, false=F)
-	var unit = (document.getElementById("UNT").checked);
+	var unit = (document.getElementById('UNT').checked);
 
 	// get and set value
 	var value = 0;
@@ -255,7 +255,7 @@ function sendCommand(cmd)
 	{
 		value = parseInt(document.getElementById((cmd == 'setTarget') ? 'temp' : 'selectorTemp').value);
 		value = getProperValue(value, (unit ? 20 : 68), (unit ? 40 : 104));
-		document.getElementById("sliderTempVal").innerHTML = value.toString();
+		document.getElementById('sliderTempVal').innerHTML = value.toString();
 		document.getElementById('selectorTemp').value = value.toString();
 		updateTempState = true;
 	}
@@ -263,7 +263,7 @@ function sendCommand(cmd)
 	{
 		value = parseInt(document.getElementById((cmd == 'setAmbient') ? 'amb' : 'selectorAmb').value);
 		value = getProperValue(value, (unit ? -10 : 14), (unit ? 50 : 122));
-		document.getElementById("sliderAmbVal").innerHTML = value.toString();
+		document.getElementById('sliderAmbVal').innerHTML = value.toString();
 		document.getElementById('selectorAmb').value = value.toString();
 		cmd = 'setAmbient' + (unit ? 'C' : 'F');
 		updateAmbState = true;

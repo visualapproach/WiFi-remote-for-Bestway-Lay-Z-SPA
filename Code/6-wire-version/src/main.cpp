@@ -1368,7 +1368,8 @@ void startMqtt()
 {
   // load mqtt credential file if it exists, and update default strings
   loadMqtt();
-  // In case we're already connected
+
+  // disconnect in case we are already connected
   mqttClient.disconnect();
 
   // setup MQTT broker information as defined earlier
@@ -1376,7 +1377,7 @@ void startMqtt()
   // set buffer for larger messages, new to library 2.8.0
   if (mqttClient.setBufferSize(1536))
   {
-    Serial.println(F("MQTT > buffer size successfully increased"));
+    Serial.println(F("MQTT > Buffer size successfully increased"));
   }
   mqttClient.setKeepAlive(60);
   mqttClient.setSocketTimeout(30);
@@ -1450,7 +1451,7 @@ void mqttConnect()
     // These all have the Retained flag set to true, so that the value is stored on the server and can be retrieved at any point
     // Check the 'Status' topic to see that the device is still online before relying on the data from these retained topics
     mqttClient.publish((String(mqttBaseTopic) + "/Status").c_str(), "Alive", true);
-    mqttClient.publish((String(mqttBaseTopic) + "/MAC_Address").c_str(), WiFi.macAddress().c_str(), true);                 // device MAC Address
+    mqttClient.publish((String(mqttBaseTopic) + "/MAC_Address").c_str(), WiFi.macAddress().c_str(), true);                 // Device MAC Address
     mqttClient.publish((String(mqttBaseTopic) + "/MQTT_Connect_Count").c_str(), String(mqtt_connect_count).c_str(), true); // MQTT Connect Count
     mqttClient.loop();
 
