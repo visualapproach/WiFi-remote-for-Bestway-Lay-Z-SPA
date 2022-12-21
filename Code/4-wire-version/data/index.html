@@ -72,18 +72,18 @@
 					<td><input type="range" id="amb" min="-10" max="50" step="1" value="20" onmouseup="sendCommand('setAmbient')" ontouchend="sendCommand('setAmbient')"></td>
 					<td style="text-align:right" id="sliderAmbVal">n/a</td>
 				</tr>
-				<tr>
+				<!-- <tr>
 					<td>Brightness <span data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off)." class="tooltip">?</span></td>
 					<td><input type="range" id="brt" min="0" max="8" step="1" value="7" onmouseup="sendCommand('setBrightness')" ontouchend="sendCommand('setBrightness')"></td>
 					<td style="text-align:right" id="sliderBrtVal">n/a</td>
-				</tr>
+				</tr> -->
 			</table>
 
 			<table id="tableSelector" class="fixed">
 				<tr>
 					<td class="center">Temperature</td>
 					<td class="center">Ambient Temperature</td>
-					<td class="center">Brightness <span data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off)." class="tooltip left">?</span></td>
+					<!-- <td class="center">Brightness <span data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off)." class="tooltip left">?</span></td> -->
 				</tr>
 				<tr>
 					<td class="center">
@@ -100,13 +100,13 @@
 							<button onclick="decreaseNumber('selectorAmb');sendCommand('setAmbientSelector')" class="selectorbutton selectorbottom">ᐯ</button>
 						</div>
 					</td>
-					<td class="center">
+					<!-- <td class="center">
 						<div class="selector">
 							<button onclick="increaseNumber('selectorBrt');sendCommand('setBrightnessSelector')" class="selectorbutton selectortop">ᐱ</button>
 							<input id="selectorBrt" min="0" max="8" step="1" value="7" type="text" class="selectorvalue" onchange="sendCommand('setBrightnessSelector')">
 							<button onclick="decreaseNumber('selectorBrt');sendCommand('setBrightnessSelector')" class="selectorbutton selectorbottom">ᐯ</button>
 						</div>
-					</td>
+					</td> -->
 				</tr>
 			</table>
 		</section>
