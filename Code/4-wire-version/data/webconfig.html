@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Lay-Z-Spa Module | Web Config</title>
+	<meta charset="utf-8">
+	<link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
+	<link rel="manifest" href="manifest.json">
+	<link rel="stylesheet" href="main.css">
+	<meta name="theme-color" content="#0066BF">
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+	<script src="function.js" type="text/javascript"></script>
+</head>
+
+<body>
+	<div id="site">
+		<header>
+			<span>Web Config</span>
+			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
+		</header>
+
+		<div class="topnav" id="topnav">
+			<a href="./">Home</a>
+			<a href="config.html">SPA Config</a>
+			<a href="webconfig.html" class="active">Web Config</a>
+			<a href="wifi.html">Network Config</a>
+			<a href="mqtt.html">MQTT Config</a>
+			<a href="/dir/">Directory</a>
+			<a href="upload.html">File Uploader</a>
+			<a href="remove.html">File Remover</a>
+			<!--<a href="/restart/" class="bgred">Restart ESP</a>
+			<a href="javascript:void(0);" class="bgred" onclick="reboot()">Restart ESP</a>-->
+		</div>
+
+		<section>
+			<table>
+				<tr>
+					<td>Show section "Temperature"</td>
+					<td><label class="switch"><input type="checkbox" id="showSectionTemperature"><span class="slider round"></span></label></td>
+				</tr>
+				<tr>
+					<td>Show section "Display"</td>
+					<td><label class="switch"><input type="checkbox" id="showSectionDisplay"><span class="slider round"></span></label></td>
+				</tr>
+				<tr>
+					<td>Show section "Control"</td>
+					<td><label class="switch"><input type="checkbox" id="showSectionControl"><span class="slider round"></span></label></td>
+				</tr>
+				<tr>
+					<td>Show section "Buttons"</td>
+					<td><label class="switch"><input type="checkbox" id="showSectionButtons"><span class="slider round"></span></label></td>
+				</tr>
+				<tr>
+					<td>Show section "Timer"</td>
+					<td><label class="switch"><input type="checkbox" id="showSectionTimer"><span class="slider round"></span></label></td>
+				</tr>
+				<tr>
+					<td>Show section "Totals"</td>
+					<td><label class="switch"><input type="checkbox" id="showSectionTotals"><span class="slider round"></span></label></td>
+				</tr>
+				<tr>
+					<td>Use selector (instead of slider)</td>
+					<td><label class="switch"><input type="checkbox" id="useControlSelector"><span class="slider round"></span></label></td>
+				</tr>
+			</table>
+		</section>
+
+		<footer class="center">
+			<button id="save" class="button" onclick="buttonConfirm(this);saveWebConfig()">save</button>
+		</footer>
+	</div>
+
+<script>
+if (localStorage.getItem('showSectionTemperature'))
+{
+	setWebConfig();
+}
+readWebConfig();
+
+function setWebConfig()
+{
+	document.getElementById('showSectionTemperature').checked = (localStorage.getItem('showSectionTemperature') === 'true');
+	document.getElementById('showSectionDisplay').checked = (localStorage.getItem('showSectionDisplay') === 'true');
+	document.getElementById('showSectionControl').checked = (localStorage.getItem('showSectionControl') === 'true');
+	document.getElementById('showSectionButtons').checked = (localStorage.getItem('showSectionButtons') === 'true');
+	document.getElementById('showSectionTimer').checked = (localStorage.getItem('showSectionTimer') === 'true');
+	document.getElementById('showSectionTotals').checked = (localStorage.getItem('showSectionTotals') === 'true');
+	document.getElementById('useControlSelector').checked = (localStorage.getItem('useControlSelector') === 'true');
+}
+
+function saveWebConfig()
+{
+	localStorage.setItem('showSectionTemperature', document.getElementById('showSectionTemperature').checked);
+	localStorage.setItem('showSectionDisplay', document.getElementById('showSectionDisplay').checked);
+	localStorage.setItem('showSectionControl', document.getElementById('showSectionControl').checked);
+	localStorage.setItem('showSectionButtons', document.getElementById('showSectionButtons').checked);
+	localStorage.setItem('showSectionTimer', document.getElementById('showSectionTimer').checked);
+	localStorage.setItem('showSectionTotals', document.getElementById('showSectionTotals').checked);
+	localStorage.setItem('useControlSelector', document.getElementById('useControlSelector').checked);
+	writeWebConfig();
+}
+
+// if we want to just keep this configuration in a browser, we can use following
+// html: onclick="toggleWebConfig(this)"
+// js:
+// function toggleWebConfig(elem){
+// 	localStorage.setItem(elem.id, elem.checked);
+// }
+
+function readWebConfig()
+{
+	var req = new XMLHttpRequest();
+	req.open('POST', '/getwebconfig/');
+	req.send();
+	req.onreadystatechange = function()
+	{
+		if (this.readyState == 4 && this.status == 200)
+		{
+			var json = JSON.parse(req.responseText);
+			console.log(json);
+			document.getElementById('showSectionTemperature').checked = json.showSectionTemperature;
+			document.getElementById('showSectionDisplay').checked = json.showSectionDisplay;
+			document.getElementById('showSectionControl').checked = json.showSectionControl;
+			document.getElementById('showSectionButtons').checked = json.showSectionButtons;
+			document.getElementById('showSectionTimer').checked = json.showSectionTimer;
+			document.getElementById('showSectionTotals').checked = json.showSectionTotals;
+			document.getElementById('useControlSelector').checked = json.useControlSelector;
+		}
+	}
+}
+
+function writeWebConfig()
+{
+	var req = new XMLHttpRequest();
+	req.open('POST', '/setwebconfig/');
+	var json = {
+		'showSectionTemperature':document.getElementById('showSectionTemperature').checked,
+		'showSectionDisplay':document.getElementById('showSectionDisplay').checked,
+		'showSectionControl':document.getElementById('showSectionControl').checked,
+		'showSectionButtons':document.getElementById('showSectionButtons').checked,
+		'showSectionTimer':document.getElementById('showSectionTimer').checked,
+		'showSectionTotals':document.getElementById('showSectionTotals').checked,
+		'useControlSelector':document.getElementById('useControlSelector').checked
+	};
+	req.send(JSON.stringify(json));
+	console.log(json);
+}
+</script>
+</body>
+</html>
