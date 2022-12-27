@@ -271,7 +271,6 @@ void sendMQTT()
     //Serial.println(F("MQTT > times not published"));
   }
 
-
   //send other info
   json = getOtherInfo();
   if (mqttClient.publish((String(mqttBaseTopic) + "/other").c_str(), String(json).c_str(), true))
@@ -356,7 +355,7 @@ void startWiFi()
   }
   else
   {
-    Serial.println("WiFi > Connection failed. Retrying in a while ...");
+    Serial.println(F("WiFi > Connection failed. Retrying in a while ..."));
   }
 }
 
@@ -399,7 +398,7 @@ void startOTA()
 
   ArduinoOTA.onStart([]() {
     Serial.println(F("OTA > Start"));
-    //bwc.stop(); // TODO: 6-wire only(?)
+    //stopall(); // TODO: 6-wire only(?)
   });
   ArduinoOTA.onEnd([]() {
     Serial.println(F("OTA > End"));
@@ -495,6 +494,8 @@ void startHttpServer()
   server.on(F("/setconfig/"), handleSetConfig);
   server.on(F("/getcommands/"), handleGetCommandQueue);
   server.on(F("/addcommand/"), handleAddCommand);
+  server.on(F("/getwebconfig/"), handleGetWebConfig);
+  server.on(F("/setwebconfig/"), handleSetWebConfig);
   server.on(F("/getwifi/"), handleGetWifi);
   server.on(F("/setwifi/"), handleSetWifi);
   server.on(F("/resetwifi/"), handleResetWifi);
@@ -507,6 +508,7 @@ void startHttpServer()
   server.on(F("/remove.html"), HTTP_POST, handleFileRemove);
   server.on(F("/restart/"), handleRestart);
   server.on(F("/info/"), handleESPInfo);
+
   // if someone requests any other file or page, go to function 'handleNotFound'
   // and check if the file exists
   server.onNotFound(handleNotFound);
@@ -610,7 +612,7 @@ void handleGetConfig()
 
 /**
  * response for /setconfig/
- * save spa config
+ * web server writes a json document
  */
 void handleSetConfig()
 {
@@ -662,6 +664,124 @@ void handleAddCommand()
 }
 
 /**
+ * load "Web Config" json configuration from "webconfig.json"
+ */
+void loadWebConfig()
+{
+  DynamicJsonDocument doc(1024);
+
+  File file = LittleFS.open("webconfig.json", "r");
+  if (file)
+  {
+    DeserializationError error = deserializeJson(doc, file);
+    if (error)
+    {
+      Serial.println(F("Failed to deserialize webconfig.json"));
+      file.close();
+      return;
+    }
+  }
+  else
+  {
+    Serial.println(F("Failed to read webconfig.json. Using defaults."));
+  }
+
+  showSectionTemperature = (doc.containsKey("showSectionTemperature") ? doc["showSectionTemperature"] : true);
+  showSectionDisplay = (doc.containsKey("showSectionDisplay") ? doc["showSectionDisplay"] : true);
+  showSectionControl = (doc.containsKey("showSectionControl") ? doc["showSectionControl"] : true);
+  showSectionButtons = (doc.containsKey("showSectionButtons") ? doc["showSectionButtons"] : true);
+  showSectionTimer = (doc.containsKey("showSectionTimer") ? doc["showSectionTimer"] : true);
+  showSectionTotals = (doc.containsKey("showSectionTotals") ? doc["showSectionTotals"] : true);
+  useControlSelector = (doc.containsKey("useControlSelector") ? doc["useControlSelector"] : false);
+}
+
+/**
+ * save "Web Config" json configuration to "webconfig.json"
+ */
+void saveWebConfig()
+{
+  File file = LittleFS.open("webconfig.json", "w");
+  if (!file)
+  {
+    Serial.println(F("Failed to save webconfig.json"));
+    return;
+  }
+
+  DynamicJsonDocument doc(1024);
+
+  doc["showSectionTemperature"] = showSectionTemperature;
+  doc["showSectionDisplay"] = showSectionDisplay;
+  doc["showSectionControl"] = showSectionControl;
+  doc["showSectionButtons"] = showSectionButtons;
+  doc["showSectionTimer"] = showSectionTimer;
+  doc["showSectionTotals"] = showSectionTotals;
+  doc["useControlSelector"] = useControlSelector;
+
+  if (serializeJson(doc, file) == 0)
+  {
+    Serial.println(F("{\"error\": \"Failed to serialize file\"}"));
+  }
+  file.close();
+}
+
+/**
+ * response for /getwebconfig/
+ * web server prints a json document
+ */
+void handleGetWebConfig()
+{
+  if (!checkHttpPost(server.method())) return;
+
+  DynamicJsonDocument doc(1024);
+
+  doc["showSectionTemperature"] = showSectionTemperature;
+  doc["showSectionDisplay"] = showSectionDisplay;
+  doc["showSectionControl"] = showSectionControl;
+  doc["showSectionButtons"] = showSectionButtons;
+  doc["showSectionTimer"] = showSectionTimer;
+  doc["showSectionTotals"] = showSectionTotals;
+  doc["useControlSelector"] = useControlSelector;
+
+  String json;
+  if (serializeJson(doc, json) == 0)
+  {
+    json = "{\"error\": \"Failed to serialize message\"}";
+  }
+  server.send(200, "application/json", json);
+}
+
+/**
+ * response for /setwebconfig/
+ * web server writes a json document
+ */
+void handleSetWebConfig()
+{
+  if (!checkHttpPost(server.method())) return;
+
+  DynamicJsonDocument doc(1024);
+  String message = server.arg(0);
+  DeserializationError error = deserializeJson(doc, message);
+  if (error)
+  {
+    Serial.println(F("Failed to read config file"));
+    server.send(400, "text/plain", "Error deserializing message");
+    return;
+  }
+
+  showSectionTemperature = doc["showSectionTemperature"];
+  showSectionDisplay = doc["showSectionDisplay"];
+  showSectionControl = doc["showSectionControl"];
+  showSectionButtons = doc["showSectionButtons"];
+  showSectionTimer = doc["showSectionTimer"];
+  showSectionTotals = doc["showSectionTotals"];
+  useControlSelector = doc["useControlSelector"];
+
+  saveWebConfig();
+
+  server.send(200, "text/plain", "");
+}
+
+/**
  * load WiFi json configuration from "wifi.json"
  */
 void loadWifi()
@@ -684,6 +804,7 @@ void loadWifi()
   }
 
   enableAp = doc["enableAp"];
+  if(doc.containsKey("enableWM")) enableWmApFallback = doc["enableWM"];
   apSsid = doc["apSsid"].as<String>();
   apPwd = doc["apPwd"].as<String>();
 
@@ -725,6 +846,7 @@ void saveWifi()
   DynamicJsonDocument doc(1024);
 
   doc["enableAp"] = enableAp;
+  doc["enableWM"] = enableWmApFallback;
   doc["apSsid"] = apSsid;
   doc["apPwd"] = apPwd;
 
@@ -768,6 +890,7 @@ void handleGetWifi()
   DynamicJsonDocument doc(1024);
 
   doc["enableAp"] = enableAp;
+  doc["enableWM"] = enableWmApFallback;
   doc["apSsid"] = apSsid;
   doc["apPwd"] = "<enter password>";
   if (!hidePasswords)
@@ -807,7 +930,7 @@ void handleGetWifi()
 
 /**
  * response for /setwifi/
- * web server prints a json document
+ * web server writes a json document
  */
 void handleSetWifi()
 {
@@ -824,6 +947,7 @@ void handleSetWifi()
   }
 
   enableAp = doc["enableAp"];
+  if(doc.containsKey("enableWM")) enableWmApFallback = doc["enableWM"];
   apSsid = doc["apSsid"].as<String>();
   apPwd = doc["apPwd"].as<String>();
 
@@ -875,6 +999,7 @@ void handleResetWifi()
   delay(1000);
 
   enableAp = false;
+  enableWmApFallback = true;
   apSsid = "empty";
   apPwd = "empty";
   saveWifi();
@@ -994,7 +1119,7 @@ void handleGetMqtt()
 
 /**
  * response for /setmqtt/
- * web server prints a json document
+ * web server writes a json document
  */
 void handleSetMqtt()
 {
@@ -1026,7 +1151,6 @@ void handleSetMqtt()
 
   saveMqtt();
   startMqtt();
-
 }
 
 /**
@@ -1167,6 +1291,7 @@ void handleRestart()
   delay(1000);
   Serial.println(F("ESP restart ..."));
   ESP.restart();
+  delay(3000);
 }
 
 void handleESPInfo()
@@ -1211,6 +1336,7 @@ void startMqtt()
 
   // disconnect in case we are already connected
   mqttClient.disconnect();
+
   // setup MQTT broker information as defined earlier
   mqttClient.setServer(mqttIpAddress, mqttPort);
   // set buffer for larger messages, new to library 2.8.0
@@ -1298,11 +1424,11 @@ void mqttConnect()
     mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());
     mqttClient.loop();
 
-    mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), reboottime.c_str(), true);
+    mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), bwc.reboottime.c_str(), true);
     mqttClient.publish((String(mqttBaseTopic) + "/reboot_reason").c_str(), ESP.getResetReason().c_str(), true);
     mqttClient.loop();
     sendMQTT();
-    setupHA(); //Setup MQTT Device
+    setupHA();
   }
   else
   {

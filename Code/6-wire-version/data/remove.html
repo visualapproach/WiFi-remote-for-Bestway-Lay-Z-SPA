@@ -21,6 +21,7 @@
 		<div class="topnav" id="topnav">
 			<a href="./">Home</a>
 			<a href="config.html">SPA Config</a>
+			<a href="webconfig.html">Web Config</a>
 			<a href="wifi.html">Network Config</a>
 			<a href="mqtt.html">MQTT Config</a>
 			<a href="/dir/">Directory</a>
@@ -31,11 +32,15 @@
 		</div>
 
 		<section>
-			<p style="text-align: left">Use this page to remove a file from the ESP8266.</p>
-			<form method="post" enctype="application/x-www-form-urlencoded" style="margin: 0px auto 8px auto" >
-				<input type="text" name="FileToRemove" value="">
-				<input class="button" type="submit" value="Delete" name="submit">
-			</form>
+			<p>Use this page to remove a file from the ESP8266.</p>
 		</section>
+
+		<footer>
+			<form method="post" enctype="application/x-www-form-urlencoded" style="margin: 0px auto 8px">
+				<input type="text" name="FileToRemove" value="" />
+				<input type="submit" value="delete" name="submit" class="button" />
+			</form>
+		</footer>
+	</div>
 </body>
 </html>

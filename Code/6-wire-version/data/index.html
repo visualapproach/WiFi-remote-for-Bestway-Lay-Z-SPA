@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html ontouchmove>
 <head>
 	<title>Lay-Z-Spa Module</title>
 	<meta charset="utf-8">
@@ -22,6 +22,7 @@
 		<div class="topnav" id="topnav">
 			<a href="./" class="active">Home</a>
 			<a href="config.html">SPA Config</a>
+			<a href="webconfig.html">Web Config</a>
 			<a href="wifi.html">Network Config</a>
 			<a href="mqtt.html">MQTT Config</a>
 			<a href="/dir/">Directory</a>
@@ -31,68 +32,97 @@
 			<a href="javascript:void(0);" class="bgred" onclick="sendCommand('restartEsp')">Restart ESP</a>
 		</div>
 
-		<section style="position:relative">
+		<section id="sectionTemperature">
 			<div class="visualapproach"></div>
 			<h2>Temperature:</h2>
 			<table class="fixed">
 				<tr>
 					<td>Actual:</td>
-					<td><span id="atlabel">0</span></td>
+					<td><span id="atlabel">n/a</span></td>
 				</tr>
 				<tr>
-					<td>Virtual:</td>
-					<td><span id="vtlabel">0</span></td>
+					<td>Virtual: <span data-text="ESP attempts to keep track of water temperature even when pump is stopped and the temperature drops in the pump while the large body of water cools slower. Uses ambient temperature." class="tooltip">?</span></td>
+					<td><span id="vtlabel">n/a</span></td>
 				</tr>
 				<tr>
 					<td>Target:</td>
-					<td><span id="ttlabel">0</span></td>
+					<td><span id="ttlabel">n/a</span></td>
 				</tr>
 			</table>
 		</section>
 
-		<section>
+		<section id="sectionDisplay">
 			<table>
 				<tr>
-					<td colspan="2" class="center">
-						<h1 id="dsp" style="width:20%; margin:auto; text-align: center; background-color: #000; color: red;">[DSP]</h1>
+					<td class="center"><div id="display">[DSP]</div></td>
+				</tr>
+			</table>
+		</section>
+
+		<section id="sectionControl">
+			<h2>Control:</h2>
+			<table id="tableSlider">
+				<tr>
+					<td style="width:40%;">Temperature</td>
+					<td style="width:50%"><input type="range" id="temp" min="20" max="40" step="1" value="20" onmouseup="sendCommand('setTarget')" ontouchend="sendCommand('setTarget')"></td>
+					<td style="width:10%;text-align:right" id="sliderTempVal">n/a</td>
+				</tr>
+				<tr>
+					<td>Ambient Temp.</td>
+					<td><input type="range" id="amb" min="-10" max="50" step="1" value="20" onmouseup="sendCommand('setAmbient')" ontouchend="sendCommand('setAmbient')"></td>
+					<td style="text-align:right" id="sliderAmbVal">n/a</td>
+				</tr>
+				<tr>
+					<td>Brightness <span data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off)." class="tooltip">?</span></td>
+					<td><input type="range" id="brt" min="0" max="8" step="1" value="7" onmouseup="sendCommand('setBrightness')" ontouchend="sendCommand('setBrightness')"></td>
+					<td style="text-align:right" id="sliderBrtVal">n/a</td>
+				</tr>
+			</table>
+
+			<table id="tableSelector" class="fixed">
+				<tr>
+					<td class="center">Temperature</td>
+					<td class="center">Ambient Temperature</td>
+					<td class="center">Brightness <span data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off)." class="tooltip left">?</span></td>
+				</tr>
+				<tr>
+					<td class="center">
+						<div class="selector">
+							<button onclick="increaseNumber('selectorTemp');sendCommand('setTargetSelector')" class="selectorbutton selectortop">ᐱ</button>
+							<input id="selectorTemp" min="20" max="40" step="1" value="20" type="text" class="selectorvalue" onchange="sendCommand('setTargetSelector')"><span class="degree">°</span>
+							<button onclick="decreaseNumber('selectorTemp');sendCommand('setTargetSelector')" class="selectorbutton selectorbottom">ᐯ</button>
+						</div>
+					</td>
+					<td class="center">
+						<div class="selector">
+							<button onclick="increaseNumber('selectorAmb');sendCommand('setAmbientSelector')" class="selectorbutton selectortop">ᐱ</button>
+							<input id="selectorAmb" min="-10" max="50" step="1" value="20" type="text" class="selectorvalue" onchange="sendCommand('setAmbientSelector')"><span class="degree">°</span>
+							<button onclick="decreaseNumber('selectorAmb');sendCommand('setAmbientSelector')" class="selectorbutton selectorbottom">ᐯ</button>
+						</div>
+					</td>
+					<td class="center">
+						<div class="selector">
+							<button onclick="increaseNumber('selectorBrt');sendCommand('setBrightnessSelector')" class="selectorbutton selectortop">ᐱ</button>
+							<input id="selectorBrt" min="0" max="8" step="1" value="7" type="text" class="selectorvalue" onchange="sendCommand('setBrightnessSelector')">
+							<button onclick="decreaseNumber('selectorBrt');sendCommand('setBrightnessSelector')" class="selectorbutton selectorbottom">ᐯ</button>
+						</div>
 					</td>
 				</tr>
 			</table>
 		</section>
 
-		<section>
-			<h2>Control:</h2>
-			<table>
-				<tr>
-					<td style="width:40%;white-space:nowrap;">Set temperature:</td>
-					<td style="width:40%"><input type="range" id="temp" min="20" max="40" step="1" value="20" onmouseup="sendCommand('setTarget')" ontouchend="sendCommand('setTarget')"></td>
-					<td style="width:20%;text-align:right" id="sliderTempVal">n/a</td>
-				</tr>
-			</table>
-			<table>
-				<tr>
-					<td style="width:40%;white-space:nowrap;">Set brightness:</td>
-					<td style="width:40%"><input type="range" id="brt" min="0" max="8" step="1" value="7" onmouseup="sendCommand('setBrightness')" ontouchend="sendCommand('setBrightness')"></td>
-					<td style="width:20%;text-align:right" id="sliderBrtVal">n/a</td>
-				</tr>
-			</table>
-			<table>
-				<tr>
-					<td style="width:40%;white-space:nowrap;">Set ambient temp:</td>
-					<td style="width:40%"><input type="range" id="amb" min="-10" max="50" step="1" value="20" onmouseup="sendCommand('setAmbient')" ontouchend="sendCommand('setAmbient')"></td>
-					<td style="width:20%;text-align:right" id="sliderAmbVal">n/a</td>
-				</tr>
-			</table>
+		<section id="sectionButtons">
+			<h2>Buttons:</h2>
 			<table class="fixed">
 				<tr>
-					<td>Bubbles</td>
+					<td class="right">Bubbles</td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="AIR" onchange="sendCommand('toggleBubbles')">
 						<span class="slider round"></span>
 						</label>
 					</td>
-					<td>Heater</td>
+					<td class="right">Heater</td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="HTR" onchange="sendCommand('toggleHeater')">
@@ -101,14 +131,14 @@
 					</td>
 				</tr>
 				<tr>
-					<td>Pump</td>
+					<td class="right">Pump</td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="FLT" onchange="sendCommand('togglePump')">
 						<span class="slider round"></span>
 						</label>
 					</td>
-					<td>Unit (F/C)</td>
+					<td class="right">Unit (F/C)</td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="UNT" onchange="sendCommand('toggleUnit')">
@@ -117,7 +147,7 @@
 					</td>
 				</tr>
 				<tr id="jets">
-					<td>Hydrojets</td>
+					<td class="right">Hydrojets</td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="HJT" onchange="sendCommand('toggleHydroJets')">
@@ -129,38 +159,38 @@
 				</tr>
 			</table>
 		</section>
-	
-		<section>
+
+		<section id="sectionTimer">
 			<h2>Timer:</h2>
 			<table>
 				<tr>
-					<td>Last chlorine add was <span id="cltimer">n/a</span> day(s) ago.</td>
-					<td><button id="cltimerbtn" class="button" onclick="sendCommand('resetTimerChlorine')">Reset</button></td>
+					<td>Last chlorine add was <span id="cltimer">n/a</span> ago.</td>
+					<td><button id="cltimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerChlorine')">reset</button></td>
 				</tr>
 				<tr>
-					<td>Last filter change was <span id="ftimer">n/a</span> day(s) ago.</td>
-					<td><button id="ftimerbtn" class="button" onclick="sendCommand('resetTimerFilter')">Reset</button></td>
+					<td>Last filter change was <span id="ftimer">n/a</span> ago.</td>
+					<td><button id="ftimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerFilter')">reset</button></td>
 				</tr>
 			</table>
 		</section>
-	
-		<section>
+
+		<section id="sectionTotals">
 			<h2>Totals:</h2>
 			<table class="fixed">
 				<tr>
-					<td>Time:</td>
+					<td>Time: <span data-text="ESP sends UTC. Browser converts to Local." class="tooltip">?</span></td>
 					<td><span id="time">n/a</span></td>
 				</tr>
 				<tr>
-					<td>Heating Est.:</td>
+					<td>Heating Est.: <span data-text="Heating Estimation: Old naive way to estimate when target temp is reached." class="tooltip">?</span></td>
 					<td><span id="tttt">n/a</span></td>
 				</tr>
 				<tr>
-					<td>Ready in (hours):</td>
+					<td>Ready in (hours): <span data-text="New way of estimating time to ready. Works best if given actual ambient temperature from for example HA." class="tooltip">?</span></td>
 					<td><span id="t2r">n/a</span></td>
 				</tr>
 				<tr>
-					<td>Uptime:</td>
+					<td>Uptime: <span data-text="How long ESP has been running since reset. Rebooting will continue counting." class="tooltip">?</span></td>
 					<td><span id="uptime">n/a</span></td>
 				</tr>
 				<tr>
@@ -184,18 +214,74 @@
 					<td><span id="cost">n/a</span></td>
 				</tr>
 				<tr>
-					<td colspan="1" class="left"><button id="reset" class="button" onclick="sendCommand('resetTotals')">Reset</button></td>
-					<td><button id="help" class="button" onclick="alert('Time: ESP sends UTC. Browser converts to Local.\nHeating est: old naive way to estimate when target temp is reached.\nReady in: new way of estimating time to ready. Works best if given actual ambient temperature from for example HA.\nUptime: how long ESP has been running since reset. Rebooting will continue counting.\n Virtual temp: ESP attempts to keep track of water temperature even when pump is stopped and the temperature drops in the pump while the large body of water cools slower. Uses ambient temperature.')">?</button></td>
+					<td colspan="2" class="center"><button id="reset" class="button" onclick="resetTotals()">reset</button></td>
 				</tr>
 			</table>
 		</section>
 
 		<footer>
-			<p class="center"><span id="mqtt">MQTT: loading status...</span></p>
-			<p class="center"><span id="fw">Firmware version: loading status...</span></p>
-			<p class="center"><span id="model">Model: loading status...</span></p>
-			<p class="center"><span id="rssi">RSSI: loading status...</span></p>
+			<p class="center">
+				<span id="mqtt">MQTT: loading status...</span><br />
+				<span id="fw">Firmware: loading status...</span><br />
+				<span id="model">Model: loading status...</span><br />
+				<span id="rssi">RSSI: loading status...</span>
+			</p>
 		</footer>
 	</div>
+
+<script>
+// loading functions from a .js (in the <head> section)
+// and calling the function here can cause problems on laggy connections
+
+if (localStorage.getItem('showSectionTemperature'))
+{
+	setWebConfig();
+}
+loadWebConfig();
+
+function setWebConfig()
+{
+	document.getElementById('sectionTemperature').style.display = (localStorage.getItem('showSectionTemperature') !== 'false' ? 'block' : 'none');
+	document.getElementById('sectionDisplay').style.display = (localStorage.getItem('showSectionDisplay') !== 'false' ? 'block' : 'none');
+	document.getElementById('sectionControl').style.display = (localStorage.getItem('showSectionControl') !== 'false' ? 'block' : 'none');
+	document.getElementById('sectionButtons').style.display = (localStorage.getItem('showSectionButtons') !== 'false' ? 'block' : 'none');
+	document.getElementById('sectionTimer').style.display = (localStorage.getItem('showSectionTimer') !== 'false' ? 'block' : 'none');
+	document.getElementById('sectionTotals').style.display = (localStorage.getItem('showSectionTotals') !== 'false' ? 'block' : 'none');
+	document.getElementById('tableSlider').style.display = (localStorage.getItem('useControlSelector') !== 'false' ? 'none' : 'table');
+	document.getElementById('tableSelector').style.display = (localStorage.getItem('useControlSelector') !== 'false' ? 'table' : 'none');
+}
+
+function loadWebConfig()
+{
+	const Http = new XMLHttpRequest();
+	const url = '/getwebconfig/';
+	Http.open('POST', url);
+	Http.send();
+	Http.onreadystatechange = function()
+	{
+		if (this.readyState == 4 && this.status == 200)
+		{
+			var json = JSON.parse(Http.responseText);
+			localStorage.setItem('showSectionTemperature', json.showSectionTemperature);
+			localStorage.setItem('showSectionDisplay', json.showSectionDisplay);
+			localStorage.setItem('showSectionControl', json.showSectionControl);
+			localStorage.setItem('showSectionButtons', json.showSectionButtons);
+			localStorage.setItem('showSectionTimer', json.showSectionTimer);
+			localStorage.setItem('showSectionTotals', json.showSectionTotals);
+			localStorage.setItem('useControlSelector', json.useControlSelector);
+			setWebConfig();
+		}
+	}
+}
+
+function resetTotals()
+{
+	if (confirm('Do you really want to reset the totals?'))
+	{
+		buttonConfirm(document.getElementById('reset'));
+		sendCommand('resetTotals');
+	}
+}
+</script>
 </body>
 </html>

@@ -40,13 +40,13 @@ void CIO::loop(void) {
   newData = false;
   static uint32_t buttonReleaseTime;
   enum Readmode: int {readtemperature, uncertain, readtarget};
-  static int capturePhase = readtemperature;
+  static Readmode capturePhase = readtemperature;
 
   //capture TARGET after UP/DOWN has been pressed...
   if ((button == ButtonCodes[UP]) || (button == ButtonCodes[DOWN]))
   {
     buttonReleaseTime = millis(); //updated as long as buttons are pressed
-    capturePhase = readtarget;
+    if(states[POWERSTATE] && !states[LOCKEDSTATE]) capturePhase = readtarget;
   }
   //require two consecutive messages to be equal before registering
   static uint8_t prev_checksum = 0;
