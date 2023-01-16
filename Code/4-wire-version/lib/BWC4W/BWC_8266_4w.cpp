@@ -731,6 +731,7 @@ String BWC::getJSONStates() {
   doc["AIR"] = _cio.states[BUBBLESSTATE];
   doc["GRN"] = _cio.states[HEATGRNSTATE];
   doc["RED"] = _cio.states[HEATREDSTATE];
+  doc["HET"] = _cio.states[HEATSTATE];
   doc["FLT"] = _cio.states[PUMPSTATE];
   doc["TGT"] = _cio.states[TARGET];
   doc["TMP"] = _cio.states[TEMPERATURE];
