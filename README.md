@@ -1,7 +1,28 @@
+Change log
+
+ - Brightness slider in HA
+ - Brightness temporarily increases on button press
+ - Non blocking audio and text
+ - New sounds like sweeping up/down, hopefully making it easier for people with impaired vision
+ - Print text command
+ - Set SPA ready time command
+ - Fix buggy estimate time to ready
+ - Better hover tips in web ui
+ - Added calibration reset in web ui
+ - Indicator tells when spa is calibrated
+ - No need to edit code before compiling
+ - All pump models in one firmware
+ - Set hardware config from web ui (Pump, display and PCB model)
+ - Use any 6-wire display with any pump
+
+Only install if you have time for failure and can revert to old version (master branch)
+Feedback is welcome in discussion #428
+State your hardware config and your feedback.
+
 WiFi-remote-for-Bestway-Lay-Z-SPA
 =================================
 ESP8266 hack to use as WiFi remote control for Bestway Lay-Z-Spa Whirlpools (including 2021 year models) <br>
-Latest code found in [Development branch](https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/tree/development)
+Latest code found in [Development branch](https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/tree/development_v4)
 
 - [Features](#features)
 - [BOM](#bom)
