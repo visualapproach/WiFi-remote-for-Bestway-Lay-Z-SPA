@@ -1,9 +1,0 @@
-# Only for use with the 4-wire models to track pump ERROR.
-- platform: mqtt
-  name: spa error
-  state_topic: "layzspa/message"
-  value_template: "{{ value_json.ERR }}"
-  expire_after: 700
-  availability_topic: "layzspa/Status"
-  payload_available: "Alive"
-  payload_not_available: "Dead"
