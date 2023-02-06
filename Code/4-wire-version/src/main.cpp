@@ -1384,8 +1384,6 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
     bwc.qCommand(command, value, xtime, interval);
   }
 
-  
-
   if (String(topic).equals(String(mqttBaseTopic) + "/command_batch"))
   {
     DynamicJsonDocument doc(1024);
