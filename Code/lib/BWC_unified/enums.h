@@ -122,7 +122,7 @@ struct sStates
     uint8_t heatred = 0;
     uint8_t heat = 0;
     uint8_t pump = 0;
-    uint8_t temperature = 99;
+    uint8_t temperature = 25;
     uint8_t target = 20;
     uint8_t char1 = 'a';
     uint8_t char2 = 'b';

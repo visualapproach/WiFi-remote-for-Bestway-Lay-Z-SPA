@@ -23,8 +23,11 @@ const cmdMap = {
 	setAmbientSelector: 15,
 	setAmbientF: 14,
 	setAmbientC: 15,
-    setGodmode: 16,
-    setFullpower:17
+    resetDaily: 16,
+    toggleGodmode: 17,
+    setFullpower:18,
+    printText: 19,
+    setReady: 20
 };
 
 // button element ID mapping
@@ -247,6 +250,8 @@ function s2dhms(val)
 
 function sendCommand(cmd)
 {
+    console.log(cmd);
+    console.log(typeof(cmdMap[cmd]));
 	// check command
 	if (typeof(cmdMap[cmd]) == 'undefined')
 	{

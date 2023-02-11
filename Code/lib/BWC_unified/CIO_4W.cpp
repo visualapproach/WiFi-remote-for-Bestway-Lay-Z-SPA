@@ -34,8 +34,6 @@ void CIO_4W::setStates(const sToggles& requested_toggles)
     uint64_t prev_ms = millis();
     elapsed_time_ms = millis() - prev_ms;
     prev_ms = millis();
-
-    _actual_states.godmode = true;
     _actual_states.target = requested_toggles.target;
 
     if(_heater2_countdown_ms > 0) _heater2_countdown_ms -= elapsed_time_ms;
@@ -50,7 +48,7 @@ void CIO_4W::setStates(const sToggles& requested_toggles)
 
     for(unsigned int i = 0; i < sizeof(_from_CIO_buf); i++)
         _raw_payload_from_cio[i] = _from_CIO_buf[i];
-        
+
     if(!requested_toggles.godmode)
     {
         /*Copy raw payload to CIO*/
@@ -59,6 +57,8 @@ void CIO_4W::setStates(const sToggles& requested_toggles)
         // _cio_serial.write(_to_CIO_buf, PAYLOADSIZE); //this is done in getStates()
         _actual_states.godmode = false;
         return;
+    } else {
+        _actual_states.godmode = true;
     }
 
     if(requested_toggles.unit_change)
@@ -245,9 +245,10 @@ void CIO_4W::antifreeze()
             togglestates();
         } 
         targetC = 10;
+        Serial.printf("antifrz active\n");
+        if(_actual_states.unit) _actual_states.target = targetC;
+        else _actual_states.target = C2F(targetC);
     }
-    if(_actual_states.unit) _actual_states.target = targetC;
-    else _actual_states.target = C2F(targetC);
 }
 
 void CIO_4W::antiboil()
@@ -271,6 +272,7 @@ void CIO_4W::antiboil()
             _currentStateIndex = getJumptable(_currentStateIndex, HEATTOGGLE);
             togglestates();
         } 
+        Serial.printf("antiboil active\n");
     }
 
     /*

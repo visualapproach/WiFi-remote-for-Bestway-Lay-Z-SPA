@@ -852,6 +852,9 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
     case RESETDAILY:
         _energy_daily_Ws = 0;
         break;
+    case SETGODMODE:
+        to_cio_states.godmode = val > 0;
+        break;
     case SETREADY:
         {
             Serial.print(_timestamp_secs);
