@@ -88,6 +88,7 @@ class BWC {
         sToggles to_cio_states, from_dsp_states;
         int pins[7];
         unsigned int loop_count = 0;
+        bool hasjets, hasgod;
 
     private:
         void _loadHardware(Models& cioNo, Models& dspNo, int pins[]);

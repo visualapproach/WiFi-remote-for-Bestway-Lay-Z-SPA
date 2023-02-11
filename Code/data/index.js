@@ -118,12 +118,12 @@ function handlemsg(e)
 		document.getElementById('rssi').innerHTML = "RSSI: " + msgobj.RSSI;
 
 		// hydro jets available
-		document.getElementById('jets').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
-		document.getElementById('jetsswitch').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
-		document.getElementById('jetstotals').style.display = (msgobj.HASJETS ? 'table-row' : 'none');
+		document.getElementById('jets').style.display = (msgobj.HASJETS ? 'table-cell' : 'none');
+		document.getElementById('jetsswitch').style.display = (msgobj.HASJETS ? 'table-cell' : 'none');
+		document.getElementById('jetstotals').style.display = (msgobj.HASJETS ? 'table-cell' : 'none');
 		// godmode available
-		document.getElementById('god').style.display = (msgobj.GOD ? 'table-row' : 'none');
-		document.getElementById('godswitch').style.display = (msgobj.GOD ? 'table-row' : 'none');
+		document.getElementById('god').style.display = (msgobj.HASGOD ? 'table-cell' : 'none');
+		document.getElementById('godswitch').style.display = (msgobj.HASGOD ? 'table-cell' : 'none');
 	}
 
 	if (msgobj.CONTENT == "STATES")

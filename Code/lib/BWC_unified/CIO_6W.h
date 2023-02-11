@@ -19,14 +19,15 @@ class CIO_6W : public CIO
         virtual ~CIO_6W(){};
         Power getPower(){return power;};
         void setStates(const sToggles& requested_toggles);
+        bool getHasgod() {return false;}
+        virtual bool getHasjets() = 0;
+        virtual bool getHasair() = 0;
 
         /*internal use*/
     protected:
         virtual uint16_t getButtonCode(Buttons buttonIndex) = 0;
         void _qButton(sButton_queue_item item);
         void _handleButtonQ(void);
-        virtual bool getHasjets() = 0;
-        virtual bool getHasair() = 0;
         void unlock();
 
     /*These must be declared for the API to work*/

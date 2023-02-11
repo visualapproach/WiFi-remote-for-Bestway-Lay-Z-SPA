@@ -103,6 +103,8 @@ void BWC::setup(void){
     }
     _cio->setup(pins[0], pins[1], pins[2]);
     _dsp->setup(pins[3], pins[4], pins[5], pins[6]);
+    hasjets = _cio->getHasjets();
+    hasgod = _cio->getHasgod();
     begin();
 }
 
@@ -155,7 +157,6 @@ void BWC::loop(){
         _scroll = false;
     }
     from_cio_states = _cio->getStates();
-
     to_dsp_states.locked = from_cio_states.locked;
     to_dsp_states.power = from_cio_states.power;
     to_dsp_states.unit = from_cio_states.unit;
@@ -193,8 +194,16 @@ void BWC::loop(){
         to_dsp_states.brightness = _dsp_brightness;
     }
 
-    if(from_dsp_states.pressed_button == UP) _sweepup();
-    if(from_dsp_states.pressed_button == DOWN) _sweepdown();
+    if(from_dsp_states.pressed_button == UP) 
+    {
+        _sweepup();
+        _dsp_tgt_used = true;
+    }
+    if(from_dsp_states.pressed_button == DOWN) 
+    {
+        _sweepdown();
+        _dsp_tgt_used = true;
+    }
     if(from_dsp_states.pressed_button == TIMER) _beep();
     to_cio_states.locked_change = from_dsp_states.locked_change;
     to_cio_states.power_change = from_dsp_states.power_change;
@@ -217,6 +226,7 @@ void BWC::loop(){
     /*If new target was not set above, use whatever the cio says*/
     _cio->setRawPayload(_dsp->getRawPayload());
     _cio->setStates(to_cio_states);
+
     if(_save_settings_needed) saveSettings();
     if(_save_cmdq_needed) _saveCommandQueue();
     if(_save_states_needed) _saveStates();
@@ -486,9 +496,9 @@ void BWC::_handleStateChanges()
         /*TODO: declare _changed and _stateage for some parameters, like Heatred, temperature*/
     if(from_cio_states.temperature != _prev_cio_states.temperature)
     {
-        _temp_change_timestamp_ms = millis();
         _deltatemp = from_cio_states.temperature - _prev_cio_states.temperature;
         _updateVirtualTempFix_ontempchange();
+        _temp_change_timestamp_ms = millis();
     }
 
     // Store virtual temp data point
@@ -647,11 +657,11 @@ void BWC::_updateVirtualTempFix_ontempchange()
 
     // We can only know something about rate of change if we had continous cooling since last update
     // (Nobody messed with the heater during the 1 degree change)
-    if((millis()-_heatred_change_timestamp_ms) < (millis()-_temp_change_timestamp_ms)) return;
+    if(_heatred_change_timestamp_ms < _temp_change_timestamp_ms) return;
     // rate of heating is not subject to change (fixed wattage and pool size) so do this only if cooling
     // and do not calibrate if bubbles has been on
     if(_vt_calibrated) return;
-    if(from_cio_states.heatred || from_cio_states.bubbles || ((millis()-_bubbles_change_timestamp_ms) < (millis()-_temp_change_timestamp_ms))) return;
+    if(from_cio_states.heatred || from_cio_states.bubbles || (_bubbles_change_timestamp_ms < _temp_change_timestamp_ms)) return;
     if(_deltatemp > 0 && _virtual_temp > _ambient_temp) return; //temp is rising when it should be falling. Bail out
     if(_deltatemp < 0 && _virtual_temp < _ambient_temp) return; //temp is falling when it should be rising. Bail out
     float degAboveAmbient = _virtual_temp - _ambient_temp;

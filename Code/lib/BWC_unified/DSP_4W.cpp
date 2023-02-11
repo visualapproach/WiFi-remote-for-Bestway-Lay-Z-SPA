@@ -5,9 +5,9 @@ void DSP_4W::setup(int dsp_rx, int dsp_tx, int dummy, int dummy2)
 {
     _dsp_serial.begin(9600, SWSERIAL_8N1, dsp_tx, dsp_rx, false, 63);
     _dsp_serial.setTimeout(20);
-    _from_dsp_states.locked_change = false;
-    _from_dsp_states.power_change = 1;
-    _from_dsp_states.unit_change = 1;
+    _from_dsp_states.locked_change = 0;
+    _from_dsp_states.power_change = 0;
+    _from_dsp_states.unit_change = 0;
     // _from_dsp_states.error = 0;
     _from_dsp_states.pressed_button = NOBTN;
     _from_dsp_states.no_of_heater_elements_on = 0;

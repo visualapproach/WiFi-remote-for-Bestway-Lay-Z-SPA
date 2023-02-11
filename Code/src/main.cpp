@@ -67,41 +67,37 @@ void loop()
         // MQTT
         if (enableMqtt && mqttClient.loop())
         {
-        String msg = bwc.getButtonName();
-        // publish pretty button name if display button is pressed (or NOBTN if released)
-        if (!msg.equals(prevButtonName))
-        {
-            mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
-            prevButtonName = msg;
-        }
+            String msg = bwc.getButtonName();
+            // publish pretty button name if display button is pressed (or NOBTN if released)
+            if (!msg.equals(prevButtonName))
+            {
+                mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
+                prevButtonName = msg;
+            }
 
-        if (newData || sendMQTTFlag)
-        {
-            sendMQTT();
-            sendMQTTFlag = false;
-        }
+            if (newData || sendMQTTFlag)
+            {
+                sendMQTT();
+                sendMQTTFlag = false;
+            }
         }
 
         // web socket
-        if (newData)
+        if (newData || sendWSFlag)
         {
-        sendWS();
-        }
-        else if (sendWSFlag)
-        {
-        sendWSFlag = false;
-        sendWS();
+            sendWSFlag = false;
+            sendWS();
         }
 
         // run once after connection was established
         if (!wifiConnected)
         {
-        // Serial.println(F("WiFi > Connected"));
-        // Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
-        // Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
-        startOTA();
-        startHttpServer();
-        startWebSocket();
+            // Serial.println(F("WiFi > Connected"));
+            // Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
+            // Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
+            startOTA();
+            startHttpServer();
+            startWebSocket();
         }
         // reset marker
         wifiConnected = true;
@@ -113,7 +109,7 @@ void loop()
         // run once after connection was lost
         if (wifiConnected)
         {
-        // Serial.println(F("WiFi > Lost connection. Trying to reconnect ..."));
+            // Serial.println(F("WiFi > Lost connection. Trying to reconnect ..."));
         }
         // set marker
         wifiConnected = false;
@@ -126,25 +122,25 @@ void loop()
 
         if (WiFi.status() != WL_CONNECTED)
         {
-        bwc.print(F("check network"));
-        // Serial.println(F("WiFi > Trying to reconnect ..."));
+            bwc.print(F("check network"));
+            // Serial.println(F("WiFi > Trying to reconnect ..."));
         }
         if (WiFi.status() == WL_CONNECTED)
         {
-        // could be interesting to display the IP
-        //bwc.print(WiFi.localIP().toString());
+            // could be interesting to display the IP
+            //bwc.print(WiFi.localIP().toString());
 
-        if (!DateTime.isTimeValid())
-        {
-            // Serial.println(F("NTP > Start synchronisation"));
-            DateTime.begin();
-        }
+            if (!DateTime.isTimeValid())
+            {
+                // Serial.println(F("NTP > Start synchronisation"));
+                DateTime.begin();
+            }
 
-        if (enableMqtt && !mqttClient.loop())
-        {
-            // Serial.println(F("MQTT > Not connected"));
-            mqttConnect();
-        }
+            if (enableMqtt && !mqttClient.loop())
+            {
+                // Serial.println(F("MQTT > Not connected"));
+                mqttConnect();
+            }
         }
     }
 
@@ -170,11 +166,11 @@ void sendWS()
     // send states
     json = bwc.getJSONStates();
     webSocket.broadcastTXT(json);
-
+delay(2);
     // send times
     json = bwc.getJSONTimes();
     webSocket.broadcastTXT(json);
-
+delay(2);
     // send other info
     json = getOtherInfo();
     webSocket.broadcastTXT(json);
@@ -189,7 +185,8 @@ String getOtherInfo()
     doc["MQTT"] = mqttClient.state();
     /*TODO: add these:*/
     //   doc["PressedButton"] = bwc.getPressedButton();
-    //   doc["HASJETS"] = HASJETS;
+    doc["HASJETS"] = bwc.hasjets;
+    doc["HASGOD"] = bwc.hasgod;
     doc["MODEL"] = bwc.getModel();
     doc["RSSI"] = WiFi.RSSI();
     doc["IP"] = WiFi.localIP().toString();
@@ -226,6 +223,7 @@ void sendMQTT()
     {
         //Serial.println(F("MQTT > message not published"));
     }
+delay(2);
 
     // send times
     json = bwc.getJSONTimes();
@@ -237,6 +235,7 @@ void sendMQTT()
     {
         //Serial.println(F("MQTT > times not published"));
     }
+delay(2);
 
     //send other info
     json = getOtherInfo();
@@ -279,25 +278,25 @@ void startWiFi()
 
         while (WiFi.status() != WL_CONNECTED)
         {
-        delay(1000);
-        // Serial.print(".");
-        tryCount++;
+            delay(1000);
+            // Serial.print(".");
+            tryCount++;
 
-        if (tryCount >= maxTries)
-        {
-            // Serial.println("");
-            // Serial.println(F("WiFi > NOT connected!"));
-            if (enableWmApFallback)
+            if (tryCount >= maxTries)
             {
-            // disable specific WiFi config
-            enableAp = false;
-            enableStaticIp4 = false;
-            // fallback to WiFi config portal
-            startWiFiConfigPortal();
+                // Serial.println("");
+                // Serial.println(F("WiFi > NOT connected!"));
+                if (enableWmApFallback)
+                {
+                    // disable specific WiFi config
+                    enableAp = false;
+                    enableStaticIp4 = false;
+                    // fallback to WiFi config portal
+                    startWiFiConfigPortal();
+                }
+                break;
             }
-            break;
-        }
-        // Serial.println("");
+            // Serial.println("");
         }
     }
     else

@@ -123,7 +123,7 @@ struct sStates
     uint8_t heat = 0;
     uint8_t pump = 0;
     uint8_t temperature = 99;
-    uint8_t target = 0;
+    uint8_t target = 20;
     uint8_t char1 = 'a';
     uint8_t char2 = 'b';
     uint8_t char3 = 'c';
@@ -140,7 +140,7 @@ struct sStates
     // bool fullpower = false;
     uint8_t no_of_heater_elements_on = 0;
     bool godmode = false;
-    String text;
+    String text ="";
     int audiofrequency = 0;
 
     inline bool operator==(const sStates& rhs)

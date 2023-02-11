@@ -12,12 +12,15 @@ class CIO_4W : public CIO
     public:
         CIO_4W(){};
         virtual ~CIO_4W(){};
-        Power getPower(){return _power;};
+        Power getPower(){return _power;}
         void setup(int cio_rx, int cio_tx, int dummy);
         void stop();
 
         void setStates(const sToggles& requested_toggles);
         sStates getStates();
+        bool getHasgod() {return true;}
+        virtual bool getHasjets() = 0;
+        virtual bool getHasair() = 0;
 
     /*internal use*/
     protected:
@@ -33,8 +36,6 @@ class CIO_4W : public CIO
         virtual uint8_t getPowerBitmask() = 0;
         virtual uint8_t getJumptable(int row, int col) = 0;
         virtual uint8_t getAllowedstates(int row, int col) = 0;
-        virtual bool getHasjets() = 0;
-        virtual bool getHasair() = 0;
         void generatePayload();
 
     private:
