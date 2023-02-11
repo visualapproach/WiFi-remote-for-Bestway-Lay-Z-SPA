@@ -2,10 +2,10 @@
 
 void DSP::setRawPayload(const std::vector<uint8_t>& pl)
 {
-    rawPayloadToDSP = pl;
+    _raw_payload_to_dsp = pl;
 }
 
 std::vector<uint8_t> DSP::getRawPayload()
 {
-    return rawPayloadFromDSP;
+    return _raw_payload_from_dsp;
 }

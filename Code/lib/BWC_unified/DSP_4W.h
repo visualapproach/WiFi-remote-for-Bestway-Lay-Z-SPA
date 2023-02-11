@@ -32,9 +32,9 @@ class DSP_4W : public DSP
         sStates _to_dsp_states;
         SoftwareSerial _dsp_serial;
         /*ESP to DSP*/
-        uint8_t _to_DSP_buf[7];
+        uint8_t _to_DSP_buf[7] = {};
         /*DSP to ESP. We can ignore this message and send our own when ESP is in charge.*/
-        uint8_t _from_DSP_buf[7];
+        uint8_t _from_DSP_buf[7] = {};
         const uint8_t COMMANDINDEX = 2;
         const uint8_t DSP_CHECKSUMINDEX = 5;
         const uint8_t PAYLOADSIZE = 7;

@@ -21,6 +21,6 @@ class CIO
         virtual Power getPower() = 0;
 
     protected:
-        std::vector<uint8_t> _raw_payload_to_cio;
-        std::vector<uint8_t> _raw_payload_from_cio;
+        std::vector<uint8_t> _raw_payload_to_cio = {0,0,0,0,0,0,0};
+        std::vector<uint8_t> _raw_payload_from_cio = {0,0,0,0,0,0,0};
 };

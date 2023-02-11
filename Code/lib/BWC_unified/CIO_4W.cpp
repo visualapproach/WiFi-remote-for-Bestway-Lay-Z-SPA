@@ -48,14 +48,15 @@ void CIO_4W::setStates(const sToggles& requested_toggles)
         _turn_off_heater_flag = false;
     }
 
+    for(unsigned int i = 0; i < sizeof(_from_CIO_buf); i++)
+        _raw_payload_from_cio[i] = _from_CIO_buf[i];
+        
     if(!requested_toggles.godmode)
     {
         /*Copy raw payload to CIO*/
         for(unsigned int i = 0; i < sizeof(_to_CIO_buf); i++)
             _to_CIO_buf[i] = _raw_payload_to_cio[i];
-        for(unsigned int i = 0; i < sizeof(_from_CIO_buf); i++)
-            _raw_payload_from_cio[i] = _from_CIO_buf[i];
-        _cio_serial.write(_to_CIO_buf, PAYLOADSIZE);
+        // _cio_serial.write(_to_CIO_buf, PAYLOADSIZE); //this is done in getStates()
         _actual_states.godmode = false;
         return;
     }

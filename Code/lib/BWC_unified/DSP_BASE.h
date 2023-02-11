@@ -15,6 +15,6 @@ class DSP
         std::vector<uint8_t> getRawPayload();
 
     protected:
-        std::vector<uint8_t> rawPayloadToDSP;
-        std::vector<uint8_t> rawPayloadFromDSP;
+        std::vector<uint8_t> _raw_payload_to_dsp = {0,0,0,0,0,0,0};
+        std::vector<uint8_t> _raw_payload_from_dsp = {0,0,0,0,0,0,0};
 };

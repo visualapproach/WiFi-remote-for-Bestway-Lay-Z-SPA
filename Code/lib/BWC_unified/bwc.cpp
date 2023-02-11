@@ -176,6 +176,7 @@ void BWC::loop(){
     to_dsp_states.godmode = from_cio_states.godmode;
     
     /*Modify and use to_dsp_states here if we want to show text or something*/
+    _dsp->setRawPayload(_cio->getRawPayload());
     _dsp->setStates(to_dsp_states);
 
     from_dsp_states = _dsp->getStates();
@@ -214,6 +215,7 @@ void BWC::loop(){
     /*following method will change target temp and set _dsp_tgt_used to false if target temp is changed*/
     _handleCommandQ();
     /*If new target was not set above, use whatever the cio says*/
+    _cio->setRawPayload(_dsp->getRawPayload());
     _cio->setStates(to_cio_states);
     if(_save_settings_needed) saveSettings();
     if(_save_cmdq_needed) _saveCommandQueue();
@@ -845,9 +847,9 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
             Serial.print(_timestamp_secs);
             Serial.print("  ");
             Serial.print((val - _estHeatingTime() * 3600.0f - 7200));
-            Serial.println(_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200));
+            Serial.println((int64_t)_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200));
             command_que_item item;
-            if(_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200)) //2 hours extra margin
+            if((int64_t)_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200)) //2 hours extra margin
             {
                 /*time to start heating*/
                 item.cmd = SETHEATER;

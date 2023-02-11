@@ -42,7 +42,7 @@ sToggles DSP_4W::getStates()
     for(int i = 0; i < PAYLOADSIZE; i++)
         {
             _from_DSP_buf[i] = tempbuffer[i];
-            rawPayloadFromDSP[i] = tempbuffer[i];
+            _raw_payload_from_dsp[i] = tempbuffer[i];
         }
 
     uint8_t bubbles = (_from_DSP_buf[COMMANDINDEX] & getBubblesBitmask()) > 0;
@@ -88,9 +88,10 @@ void DSP_4W::setStates(const sStates& to_dsp_states)
     }
     else
     {
+        if(PAYLOADSIZE != _raw_payload_to_dsp.size()) return;
         for(int i = 0; i < PAYLOADSIZE; i++)
         {
-            _to_DSP_buf[i] = rawPayloadToDSP[i];
+            _to_DSP_buf[i] = _raw_payload_to_dsp[i];
         }
     }
 }
