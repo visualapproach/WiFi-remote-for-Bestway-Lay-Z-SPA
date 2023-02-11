@@ -27,7 +27,6 @@ void CIO_4W::stop()
     _cio_serial.stopListening();
 }
 
-/*TODO: fix this with the new toggle logic instead of set states*/
 void CIO_4W::setStates(const sToggles& requested_toggles)
 {
     uint64_t elapsed_time_ms = 0;
