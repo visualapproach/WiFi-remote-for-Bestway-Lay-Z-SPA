@@ -789,7 +789,15 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
     {
     case SETTARGET:
     {
-        to_cio_states.target = val;
+        if(! ((val > 0 && val < 41) || (val > 50 && val < 105)) ) break;
+        bool implied_unit_is_celsius = (val < 41);
+        bool required_unit = from_cio_states.unit;
+        if(implied_unit_is_celsius && !required_unit)
+            to_cio_states.target = round(C2F(val));
+        else if(!implied_unit_is_celsius && required_unit)
+            to_cio_states.target = round(F2C(val));
+        else
+            to_cio_states.target = val;
         /*Send this value to cio instead of results from button presses on the display*/
         _dsp_tgt_used = false;
         break;
