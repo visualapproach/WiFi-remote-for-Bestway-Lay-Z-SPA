@@ -63,7 +63,9 @@ void CIO_4W::setStates(const sToggles& requested_toggles)
     if(requested_toggles.unit_change)
     {
         _actual_states.unit = !_actual_states.unit;
-        _actual_states.unit ? _actual_states.target = F2C(_actual_states.target) : _actual_states.target = C2F(_actual_states.target);
+        /*requested target is converted in bwc.cpp*/
+        // _actual_states.unit ? _actual_states.target = round(F2C(_actual_states.target)) : _actual_states.target = round(C2F(_actual_states.target));
+        _actual_states.unit ? _actual_states.temperature = round(F2C(_actual_states.temperature)) : _actual_states.temperature = round(C2F(_actual_states.temperature));
     }
 
     if(requested_toggles.heat_change)

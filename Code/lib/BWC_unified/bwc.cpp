@@ -568,6 +568,19 @@ float BWC::_estHeatingTime()
 //virtual temp is always C in this code and will be converted when sending externally
 void BWC::_calcVirtualTemp()
 {
+    //startup init
+    if(millis() < 30000)
+    {
+        int tempInC = from_cio_states.temperature;
+        if(!from_cio_states.unit) {
+            tempInC = F2C(tempInC);
+        }
+        _virtual_temp_fix = tempInC;
+        _virtual_temp = _virtual_temp_fix;
+        _virtual_temp_fix_age = 0;
+        return;
+    }
+
     // calculate from last updated VTFix.
     double netRisePerHour;
     float degAboveAmbient = _virtual_temp - _ambient_temp;
@@ -631,15 +644,6 @@ void BWC::_updateVirtualTempFix_ontempchange()
         tempInC = F2C(tempInC);
         conversion = 1/1.8;
     }
-    //startup init
-    if(_virtual_temp_fix < -10)
-    {
-        _virtual_temp_fix = tempInC;
-        _virtual_temp = _virtual_temp_fix;
-        _virtual_temp_fix_age = 0;
-        return;
-    }
-
     //Do not process if temperature changed > 1 degree (reading spikes)
     if(abs(_deltatemp) != 1) return;
 
@@ -803,8 +807,9 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
         break;
     }
     case SETUNIT:
-        if(val == 1) to_cio_states.target = F2C(to_cio_states.target); 
-        if(!(val == 1)) to_cio_states.target = C2F(to_cio_states.target); 
+        if(hasgod && !to_cio_states.godmode) break;
+        if(val == 1 && from_cio_states.unit == 0) to_cio_states.target = round(F2C(to_cio_states.target)); 
+        if(val == 0 && from_cio_states.unit == 1) to_cio_states.target = round(C2F(to_cio_states.target)); 
         if((uint8_t)val != from_cio_states.unit) to_cio_states.unit_change = 1;
         break;
     case SETBUBBLES:
