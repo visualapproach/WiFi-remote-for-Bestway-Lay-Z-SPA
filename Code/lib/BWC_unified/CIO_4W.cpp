@@ -45,9 +45,6 @@ void CIO_4W::setStates(const sToggles& requested_toggles)
         _turn_off_heater_flag = false;
     }
 
-    for(unsigned int i = 0; i < sizeof(_from_CIO_buf); i++)
-        _raw_payload_from_cio[i] = _from_CIO_buf[i];
-
     if(!requested_toggles.godmode)
     {
         /*Copy raw payload to CIO*/
@@ -158,7 +155,10 @@ sStates CIO_4W::getStates()
     // cio_tx_ok = true;
     /* Copy tempbuffer into _from_CIO_buf */
     for(int i = 0; i < PAYLOADSIZE; i++)
+    {
         _from_CIO_buf[i] = tempbuffer[i];
+        _raw_payload_from_cio[i] = tempbuffer[i];
+    }
 
     _actual_states.temperature = _from_CIO_buf[TEMPINDEX];
     if(!_actual_states.unit) _actual_states.temperature = C2F(_actual_states.temperature);

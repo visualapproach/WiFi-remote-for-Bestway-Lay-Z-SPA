@@ -24,6 +24,29 @@ BWC::BWC()
     to_cio_states.power_change = 1;
 };
 
+void save_settings_cb(BWC* bwcInstance)
+{
+    bwcInstance->on_save_settings();
+}
+void scroll_text_cb(BWC* bwcInstance)
+{
+    bwcInstance->on_scroll_text();
+}
+
+void BWC::on_save_settings()
+{
+    if(++_ticker_count >= 3)
+    {
+        _save_settings_needed = true;
+        _ticker_count = 0;
+    }
+}
+
+void BWC::on_scroll_text()
+{
+    _scroll = true;
+}
+
 void BWC::setup(void){
     Models ciomodel;
     Models dspmodel;
@@ -121,28 +144,6 @@ void BWC::begin(){
     _next_notification_time = _notification_time;
 }
 
-void save_settings_cb(BWC* bwcInstance)
-{
-    bwcInstance->on_save_settings();
-}
-void scroll_text_cb(BWC* bwcInstance)
-{
-    bwcInstance->on_scroll_text();
-}
-
-void BWC::on_save_settings()
-{
-    if(++_ticker_count >= 3)
-    {
-        _save_settings_needed = true;
-        _ticker_count = 0;
-    }
-}
-
-void BWC::on_scroll_text()
-{
-    _scroll = true;
-}
 
 void BWC::loop(){
     ++loop_count;
@@ -352,36 +353,10 @@ void BWC::stop(){
     delete _dsp;
 }
 
-void BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
+/*Sort by xtime, ascending*/
+bool BWC::_compare_command(const command_que_item& i1, const command_que_item& i2)
 {
-    File file = LittleFS.open("/hwcfg.json", "r");
-    if (!file)
-    {
-        // Serial.println(F("Failed to open hwcfg.json"));
-        return;
-    }
-    DynamicJsonDocument doc(256);
-    DeserializationError error = deserializeJson(doc, file);
-    if (error) {
-        // Serial.println(F("Failed to read settings.txt"));
-        file.close();
-        return;
-    }
-    file.close();
-    cioNo = doc["cio"];
-    dspNo = doc["dsp"];
-    String pcbname = doc["pcb"].as<String>();
-    // int pins[7];
-    #ifdef ESP8266
-    int DtoGPIO[] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
-    #endif
-    for(int i = 0; i < 7; i++)
-    {
-        pins[i] = doc["pins"][i];
-    #ifdef ESP8266
-        pins[i] = DtoGPIO[pins[i]];
-    #endif
-    }
+    return i1.xtime < i2.xtime;
 }
 
 void BWC::_handleNotification()
@@ -408,92 +383,157 @@ void BWC::_handleNotification()
         _next_notification_time /= 2;
 }
 
-/*Sort by xtime, ascending*/
-bool BWC::_compare_command(const command_que_item& i1, const command_que_item& i2)
-{
-    return i1.xtime < i2.xtime;
-}
-
-void BWC::_add_melody(const String &filename)
-{
-    if(_notes.size() || !_audio_enabled) return;
-    File file = LittleFS.open(filename, "r");
-    if (!file) return;
-    while(file.available())
+void BWC::_handleCommandQ() {
+    bool restartESP = false;
+    if(_command_que.size() < 1) return;
+    /* time for next command? */
+    if (_timestamp_secs < _command_que[0].xtime) return;
+    //If interval > 0 then append to commandQ with updated xtime.
+    if(_command_que[0].interval > 0)
     {
-        sNote n;
-        file.readBytes((char*)&n, sizeof(n));
-        _notes.push_back(n);
+       _command_que[0].xtime += _command_que[0].interval;
+       _command_que.push_back(_command_que[0]);
+    } 
+    _handlecommand(_command_que[0].cmd, _command_que[0].val, _command_que[0].text);
+    restartESP = _command_que[0].cmd == REBOOTESP;
+    //remove from commandQ
+    _command_que.erase(_command_que.begin());
+    _next_notification_time = _notification_time; //reset alarm time
+    _save_cmdq_needed = true;
+    if(restartESP) {
+        saveSettings();
+        _saveCommandQueue();
+        stop();
+        delay(3000);
+        ESP.restart();
     }
-    file.close();
-    /* We read and erase from the back of the vector (faster) so if notes are stored in the natural order we need to reverse*/
-    std::reverse(_notes.begin(), _notes.end());
+    /*If we pushed back an item, we need to re-sort the que*/
+    std::sort(_command_que.begin(), _command_que.end(), _compare_command);
 }
 
-void BWC::_save_melody(const String& filename)
+bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
 {
-    File file = LittleFS.open(filename, "w");
-    if (!file) return;
-    sNote n = {1000, 500};
-    file.write((byte*)&n, sizeof(n));
-    file.close();
-}
-
-void BWC::_sweepdown()
-{
-    if(_notes.size() || !_audio_enabled) return;
-    for(int i = 0; i < 128; i++)
+    
+    to_dsp_states.text += String(" ") + txt;
+    switch (cmd)
     {
-        sNote n;
-        n.duration_ms = 2;
-        n.frequency_hz = 1000 + 8*i;
-        _notes.push_back(n);
-    }
-}
-
-void BWC::_sweepup()
-{
-    if(_notes.size() || !_audio_enabled) return;
-    for(int i = 0; i < 128; i++)
+    case SETTARGET:
     {
-        sNote n;
-        n.duration_ms = 2;
-        n.frequency_hz = 2000 - 8*i;
-        _notes.push_back(n);
+        if(! ((val > 0 && val < 41) || (val > 50 && val < 105)) ) break;
+        bool implied_unit_is_celsius = (val < 41);
+        bool required_unit = from_cio_states.unit;
+        if(implied_unit_is_celsius && !required_unit)
+            to_cio_states.target = round(C2F(val));
+        else if(!implied_unit_is_celsius && required_unit)
+            to_cio_states.target = round(F2C(val));
+        else
+            to_cio_states.target = val;
+        /*Send this value to cio instead of results from button presses on the display*/
+        _dsp_tgt_used = false;
+        break;
     }
-}
-
-void BWC::_beep()
-{
-    if(_notes.size() || !_audio_enabled) return;
-    sNote n;
-    n.duration_ms = 50;
-    n.frequency_hz = 2400;
-    _notes.push_back(n);
-    n.duration_ms = 50;
-    n.frequency_hz = 800;
-    _notes.push_back(n);
-}
-
-void BWC::_accord()
-{
-    if(_notes.size() || !_audio_enabled) return;
-    sNote n;
-    for(int i = 0; i < 5; i++)
-    {
-        n.duration_ms = 10;
-        n.frequency_hz = NOTE_C6;
-        _notes.push_back(n);
-        n.duration_ms = 10;
-        n.frequency_hz = NOTE_E6;
-        _notes.push_back(n);
+    case SETUNIT:
+        if(hasgod && !to_cio_states.godmode) break;
+        if(val == 1 && from_cio_states.unit == 0) to_cio_states.target = round(F2C(to_cio_states.target)); 
+        if(val == 0 && from_cio_states.unit == 1) to_cio_states.target = round(C2F(to_cio_states.target)); 
+        if((uint8_t)val != from_cio_states.unit) to_cio_states.unit_change = 1;
+        break;
+    case SETBUBBLES:
+        if(val != from_cio_states.bubbles) to_cio_states.bubbles_change = 1;
+        break;
+    case SETHEATER:
+        if(val != from_cio_states.heat) to_cio_states.heat_change = 1;
+        break;
+    case SETPUMP:
+        if(val != from_cio_states.pump) to_cio_states.pump_change = 1;
+        break;
+    case GETTARGET:
+        /*Not used atm*/
+        break;
+    case RESETTIMES:
+        _uptime = 0;
+        _pumptime = 0;
+        _jettime = 0;
+        _heatingtime = 0;
+        _airtime = 0;
+        _uptime_ms = 0;
+        _pumptime_ms = 0;
+        _jettime_ms = 0;
+        _heatingtime_ms = 0;
+        _airtime_ms = 0;
+        _energy_total_kWh = 0;
+        _save_settings_needed = true;
+        break;
+    case RESETCLTIMER:
+        _cl_timestamp_s = _timestamp_secs;
+        _save_settings_needed = true;
+        break;
+    case RESETFTIMER:
+        _filter_timestamp_s = _timestamp_secs;
+        _save_settings_needed = true;
+        break;
+    case SETJETS:
+        if(val != from_cio_states.jets) to_cio_states.jets_change = 1;
+        break;
+    case SETBRIGHTNESS:
+        _dsp_brightness = val;
+        break;
+    case SETBEEP:
+        if(val == 0) _beep();
+        if(val == 1) _accord();
+        break;
+    case SETAMBIENTF:
+        setAmbientTemperature(val, false);
+        break;
+    case SETAMBIENTC:
+        setAmbientTemperature(val, true);
+        break;
+    case RESETDAILY:
+        _energy_daily_Ws = 0;
+        break;
+    case SETGODMODE:
+        to_cio_states.godmode = val > 0;
+        break;
+    case SETREADY:
+        {
+            Serial.print(_timestamp_secs);
+            Serial.print("  ");
+            Serial.print((val - _estHeatingTime() * 3600.0f - 7200));
+            Serial.println((int64_t)_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200));
+            command_que_item item;
+            if((int64_t)_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200)) //2 hours extra margin
+            {
+                /*time to start heating*/
+                item.cmd = SETHEATER;
+                item.interval = 0;
+                item.text = "";
+                item.val = 1;
+                item.xtime = _timestamp_secs + 1;
+                add_command(item);
+            }
+            else
+            {
+                /*Not time yet, so add check in one minute*/
+                item.cmd = cmd;
+                item.interval = 0;
+                item.text = "";
+                item.val = val;
+                item.xtime = _timestamp_secs + 60;
+                /*We can't use addcommand() because it will copy xtime to val again*/
+                _command_que.push_back(item);
+                std::sort(_command_que.begin(), _command_que.end(), _compare_command);
+            }
+        }
+        break;
+    default:
+        break;
     }
+    return false;
 }
 
 void BWC::_handleStateChanges()
 {
     if(_prev_cio_states != from_cio_states) _new_data_available = true;
-        /*TODO: declare _changed and _stateage for some parameters, like Heatred, temperature*/
     if(from_cio_states.temperature != _prev_cio_states.temperature)
     {
         _deltatemp = from_cio_states.temperature - _prev_cio_states.temperature;
@@ -682,6 +722,11 @@ void BWC::_updateVirtualTempFix_onheaterchange()
     _virtual_temp_fix_age = 0;
 }
 
+void BWC::print(const String &txt)
+{
+    to_dsp_states.text += txt;
+}
+
 void BWC::setAmbientTemperature(int64_t amb, bool unit)
 {
     _ambient_temp = (int)amb;
@@ -695,47 +740,6 @@ String BWC::getModel()
 {
     return _cio->getModel();
 }
-
-void BWC::print(const String &txt)
-{
-    to_dsp_states.text += txt;
-}
-
-//save out debug text to file "debug.txt" on littleFS
-void BWC::saveDebugInfo(String s){
-    File file = LittleFS.open("debug.txt", "a");
-    if (!file) {
-        // Serial.println(F("Failed to save debug.txt"));
-        return;
-    }
-
-    DynamicJsonDocument doc(1024);
-
-    // Set the values in the document
-    doc["timestamp"] = DateTime.format(DateFormatter::SIMPLE);
-    doc["message"] = s;
-    // Serialize JSON to file
-    if (serializeJson(doc, file) == 0) {
-        // Serial.println(F("Failed to write debug.txt"));
-    }
-    file.close();
-}
-
-
-//check for special button sequence
-bool BWC::getBtnSeqMatch()
-{
-    if( _btn_sequence[0] == POWER &&
-        _btn_sequence[1] == LOCK &&
-        _btn_sequence[2] == TIMER &&
-        _btn_sequence[3] == POWER)
-    {
-        return true;
-    }
-    return false;
-}
-
-
 
 bool BWC::add_command(command_que_item command_item)
 {
@@ -757,150 +761,15 @@ bool BWC::add_command(command_que_item command_item)
     return true;
 }
 
-void BWC::_handleCommandQ() {
-    bool restartESP = false;
-    if(_command_que.size() < 1) return;
-    /* time for next command? */
-    if (_timestamp_secs < _command_que[0].xtime) return;
-    //If interval > 0 then append to commandQ with updated xtime.
-    if(_command_que[0].interval > 0)
-    {
-       _command_que[0].xtime += _command_que[0].interval;
-       _command_que.push_back(_command_que[0]);
-    } 
-    _handlecommand(_command_que[0].cmd, _command_que[0].val, _command_que[0].text);
-    restartESP = _command_que[0].cmd == REBOOTESP;
-    //remove from commandQ
-    _command_que.erase(_command_que.begin());
-    _next_notification_time = _notification_time; //reset alarm time
-    _save_cmdq_needed = true;
-    if(restartESP) {
-        saveSettings();
-        _saveCommandQueue();
-        stop();
-        delay(3000);
-        ESP.restart();
-    }
-    /*If we pushed back an item, we need to re-sort the que*/
-    std::sort(_command_que.begin(), _command_que.end(), _compare_command);
-}
-
-bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
+//check for special button sequence
+bool BWC::getBtnSeqMatch()
 {
-    
-    to_dsp_states.text += String(" ") + txt;
-    switch (cmd)
+    if( _btn_sequence[0] == POWER &&
+        _btn_sequence[1] == LOCK &&
+        _btn_sequence[2] == TIMER &&
+        _btn_sequence[3] == POWER)
     {
-    case SETTARGET:
-    {
-        if(! ((val > 0 && val < 41) || (val > 50 && val < 105)) ) break;
-        bool implied_unit_is_celsius = (val < 41);
-        bool required_unit = from_cio_states.unit;
-        if(implied_unit_is_celsius && !required_unit)
-            to_cio_states.target = round(C2F(val));
-        else if(!implied_unit_is_celsius && required_unit)
-            to_cio_states.target = round(F2C(val));
-        else
-            to_cio_states.target = val;
-        /*Send this value to cio instead of results from button presses on the display*/
-        _dsp_tgt_used = false;
-        break;
-    }
-    case SETUNIT:
-        if(hasgod && !to_cio_states.godmode) break;
-        if(val == 1 && from_cio_states.unit == 0) to_cio_states.target = round(F2C(to_cio_states.target)); 
-        if(val == 0 && from_cio_states.unit == 1) to_cio_states.target = round(C2F(to_cio_states.target)); 
-        if((uint8_t)val != from_cio_states.unit) to_cio_states.unit_change = 1;
-        break;
-    case SETBUBBLES:
-        if(val != from_cio_states.bubbles) to_cio_states.bubbles_change = 1;
-        break;
-    case SETHEATER:
-        if(val != from_cio_states.heat) to_cio_states.heat_change = 1;
-        break;
-    case SETPUMP:
-        if(val != from_cio_states.pump) to_cio_states.pump_change = 1;
-        break;
-    case GETTARGET:
-        /*Not used atm*/
-        break;
-    case RESETTIMES:
-        _uptime = 0;
-        _pumptime = 0;
-        _jettime = 0;
-        _heatingtime = 0;
-        _airtime = 0;
-        _uptime_ms = 0;
-        _pumptime_ms = 0;
-        _jettime_ms = 0;
-        _heatingtime_ms = 0;
-        _airtime_ms = 0;
-        _energy_total_kWh = 0;
-        _save_settings_needed = true;
-        break;
-    case RESETCLTIMER:
-        _cl_timestamp_s = _timestamp_secs;
-        _save_settings_needed = true;
-        break;
-    case RESETFTIMER:
-        _filter_timestamp_s = _timestamp_secs;
-        _save_settings_needed = true;
-        break;
-    case SETJETS:
-        if(val != from_cio_states.jets) to_cio_states.jets_change = 1;
-        break;
-    case SETBRIGHTNESS:
-        _dsp_brightness = val;
-        break;
-    case SETBEEP:
-        if(val == 0) _beep();
-        if(val == 1) _accord();
-        break;
-    case SETAMBIENTF:
-        setAmbientTemperature(val, false);
-        break;
-    case SETAMBIENTC:
-        setAmbientTemperature(val, true);
-        break;
-    case RESETDAILY:
-        _energy_daily_Ws = 0;
-        break;
-    case SETGODMODE:
-        to_cio_states.godmode = val > 0;
-        break;
-    case SETREADY:
-        {
-            Serial.print(_timestamp_secs);
-            Serial.print("  ");
-            Serial.print((val - _estHeatingTime() * 3600.0f - 7200));
-            Serial.println((int64_t)_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200));
-            command_que_item item;
-            if((int64_t)_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200)) //2 hours extra margin
-            {
-                /*time to start heating*/
-                item.cmd = SETHEATER;
-                item.interval = 0;
-                item.text = "";
-                item.val = 1;
-                item.xtime = _timestamp_secs + 1;
-                add_command(item);
-            }
-            else
-            {
-                /*Not time yet, so add check in one minute*/
-                item.cmd = cmd;
-                item.interval = 0;
-                item.text = "";
-                item.val = val;
-                item.xtime = _timestamp_secs + 60;
-                /*We can't use addcommand() because it will copy xtime to val again*/
-                _command_que.push_back(item);
-                std::sort(_command_que.begin(), _command_que.end(), _compare_command);
-            }
-        }
-        break;
-    default:
-        break;
+        return true;
     }
     return false;
 }
@@ -1044,30 +913,6 @@ String BWC::getJSONSettings(){
     return jsonmsg;
 }
 
-void BWC::setJSONSettings(const String& message){
-    //feed the dog
-    // ESP.wdtFeed();
-    DynamicJsonDocument doc(1024);
-
-    // Deserialize the JSON document
-    DeserializationError error = deserializeJson(doc, message);
-    if (error) {
-        // Serial.println(F("Failed to read config file"));
-        return;
-    }
-
-    // Copy values from the JsonDocument to the variables
-    _price = doc["PRICE"];
-    _filter_interval = doc["FINT"];
-    _cl_interval = doc["CLINT"];
-    _audio_enabled = doc["AUDIO"];
-    _restore_states_on_start = doc["RESTORE"];
-    _notify = doc["NOTIFY"];
-    _notification_time = doc["NOTIFTIME"];
-    _vt_calibrated = doc["VTCAL"];
-    saveSettings();
-}
-
 String BWC::getJSONCommandQueue(){
     //feed the dog
     #ifdef ESP8266
@@ -1092,6 +937,45 @@ String BWC::getJSONCommandQueue(){
     return jsonmsg;
 }
 
+/*TODO:*/
+uint8_t BWC::getState(int state){
+    // return _cio->getState(state);
+    return 0;
+}
+
+String BWC::getButtonName() {
+    return ButtonNames[from_dsp_states.pressed_button];
+}
+
+Buttons BWC::getButton()
+{
+    return from_dsp_states.pressed_button;
+}
+
+void BWC::setJSONSettings(const String& message){
+    //feed the dog
+    // ESP.wdtFeed();
+    DynamicJsonDocument doc(1024);
+
+    // Deserialize the JSON document
+    DeserializationError error = deserializeJson(doc, message);
+    if (error) {
+        // Serial.println(F("Failed to read config file"));
+        return;
+    }
+
+    // Copy values from the JsonDocument to the variables
+    _price = doc["PRICE"];
+    _filter_interval = doc["FINT"];
+    _cl_interval = doc["CLINT"];
+    _audio_enabled = doc["AUDIO"];
+    _restore_states_on_start = doc["RESTORE"];
+    _notify = doc["NOTIFY"];
+    _notification_time = doc["NOTIFTIME"];
+    _vt_calibrated = doc["VTCAL"];
+    saveSettings();
+}
+
 bool BWC::newData(){
     bool result = _new_data_available;
     _new_data_available = false;
@@ -1112,279 +996,6 @@ void BWC::_startNTP() {
         if (c++ > 5) break;
     }
     // Serial.println(DateTime.format(DateFormatter::SIMPLE));
-}
-
-void BWC::_loadSettings(){
-    File file = LittleFS.open("/settings.json", "r");
-    if (!file) {
-        // Serial.println(F("Failed to load settings.json"));
-        return;
-    }
-    DynamicJsonDocument doc(1024);
-
-    // Deserialize the JSON document
-    DeserializationError error = deserializeJson(doc, file);
-    if (error) {
-        // Serial.println(F("Failed to deser. settings.json"));
-        file.close();
-        return;
-    }
-
-    // Copy values from the JsonDocument to the variables
-    _cl_timestamp_s = doc["CLTIME"];
-    _filter_timestamp_s = doc["FTIME"];
-    _uptime = doc["UPTIME"];
-    _pumptime = doc["PUMPTIME"];
-    _heatingtime = doc["HEATINGTIME"];
-    _airtime = doc["AIRTIME"];
-    _jettime = doc["JETTIME"];
-    _price = doc["PRICE"];
-    _filter_interval = doc["FINT"];
-    _cl_interval = doc["CLINT"];
-    _audio_enabled = doc["AUDIO"];
-    _notify = doc["NOTIFY"];
-    _notification_time = doc["NOTIFTIME"];
-    _energy_total_kWh = doc["KWH"];
-    _energy_daily_Ws = doc["KWHD"];
-    _restore_states_on_start = doc["RESTORE"];
-    _R_COOLING = doc["R"] | 20; //else use default
-    _ambient_temp = doc["AMB"] | 20;
-    _dsp_brightness = doc["BRT"] | 7;
-    _vt_calibrated = doc["VTCAL"] | false;
-
-    file.close();
-}
-
-void BWC::saveSettings(){
-    //kill the dog
-    // ESP.wdtDisable();
-    #ifdef ESP8266
-    ESP.wdtFeed();
-    #endif
-    _save_settings_needed = false;
-    File file = LittleFS.open("settings.json", "w");
-    if (!file) {
-        // Serial.println(F("Failed to save settings.json"));
-        return;
-    }
-
-    DynamicJsonDocument doc(1024);
-    _heatingtime += _heatingtime_ms/1000;
-    _pumptime += _pumptime_ms/1000;
-    _airtime += _airtime_ms/1000;
-    _jettime += _jettime_ms/1000;
-    _uptime += _uptime_ms/1000;
-    _heatingtime_ms = 0;
-    _pumptime_ms = 0;
-    _airtime_ms = 0;
-    _uptime_ms = 0;
-    // Set the values in the document
-    doc["CLTIME"] = _cl_timestamp_s;
-    doc["FTIME"] = _filter_timestamp_s;
-    doc["UPTIME"] = _uptime;
-    doc["PUMPTIME"] = _pumptime;
-    doc["HEATINGTIME"] = _heatingtime;
-    doc["AIRTIME"] = _airtime;
-    doc["JETTIME"] = _jettime;
-    doc["PRICE"] = _price;
-    doc["FINT"] = _filter_interval;
-    doc["CLINT"] = _cl_interval;
-    doc["AUDIO"] = _audio_enabled;
-    doc["KWH"] = _energy_total_kWh;
-    doc["KWHD"] = _energy_daily_Ws;
-    doc["SAVETIME"] = DateTime.format(DateFormatter::SIMPLE);
-    doc["RESTORE"] = _restore_states_on_start;
-    doc["R"] = _R_COOLING;
-    doc["AMB"] = _ambient_temp;
-    doc["BRT"] = _dsp_brightness;
-    doc["NOTIFY"] = _notify;
-    doc["NOTIFTIME"] = _notification_time;
-    doc["VTCAL"] = _vt_calibrated;
-
-    // Serialize JSON to file
-    if (serializeJson(doc, file) == 0) {
-        // Serial.println(F("Failed to write json to settings.json"));
-    }
-    file.close();
-    //revive the dog
-    // ESP.wdtEnable(0);
-}
-
-void BWC::_loadCommandQueue(){
-    File file = LittleFS.open("/cmdq.json", "r");
-    if (!file) {
-        // Serial.println(F("Failed to read cmdq.json"));
-        return;
-    }
-
-    DynamicJsonDocument doc(1024);
-    // Deserialize the JSON document
-    DeserializationError error = deserializeJson(doc, file);
-    if (error) {
-        // Serial.println(F("Failed to deserialize cmdq.json"));
-        file.close();
-        return;
-    }
-
-    // Set the values in the variables
-    for(int i = 0; i < doc["LEN"]; i++){
-        command_que_item item;
-        item.cmd = doc["CMD"][i];
-        item.val = doc["VALUE"][i];
-        item.xtime = doc["XTIME"][i];
-        item.interval = doc["INTERVAL"][i];
-        String s = doc["TXT"][i] | "";
-        item.text = s;
-        _command_que.push_back(item);
-    }
-
-    file.close();
-}
-
-void BWC::_saveCommandQueue(){
-    _save_cmdq_needed = false;
-    //kill the dog
-    // ESP.wdtDisable();
-    #ifdef ESP8266
-    ESP.wdtFeed();
-    #endif
-    File file = LittleFS.open("cmdq.json", "w");
-    if (!file) {
-        // Serial.println(F("Failed to save cmdq.json"));
-        return;
-    } else {
-        // Serial.println(F("Wrote cmdq.json"));
-    }
-    /*Do not save instant reboot command. Don't ask me how I know.*/
-    if(_command_que.size())
-        if(_command_que[0].cmd == REBOOTESP && _command_que[0].interval == 0) return;
-    DynamicJsonDocument doc(1024);
-
-    // Set the values in the document
-    doc["LEN"] = _command_que.size();
-    for(unsigned int i = 0; i < _command_que.size(); i++){
-        doc["CMD"][i] = _command_que[i].cmd;
-        doc["VALUE"][i] = _command_que[i].val;
-        doc["XTIME"][i] = _command_que[i].xtime;
-        doc["INTERVAL"][i] = _command_que[i].interval;
-        doc["TXT"][i] = _command_que[i].text;
-    }
-
-    // Serialize JSON to file
-    if (serializeJson(doc, file) == 0) {
-        // Serial.println(F("Failed to write cmdq.json"));
-    } else {
-        String s;
-        serializeJson(doc, s);
-        // Serial.println(s);
-    }
-    file.close();
-    //revive the dog
-    // ESP.wdtEnable(0);
-}
-
-void BWC::reloadCommandQueue(){
-    _loadCommandQueue();
-    return;
-}
-
-void BWC::reloadSettings(){
-    _loadSettings();
-    return;
-}
-
-void BWC::_saveStates() {
-    // //kill the dog
-    // // ESP.wdtDisable();
-    #ifdef ESP8266
-    ESP.wdtFeed();
-    #endif
-    _save_states_needed = false;
-    File file = LittleFS.open("states.txt", "w");
-    if (!file) {
-        // Serial.println(F("Failed to save states.txt"));
-        return;
-    }
-
-    DynamicJsonDocument doc(1024);
-
-    // Set the values in the document
-    doc["UNT"] = from_cio_states.unit;
-    doc["HTR"] = from_cio_states.heat;
-    doc["FLT"] = from_cio_states.pump;
-
-    // Serialize JSON to file
-    if (serializeJson(doc, file) == 0) {
-        // Serial.println(F("Failed to write states.txt"));
-    }
-    file.close();
-    // //revive the dog
-    // // ESP.wdtEnable(0);
-}
-
-void BWC::_restoreStates() {
-    if(!_restore_states_on_start) return;
-    File file = LittleFS.open("states.txt", "r");
-    if (!file) {
-        // Serial.println(F("Failed to read states.txt"));
-        return;
-    }
-    DynamicJsonDocument doc(512);
-    // Deserialize the JSON document
-    DeserializationError error = deserializeJson(doc, file);
-    if (error) {
-        // Serial.println(F("Failed to deserialize states.txt"));
-        file.close();
-        return;
-    }
-
-    uint8_t unt = doc["UNT"];
-    uint8_t flt = doc["FLT"];
-    uint8_t htr = doc["HTR"];
-    command_que_item item;
-    item.cmd = SETUNIT;
-    item.val = unt;
-    item.xtime = 0;
-    item.interval = 0;
-    item.text = "";
-    add_command(item);
-    item.cmd = SETPUMP;
-    item.val = flt;
-    item.xtime = 0;
-    item.interval = 0;
-    item.text = "";
-    add_command(item);
-    item.cmd = SETHEATER;
-    item.val = htr;
-    item.xtime = 0;
-    item.interval = 0;
-    item.text = "";
-    add_command(item);
-    // Serial.println(F("Restoring states"));
-    file.close();
-}
-
-void BWC::saveRebootInfo(){
-    File file = LittleFS.open("bootlog.txt", "a");
-    if (!file) {
-        // Serial.println(F("Failed to save bootlog.txt"));
-        return;
-    }
-
-    DynamicJsonDocument doc(1024);
-
-    // Set the values in the document
-    reboot_time = DateTime.format(DateFormatter::SIMPLE);
-    #ifdef ESP8266
-    doc["BOOTINFO"] = ESP.getResetReason() + " " + reboot_time;
-    #endif
-
-    // Serialize JSON to file
-    if (serializeJson(doc, file) == 0) {
-        // Serial.println(F("Failed to write bootlog.txt"));
-    }
-    file.println();
-    file.close();
 }
 
 void BWC::_updateTimes(){
@@ -1462,18 +1073,413 @@ void BWC::_updateTimes(){
     }
 }
 
-/*TODO:*/
-uint8_t BWC::getState(int state){
-    // return _cio->getState(state);
-    return 0;
-}
+/*          */
+/* LOADERS  */
+/*          */
 
-/*TODO:*/
-String BWC::getButtonName() {
-    return ButtonNames[from_dsp_states.pressed_button];
-}
-
-Buttons BWC::getButton()
+void BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
 {
-    return from_dsp_states.pressed_button;
+    File file = LittleFS.open("/hwcfg.json", "r");
+    if (!file)
+    {
+        // Serial.println(F("Failed to open hwcfg.json"));
+        return;
+    }
+    DynamicJsonDocument doc(256);
+    DeserializationError error = deserializeJson(doc, file);
+    if (error) {
+        // Serial.println(F("Failed to read settings.txt"));
+        file.close();
+        return;
+    }
+    file.close();
+    cioNo = doc["cio"];
+    dspNo = doc["dsp"];
+    String pcbname = doc["pcb"].as<String>();
+    // int pins[7];
+    #ifdef ESP8266
+    int DtoGPIO[] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
+    #endif
+    for(int i = 0; i < 7; i++)
+    {
+        pins[i] = doc["pins"][i];
+    #ifdef ESP8266
+        pins[i] = DtoGPIO[pins[i]];
+    #endif
+    }
+}
+
+void BWC::reloadSettings(){
+    _loadSettings();
+    return;
+}
+
+void BWC::_loadSettings(){
+    File file = LittleFS.open("/settings.json", "r");
+    if (!file) {
+        // Serial.println(F("Failed to load settings.json"));
+        return;
+    }
+    DynamicJsonDocument doc(1024);
+
+    // Deserialize the JSON document
+    DeserializationError error = deserializeJson(doc, file);
+    if (error) {
+        // Serial.println(F("Failed to deser. settings.json"));
+        file.close();
+        return;
+    }
+
+    // Copy values from the JsonDocument to the variables
+    _cl_timestamp_s = doc["CLTIME"];
+    _filter_timestamp_s = doc["FTIME"];
+    _uptime = doc["UPTIME"];
+    _pumptime = doc["PUMPTIME"];
+    _heatingtime = doc["HEATINGTIME"];
+    _airtime = doc["AIRTIME"];
+    _jettime = doc["JETTIME"];
+    _price = doc["PRICE"];
+    _filter_interval = doc["FINT"];
+    _cl_interval = doc["CLINT"];
+    _audio_enabled = doc["AUDIO"];
+    _notify = doc["NOTIFY"];
+    _notification_time = doc["NOTIFTIME"];
+    _energy_total_kWh = doc["KWH"];
+    _energy_daily_Ws = doc["KWHD"];
+    _restore_states_on_start = doc["RESTORE"];
+    _R_COOLING = doc["R"] | 20; //else use default
+    _ambient_temp = doc["AMB"] | 20;
+    _dsp_brightness = doc["BRT"] | 7;
+    _vt_calibrated = doc["VTCAL"] | false;
+
+    file.close();
+}
+
+void BWC::_restoreStates() {
+    if(!_restore_states_on_start) return;
+    File file = LittleFS.open("states.txt", "r");
+    if (!file) {
+        // Serial.println(F("Failed to read states.txt"));
+        return;
+    }
+    DynamicJsonDocument doc(512);
+    // Deserialize the JSON document
+    DeserializationError error = deserializeJson(doc, file);
+    if (error) {
+        // Serial.println(F("Failed to deserialize states.txt"));
+        file.close();
+        return;
+    }
+
+    uint8_t unt = doc["UNT"];
+    uint8_t flt = doc["FLT"];
+    uint8_t htr = doc["HTR"];
+    command_que_item item;
+    item.cmd = SETUNIT;
+    item.val = unt;
+    item.xtime = 0;
+    item.interval = 0;
+    item.text = "";
+    add_command(item);
+    item.cmd = SETPUMP;
+    item.val = flt;
+    item.xtime = 0;
+    item.interval = 0;
+    item.text = "";
+    add_command(item);
+    item.cmd = SETHEATER;
+    item.val = htr;
+    item.xtime = 0;
+    item.interval = 0;
+    item.text = "";
+    add_command(item);
+    // Serial.println(F("Restoring states"));
+    file.close();
+}
+
+void BWC::reloadCommandQueue(){
+    _loadCommandQueue();
+    return;
+}
+
+void BWC::_loadCommandQueue(){
+    File file = LittleFS.open("/cmdq.json", "r");
+    if (!file) {
+        // Serial.println(F("Failed to read cmdq.json"));
+        return;
+    }
+
+    DynamicJsonDocument doc(1024);
+    // Deserialize the JSON document
+    DeserializationError error = deserializeJson(doc, file);
+    if (error) {
+        // Serial.println(F("Failed to deserialize cmdq.json"));
+        file.close();
+        return;
+    }
+
+    // Set the values in the variables
+    for(int i = 0; i < doc["LEN"]; i++){
+        command_que_item item;
+        item.cmd = doc["CMD"][i];
+        item.val = doc["VALUE"][i];
+        item.xtime = doc["XTIME"][i];
+        item.interval = doc["INTERVAL"][i];
+        String s = doc["TXT"][i] | "";
+        item.text = s;
+        _command_que.push_back(item);
+    }
+
+    file.close();
+}
+
+/*          */
+/* SAVERS   */
+/*          */
+
+void BWC::saveRebootInfo(){
+    File file = LittleFS.open("bootlog.txt", "a");
+    if (!file) {
+        // Serial.println(F("Failed to save bootlog.txt"));
+        return;
+    }
+
+    DynamicJsonDocument doc(1024);
+
+    // Set the values in the document
+    reboot_time = DateTime.format(DateFormatter::SIMPLE);
+    #ifdef ESP8266
+    doc["BOOTINFO"] = ESP.getResetReason() + " " + reboot_time;
+    #endif
+
+    // Serialize JSON to file
+    if (serializeJson(doc, file) == 0) {
+        // Serial.println(F("Failed to write bootlog.txt"));
+    }
+    file.println();
+    file.close();
+}
+
+void BWC::_saveStates() {
+    // //kill the dog
+    // // ESP.wdtDisable();
+    #ifdef ESP8266
+    ESP.wdtFeed();
+    #endif
+    _save_states_needed = false;
+    File file = LittleFS.open("states.txt", "w");
+    if (!file) {
+        // Serial.println(F("Failed to save states.txt"));
+        return;
+    }
+
+    DynamicJsonDocument doc(1024);
+
+    // Set the values in the document
+    doc["UNT"] = from_cio_states.unit;
+    doc["HTR"] = from_cio_states.heat;
+    doc["FLT"] = from_cio_states.pump;
+
+    // Serialize JSON to file
+    if (serializeJson(doc, file) == 0) {
+        // Serial.println(F("Failed to write states.txt"));
+    }
+    file.close();
+    // //revive the dog
+    // // ESP.wdtEnable(0);
+}
+
+void BWC::_saveCommandQueue(){
+    _save_cmdq_needed = false;
+    //kill the dog
+    // ESP.wdtDisable();
+    #ifdef ESP8266
+    ESP.wdtFeed();
+    #endif
+    File file = LittleFS.open("cmdq.json", "w");
+    if (!file) {
+        // Serial.println(F("Failed to save cmdq.json"));
+        return;
+    } else {
+        // Serial.println(F("Wrote cmdq.json"));
+    }
+    /*Do not save instant reboot command. Don't ask me how I know.*/
+    if(_command_que.size())
+        if(_command_que[0].cmd == REBOOTESP && _command_que[0].interval == 0) return;
+    DynamicJsonDocument doc(1024);
+
+    // Set the values in the document
+    doc["LEN"] = _command_que.size();
+    for(unsigned int i = 0; i < _command_que.size(); i++){
+        doc["CMD"][i] = _command_que[i].cmd;
+        doc["VALUE"][i] = _command_que[i].val;
+        doc["XTIME"][i] = _command_que[i].xtime;
+        doc["INTERVAL"][i] = _command_que[i].interval;
+        doc["TXT"][i] = _command_que[i].text;
+    }
+
+    // Serialize JSON to file
+    if (serializeJson(doc, file) == 0) {
+        // Serial.println(F("Failed to write cmdq.json"));
+    } else {
+        String s;
+        serializeJson(doc, s);
+        // Serial.println(s);
+    }
+    file.close();
+    //revive the dog
+    // ESP.wdtEnable(0);
+}
+
+void BWC::saveSettings(){
+    //kill the dog
+    // ESP.wdtDisable();
+    #ifdef ESP8266
+    ESP.wdtFeed();
+    #endif
+    _save_settings_needed = false;
+    File file = LittleFS.open("settings.json", "w");
+    if (!file) {
+        // Serial.println(F("Failed to save settings.json"));
+        return;
+    }
+
+    DynamicJsonDocument doc(1024);
+    _heatingtime += _heatingtime_ms/1000;
+    _pumptime += _pumptime_ms/1000;
+    _airtime += _airtime_ms/1000;
+    _jettime += _jettime_ms/1000;
+    _uptime += _uptime_ms/1000;
+    _heatingtime_ms = 0;
+    _pumptime_ms = 0;
+    _airtime_ms = 0;
+    _uptime_ms = 0;
+    // Set the values in the document
+    doc["CLTIME"] = _cl_timestamp_s;
+    doc["FTIME"] = _filter_timestamp_s;
+    doc["UPTIME"] = _uptime;
+    doc["PUMPTIME"] = _pumptime;
+    doc["HEATINGTIME"] = _heatingtime;
+    doc["AIRTIME"] = _airtime;
+    doc["JETTIME"] = _jettime;
+    doc["PRICE"] = _price;
+    doc["FINT"] = _filter_interval;
+    doc["CLINT"] = _cl_interval;
+    doc["AUDIO"] = _audio_enabled;
+    doc["KWH"] = _energy_total_kWh;
+    doc["KWHD"] = _energy_daily_Ws;
+    doc["SAVETIME"] = DateTime.format(DateFormatter::SIMPLE);
+    doc["RESTORE"] = _restore_states_on_start;
+    doc["R"] = _R_COOLING;
+    doc["AMB"] = _ambient_temp;
+    doc["BRT"] = _dsp_brightness;
+    doc["NOTIFY"] = _notify;
+    doc["NOTIFTIME"] = _notification_time;
+    doc["VTCAL"] = _vt_calibrated;
+
+    // Serialize JSON to file
+    if (serializeJson(doc, file) == 0) {
+        // Serial.println(F("Failed to write json to settings.json"));
+    }
+    file.close();
+    //revive the dog
+    // ESP.wdtEnable(0);
+}
+
+//save out debug text to file "debug.txt" on littleFS
+void BWC::saveDebugInfo(String s){
+    File file = LittleFS.open("debug.txt", "a");
+    if (!file) {
+        // Serial.println(F("Failed to save debug.txt"));
+        return;
+    }
+
+    DynamicJsonDocument doc(1024);
+
+    // Set the values in the document
+    doc["timestamp"] = DateTime.format(DateFormatter::SIMPLE);
+    doc["message"] = s;
+    // Serialize JSON to file
+    if (serializeJson(doc, file) == 0) {
+        // Serial.println(F("Failed to write debug.txt"));
+    }
+    file.close();
+}
+
+/* SOUND */
+
+void BWC::_save_melody(const String& filename)
+{
+    File file = LittleFS.open(filename, "w");
+    if (!file) return;
+    sNote n = {1000, 500};
+    file.write((byte*)&n, sizeof(n));
+    file.close();
+}
+
+void BWC::_add_melody(const String &filename)
+{
+    if(_notes.size() || !_audio_enabled) return;
+    File file = LittleFS.open(filename, "r");
+    if (!file) return;
+    while(file.available())
+    {
+        sNote n;
+        file.readBytes((char*)&n, sizeof(n));
+        _notes.push_back(n);
+    }
+    file.close();
+    /* We read and erase from the back of the vector (faster) so if notes are stored in the natural order we need to reverse*/
+    std::reverse(_notes.begin(), _notes.end());
+}
+
+void BWC::_sweepdown()
+{
+    if(_notes.size() || !_audio_enabled) return;
+    for(int i = 0; i < 128; i++)
+    {
+        sNote n;
+        n.duration_ms = 2;
+        n.frequency_hz = 1000 + 8*i;
+        _notes.push_back(n);
+    }
+}
+
+void BWC::_sweepup()
+{
+    if(_notes.size() || !_audio_enabled) return;
+    for(int i = 0; i < 128; i++)
+    {
+        sNote n;
+        n.duration_ms = 2;
+        n.frequency_hz = 2000 - 8*i;
+        _notes.push_back(n);
+    }
+}
+
+void BWC::_beep()
+{
+    if(_notes.size() || !_audio_enabled) return;
+    sNote n;
+    n.duration_ms = 50;
+    n.frequency_hz = 2400;
+    _notes.push_back(n);
+    n.duration_ms = 50;
+    n.frequency_hz = 800;
+    _notes.push_back(n);
+}
+
+void BWC::_accord()
+{
+    if(_notes.size() || !_audio_enabled) return;
+    sNote n;
+    for(int i = 0; i < 5; i++)
+    {
+        n.duration_ms = 10;
+        n.frequency_hz = NOTE_C6;
+        _notes.push_back(n);
+        n.duration_ms = 10;
+        n.frequency_hz = NOTE_E6;
+        _notes.push_back(n);
+    }
 }

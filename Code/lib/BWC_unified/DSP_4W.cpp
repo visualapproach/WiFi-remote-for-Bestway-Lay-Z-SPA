@@ -88,7 +88,10 @@ void DSP_4W::setStates(const sStates& to_dsp_states)
     }
     else
     {
-        if(PAYLOADSIZE != _raw_payload_to_dsp.size()) return;
+        if(PAYLOADSIZE != _raw_payload_to_dsp.size()) 
+        {
+            return;
+        }
         for(int i = 0; i < PAYLOADSIZE; i++)
         {
             _to_DSP_buf[i] = _raw_payload_to_dsp[i];
