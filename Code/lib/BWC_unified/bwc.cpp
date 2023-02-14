@@ -870,6 +870,8 @@ String BWC::getJSONTimes() {
     if(t2r == -2) t2r_string = F("Already");
     if(t2r == -1) t2r_string = F("Never");
     doc["T2R"] = t2r_string;
+    String s = _cio->debug();
+    doc["DBG"] = s;
     //_cio->clk_per = 1000;  //reset minimum clock period
 
     // Serialize JSON to string

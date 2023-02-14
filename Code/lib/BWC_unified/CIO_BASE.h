@@ -22,6 +22,7 @@ class CIO
         virtual bool getHasgod() = 0;
         virtual bool getHasjets() = 0;
         virtual bool getHasair() = 0;
+        String debug();
 
     protected:
         std::vector<uint8_t> _raw_payload_to_cio = {0,0,0,0,0,0,0};

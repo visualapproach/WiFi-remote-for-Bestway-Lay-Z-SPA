@@ -13,3 +13,10 @@ std::vector<uint8_t> CIO::getRawPayload()
 {
     return _raw_payload_from_cio;
 }
+
+String CIO::debug()
+{
+    String s;
+    for(int i = 0; i<7; i++) s += ' ' + String(_raw_payload_from_cio[i]);
+    return s;
+}
