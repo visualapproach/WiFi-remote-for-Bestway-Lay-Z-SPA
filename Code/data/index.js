@@ -165,8 +165,8 @@ function handlemsg(e)
 		{
 			var minTemp = (msgobj.UNT ? 20 : 68);
 			var maxTemp = (msgobj.UNT ? 40 : 104);
-			var minAmb = (msgobj.UNT ? -10 : 14);
-			var maxAmb = (msgobj.UNT ? 50 : 122);
+			var minAmb = (msgobj.UNT ? -40 : -40);
+			var maxAmb = (msgobj.UNT ? 60 : 140);
 			document.getElementById('temp').min = minTemp;
 			document.getElementById('temp').max = maxTemp;
 			document.getElementById('selectorTemp').min = minTemp;
@@ -275,7 +275,7 @@ function sendCommand(cmd)
 	else if (cmd == 'setAmbient' || cmd == 'setAmbientSelector')
 	{
 		value = parseInt(document.getElementById((cmd == 'setAmbient') ? 'amb' : 'selectorAmb').value);
-		value = getProperValue(value, (unit ? -10 : 14), (unit ? 50 : 122));
+		value = getProperValue(value, (unit ? -40 : -40), (unit ? 60 : 140));
 		document.getElementById('sliderAmbVal').innerHTML = value.toString();
 		document.getElementById('selectorAmb').value = value.toString();
 		cmd = 'setAmbient' + (unit ? 'C' : 'F');
