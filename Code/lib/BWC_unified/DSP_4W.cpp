@@ -38,6 +38,7 @@ sToggles DSP_4W::getStates()
     }
     /*message is good if we get here. Continue*/
 
+    good_packets_count++;
     /* Copy tempbuffer into _from_DSP_buf */
     for(int i = 0; i < PAYLOADSIZE; i++)
         {

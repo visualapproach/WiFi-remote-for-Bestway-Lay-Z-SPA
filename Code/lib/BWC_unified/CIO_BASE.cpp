@@ -18,5 +18,6 @@ String CIO::debug()
 {
     String s;
     for(int i = 0; i<7; i++) s += ' ' + String(_raw_payload_from_cio[i]);
+    s += "msg count:" + String(good_packets_count);
     return s;
 }

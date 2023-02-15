@@ -13,3 +13,11 @@ std::vector<uint8_t> DSP::getRawPayload()
 {
     return _raw_payload_from_dsp;
 }
+
+String DSP::debug()
+{
+    String s;
+    for(int i = 0; i<7; i++) s += ' ' + String(_raw_payload_from_dsp[i]);
+    s += "msg count:" + String(good_packets_count);
+    return s;
+}

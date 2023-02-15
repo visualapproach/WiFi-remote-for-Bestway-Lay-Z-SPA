@@ -151,6 +151,7 @@ sStates CIO_4W::getStates()
     }
     /*message is good if we get here. Continue*/
 
+    good_packets_count++;
     /* show the user that this line works (appears to work) */
     // cio_tx_ok = true;
     /* Copy tempbuffer into _from_CIO_buf */

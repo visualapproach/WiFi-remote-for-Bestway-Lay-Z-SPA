@@ -13,8 +13,10 @@ class DSP
         virtual void setStates(const sStates& display_states) = 0;
         void setRawPayload(const std::vector<uint8_t>& pl);
         std::vector<uint8_t> getRawPayload();
+        String debug();
 
     protected:
         std::vector<uint8_t> _raw_payload_to_dsp = {0,0,0,0,0,0,0};
         std::vector<uint8_t> _raw_payload_from_dsp = {0,0,0,0,0,0,0};
+        uint32_t good_packets_count = 0;
 };
