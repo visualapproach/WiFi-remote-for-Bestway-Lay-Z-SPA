@@ -60,6 +60,6 @@ class CIO_4W : public CIO
         const uint32_t _HEATERCOOLING_DELAY_MS = 5000;
         int32_t _heater2_countdown_ms = 0;
         int32_t _cool_heater_countdown_ms = 0;
-        bool _turn_off_heater_flag = false;
+        bool _turn_off_pump_flag = false;
 };
 

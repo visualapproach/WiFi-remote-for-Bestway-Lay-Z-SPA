@@ -38,11 +38,11 @@ void CIO_4W::setStates(const sToggles& requested_toggles)
     if(_heater2_countdown_ms > 0) _heater2_countdown_ms -= elapsed_time_ms;
     if(_cool_heater_countdown_ms > 0) _cool_heater_countdown_ms -= elapsed_time_ms;
     /*After count down we turn off pump just once*/
-    if(_cool_heater_countdown_ms <= 0 && _turn_off_heater_flag)
+    if(_cool_heater_countdown_ms <= 0 && _turn_off_pump_flag)
     {
         _currentStateIndex = getJumptable(_currentStateIndex, PUMPTOGGLE);
         togglestates();
-        _turn_off_heater_flag = false;
+        _turn_off_pump_flag = false;
     }
 
     if(!requested_toggles.godmode)
@@ -92,7 +92,12 @@ void CIO_4W::setStates(const sToggles& requested_toggles)
                 _currentStateIndex = getJumptable(_currentStateIndex, HEATTOGGLE);
                 togglestates();
                 _cool_heater_countdown_ms = _HEATERCOOLING_DELAY_MS;
-                _turn_off_heater_flag = true;
+                _turn_off_pump_flag = true;
+            }
+            else
+            {
+                _currentStateIndex = getJumptable(_currentStateIndex, PUMPTOGGLE);
+                togglestates();
             }
         }
     }
