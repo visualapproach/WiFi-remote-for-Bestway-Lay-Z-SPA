@@ -3,6 +3,7 @@ void setupHA()
 
     if(!mqttClient.connected()){
         String s = F("HA setup failed. MQTT not connected");
+        saveDebugInfo(s);
         return;
     }
   String topic;
