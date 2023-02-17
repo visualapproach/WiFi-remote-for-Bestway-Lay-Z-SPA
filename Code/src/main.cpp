@@ -477,6 +477,7 @@ void startHttpServer()
         server.send(200, "text/plain", "");
     }, handleFileUpload);
     server.on(F("/remove.html"), HTTP_POST, handleFileRemove);
+    server.on(F("/remove/"), HTTP_GET, handleFileRemove);
     server.on(F("/restart/"), handleRestart);
     server.on(F("/metrics"), handlePrometheusMetrics);  //prometheus metrics
     server.on(F("/info/"), handleESPInfo);
@@ -1229,8 +1230,9 @@ void handleDir()
     while (root.next())
     {
         // Serial.println(root.fileName());
-        mydir += "<a href=\"/" + root.fileName() + "\">" + root.fileName() + "</a>" + F(" \t Size: ");
-        mydir += String(root.fileSize()) + F(" Bytes<br>");
+        mydir += "<a href=\"/" + root.fileName() + "\">" + root.fileName() + "</a>";
+        mydir += F(" \t Size: ") + String(root.fileSize()) + F(" Bytes ");
+        mydir += F(" \t<a href=\"/remove/?FileToRemove=") + root.fileName() + "\">remove" + "</a><br>";
     }
     server.send(200, "text/html", mydir);
     #endif
@@ -1249,19 +1251,19 @@ void handleFileUpload()
         path = upload.filename;
         if (!path.startsWith("/"))
         {
-        path = "/" + path;
+            path = "/" + path;
         }
 
         // The file server always prefers a compressed version of a file
         if (!path.endsWith(".gz"))
         {
-        // So if an uploaded file is not compressed, the existing compressed
-        String pathWithGz = path + ".gz";
-        // version of that file must be deleted (if it exists)
-        if (LittleFS.exists(pathWithGz))
-        {
-            LittleFS.remove(pathWithGz);
-        }
+            // So if an uploaded file is not compressed, the existing compressed
+            String pathWithGz = path + ".gz";
+            // version of that file must be deleted (if it exists)
+            if (LittleFS.exists(pathWithGz))
+            {
+                LittleFS.remove(pathWithGz);
+            }
         }
 
         // Serial.print(F("handleFileUpload Name: "));
@@ -1275,8 +1277,8 @@ void handleFileUpload()
     {
         if (fsUploadFile)
         {
-        // Write the received bytes to the file
-        fsUploadFile.write(upload.buf, upload.currentSize);
+            // Write the received bytes to the file
+            fsUploadFile.write(upload.buf, upload.currentSize);
         }
     }
     else if (upload.status == UPLOAD_FILE_END)
