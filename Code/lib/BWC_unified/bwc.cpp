@@ -1389,7 +1389,7 @@ void BWC::saveSettings(){
 }
 
 //save out debug text to file "debug.txt" on littleFS
-void BWC::saveDebugInfo(String s){
+void BWC::saveDebugInfo(const String& s){
     File file = LittleFS.open("debug.txt", "a");
     if (!file) {
         // Serial.println(F("Failed to save debug.txt"));

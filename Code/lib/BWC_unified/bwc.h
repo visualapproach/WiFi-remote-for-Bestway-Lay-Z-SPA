@@ -75,7 +75,7 @@ class BWC {
         void reloadSettings();
         String getButtonName();
         Buttons getButton();
-        void saveDebugInfo(String s);
+        void saveDebugInfo(const String& s);
         void saveRebootInfo();
         bool getBtnSeqMatch();
         void setAmbientTemperature(int64_t amb, bool unit);

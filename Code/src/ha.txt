@@ -1,5 +1,10 @@
 void setupHA()
 {
+
+    if(!mqttClient.connected()){
+        String s = F("HA setup failed. MQTT not connected");
+        return;
+    }
   String topic;
   String payload;
   #if defined(ESP8266)
@@ -11,7 +16,7 @@ void setupHA()
   maxtemp = 104;
   mintemp = 68;
   DynamicJsonDocument devicedoc(512);
-  DynamicJsonDocument doc(2048);
+  DynamicJsonDocument doc(1536);
   devicedoc["dev"]["configuration_url"] = "http://" + WiFi.localIP().toString();
   devicedoc["dev"]["connections"].add(serialized("[\"mac\",\"" + WiFi.macAddress()+"\"]" ));
   devicedoc["dev"]["identifiers"] = mychipid;

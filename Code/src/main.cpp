@@ -1100,6 +1100,7 @@ void loadMqtt()
     }
 
     useMqtt = doc["enableMqtt"];
+    enableMqtt = useMqtt;
     mqttIpAddress[0] = doc["mqttIpAddress"][0];
     mqttIpAddress[1] = doc["mqttIpAddress"][1];
     mqttIpAddress[2] = doc["mqttIpAddress"][2];
@@ -1198,6 +1199,7 @@ void handleSetMqtt()
     }
 
     useMqtt = doc["enableMqtt"];
+    enableMqtt = useMqtt;
     mqttIpAddress[0] = doc["mqttIpAddress"][0];
     mqttIpAddress[1] = doc["mqttIpAddress"][1];
     mqttIpAddress[2] = doc["mqttIpAddress"][2];
@@ -1460,9 +1462,8 @@ void mqttConnect()
         mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());
         mqttClient.loop();
 
-        /*TODO:get reboot time properly*/
         #ifdef ESP8266
-        mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), ESP.getResetInfo().c_str(), true);
+        mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), DateTime.format(DateFormatter::SIMPLE).c_str(), true);
         mqttClient.publish((String(mqttBaseTopic) + "/reboot_reason").c_str(), ESP.getResetReason().c_str(), true);
         mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), bwc.getButtonName().c_str(), true);
         mqttClient.loop();
