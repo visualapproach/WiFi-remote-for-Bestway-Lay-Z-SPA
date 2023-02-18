@@ -533,7 +533,7 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
 
 void BWC::_handleStateChanges()
 {
-    if(_prev_cio_states != from_cio_states || _prev_dsp_states != to_dsp_states) _new_data_available = true;
+    if(_prev_cio_states != from_cio_states || _prev_dsp_states.brightness != to_dsp_states.brightness) _new_data_available = true;
     if(from_cio_states.temperature != _prev_cio_states.temperature)
     {
         _deltatemp = from_cio_states.temperature - _prev_cio_states.temperature;

@@ -166,11 +166,9 @@ void sendWS()
     // send states
     json = bwc.getJSONStates();
     webSocket.broadcastTXT(json);
-delay(2);
     // send times
     json = bwc.getJSONTimes();
     webSocket.broadcastTXT(json);
-delay(2);
     // send other info
     json = getOtherInfo();
     webSocket.broadcastTXT(json);
@@ -178,7 +176,7 @@ delay(2);
 
 String getOtherInfo()
 {
-    DynamicJsonDocument doc(256);
+    DynamicJsonDocument doc(512);
     String json = "";
     // Set the values in the document
     doc["CONTENT"] = "OTHER";
@@ -192,6 +190,8 @@ String getOtherInfo()
     doc["IP"] = WiFi.localIP().toString();
     doc["SSID"] = WiFi.SSID();
     doc["FW"] = FW_VERSION;
+    doc["loopfq"] = bwc.loop_count;
+    bwc.loop_count = 0;
 
     // Serialize JSON to string
     if (serializeJson(doc, json) == 0)
