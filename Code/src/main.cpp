@@ -1231,8 +1231,8 @@ void handleDir()
     {
         // Serial.println(root.fileName());
         mydir += "<a href=\"/" + root.fileName() + "\">" + root.fileName() + "</a>";
-        mydir += F(" \t Size: ") + String(root.fileSize()) + F(" Bytes ");
-        mydir += F(" \t<a href=\"/remove/?FileToRemove=") + root.fileName() + "\">remove" + "</a><br>";
+        mydir += F("   Size: ") + String(root.fileSize()) + F(" Bytes ");
+        mydir += F("   <a href=\"/remove/?FileToRemove=") + root.fileName() + "\">remove" + "</a><br>";
     }
     server.send(200, "text/html", mydir);
     #endif
@@ -1266,8 +1266,8 @@ void handleFileUpload()
             }
         }
 
-        // Serial.print(F("handleFileUpload Name: "));
-        // Serial.println(path);
+        Serial.print(F("handleFileUpload Name: "));
+        Serial.println(path);
 
         // Open the file for writing in LittleFS (create if it doesn't exist)
         fsUploadFile = LittleFS.open(path, "w");
@@ -1279,6 +1279,8 @@ void handleFileUpload()
         {
             // Write the received bytes to the file
             fsUploadFile.write(upload.buf, upload.currentSize);
+            Serial.print("file write ");
+            Serial.println(path);
         }
     }
     else if (upload.status == UPLOAD_FILE_END)
@@ -1286,12 +1288,10 @@ void handleFileUpload()
         if (fsUploadFile)
         {
             fsUploadFile.close();
-            // Serial.print(F("handleFileUpload Size: "));
-            // Serial.println(upload.totalSize);
-
-            server.sendHeader("Location", "/success.html");
+            Serial.print(F("handleFileUpload Size: "));
+            Serial.println(upload.totalSize);
+            server.sendHeader("location", "success.html");
             server.send(303);
-
             if (upload.filename == "cmdq.json")
             {
                 bwc.reloadCommandQueue();
@@ -1303,8 +1303,15 @@ void handleFileUpload()
         }
         else
         {
+            Serial.println("err: 500");
             server.send(500, "text/plain", "500: couldn't create file");
         }
+    }
+    else
+    {
+        Serial.print("upload status");
+        Serial.println(upload.status);
+        server.send(500, "text/plain", "500: upload aborted");
     }
 }
 
@@ -1328,7 +1335,10 @@ void handleFileRemove()
     {
         // Serial.print(F("handleFileRemove success: "));
         // Serial.println(path);
-        server.sendHeader("Location", "/success.html");
+        if(server.method() == HTTP_GET)
+            server.sendHeader("Location", "/dir/");
+        else
+            server.sendHeader("Location", "/success.html");
         server.send(303);
     }
     else
