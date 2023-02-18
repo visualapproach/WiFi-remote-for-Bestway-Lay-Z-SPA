@@ -162,7 +162,7 @@ class BWC {
         uint32_t _virtual_temp_fix_age;
         bool _new_data_available = false;
         bool _dsp_tgt_used = true;
-        sStates _prev_cio_states;
+        sStates _prev_cio_states, _prev_dsp_states;
         unsigned long _temp_change_timestamp_ms, _heatred_change_timestamp_ms;
         unsigned long _pump_change_timestamp_ms, _bubbles_change_timestamp_ms;
         int _deltatemp;
