@@ -1418,6 +1418,27 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
     int64_t interval = doc["INTERVAL"];
     bwc.qCommand(command, value, xtime, interval);
   }
+
+  if (String(topic).equals(String(mqttBaseTopic) + "/command_batch"))
+  {
+    DynamicJsonDocument doc(1024);
+    String message = (const char *) &payload[0];
+    DeserializationError error = deserializeJson(doc, message);
+    if (error)
+    {
+      return;
+    }
+
+    JsonArray commandArray = doc.as<JsonArray>();
+
+    for (JsonVariant commandItem : commandArray) {
+        int64_t command = commandItem["CMD"];
+        int64_t value = commandItem["VALUE"];
+        int64_t xtime = commandItem["XTIME"];
+        int64_t interval = commandItem["INTERVAL"];
+        bwc.qCommand(command, value, xtime, interval);
+    }
+  }
 }
 
 /**
@@ -1457,6 +1478,7 @@ void mqttConnect()
 
     // Watch the 'command' topic for incoming MQTT messages
     mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());
+    mqttClient.subscribe((String(mqttBaseTopic) + "/command_batch").c_str());
     mqttClient.loop();
 
     mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), bwc.reboottime.c_str(), true);
