@@ -1039,8 +1039,8 @@ void setupHA()
   doc["precision"] = 1.0;
   doc["temp_unit"] = "F";
   doc["modes"].add(serialized("\"fan_only\", \"off\", \"heat\""));
-  doc["mode_cmd_t"] = mqttBaseTopic+F("/command");
-  doc["mode_cmd_tpl"] = F("{CMD:3,VALUE:{%if value == \"heat\" %}1{% else %}0{% endif %},XTIME:0,INTERVAL:0}");
+  doc["mode_cmd_t"] = mqttBaseTopic+F("/command_batch");
+  doc["mode_cmd_tpl"] = F("[{CMD:3,VALUE:{%if value == \"heat\" %}1{% else %}0{% endif %},XTIME:0,INTERVAL:0},{CMD:4,VALUE:{%if value == \"fan_only\" %}1{% elif value == \"heat\" %}1{% else %}0{% endif %},XTIME:0,INTERVAL:0}]");
   doc["mode_stat_t"] = mqttBaseTopic+F("/message");
   doc["mode_stat_tpl"] = F("{% if value_json.RED == 1 %}heat{% elif value_json.GRN == 1 %}heat{% else %}off{% endif %}");
   doc["act_t"] = mqttBaseTopic+F("/message");
@@ -1051,9 +1051,6 @@ void setupHA()
   doc["curr_temp_tpl"] = F("{{ value_json.TMPF }}");
   doc["temp_cmd_t"] = mqttBaseTopic+F("/command");
   doc["temp_cmd_tpl"] = F("{CMD:0,VALUE:{{ value|int }},XTIME:0,INTERVAL:0}");
-  doc["pow_cmd_t"] = mqttBaseTopic+F("/command");
-  doc["pl_on"] = F("{CMD:4,VALUE:1,XTIME:0,INTERVAL:0}");
-  doc["pl_off"] = F("{CMD:4,VALUE:0,XTIME:0,INTERVAL:0}");
   doc["avty_t"] = mqttBaseTopic+F("/Status");
   doc["pl_avail"] = F("Alive");
   doc["pl_not_avail"] = F("Dead");

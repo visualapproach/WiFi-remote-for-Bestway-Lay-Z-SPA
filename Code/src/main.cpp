@@ -1433,6 +1433,35 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
         item.text = txt;
         bwc.add_command(item);
     }
+
+    /* author @malfurion, edited by @visualapproach for v4 */
+    if (String(topic).equals(String(mqttBaseTopic) + "/command_batch"))
+    {
+        DynamicJsonDocument doc(1024);
+        String message = (const char *) &payload[0];
+        DeserializationError error = deserializeJson(doc, message);
+        if (error)
+        {
+            return;
+        }
+
+        JsonArray commandArray = doc.as<JsonArray>();
+
+        for (JsonVariant commandItem : commandArray) {
+            int64_t command = commandItem["CMD"];
+            int64_t value = commandItem["VALUE"];
+            int64_t xtime = commandItem["XTIME"];
+            int64_t interval = commandItem["INTERVAL"];
+            String txt = doc["TXT"] | "";
+            command_que_item item;
+            item.cmd = command;
+            item.val = value;
+            item.xtime = xtime;
+            item.interval = interval;
+            item.text = txt;
+            bwc.add_command(item);
+        }
+    }
 }
 
 /**
@@ -1472,6 +1501,7 @@ void mqttConnect()
 
         // Watch the 'command' topic for incoming MQTT messages
         mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());
+        mqttClient.subscribe((String(mqttBaseTopic) + "/command_batch").c_str());
         mqttClient.loop();
 
         #ifdef ESP8266
