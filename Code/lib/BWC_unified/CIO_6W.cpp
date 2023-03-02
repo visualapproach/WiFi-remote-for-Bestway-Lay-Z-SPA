@@ -161,11 +161,13 @@ void CIO_6W::_handleButtonQ(void) {
 
     elapsedTime = millis() - prevMillis;
     prevMillis = millis();
+    uint8_t waitlimit = 0;
     if(_button_que_len == 0)
     {
         /*Buttonqueue is empty, so let the touchbuttons from display/bwc through*/
         /*Avoiding write to variable when it's beeing sent to the cio*/
-        while(_packet_transm_active) delay(1);
+        waitlimit = 0;
+        while(_packet_transm_active && ++waitlimit < 10) delay(1);
         _button_code = getButtonCode(NOBTN);
         if(_pressed_button == TIMER) _button_code = getButtonCode(TIMER);
         if(_pressed_button == UP) _button_code = getButtonCode(UP);
@@ -186,18 +188,19 @@ void CIO_6W::_handleButtonQ(void) {
         }
         _button_que_len--;
         /*Avoiding write to variable when it's beeing sent to the cio*/
-        while(_packet_transm_active) delay(1);
+        waitlimit = 0;
+        while(_packet_transm_active && ++waitlimit < 10) delay(1);
         _button_code = getButtonCode(NOBTN);
     }
     else
     {
         //keep button "pressed"
         /*Avoiding write to variable when it's beeing sent to the cio*/
-        while(_packet_transm_active) delay(1);
+        waitlimit = 0;
+        while(_packet_transm_active && ++waitlimit < 10) delay(1);
         _button_code = _button_que[0].btncode;
     }
 }
-
 
 CIO_6W::CIO_6W()
 {
