@@ -7,6 +7,42 @@ BWC bwc;
 char *stack_start;
 uint32_t heap_water_mark;
 
+/* firmware update content */
+#define URL_fw_Version "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/fw/version.txt"
+#define URL_fw_Bin "https://raw.githubusercontent.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/fw/firmware.bin"
+const char* host = "raw.githubusercontent.com";
+const int httpsPort = 443;
+// /*Defined in "certs.h"*/
+// X509List cert(cert_DigiCert_Global_Root_CA);
+// DigiCert High Assurance EV Root CA
+const char trustRoot[] PROGMEM = R"EOF(
+-----BEGIN CERTIFICATE-----
+MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
+MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
+d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
+QTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT
+MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j
+b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG
+9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB
+CSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97
+nh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt
+43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P
+T19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4
+gdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO
+BgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR
+TLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw
+DQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr
+hMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg
+06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF
+PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls
+YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
+CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
+-----END CERTIFICATE-----
+)EOF";
+X509List cert(trustRoot);
+extern const unsigned char caCert[] PROGMEM;
+extern const unsigned int caCertLen;
+
 void setup()
 {
     // init record of stack
@@ -43,7 +79,28 @@ void setup()
     bwc.print(FW_VERSION);
     Serial.println(F("End of setup()"));
     heap_water_mark = ESP.getFreeHeap();
+
+    // setClock();
+
 }
+
+void setClock() {
+    // Set time via NTP, as required for x.509 validation
+    configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+    Serial.print("Waiting for NTP time sync: ");
+    time_t now = time(nullptr);
+    while (now < 8 * 3600 * 2) {
+        delay(500);
+        Serial.print(".");
+        now = time(nullptr);
+    }
+    Serial.println("");
+    struct tm timeinfo;
+    gmtime_r(&now, &timeinfo);
+    Serial.print("Current time: ");
+    Serial.print(asctime(&timeinfo));
+}
+
 
 void loop()
 {
@@ -119,7 +176,6 @@ void loop()
     if (periodicTimerFlag)
     {
         periodicTimerFlag = false;
-
         if (WiFi.status() != WL_CONNECTED)
         {
             bwc.print(F("check network"));
@@ -483,7 +539,8 @@ void startHttpServer()
     server.on(F("/info/"), handleESPInfo);
     server.on(F("/sethardware/"), handleSetHardware);
     server.on(F("/gethardware/"), handleGetHardware);
-    
+    server.on(F("/update/"), handleUpdate);    
+    server.on(F("/getversions/"), handleGetVersions);    
 
     // if someone requests any other file or page, go to function 'handleNotFound'
     // and check if the file exists
@@ -491,6 +548,21 @@ void startHttpServer()
     // start the HTTP server
     server.begin();
     // Serial.println(F("HTTP > server started"));
+}
+
+void handleGetVersions()
+{
+    DynamicJsonDocument doc(256);
+    String json = "";
+    // Set the values in the document
+    doc["current"] = FW_VERSION;
+    doc["available"] = checkFirmwareUpdate();
+    // Serialize JSON to string
+    if (serializeJson(doc, json) == 0)
+    {
+        json = "{\"error\": \"Failed to serialize message\"}";
+    }
+    server.send(200, "text/plain", json);
 }
 
 void handleGetHardware()
@@ -1367,6 +1439,110 @@ void handleRestart()
     delay(3000);
 }
 
+String checkFirmwareUpdate()
+{
+    WiFiClientSecure client;
+    client.setTrustAnchors(&cert);
+    if(client.probeMaxFragmentLength(host, httpsPort, 1024))
+        client.setBufferSizes(1024, 512);
+    if (!client.connect(host, httpsPort)) {
+        Serial.println(F("Connection to github failed"));
+        return "check failed";
+    }
+    client.print(String("GET ") + URL_fw_Version + " HTTP/1.1\r\n" +
+                "Host: " + host + "\r\n" +
+                "User-Agent: BuildFailureDetectorESP8266\r\n" +
+                "Connection: close\r\n\r\n");
+    while (client.available() || client.connected()) {
+        String line = client.readStringUntil('\n');
+        if (line == "\r") {
+            Serial.println("Headers received");
+            // headersreceived = true;
+            break;
+        }
+    }
+    String payload = client.readStringUntil('\n');
+    payload.trim();
+    return payload;
+}
+
+void handleUpdate()
+{
+    // setClock();
+    WiFiClientSecure client;
+    client.setTrustAnchors(&cert);
+    // client.setInsecure();
+    if(client.probeMaxFragmentLength(host, httpsPort, 1024))
+        client.setBufferSizes(1024, 512);
+    if (!client.connect(host, httpsPort)) {
+        Serial.println(F("Connection to github failed"));
+        return;
+    }
+    Serial.println(client.getMFLNStatus());
+    ESPhttpUpdate.onStart(updateStart);
+    ESPhttpUpdate.onEnd(updateEnd);
+    // ESPhttpUpdate.onProgress(udpateProgress);
+    ESPhttpUpdate.onError(updateError);
+    client.print(String("GET ") + URL_fw_Version + " HTTP/1.1\r\n" +
+                "Host: " + host + "\r\n" +
+                "User-Agent: BuildFailureDetectorESP8266\r\n" +
+                "Connection: close\r\n\r\n");
+    // bool headersreceived = false;
+    while (client.available() || client.connected()) {
+        String line = client.readStringUntil('\n');
+        // Serial.print(client.available());
+        Serial.println(line);
+        if (line == "\r") {
+            Serial.println("Headers received");
+            // headersreceived = true;
+            break;
+        }
+    }
+    String payload = client.readStringUntil('\n');
+    server.sendHeader("location", "/index.html");
+    server.send(303);
+    payload.trim();
+    Serial.printf("pl: %s\n", payload.c_str());
+    Serial.print("FW: ");
+    Serial.println(FW_VERSION);
+    if(payload.equals(FW_VERSION) )
+    {   
+        Serial.println(F("Device already on latest firmware version")); 
+    }
+    else
+    {
+        Serial.println(F("New firmware detected"));
+        // ESPhttpUpdate.setLedPin(LED_BUILTIN, LOW); 
+        t_httpUpdate_return ret = ESPhttpUpdate.update(client, URL_fw_Bin);
+            
+        switch (ret) {
+        case HTTP_UPDATE_FAILED:
+            Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s\n", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+            break;
+
+        case HTTP_UPDATE_NO_UPDATES:
+            Serial.println("HTTP_UPDATE_NO_UPDATES");
+            break;
+
+        case HTTP_UPDATE_OK:
+            Serial.println("HTTP_UPDATE_OK");
+            break;
+        } 
+    }
+}
+
+void updateStart(){
+    Serial.println("update start");
+}
+void updateEnd(){
+    Serial.println("update finish");
+}
+void udpateProgress(int cur, int total){
+    Serial.printf("update process at %d of %d bytes...\n", cur, total);
+}
+void updateError(int err){
+    Serial.printf("update fatal error code %d\n", err);
+}
 
 /**
  * MQTT setup and connect
@@ -1543,7 +1719,7 @@ void handleESPInfo()
         stacksize,
         ESP.getFreeHeap(),
         heap_water_mark,
-        ESP.getCoreVersion(),
+        ESP.getCoreVersion().c_str(),
         ESP.getCpuFreqMHz(),
         ESP.getCycleCount(),
         ESP.getFreeContStack(),

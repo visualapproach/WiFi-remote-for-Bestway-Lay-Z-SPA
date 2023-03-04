@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Lay-Z-Spa Module | Check firmware update!</title>
+	<meta charset="utf-8">
+	<link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
+	<link rel="manifest" href="manifest.json">
+	<link rel="stylesheet" href="main.css">
+	<meta name="theme-color" content="#0066BF">
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+	<script src="function.js" type="text/javascript"></script>
+</head>
+
+<body>
+	<div id="site">
+		<header>
+			<span>Firmware</span>
+			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
+		</header>
+
+		<div class="topnav" id="topnav">
+			<a href="./">Home</a>
+			<a href="hwconfig.html">Hardware Config</a>
+			<a href="config.html">SPA Config</a>
+			<a href="webconfig.html">Web Config</a>
+			<a href="wifi.html">Network Config</a>
+			<a href="mqtt.html">MQTT Config</a>
+			<a href="/dir/">Directory</a>
+			<a href="upload.html">File Uploader</a>
+			<a href="remove.html">File Remover</a>
+			<!--<a href="/restart/" class="bgred">Restart ESP</a>
+			<a href="javascript:void(0);" class="bgred" onclick="reboot()">Restart ESP</a>-->
+		</div>
+
+		<section>
+			<p>Only update if:<br>
+            You have a NodeMCU12E<br>
+            You are at the spa so you can fix it if something goes wrong<br>
+            For the moment you have to manually upload the data files (the html and such)<br>
+            </p>
+            Do not power off or reset the ESP until finished! Will take a few minutes.
+            <p id="current">Loading...</p>
+            <p id="available">Loading...</p>
+		</section>
+
+		<footer>
+			<p class="center"><a class="button" href="/">Home</a></p><br>
+			<p class="center"><a class="button_red" onclick="buttonConfirm(this, 'Wait until main page is loaded!')" href="/update/">Update firmware</a></p>
+		</footer>
+	</div>
+<script>
+    loadversions();
+    function loadversions()
+    {
+        var req = new XMLHttpRequest();
+        req.open('POST', '/getversions/');
+        req.send();
+        req.onreadystatechange = function()
+        {
+            if (this.readyState == 4 && this.status == 200)
+            {
+                var json = JSON.parse(req.responseText);
+                console.log(json);
+                document.getElementById('current').innerHTML = "Current: " + json.current;
+                document.getElementById('available').innerHTML = "Available: " + json.available;
+            }
+        }
+    }
+
+
+</script>        
+</body>
+</html>

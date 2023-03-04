@@ -91,7 +91,7 @@ class BWC {
         bool hasjets, hasgod;
 
     private:
-        void _loadHardware(Models& cioNo, Models& dspNo, int pins[]);
+        bool _loadHardware(Models& cioNo, Models& dspNo, int pins[]);
         bool _handlecommand(int64_t cmd, int64_t val, String txt);
         void _handleCommandQ();
         void _startNTP();

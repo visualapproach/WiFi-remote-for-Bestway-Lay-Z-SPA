@@ -51,8 +51,18 @@ void BWC::setup(void){
     Models ciomodel;
     Models dspmodel;
     
-    LittleFS.begin();
-    _loadHardware(ciomodel, dspmodel, pins);
+    bool fsret = LittleFS.begin();
+    Serial.print("fs: "); Serial.println(fsret);
+    if(!_loadHardware(ciomodel, dspmodel, pins)){
+        pins[0] = D1;
+        pins[1] = D2;
+        pins[2] = D3;
+        pins[3] = D4;
+        pins[4] = D5;
+        pins[5] = D6;
+        pins[6] = D7;
+        
+    }
     // Serial.printf("Cio loaded: %d, dsp model: %d\n", ciomodel, dspmodel);
     for(int i = 0; i < 7; i++)
     {
@@ -804,7 +814,6 @@ String BWC::getJSONStates() {
     doc["GOD"] = from_cio_states.godmode;
     doc["TGT"] = from_cio_states.target;
     doc["TMP"] = from_cio_states.temperature;
-    doc["VTF"] = _virtual_temp_fix; // **************************REMOVE THIS LINE
     doc["VTMC"] = _virtual_temp;
     doc["VTMF"] = C2F(_virtual_temp);
     doc["AMBC"] = _ambient_temp;
@@ -1080,20 +1089,20 @@ void BWC::_updateTimes(){
 /* LOADERS  */
 /*          */
 
-void BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
+bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
 {
     File file = LittleFS.open("/hwcfg.json", "r");
     if (!file)
     {
         // Serial.println(F("Failed to open hwcfg.json"));
-        return;
+        return false;
     }
     DynamicJsonDocument doc(256);
     DeserializationError error = deserializeJson(doc, file);
     if (error) {
         // Serial.println(F("Failed to read settings.txt"));
         file.close();
-        return;
+        return false;
     }
     file.close();
     cioNo = doc["cio"];
@@ -1110,6 +1119,7 @@ void BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
         pins[i] = DtoGPIO[pins[i]];
     #endif
     }
+    return true;
 }
 
 void BWC::reloadSettings(){

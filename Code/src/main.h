@@ -1,13 +1,26 @@
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 #include <DNSServer.h>
+
 #ifdef ESP8266
+
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+#include <ESP8266httpUpdate.h>
+#include <WiFiClientSecure.h>
+#include "certs.h"
+#include <CertStoreBearSSL.h>
+BearSSL::CertStore certStore;
+#include <time.h>
+
 #else
+
 #include <WebServer.h>
 #include <WiFi.h>
+
 #endif
+
 #include <LittleFS.h>
 #include <PubSubClient.h> // ** Requires library 2.8.0 or higher ** https://github.com/knolleary/pubsubclient
 #include <Ticker.h>
@@ -67,6 +80,7 @@ bool enableMqtt = false;
 /** used for handleAUX() */
 bool runonce = true;
 
+void setClock();
 
 void sendWS();
 String getOtherInfo();
@@ -79,6 +93,7 @@ void stopall();
 void startWebSocket();
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len);
 void startHttpServer();
+void handleGetVersions();
 void handleGetHardware();
 void handleSetHardware();
 void handleHWtest();
@@ -108,7 +123,12 @@ void handleDir();
 void handleFileUpload();
 void handleFileRemove();
 void handleRestart();
-
+String checkFirmwareUpdate();
+void handleUpdate();
+void updateStart();
+void updateEnd();
+void udpateProgress(int cur, int total);
+void updateError(int err);
 void startMqtt();
 void mqttCallback(char* topic, byte* payload, unsigned int length);
 void mqttConnect();
