@@ -16,7 +16,7 @@ Change log
  - Set hardware config from web ui (Pump, display and PCB model)
  - Use any 6-wire display with any pump
 
-Only install if you have time for failure and can revert to old version (master branch)
+Only install if you have time for failure and can revert to old version (backup 3.5 branch)
 Feedback is welcome in discussion #428
 State your hardware config and your feedback.
 
