@@ -43,6 +43,21 @@ void CIO_6_TYPE1::stop(){
     detachInterrupt(digitalPinToInterrupt(_CLK_PIN));
 }
 
+void CIO_6_TYPE1::pause_resume(bool action)
+{
+    if(action)
+    {
+        /*pause*/
+        detachInterrupt(digitalPinToInterrupt(_CS_PIN));
+        detachInterrupt(digitalPinToInterrupt(_CLK_PIN));
+    } else
+    {
+        /*resume*/
+        attachInterrupt(digitalPinToInterrupt(_CS_PIN), isr_cs_type1, CHANGE);
+        attachInterrupt(digitalPinToInterrupt(_CLK_PIN), isr_clk_type1, CHANGE);
+    }
+}
+
 sStates CIO_6_TYPE1::getStates()
 {
     /*update all states*/

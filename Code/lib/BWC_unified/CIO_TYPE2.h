@@ -10,6 +10,7 @@ class CIO_6_TYPE2: public CIO_6W
         virtual ~CIO_6_TYPE2(){};
         void setup(int cio_data_pin, int cio_clk_pin, int cio_cs_pin) override;
         void stop() override;
+        void pause_resume(bool action) override;
         void LED_Handler();
         void clkHandler();
         sStates getStates();

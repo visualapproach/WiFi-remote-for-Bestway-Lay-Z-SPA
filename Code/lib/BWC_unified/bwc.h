@@ -60,6 +60,7 @@ class BWC {
         // String get_fromdsp();
         // String get_tocio();
         void stop(void);
+        void pause_resume(bool action);
         bool add_command(command_que_item command_item);
         // bool qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval);
         bool newData();

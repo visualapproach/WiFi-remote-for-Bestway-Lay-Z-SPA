@@ -36,20 +36,21 @@
 			<p>Only update if:<br>
             You have a NodeMCU12E<br>
             You are at the spa so you can fix it if something goes wrong<br>
-            For the moment you have to manually upload the data files (the html and such)<br>
+            Communication with the pump will pause, so 4-wire pump will throw an error and needs to be restarted.<br>
             </p>
-            Do not power off or reset the ESP until finished! Will take a few minutes.
+            Do not power off or reset the ESP until finished! It will take a few minutes!
+            Files will always be downloaded. FW only if different.
             <p id="current">Loading...</p>
             <p id="available">Loading...</p>
 		</section>
 
 		<footer>
 			<p class="center"><a class="button" href="/">Home</a></p><br>
-			<p class="center"><a class="button_red" onclick="buttonConfirm(this, 'Wait until main page is loaded!')" href="/update/">Update firmware</a></p>
+			<p class="center"><a class="button_red" onclick="buttonConfirm(this, 'Wait until main page is loaded!')" href="/update/">Update data files, then firmware</a></p>
 		</footer>
 	</div>
 <script>
-    loadversions();
+    document.addEventListener("load", loadversions());
     function loadversions()
     {
         var req = new XMLHttpRequest();

@@ -51,8 +51,7 @@ void BWC::setup(void){
     Models ciomodel;
     Models dspmodel;
     
-    bool fsret = LittleFS.begin();
-    Serial.print("fs: "); Serial.println(fsret);
+    LittleFS.begin();
     if(!_loadHardware(ciomodel, dspmodel, pins)){
         pins[0] = D1;
         pins[1] = D2;
@@ -361,6 +360,21 @@ void BWC::stop(){
     delete _cio;
     _dsp->stop();
     delete _dsp;
+}
+
+void BWC::pause_resume(bool action)
+{
+    if(action)
+    {
+        _save_settings_ticker.detach();
+        _scroll_text_ticker.detach();
+    } else
+    {
+        _save_settings_ticker.attach(3600.0f, save_settings_cb, this);
+        _scroll_text_ticker.attach(0.25f, scroll_text_cb, this);
+    }
+    _cio->pause_resume(action);
+    _dsp->pause_resume(action);
 }
 
 /*Sort by xtime, ascending*/
