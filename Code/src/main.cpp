@@ -555,11 +555,12 @@ void startHttpServer()
 
 void handleGetVersions()
 {
-    DynamicJsonDocument doc(256);
+    DynamicJsonDocument doc(512);
     String json = "";
     // Set the values in the document
     doc["current"] = FW_VERSION;
-    doc["available"] = checkFirmwareUpdate();
+    String s = checkFirmwareUpdate();
+    doc["available"] = s;
     // Serialize JSON to string
     if (serializeJson(doc, json) == 0)
     {
@@ -1444,6 +1445,7 @@ void handleRestart()
 
 String checkFirmwareUpdate()
 {
+    bwc.stop();
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     if(client.probeMaxFragmentLength(host, httpsPort, 1024))
@@ -1459,18 +1461,20 @@ String checkFirmwareUpdate()
     while (client.available() || client.connected()) {
         String line = client.readStringUntil('\n');
         if (line == "\r") {
-            Serial.println("Headers received");
+            Serial.println(F("Headers received"));
             // headersreceived = true;
             break;
         }
     }
     String payload = client.readStringUntil('\n');
     payload.trim();
+    bwc.setup();
     return payload;
 }
 
 void handleUpdate()
 {
+    bwc.stop();
     int nof = updateFiles();
     Serial.printf("No of files: %d", nof);
     delay(1000);
@@ -1535,6 +1539,7 @@ void handleUpdate()
             break;
         }
     }
+    bwc.setup();
 }
 
 int updateFiles()
@@ -1580,9 +1585,9 @@ int updateFiles()
     // server.send(303);
 
     /*Load the files to flash*/
-    int contentLength = -1;
     for(auto filename : files)
     {
+        int contentLength = -1;
         Serial.println(filename);
         int count = 0;
         if (!client.connect(host, httpsPort)) {
@@ -1601,7 +1606,7 @@ int updateFiles()
                 contentLength = line.substring(15).toInt();
             }            
             if (line == "\r") {
-                Serial.println("Headers received");
+                Serial.println(F("Headers received"));
                 break;
             }
         }
@@ -1611,12 +1616,12 @@ int updateFiles()
             Serial.println("file error");
             return number_of_files;
         }
-        uint8_t buf[256] = {0};
+        uint8_t buf[128] = {0};
         int remaining = contentLength;
         int received;
         while ((client.available() || client.connected()) && remaining > 0) {
             Serial.print(".");
-            received = client.readBytes(buf, ((remaining > 256) ? 256 : remaining));
+            received = client.readBytes(buf, ((remaining > 128) ? 128 : remaining));
             remaining -= received;
             f.write(buf, received);
         }
@@ -1628,10 +1633,10 @@ int updateFiles()
 }
 
 void updateStart(){
-    Serial.println("update start");
+    Serial.println(F("update start"));
 }
 void updateEnd(){
-    Serial.println("update finish");
+    Serial.println(F("update finish"));
 }
 void udpateProgress(int cur, int total){
     Serial.printf("update process at %d of %d bytes...\n", cur, total);
