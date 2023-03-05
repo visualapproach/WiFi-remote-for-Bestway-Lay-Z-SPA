@@ -1,5 +1,6 @@
 Change log
 
+ - Update firmware via web UI (not filesystem for the moment)
  - Brightness slider in HA
  - Brightness temporarily increases on button press
  - Non blocking audio and text
