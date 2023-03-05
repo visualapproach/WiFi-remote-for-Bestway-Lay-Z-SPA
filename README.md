@@ -1,4 +1,4 @@
-Change log
+Change log v4
 
  - Update firmware via web UI (not filesystem for the moment)
  - Brightness slider in HA
