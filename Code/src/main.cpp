@@ -9,6 +9,8 @@ uint32_t heap_water_mark;
 
 /* firmware update content */
 #define URL_fw_Version "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/fw/version.txt"
+#define URL_filelist "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/datazip/filelist.txt"
+#define URL_filedir "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/datazip/"
 #define URL_fw_Bin "https://raw.githubusercontent.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/fw/firmware.bin"
 const char* host = "raw.githubusercontent.com";
 const int httpsPort = 443;
@@ -541,6 +543,7 @@ void startHttpServer()
     server.on(F("/gethardware/"), handleGetHardware);
     server.on(F("/update/"), handleUpdate);    
     server.on(F("/getversions/"), handleGetVersions);    
+    server.on(F("/getfiles/"), updateFiles);    
 
     // if someone requests any other file or page, go to function 'handleNotFound'
     // and check if the file exists
@@ -1527,8 +1530,50 @@ void handleUpdate()
         case HTTP_UPDATE_OK:
             Serial.println("HTTP_UPDATE_OK");
             break;
-        } 
+        }
     }
+}
+
+void updateFiles()
+{
+    WiFiClientSecure client;
+    client.setTrustAnchors(&cert);
+    // client.setInsecure();
+    if(client.probeMaxFragmentLength(host, httpsPort, 1024))
+        client.setBufferSizes(1024, 512);
+    if (!client.connect(host, httpsPort)) {
+        Serial.println(F("Connection to github failed"));
+        return;
+    }
+    Serial.println(client.getMFLNStatus());
+    ESPhttpUpdate.onStart(updateStart);
+    ESPhttpUpdate.onEnd(updateEnd);
+    // ESPhttpUpdate.onProgress(udpateProgress);
+    ESPhttpUpdate.onError(updateError);
+    client.print(String("GET ") + URL_filelist + " HTTP/1.1\r\n" +
+                "Host: " + host + "\r\n" +
+                "User-Agent: BuildFailureDetectorESP8266\r\n" +
+                "Connection: close\r\n\r\n");
+    while (client.available() || client.connected()) {
+        String line = client.readStringUntil('\n');
+        Serial.println(line);
+        if (line == "\r") {
+            Serial.println("Headers received");
+            break;
+        }
+    }
+
+    std::vector<String> files;
+    while (client.available() || client.connected()) {
+        String payload = client.readStringUntil('\n');
+        // server.sendHeader("location", "/index.html");
+        // server.send(303);
+        payload.trim();
+        files.push_back(payload);
+        Serial.printf("pl: %s\n", payload.c_str());
+    }
+
+    /*Load the files to flash*/
 }
 
 void updateStart(){
