@@ -125,7 +125,7 @@ void handleFileRemove();
 void handleRestart();
 String checkFirmwareUpdate();
 void handleUpdate();
-void updateFiles();
+int updateFiles();
 void updateStart();
 void updateEnd();
 void udpateProgress(int cur, int total);

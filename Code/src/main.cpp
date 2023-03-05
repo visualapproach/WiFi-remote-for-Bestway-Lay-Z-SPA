@@ -1471,6 +1471,9 @@ String checkFirmwareUpdate()
 
 void handleUpdate()
 {
+    int nof = updateFiles();
+    Serial.printf("No of files: %d", nof);
+    delay(1000);
     // setClock();
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
@@ -1534,8 +1537,9 @@ void handleUpdate()
     }
 }
 
-void updateFiles()
+int updateFiles()
 {
+    int number_of_files = 0;
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     // client.setInsecure();
@@ -1543,7 +1547,7 @@ void updateFiles()
         client.setBufferSizes(1024, 512);
     if (!client.connect(host, httpsPort)) {
         Serial.println(F("Connection to github failed"));
-        return;
+        return 0;
     }
     Serial.println(client.getMFLNStatus());
     ESPhttpUpdate.onStart(updateStart);
@@ -1572,8 +1576,55 @@ void updateFiles()
         files.push_back(payload);
         Serial.printf("pl: %s\n", payload.c_str());
     }
+    // server.sendHeader("location", "/index.html");
+    // server.send(303);
 
     /*Load the files to flash*/
+    int contentLength = -1;
+    for(auto filename : files)
+    {
+        Serial.println(filename);
+        int count = 0;
+        if (!client.connect(host, httpsPort)) {
+            Serial.println(F("Connection to file failed"));
+            if(++count > 5) return number_of_files;
+        }
+        client.print(String("GET ") + URL_filedir + filename + " HTTP/1.1\r\n" +
+                    "Host: " + host + "\r\n" +
+                    "User-Agent: BuildFailureDetectorESP8266\r\n" +
+                    "Connection: close\r\n\r\n");
+        while (client.available() || client.connected()) {
+            String line = client.readStringUntil('\n');
+            Serial.println(line);
+            if (line.startsWith(F("Content-Length: ")))
+            {
+                contentLength = line.substring(15).toInt();
+            }            
+            if (line == "\r") {
+                Serial.println("Headers received");
+                break;
+            }
+        }
+        yield();
+        File f = LittleFS.open("/"+filename, "w");
+        if(!f) {
+            Serial.println("file error");
+            return number_of_files;
+        }
+        uint8_t buf[256] = {0};
+        int remaining = contentLength;
+        int received;
+        while ((client.available() || client.connected()) && remaining > 0) {
+            Serial.print(".");
+            received = client.readBytes(buf, ((remaining > 256) ? 256 : remaining));
+            remaining -= received;
+            f.write(buf, received);
+        }
+        f.close();
+        number_of_files++;
+        delay(500);
+    }
+    return number_of_files;
 }
 
 void updateStart(){
