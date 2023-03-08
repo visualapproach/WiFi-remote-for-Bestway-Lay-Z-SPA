@@ -1111,7 +1111,8 @@ bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
         // Serial.println(F("Failed to open hwcfg.json"));
         return false;
     }
-    DynamicJsonDocument doc(256);
+    // DynamicJsonDocument doc(256);
+    StaticJsonDocument<256> doc;
     DeserializationError error = deserializeJson(doc, file);
     if (error) {
         // Serial.println(F("Failed to read settings.txt"));
@@ -1189,7 +1190,8 @@ void BWC::_restoreStates() {
         // Serial.println(F("Failed to read states.txt"));
         return;
     }
-    DynamicJsonDocument doc(512);
+    // DynamicJsonDocument doc(512);
+    StaticJsonDocument<512> doc;
     // Deserialize the JSON document
     DeserializationError error = deserializeJson(doc, file);
     if (error) {
@@ -1278,7 +1280,8 @@ void BWC::saveRebootInfo(){
         return;
     }
 
-    DynamicJsonDocument doc(1024);
+    // DynamicJsonDocument doc(1024);
+    StaticJsonDocument<256> doc;
 
     // Set the values in the document
     reboot_time = DateTime.format(DateFormatter::SIMPLE);
@@ -1307,7 +1310,8 @@ void BWC::_saveStates() {
         return;
     }
 
-    DynamicJsonDocument doc(1024);
+    // DynamicJsonDocument doc(1024);
+    StaticJsonDocument<256> doc;
 
     // Set the values in the document
     doc["UNT"] = from_cio_states.unit;
