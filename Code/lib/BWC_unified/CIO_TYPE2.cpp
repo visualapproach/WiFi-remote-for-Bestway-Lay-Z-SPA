@@ -40,6 +40,21 @@ void CIO_6_TYPE2::stop(){
     detachInterrupt(digitalPinToInterrupt(_CIO_CLK_PIN));
 }
 
+void CIO_6_TYPE2::pause_resume(bool action)
+{
+    if(action)
+    {
+        /*pause*/
+        detachInterrupt(digitalPinToInterrupt(_CIO_LD_PIN));
+        detachInterrupt(digitalPinToInterrupt(_CIO_CLK_PIN));
+    } else
+    {
+        /*resume*/
+        attachInterrupt(digitalPinToInterrupt(_CIO_LD_PIN), isr_LEDdatapin, CHANGE);
+        attachInterrupt(digitalPinToInterrupt(_CIO_CLK_PIN), isr_clk_type2, CHANGE); //Write on falling edge and read on rising edge
+    }
+}
+
 sStates CIO_6_TYPE2::getStates()
 {
     /*update all states*/

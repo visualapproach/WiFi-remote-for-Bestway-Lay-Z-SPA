@@ -27,6 +27,7 @@ BearSSL::CertStore certStore;
 #include <WebSocketsServer.h>
 #include <ESP_WiFiManager.h>
 #include "bwc.h"
+#include <umm_malloc/umm_heap_select.h>
 
 /**  */
 Ticker bootlogTimer;
@@ -80,7 +81,7 @@ bool enableMqtt = false;
 /** used for handleAUX() */
 bool runonce = true;
 
-void setClock();
+// void setClock();
 
 void sendWS();
 String getOtherInfo();
@@ -90,6 +91,7 @@ void startWiFiConfigPortal();
 void startNTP();
 void startOTA();
 void stopall();
+void pause_resume(bool action);
 void startWebSocket();
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len);
 void startHttpServer();
@@ -125,7 +127,7 @@ void handleFileRemove();
 void handleRestart();
 String checkFirmwareUpdate();
 void handleUpdate();
-int updateFiles();
+bool updateFiles();
 void updateStart();
 void updateEnd();
 void udpateProgress(int cur, int total);

@@ -51,8 +51,7 @@ void BWC::setup(void){
     Models ciomodel;
     Models dspmodel;
     
-    bool fsret = LittleFS.begin();
-    Serial.print("fs: "); Serial.println(fsret);
+    LittleFS.begin();
     if(!_loadHardware(ciomodel, dspmodel, pins)){
         pins[0] = D1;
         pins[1] = D2;
@@ -361,6 +360,21 @@ void BWC::stop(){
     delete _cio;
     _dsp->stop();
     delete _dsp;
+}
+
+void BWC::pause_resume(bool action)
+{
+    if(action)
+    {
+        _save_settings_ticker.detach();
+        _scroll_text_ticker.detach();
+    } else
+    {
+        _save_settings_ticker.attach(3600.0f, save_settings_cb, this);
+        _scroll_text_ticker.attach(0.25f, scroll_text_cb, this);
+    }
+    _cio->pause_resume(action);
+    _dsp->pause_resume(action);
 }
 
 /*Sort by xtime, ascending*/
@@ -1097,7 +1111,8 @@ bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
         // Serial.println(F("Failed to open hwcfg.json"));
         return false;
     }
-    DynamicJsonDocument doc(256);
+    // DynamicJsonDocument doc(256);
+    StaticJsonDocument<256> doc;
     DeserializationError error = deserializeJson(doc, file);
     if (error) {
         // Serial.println(F("Failed to read settings.txt"));
@@ -1175,7 +1190,8 @@ void BWC::_restoreStates() {
         // Serial.println(F("Failed to read states.txt"));
         return;
     }
-    DynamicJsonDocument doc(512);
+    // DynamicJsonDocument doc(512);
+    StaticJsonDocument<512> doc;
     // Deserialize the JSON document
     DeserializationError error = deserializeJson(doc, file);
     if (error) {
@@ -1264,7 +1280,8 @@ void BWC::saveRebootInfo(){
         return;
     }
 
-    DynamicJsonDocument doc(1024);
+    // DynamicJsonDocument doc(1024);
+    StaticJsonDocument<256> doc;
 
     // Set the values in the document
     reboot_time = DateTime.format(DateFormatter::SIMPLE);
@@ -1293,7 +1310,8 @@ void BWC::_saveStates() {
         return;
     }
 
-    DynamicJsonDocument doc(1024);
+    // DynamicJsonDocument doc(1024);
+    StaticJsonDocument<256> doc;
 
     // Set the values in the document
     doc["UNT"] = from_cio_states.unit;
