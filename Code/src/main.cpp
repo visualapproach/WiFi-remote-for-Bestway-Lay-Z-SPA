@@ -1526,6 +1526,7 @@ void handleUpdate()
     }
     delay(1000);
     // setClock();
+HeapSelectIram ephemeral;
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     // client.setInsecure();
@@ -1594,6 +1595,8 @@ void handleUpdate()
 
 bool updateFiles()
 {
+HeapSelectIram ephemeral;
+Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     // client.setInsecure();
@@ -1603,6 +1606,7 @@ bool updateFiles()
         Serial.println(F("Connection to github failed"));
         return false;
     }
+Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     // Serial.println(client.getMFLNStatus());
     ESPhttpUpdate.onStart(updateStart);
     ESPhttpUpdate.onEnd(updateEnd);
@@ -1636,6 +1640,7 @@ bool updateFiles()
     for(auto filename : files)
     {
         int contentLength = -1;
+Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
         Serial.print(filename);
         int count = 0;
         if(client.probeMaxFragmentLength(host, httpsPort, 512))
