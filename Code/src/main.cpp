@@ -8,10 +8,14 @@ char *stack_start;
 uint32_t heap_water_mark;
 
 /* firmware update content */
-#define URL_fw_Version "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/fw/version.txt"
-#define URL_filelist "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/datazip/filelist.txt"
-#define URL_filedir "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/datazip/"
-#define URL_fw_Bin "https://raw.githubusercontent.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/fw/firmware.bin"
+// #define URL_fw_Version "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/fw/version.txt"
+// #define URL_filelist "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/datazip/filelist.txt"
+// #define URL_filedir "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/datazip/"
+// #define URL_fw_Bin "https://raw.githubusercontent.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/fw/firmware.bin"
+#define URL_fw_Version "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/fw/version.txt"
+#define URL_filelist "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/datazip/filelist.txt"
+#define URL_filedir "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/datazip/"
+#define URL_fw_Bin "https://raw.githubusercontent.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/fw/firmware.bin"
 const char* host = "raw.githubusercontent.com";
 const int httpsPort = 443;
 // /*Defined in "certs.h"*/
