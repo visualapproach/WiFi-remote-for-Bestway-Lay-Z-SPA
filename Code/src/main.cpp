@@ -1473,14 +1473,15 @@ void handleRestart()
 
 String checkFirmwareUpdate()
 {
-    Serial.printf("1Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+Serial.printf("1Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     pause_resume(true);
-    Serial.printf("2Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+Serial.printf("2Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+HeapSelectIram ephemeral;
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     if(client.probeMaxFragmentLength(host, httpsPort, 512))
         client.setBufferSizes(512, 256);
-    Serial.printf("3Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+Serial.printf("3Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     int count = 0;
     if (!client.connect(host, httpsPort)) {
         Serial.println(F("Connection to github failed"));
@@ -1505,7 +1506,7 @@ String checkFirmwareUpdate()
     String payload = client.readStringUntil('\n');
     payload.trim();
     pause_resume(false);
-    Serial.printf("4Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+Serial.printf("4Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     return payload;
 }
 
@@ -1544,10 +1545,10 @@ void handleUpdate()
     ESPhttpUpdate.onEnd(updateEnd);
     // ESPhttpUpdate.onProgress(udpateProgress);
     ESPhttpUpdate.onError(updateError);
-    client.print(String("GET ") + URL_fw_Version + " HTTP/1.1\r\n" +
-                "Host: " + host + "\r\n" +
-                "User-Agent: BuildFailureDetectorESP8266\r\n" +
-                "Connection: close\r\n\r\n");
+    client.print(String("GET ") + F(URL_fw_Version) + F(" HTTP/1.1\r\n") +
+                F("Host: ") + host + "\r\n" +
+                F("User-Agent: BuildFailureDetectorESP8266\r\n") +
+                F("Connection: close\r\n\r\n"));
     // bool headersreceived = false;
     while (client.available() || client.connected()) {
         String line = client.readStringUntil('\n');
@@ -1561,9 +1562,9 @@ void handleUpdate()
     String payload = client.readStringUntil('\n');
 
     payload.trim();
-    // Serial.printf("pl: %s\n", payload.c_str());
-    // Serial.print("FW: ");
-    // Serial.println(FW_VERSION);
+    Serial.printf("pl: %s\n", payload.c_str());
+    Serial.print("FW: ");
+    Serial.println(FW_VERSION);
     if(payload.equals(FW_VERSION) )
     {   
         Serial.println(F("Device already on latest firmware version")); 
@@ -1607,10 +1608,10 @@ bool updateFiles()
     ESPhttpUpdate.onEnd(updateEnd);
     // ESPhttpUpdate.onProgress(udpateProgress);
     ESPhttpUpdate.onError(updateError);
-    client.print(String("GET ") + URL_filelist + " HTTP/1.1\r\n" +
-                "Host: " + host + "\r\n" +
-                "User-Agent: BuildFailureDetectorESP8266\r\n" +
-                "Connection: close\r\n\r\n");
+    client.print(String("GET ") + F(URL_filelist) + F(" HTTP/1.1\r\n") +
+                F("Host: ") + host + "\r\n" +
+                F("User-Agent: BuildFailureDetectorESP8266\r\n") +
+                F("Connection: close\r\n\r\n"));
     while (client.available() || client.connected()) {
         String line = client.readStringUntil('\n');
         // Serial.println(line);
@@ -1643,10 +1644,10 @@ bool updateFiles()
             Serial.println(F("Connection to file failed"));
             if(++count > 5) return false;
         }
-        client.print(String("GET ") + URL_filedir + filename + " HTTP/1.1\r\n" +
-                    "Host: " + host + "\r\n" +
-                    "User-Agent: BuildFailureDetectorESP8266\r\n" +
-                    "Connection: close\r\n\r\n");
+        client.print(String("GET ") + F(URL_filedir) + filename + F(" HTTP/1.1\r\n") +
+                    F("Host: ") + host + "\r\n" +
+                    F("User-Agent: BuildFailureDetectorESP8266\r\n") +
+                    F("Connection: close\r\n\r\n"));
         while (client.available() || client.connected()) {
             String line = client.readStringUntil('\n');
             // Serial.println(line);

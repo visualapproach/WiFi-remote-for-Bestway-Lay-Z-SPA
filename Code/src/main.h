@@ -27,6 +27,7 @@ BearSSL::CertStore certStore;
 #include <WebSocketsServer.h>
 #include <ESP_WiFiManager.h>
 #include "bwc.h"
+#include <umm_malloc/umm_heap_select.h>
 
 /**  */
 Ticker bootlogTimer;
