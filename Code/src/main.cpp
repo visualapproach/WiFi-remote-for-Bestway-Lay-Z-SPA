@@ -1473,15 +1473,15 @@ void handleRestart()
 
 String checkFirmwareUpdate()
 {
-Serial.printf("1Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+// Serial.printf("1Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     pause_resume(true);
-Serial.printf("2Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+// Serial.printf("2Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
 HeapSelectIram ephemeral;
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     if(client.probeMaxFragmentLength(host, httpsPort, 512))
         client.setBufferSizes(512, 256);
-Serial.printf("3Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+// Serial.printf("3Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     int count = 0;
     if (!client.connect(host, httpsPort)) {
         Serial.println(F("Connection to github failed"));
@@ -1506,7 +1506,7 @@ Serial.printf("3Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentati
     String payload = client.readStringUntil('\n');
     payload.trim();
     pause_resume(false);
-Serial.printf("4Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+// Serial.printf("4Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     return payload;
 }
 
@@ -1596,7 +1596,7 @@ HeapSelectIram ephemeral;
 bool updateFiles()
 {
 HeapSelectIram ephemeral;
-Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+// Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     // client.setInsecure();
@@ -1606,7 +1606,7 @@ Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentatio
         Serial.println(F("Connection to github failed"));
         return false;
     }
-Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+// Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     // Serial.println(client.getMFLNStatus());
     ESPhttpUpdate.onStart(updateStart);
     ESPhttpUpdate.onEnd(updateEnd);
@@ -1640,7 +1640,7 @@ Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentatio
     for(auto filename : files)
     {
         int contentLength = -1;
-Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+// Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
         Serial.print(filename);
         int count = 0;
         if(client.probeMaxFragmentLength(host, httpsPort, 512))
