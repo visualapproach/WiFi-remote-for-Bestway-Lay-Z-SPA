@@ -9,7 +9,7 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 #include <WiFiClientSecure.h>
-#include "certs.h"
+// #include "certs.h"
 #include <CertStoreBearSSL.h>
 BearSSL::CertStore certStore;
 #include <time.h>
@@ -80,8 +80,6 @@ bool enableMqtt = false;
 
 /** used for handleAUX() */
 bool runonce = true;
-
-// void setClock();
 
 void sendWS();
 String getOtherInfo();

@@ -55,23 +55,18 @@ void setup()
     char stack;
     stack_start = &stack;
 
+    bwc.setup();
+    bwc.loop();
     Serial.begin(115200);
     Serial.println(F("\nStart"));
-Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
 
     periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
     startComplete.attach(60, []{ if(useMqtt) enableMqtt = true; startComplete.detach(); });
-
     // update webpage every 2 seconds. (will also be updated on state changes)
     updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
-
     // when NTP time is valid we save bootlog.txt and this timer stops
     bootlogTimer.attach(5, []{ if(DateTime.isTimeValid()) {bwc.saveRebootInfo(); bootlogTimer.detach();} });
-
-    bwc.setup();
-    // needs to be loaded here for reading files
-    // LittleFS.begin();
     loadWifi();
     loadWebConfig();
     startWiFi();
@@ -87,28 +82,7 @@ Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentatio
     bwc.print(FW_VERSION);
     Serial.println(F("End of setup()"));
     heap_water_mark = ESP.getFreeHeap();
-
-    // setClock();
-
 }
-
-// void setClock() {
-//     // Set time via NTP, as required for x.509 validation
-//     configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
-//     Serial.print("Waiting for NTP time sync: ");
-//     time_t now = time(nullptr);
-//     while (now < 8 * 3600 * 2) {
-//         delay(500);
-//         Serial.print(".");
-//         now = time(nullptr);
-//     }
-//     Serial.println("");
-//     struct tm timeinfo;
-//     gmtime_r(&now, &timeinfo);
-//     Serial.print("Current time: ");
-//     Serial.print(asctime(&timeinfo));
-// }
-
 
 void loop()
 {
