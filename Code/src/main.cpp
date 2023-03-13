@@ -1816,7 +1816,12 @@ void mqttConnect()
         mqttClient.loop();
 
         #ifdef ESP8266
-        mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), DateTime.format(DateFormatter::SIMPLE).c_str(), true);
+        // mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), DateTime.format(DateFormatter::SIMPLE).c_str(), true);
+        time_t boot_timestamp = DateTime.getBootTime();
+        tm * boot_time_tm = localtime(&boot_timestamp);
+        char boot_time_str[64];
+        strftime(boot_time_str, 64, DateFormatter::SIMPLE, boot_time_tm);
+        mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), (String(boot_time_str)+'Z').c_str(), true);
         mqttClient.publish((String(mqttBaseTopic) + "/reboot_reason").c_str(), ESP.getResetReason().c_str(), true);
         mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), bwc.getButtonName().c_str(), true);
         mqttClient.loop();

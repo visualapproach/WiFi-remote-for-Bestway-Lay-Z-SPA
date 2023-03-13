@@ -85,6 +85,7 @@ void setupHA()
   doc["name"] = F("Layzspa reboot time");
   doc["uniq_id"] = "sensor.layzspa_reboot_time"+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/reboot_time");
+  doc["val_tpl"] = F("{{as_timestamp(as_datetime(value).isoformat()) | timestamp_custom('%F %T')}}");
   doc["avty_t"] = mqttBaseTopic+F("/Status");
   doc["pl_avail"] = F("Alive");
   doc["pl_not_avail"] = F("Dead");

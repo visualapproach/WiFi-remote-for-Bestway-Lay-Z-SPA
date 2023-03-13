@@ -1284,9 +1284,12 @@ void BWC::saveRebootInfo(){
     StaticJsonDocument<256> doc;
 
     // Set the values in the document
-    reboot_time = DateTime.format(DateFormatter::SIMPLE);
+    time_t boot_timestamp = DateTime.getBootTime();
+    tm * boot_time_tm = localtime(&boot_timestamp);
+    char boot_time_str[64];
+    strftime(boot_time_str, 64, DateFormatter::SIMPLE, boot_time_tm);
     #ifdef ESP8266
-    doc["BOOTINFO"] = ESP.getResetReason() + " " + reboot_time;
+    doc["BOOTINFO"] = ESP.getResetReason() + " " + boot_time_str;
     #endif
 
     // Serialize JSON to file
