@@ -94,10 +94,28 @@ String.prototype.pad = function(String, len)
 	return str;
 }
 
+function tryParseJSONObject (jsonString){
+    try {
+        var o = JSON.parse(jsonString);
+
+        // Handle non-exception-throwing cases:
+        // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
+        // but... JSON.parse(null) returns null, and typeof null === "object", 
+        // so we must check for that, too. Thankfully, null is falsey, so this suffices:
+        if (o && typeof o === "object") {
+            return o;
+        }
+    }
+    catch (e) { }
+
+    return false;
+};
+
 function handlemsg(e)
 {
 	console.log(e.data);
-	var msgobj = JSON.parse(e.data);
+	var msgobj = tryParseJSONObject(e.data);
+    if(!msgobj) return;
 	console.log(msgobj);
 
 	if (msgobj.CONTENT == "OTHER")

@@ -217,6 +217,9 @@ void sendWS()
     // send other info
     json = getOtherInfo();
     webSocket.broadcastTXT(json);
+
+    json = bwc.getDebugData();
+    webSocket.broadcastTXT(json);
 }
 
 String getOtherInfo()
