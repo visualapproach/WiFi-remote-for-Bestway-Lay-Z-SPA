@@ -1516,16 +1516,15 @@ void handleUpdateBeta()
 
 void handleUpdate(bool betaversion)
 {
-return;
+    server.sendHeader("location", "/");
+    server.send(303);
     pause_resume(true);
     bool success = updateFiles(betaversion);
     Serial.printf("Files DL: %s\n", success ? "success" : "failed");
     if(success){
-        server.sendHeader("location", "/");
-        server.send(303);
     } else
     {
-        server.send(500, "text/plain", "Err downloading files");
+        // server.send(500, "text/plain", "Err downloading files");
         pause_resume(false);
         return;
     }
