@@ -1479,11 +1479,11 @@ HeapSelectIram ephemeral;
     String URL = URL_part1;
     if(betaversion)
     {
-        URL += String("master") + URL_fw_version;
+        URL += String("development_v4") + URL_fw_version;
     }
     else
     {
-        URL += String("development_v4") + URL_fw_version;
+        URL += String("master") + URL_fw_version;
     }
 
     client.print(String("GET ") + URL + F(" HTTP/1.1\r\n") +
@@ -1553,11 +1553,11 @@ HeapSelectIram ephemeral;
     String URL = URL_fw_bin_part1;
     if(betaversion)
     {
-        URL += String("master") + URL_fw_bin;
+        URL += String("development_v4") + URL_fw_bin;
     }
     else
     {
-        URL += String("development_v4") + URL_fw_bin;
+        URL += String("master") + URL_fw_bin;
     }
 
     client.print(String("GET ") + URL + F(" HTTP/1.1\r\n") +
@@ -1629,11 +1629,11 @@ HeapSelectIram ephemeral;
     String URL = URL_part1;
     if(betaversion)
     {
-        URL += String("master") + URL_filelist;
+        URL += String("development_v4") + URL_filelist;
     }
     else
     {
-        URL += String("development_v4") + URL_filelist;
+        URL += String("master") + URL_filelist;
     }
 
     client.print(String("GET ") + URL + F(" HTTP/1.1\r\n") +
@@ -1664,11 +1664,11 @@ HeapSelectIram ephemeral;
     URL = URL_part1;
     if(betaversion)
     {
-        URL += String("master") + URL_filedir;
+        URL += String("development_v4") + URL_filedir;
     }
     else
     {
-        URL += String("development_v4") + URL_filedir;
+        URL += String("master") + URL_filedir;
     }
 
     for(auto filename : files)
