@@ -19,6 +19,17 @@ void DSP_4W::stop()
     _dsp_serial.stopListening();
 }
 
+void DSP_4W::pause_resume(bool action)
+{
+    if(action)
+    {
+        _dsp_serial.stopListening();
+    } else
+    {
+        _dsp_serial.listen();
+    }
+}
+
 sToggles DSP_4W::getStates()
 {
     int msglen = 0;

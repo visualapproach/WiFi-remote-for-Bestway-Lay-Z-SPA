@@ -8,9 +8,10 @@ class DSP_6W : public DSP
     /*These must be declared for the API to work*/
     public:
         DSP_6W(){};
-        virtual ~DSP_6W(){};
+        virtual ~DSP_6W(){}
         virtual void setup(int dsp_data_pin, int dsp_clk_pin, int dsp_cs_pin, int dsp_audio_pin) = 0;
         virtual void stop() = 0;
+        void pause_resume(bool action) override {}
         sToggles getStates();
         virtual void setStates(const sStates& to_dsp_states) = 0;
 

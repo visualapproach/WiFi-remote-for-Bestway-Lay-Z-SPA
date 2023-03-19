@@ -8,10 +8,14 @@ char *stack_start;
 uint32_t heap_water_mark;
 
 /* firmware update content */
-#define URL_fw_Version "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/fw/version.txt"
-#define URL_filelist "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/datazip/filelist.txt"
-#define URL_filedir "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/datazip/"
-#define URL_fw_Bin "https://raw.githubusercontent.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/fw/firmware.bin"
+// #define URL_fw_Version "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/fw/version.txt"
+// #define URL_filelist "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/datazip/filelist.txt"
+// #define URL_filedir "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/datazip/"
+// #define URL_fw_Bin "https://raw.githubusercontent.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/fw/firmware.bin"
+#define URL_fw_Version "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/fw/version.txt"
+#define URL_filelist "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/datazip/filelist.txt"
+#define URL_filedir "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/datazip/"
+#define URL_fw_Bin "https://raw.githubusercontent.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/fw/firmware.bin"
 const char* host = "raw.githubusercontent.com";
 const int httpsPort = 443;
 // /*Defined in "certs.h"*/
@@ -51,21 +55,18 @@ void setup()
     char stack;
     stack_start = &stack;
 
+    bwc.setup();
+    bwc.loop();
     Serial.begin(115200);
     Serial.println(F("\nStart"));
+
     periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
     startComplete.attach(60, []{ if(useMqtt) enableMqtt = true; startComplete.detach(); });
-
     // update webpage every 2 seconds. (will also be updated on state changes)
     updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
-
     // when NTP time is valid we save bootlog.txt and this timer stops
     bootlogTimer.attach(5, []{ if(DateTime.isTimeValid()) {bwc.saveRebootInfo(); bootlogTimer.detach();} });
-
-    bwc.setup();
-    // needs to be loaded here for reading files
-    // LittleFS.begin();
     loadWifi();
     loadWebConfig();
     startWiFi();
@@ -81,28 +82,7 @@ void setup()
     bwc.print(FW_VERSION);
     Serial.println(F("End of setup()"));
     heap_water_mark = ESP.getFreeHeap();
-
-    // setClock();
-
 }
-
-void setClock() {
-    // Set time via NTP, as required for x.509 validation
-    configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
-    Serial.print("Waiting for NTP time sync: ");
-    time_t now = time(nullptr);
-    while (now < 8 * 3600 * 2) {
-        delay(500);
-        Serial.print(".");
-        now = time(nullptr);
-    }
-    Serial.println("");
-    struct tm timeinfo;
-    gmtime_r(&now, &timeinfo);
-    Serial.print("Current time: ");
-    Serial.print(asctime(&timeinfo));
-}
-
 
 void loop()
 {
@@ -234,7 +214,8 @@ void sendWS()
 
 String getOtherInfo()
 {
-    DynamicJsonDocument doc(512);
+    // DynamicJsonDocument doc(512);
+    StaticJsonDocument<512> doc;
     String json = "";
     // Set the values in the document
     doc["CONTENT"] = "OTHER";
@@ -446,6 +427,24 @@ void stopall()
     mqttClient.disconnect();
 }
 
+void pause_resume(bool action)
+{
+    if(action)
+    {
+        periodicTimer.detach();
+        startComplete.detach();
+        updateWSTimer.detach();
+        bootlogTimer.detach();
+    } else 
+    {
+        periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
+        startComplete.attach(60, []{ if(useMqtt) enableMqtt = true; startComplete.detach(); });
+        updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
+        //bootlogTimer.attach(5, []{ if(DateTime.isTimeValid()) {bwc.saveRebootInfo(); bootlogTimer.detach();} });
+    }
+    bwc.pause_resume(action);
+}
+
 void startWebSocket()
 {
     // In case we are already running
@@ -482,7 +481,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
         case WStype_TEXT:
         {
             // Serial.printf("WebSocket > [%u] get Text: %s\r\n", num, payload);
-            DynamicJsonDocument doc(256);
+            // DynamicJsonDocument doc(256);
+            StaticJsonDocument<256> doc;
             DeserializationError error = deserializeJson(doc, payload);
             if (error)
             {
@@ -555,16 +555,17 @@ void startHttpServer()
 
 void handleGetVersions()
 {
-    DynamicJsonDocument doc(512);
+    String s = checkFirmwareUpdate();
+    // DynamicJsonDocument doc(128);
+    StaticJsonDocument<128> doc;
     String json = "";
     // Set the values in the document
     doc["current"] = FW_VERSION;
-    String s = checkFirmwareUpdate();
     doc["available"] = s;
     // Serialize JSON to string
     if (serializeJson(doc, json) == 0)
     {
-        json = "{\"error\": \"Failed to serialize message\"}";
+        json = F("{\"error\": \"Failed to serialize message\"}");
     }
     server.send(200, "text/plain", json);
 }
@@ -768,7 +769,8 @@ void handleAddCommand()
 {
     if (!checkHttpPost(server.method())) return;
 
-    DynamicJsonDocument doc(256);
+    // DynamicJsonDocument doc(256);
+    StaticJsonDocument<256> doc;
     String message = server.arg(0);
     DeserializationError error = deserializeJson(doc, message);
     if (error)
@@ -798,7 +800,8 @@ void handleAddCommand()
  */
 void loadWebConfig()
 {
-    DynamicJsonDocument doc(1024);
+    // DynamicJsonDocument doc(1024);
+    StaticJsonDocument<256> doc;
 
     File file = LittleFS.open("/webconfig.json", "r");
     if (file)
@@ -837,7 +840,8 @@ void saveWebConfig()
         return;
     }
 
-    DynamicJsonDocument doc(256);
+    // DynamicJsonDocument doc(256);
+    StaticJsonDocument<256> doc;
 
     doc["SST"] = showSectionTemperature;
     doc["SSD"] = showSectionDisplay;
@@ -862,7 +866,8 @@ void handleGetWebConfig()
 {
     if (!checkHttpPost(server.method())) return;
 
-    DynamicJsonDocument doc(256);
+    // DynamicJsonDocument doc(256);
+    StaticJsonDocument<256> doc;
 
     doc["SST"] = showSectionTemperature;
     doc["SSD"] = showSectionDisplay;
@@ -888,7 +893,8 @@ void handleSetWebConfig()
 {
     if (!checkHttpPost(server.method())) return;
 
-    DynamicJsonDocument doc(256);
+    // DynamicJsonDocument doc(256);
+    StaticJsonDocument<256> doc;
     String message = server.arg(0);
     DeserializationError error = deserializeJson(doc, message);
     if (error)
@@ -1445,72 +1451,95 @@ void handleRestart()
 
 String checkFirmwareUpdate()
 {
-    bwc.stop();
+// Serial.printf("1Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+    pause_resume(true);
+// Serial.printf("2Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+HeapSelectIram ephemeral;
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
-    if(client.probeMaxFragmentLength(host, httpsPort, 1024))
-        client.setBufferSizes(1024, 512);
+    if(client.probeMaxFragmentLength(host, httpsPort, 512))
+        client.setBufferSizes(512, 256);
+// Serial.printf("3Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+    int count = 0;
     if (!client.connect(host, httpsPort)) {
         Serial.println(F("Connection to github failed"));
-        return "check failed";
+        if(++count > 5)
+        {
+            pause_resume(false);
+            return "check failed";
+        }
     }
-    client.print(String("GET ") + URL_fw_Version + " HTTP/1.1\r\n" +
-                "Host: " + host + "\r\n" +
-                "User-Agent: BuildFailureDetectorESP8266\r\n" +
-                "Connection: close\r\n\r\n");
+    client.print(String("GET ") + F(URL_fw_Version) + F(" HTTP/1.1\r\n") +
+                F("Host: ") + host + "\r\n" +
+                F("User-Agent: BuildFailureDetectorESP8266\r\n") +
+                F("Connection: close\r\n\r\n"));
     while (client.available() || client.connected()) {
         String line = client.readStringUntil('\n');
         if (line == "\r") {
-            Serial.println(F("Headers received"));
+            // Serial.println(F("Headers received"));
             // headersreceived = true;
             break;
         }
     }
     String payload = client.readStringUntil('\n');
     payload.trim();
-    bwc.setup();
+    pause_resume(false);
+// Serial.printf("4Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     return payload;
 }
 
 void handleUpdate()
 {
-    bwc.stop();
-    int nof = updateFiles();
-    Serial.printf("No of files: %d", nof);
+    pause_resume(true);
+    bool success = updateFiles();
+    Serial.printf("Files DL: %s\n", success ? "success" : "failed");
+    if(success){
+        server.sendHeader("location", "/index.html");
+        server.send(303);
+    } else
+    {
+        server.send(500, "text/plain", "Err downloading files");
+        pause_resume(false);
+        return;
+    }
     delay(1000);
     // setClock();
+HeapSelectIram ephemeral;
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     // client.setInsecure();
     if(client.probeMaxFragmentLength(host, httpsPort, 1024))
         client.setBufferSizes(1024, 512);
+    int count = 0;
     if (!client.connect(host, httpsPort)) {
         Serial.println(F("Connection to github failed"));
-        return;
+        if(++count > 5)
+        {
+            pause_resume(false);
+            return;
+        }
     }
     Serial.println(client.getMFLNStatus());
     ESPhttpUpdate.onStart(updateStart);
     ESPhttpUpdate.onEnd(updateEnd);
     // ESPhttpUpdate.onProgress(udpateProgress);
     ESPhttpUpdate.onError(updateError);
-    client.print(String("GET ") + URL_fw_Version + " HTTP/1.1\r\n" +
-                "Host: " + host + "\r\n" +
-                "User-Agent: BuildFailureDetectorESP8266\r\n" +
-                "Connection: close\r\n\r\n");
+    client.print(String("GET ") + F(URL_fw_Version) + F(" HTTP/1.1\r\n") +
+                F("Host: ") + host + "\r\n" +
+                F("User-Agent: BuildFailureDetectorESP8266\r\n") +
+                F("Connection: close\r\n\r\n"));
     // bool headersreceived = false;
     while (client.available() || client.connected()) {
         String line = client.readStringUntil('\n');
-        // Serial.print(client.available());
-        Serial.println(line);
+        // Serial.println(line);
         if (line == "\r") {
-            Serial.println("Headers received");
+            // Serial.println("Headers received");
             // headersreceived = true;
             break;
         }
     }
     String payload = client.readStringUntil('\n');
-    server.sendHeader("location", "/index.html");
-    server.send(303);
+
     payload.trim();
     Serial.printf("pl: %s\n", payload.c_str());
     Serial.print("FW: ");
@@ -1539,47 +1568,48 @@ void handleUpdate()
             break;
         }
     }
-    bwc.setup();
+    pause_resume(false);
 }
 
-int updateFiles()
+bool updateFiles()
 {
-    int number_of_files = 0;
+HeapSelectIram ephemeral;
+// Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     // client.setInsecure();
-    if(client.probeMaxFragmentLength(host, httpsPort, 1024))
-        client.setBufferSizes(1024, 512);
+    if(client.probeMaxFragmentLength(host, httpsPort, 512))
+        client.setBufferSizes(512, 256);
     if (!client.connect(host, httpsPort)) {
         Serial.println(F("Connection to github failed"));
-        return 0;
+        return false;
     }
-    Serial.println(client.getMFLNStatus());
+// Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+    // Serial.println(client.getMFLNStatus());
     ESPhttpUpdate.onStart(updateStart);
     ESPhttpUpdate.onEnd(updateEnd);
     // ESPhttpUpdate.onProgress(udpateProgress);
     ESPhttpUpdate.onError(updateError);
-    client.print(String("GET ") + URL_filelist + " HTTP/1.1\r\n" +
-                "Host: " + host + "\r\n" +
-                "User-Agent: BuildFailureDetectorESP8266\r\n" +
-                "Connection: close\r\n\r\n");
+    client.print(String("GET ") + F(URL_filelist) + F(" HTTP/1.1\r\n") +
+                F("Host: ") + host + "\r\n" +
+                F("User-Agent: BuildFailureDetectorESP8266\r\n") +
+                F("Connection: close\r\n\r\n"));
     while (client.available() || client.connected()) {
         String line = client.readStringUntil('\n');
-        Serial.println(line);
+        // Serial.println(line);
         if (line == "\r") {
-            Serial.println("Headers received");
+            // Serial.println("Headers received");
             break;
         }
     }
 
+    /*Load list of files*/
     std::vector<String> files;
     while (client.available() || client.connected()) {
         String payload = client.readStringUntil('\n');
-        // server.sendHeader("location", "/index.html");
-        // server.send(303);
         payload.trim();
         files.push_back(payload);
-        Serial.printf("pl: %s\n", payload.c_str());
+        // Serial.printf("pl: %s\n", payload.c_str());
     }
     // server.sendHeader("location", "/index.html");
     // server.send(303);
@@ -1588,25 +1618,28 @@ int updateFiles()
     for(auto filename : files)
     {
         int contentLength = -1;
-        Serial.println(filename);
+// Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+        Serial.print(filename);
         int count = 0;
+        if(client.probeMaxFragmentLength(host, httpsPort, 512))
+            client.setBufferSizes(512, 256);
         if (!client.connect(host, httpsPort)) {
             Serial.println(F("Connection to file failed"));
-            if(++count > 5) return number_of_files;
+            if(++count > 5) return false;
         }
-        client.print(String("GET ") + URL_filedir + filename + " HTTP/1.1\r\n" +
-                    "Host: " + host + "\r\n" +
-                    "User-Agent: BuildFailureDetectorESP8266\r\n" +
-                    "Connection: close\r\n\r\n");
+        client.print(String("GET ") + F(URL_filedir) + filename + F(" HTTP/1.1\r\n") +
+                    F("Host: ") + host + "\r\n" +
+                    F("User-Agent: BuildFailureDetectorESP8266\r\n") +
+                    F("Connection: close\r\n\r\n"));
         while (client.available() || client.connected()) {
             String line = client.readStringUntil('\n');
-            Serial.println(line);
+            // Serial.println(line);
             if (line.startsWith(F("Content-Length: ")))
             {
                 contentLength = line.substring(15).toInt();
             }            
             if (line == "\r") {
-                Serial.println(F("Headers received"));
+                // Serial.println(F("Headers received"));
                 break;
             }
         }
@@ -1614,22 +1647,22 @@ int updateFiles()
         File f = LittleFS.open("/"+filename, "w");
         if(!f) {
             Serial.println("file error");
-            return number_of_files;
+            return false;
         }
-        uint8_t buf[128] = {0};
+        uint8_t buf[512] = {0};
         int remaining = contentLength;
         int received;
         while ((client.available() || client.connected()) && remaining > 0) {
             Serial.print(".");
-            received = client.readBytes(buf, ((remaining > 128) ? 128 : remaining));
+            received = client.readBytes(buf, ((remaining > 512) ? 512 : remaining));
             remaining -= received;
             f.write(buf, received);
         }
         f.close();
-        number_of_files++;
+        Serial.println();
         delay(500);
     }
-    return number_of_files;
+    return true;
 }
 
 void updateStart(){
@@ -1689,7 +1722,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
     // Serial.println();
     if (String(topic).equals(String(mqttBaseTopic) + "/command"))
     {
-        DynamicJsonDocument doc(256);
+        // DynamicJsonDocument doc(256);
+        StaticJsonDocument<256> doc;
         String message = (const char *) &payload[0];
         DeserializationError error = deserializeJson(doc, message);
         if (error)

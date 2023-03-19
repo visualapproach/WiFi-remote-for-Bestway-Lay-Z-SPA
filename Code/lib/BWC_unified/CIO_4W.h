@@ -15,7 +15,7 @@ class CIO_4W : public CIO
         Power getPower(){return _power;}
         void setup(int cio_rx, int cio_tx, int dummy);
         void stop();
-
+        void pause_resume(bool action);
         void setStates(const sToggles& requested_toggles);
         sStates getStates();
         bool getHasgod() {return true;}

@@ -27,6 +27,17 @@ void CIO_4W::stop()
     _cio_serial.stopListening();
 }
 
+void CIO_4W::pause_resume(bool action)
+{
+    if(action)
+    {
+        _cio_serial.stopListening();
+    } else
+    {
+        _cio_serial.listen();
+    }
+}
+
 void CIO_4W::setStates(const sToggles& requested_toggles)
 {
     uint64_t elapsed_time_ms = 0;

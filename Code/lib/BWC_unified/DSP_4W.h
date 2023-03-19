@@ -11,6 +11,7 @@ class DSP_4W : public DSP
         virtual ~DSP_4W(){};
         void setup(int dsp_rx, int dsp_tx, int dummy, int dummy2);
         void stop();
+        void pause_resume(bool action) override;
         sToggles getStates();
         void setStates(const sStates& to_dsp_states);
 
