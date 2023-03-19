@@ -49,7 +49,8 @@
         </section>
         <section>
             <p id="current">Loading...</p>
-            <p id="available">Loading...</p>
+            <p id="master">Loading...</p>
+            <p id="beta">Loading...</p>
         </section>
 
 		<footer>
@@ -71,7 +72,8 @@
                 var json = JSON.parse(req.responseText);
                 console.log(json);
                 document.getElementById('current').innerHTML = "Current: " + json.current;
-                document.getElementById('available').innerHTML = "Available: " + json.available;
+                document.getElementById('master').innerHTML = "Master: " + json.available;
+                document.getElementById('beta').innerHTML = "Beta: " + json.beta;
             }
         }
     }
