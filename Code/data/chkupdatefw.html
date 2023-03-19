@@ -36,17 +36,25 @@
 			<p>Only update if:<br>
             You have a NodeMCU12E<br>
             You are at the spa so you can fix it if something goes wrong<br>
-            Communication with the pump will pause, so 4-wire pump will throw an error and needs to be restarted.<br>
+            Communication with the pump will pause, so 4-wire pumps will throw an error and needs to be restarted.<br>
             </p>
             Do not power off or reset the ESP until finished! It will take a few minutes!
             Files will always be downloaded. FW only if different.
+        </section>
+        <section>
+			<input type="radio" id="master" name="branch" checked="checked">
+			<label for="master">Master (stable)</label><br>
+			<input type="radio" id="dev" name="branch">
+			<label for="dev">Beta (development)</label><br>
+        </section>
+        <section>
             <p id="current">Loading...</p>
             <p id="available">Loading...</p>
-		</section>
+        </section>
 
 		<footer>
 			<p class="center"><a class="button" href="/">Home</a></p><br>
-			<p class="center"><a class="button_red" onclick="buttonConfirm(this, 'Wait until main page is loaded!')" href="/update/">Update data files, then firmware</a></p>
+			<p class="center"><a class="button_red" onclick="buttonConfirm(this, 'Wait until main page is loaded!', 150); update();">Update data files, then firmware</a></p>
 		</footer>
 	</div>
 <script>
@@ -68,7 +76,15 @@
         }
     }
 
-
+    function update()
+    {
+        var req = new XMLHttpRequest();
+        if(document.getElementById('master').checked)
+            req.open('GET', '/update/');
+        else
+            req.open('GET', '/update_beta/');
+        req.send();
+    }
 </script>        
 </body>
 </html>

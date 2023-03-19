@@ -12,10 +12,17 @@ uint32_t heap_water_mark;
 // #define URL_filelist "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/datazip/filelist.txt"
 // #define URL_filedir "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/datazip/"
 // #define URL_fw_Bin "https://raw.githubusercontent.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/development_v4/Code/fw/firmware.bin"
-#define URL_fw_Version "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/fw/version.txt"
-#define URL_filelist "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/datazip/filelist.txt"
-#define URL_filedir "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/datazip/"
-#define URL_fw_Bin "https://raw.githubusercontent.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/fw/firmware.bin"
+// #define URL_fw_Version "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/fw/version.txt"
+// #define URL_filelist "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/datazip/filelist.txt"
+// #define URL_filedir "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/datazip/"
+// #define URL_fw_Bin "https://raw.githubusercontent.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/fw/firmware.bin"
+const char URL_part1[] PROGMEM = "/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/";
+const char URL_fw_version[] PROGMEM = "/Code/fw/version.txt";
+const char URL_filelist[] PROGMEM = "/Code/datazip/filelist.txt";
+const char URL_filedir[] PROGMEM = "/Code/datazip/";
+const char URL_fw_bin_part1[] PROGMEM = "https://raw.githubusercontent.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/";
+const char URL_fw_bin[] PROGMEM = "/Code/fw/firmware.bin";
+
 const char* host = "raw.githubusercontent.com";
 const int httpsPort = 443;
 // /*Defined in "certs.h"*/
@@ -541,9 +548,10 @@ void startHttpServer()
     server.on(F("/info/"), handleESPInfo);
     server.on(F("/sethardware/"), handleSetHardware);
     server.on(F("/gethardware/"), handleGetHardware);
-    server.on(F("/update/"), handleUpdate);    
+    server.on(F("/update/"), handleUpdateMaster);    
+    server.on(F("/update_beta/"), handleUpdateBeta);    
     server.on(F("/getversions/"), handleGetVersions);    
-    server.on(F("/getfiles/"), updateFiles);    
+    // server.on(F("/getfiles/"), updateFiles);    
 
     // if someone requests any other file or page, go to function 'handleNotFound'
     // and check if the file exists
@@ -551,23 +559,6 @@ void startHttpServer()
     // start the HTTP server
     server.begin();
     // Serial.println(F("HTTP > server started"));
-}
-
-void handleGetVersions()
-{
-    String s = checkFirmwareUpdate();
-    // DynamicJsonDocument doc(128);
-    StaticJsonDocument<128> doc;
-    String json = "";
-    // Set the values in the document
-    doc["current"] = FW_VERSION;
-    doc["available"] = s;
-    // Serialize JSON to string
-    if (serializeJson(doc, json) == 0)
-    {
-        json = F("{\"error\": \"Failed to serialize message\"}");
-    }
-    server.send(200, "text/plain", json);
 }
 
 void handleGetHardware()
@@ -1449,17 +1440,33 @@ void handleRestart()
     delay(3000);
 }
 
-String checkFirmwareUpdate()
+void handleGetVersions()
 {
-// Serial.printf("1Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
+    String master = checkFirmwareUpdate(false);
+    String beta = checkFirmwareUpdate(true);
+    // DynamicJsonDocument doc(128);
+    StaticJsonDocument<256> doc;
+    String json = "";
+    // Set the values in the document
+    doc["current"] = FW_VERSION;
+    doc["available"] = master;
+    doc["beta"] = beta;
+    // Serialize JSON to string
+    if (serializeJson(doc, json) == 0)
+    {
+        json = F("{\"error\": \"Failed to serialize message\"}");
+    }
+    server.send(200, "text/plain", json);
+}
+
+String checkFirmwareUpdate(bool betaversion)
+{
     pause_resume(true);
-// Serial.printf("2Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
 HeapSelectIram ephemeral;
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     if(client.probeMaxFragmentLength(host, httpsPort, 512))
         client.setBufferSizes(512, 256);
-// Serial.printf("3Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     int count = 0;
     if (!client.connect(host, httpsPort)) {
         Serial.println(F("Connection to github failed"));
@@ -1469,7 +1476,17 @@ HeapSelectIram ephemeral;
             return "check failed";
         }
     }
-    client.print(String("GET ") + F(URL_fw_Version) + F(" HTTP/1.1\r\n") +
+    String URL = URL_part1;
+    if(betaversion)
+    {
+        URL += String("master") + URL_fw_version;
+    }
+    else
+    {
+        URL += String("development_v4") + URL_fw_version;
+    }
+
+    client.print(String("GET ") + URL + F(" HTTP/1.1\r\n") +
                 F("Host: ") + host + "\r\n" +
                 F("User-Agent: BuildFailureDetectorESP8266\r\n") +
                 F("Connection: close\r\n\r\n"));
@@ -1484,14 +1501,23 @@ HeapSelectIram ephemeral;
     String payload = client.readStringUntil('\n');
     payload.trim();
     pause_resume(false);
-// Serial.printf("4Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     return payload;
 }
 
-void handleUpdate()
+void handleUpdateMaster()
+{
+    handleUpdate(false);
+}
+
+void handleUpdateBeta()
+{
+    handleUpdate(true);
+}
+
+void handleUpdate(bool betaversion)
 {
     pause_resume(true);
-    bool success = updateFiles();
+    bool success = updateFiles(betaversion);
     Serial.printf("Files DL: %s\n", success ? "success" : "failed");
     if(success){
         server.sendHeader("location", "/index.html");
@@ -1524,7 +1550,17 @@ HeapSelectIram ephemeral;
     ESPhttpUpdate.onEnd(updateEnd);
     // ESPhttpUpdate.onProgress(udpateProgress);
     ESPhttpUpdate.onError(updateError);
-    client.print(String("GET ") + F(URL_fw_Version) + F(" HTTP/1.1\r\n") +
+    String URL = URL_fw_bin_part1;
+    if(betaversion)
+    {
+        URL += String("master") + URL_fw_bin;
+    }
+    else
+    {
+        URL += String("development_v4") + URL_fw_bin;
+    }
+
+    client.print(String("GET ") + URL + F(" HTTP/1.1\r\n") +
                 F("Host: ") + host + "\r\n" +
                 F("User-Agent: BuildFailureDetectorESP8266\r\n") +
                 F("Connection: close\r\n\r\n"));
@@ -1552,7 +1588,7 @@ HeapSelectIram ephemeral;
     {
         Serial.println(F("New firmware detected"));
         // ESPhttpUpdate.setLedPin(LED_BUILTIN, LOW); 
-        t_httpUpdate_return ret = ESPhttpUpdate.update(client, URL_fw_Bin);
+        t_httpUpdate_return ret = ESPhttpUpdate.update(client, URL);
             
         switch (ret) {
         case HTTP_UPDATE_FAILED:
@@ -1571,7 +1607,7 @@ HeapSelectIram ephemeral;
     pause_resume(false);
 }
 
-bool updateFiles()
+bool updateFiles(bool betaversion)
 {
 HeapSelectIram ephemeral;
 // Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
@@ -1590,7 +1626,17 @@ HeapSelectIram ephemeral;
     ESPhttpUpdate.onEnd(updateEnd);
     // ESPhttpUpdate.onProgress(udpateProgress);
     ESPhttpUpdate.onError(updateError);
-    client.print(String("GET ") + F(URL_filelist) + F(" HTTP/1.1\r\n") +
+    String URL = URL_part1;
+    if(betaversion)
+    {
+        URL += String("master") + URL_filelist;
+    }
+    else
+    {
+        URL += String("development_v4") + URL_filelist;
+    }
+
+    client.print(String("GET ") + URL + F(" HTTP/1.1\r\n") +
                 F("Host: ") + host + "\r\n" +
                 F("User-Agent: BuildFailureDetectorESP8266\r\n") +
                 F("Connection: close\r\n\r\n"));
@@ -1615,6 +1661,16 @@ HeapSelectIram ephemeral;
     // server.send(303);
 
     /*Load the files to flash*/
+    URL = URL_part1;
+    if(betaversion)
+    {
+        URL += String("master") + URL_filedir;
+    }
+    else
+    {
+        URL += String("development_v4") + URL_filedir;
+    }
+
     for(auto filename : files)
     {
         int contentLength = -1;
@@ -1627,7 +1683,7 @@ HeapSelectIram ephemeral;
             Serial.println(F("Connection to file failed"));
             if(++count > 5) return false;
         }
-        client.print(String("GET ") + F(URL_filedir) + filename + F(" HTTP/1.1\r\n") +
+        client.print(String("GET ") + URL + filename + F(" HTTP/1.1\r\n") +
                     F("Host: ") + host + "\r\n" +
                     F("User-Agent: BuildFailureDetectorESP8266\r\n") +
                     F("Connection: close\r\n\r\n"));
