@@ -1516,11 +1516,12 @@ void handleUpdateBeta()
 
 void handleUpdate(bool betaversion)
 {
+return;
     pause_resume(true);
     bool success = updateFiles(betaversion);
     Serial.printf("Files DL: %s\n", success ? "success" : "failed");
     if(success){
-        server.sendHeader("location", "/index.html");
+        server.sendHeader("location", "/");
         server.send(303);
     } else
     {
@@ -1545,22 +1546,24 @@ HeapSelectIram ephemeral;
             return;
         }
     }
-    Serial.println(client.getMFLNStatus());
+    // Serial.println(client.getMFLNStatus());
     ESPhttpUpdate.onStart(updateStart);
     ESPhttpUpdate.onEnd(updateEnd);
     // ESPhttpUpdate.onProgress(udpateProgress);
     ESPhttpUpdate.onError(updateError);
-    String URL = URL_fw_bin_part1;
+    String URL_binary = URL_fw_bin_part1;
+    String URL_version = URL_part1;
     if(betaversion)
     {
-        URL += String("development_v4") + URL_fw_bin;
+        URL_binary += String("development_v4") + URL_fw_bin;
+        URL_version += String("development_v4") + URL_fw_version;
     }
     else
     {
-        URL += String("master") + URL_fw_bin;
+        URL_binary += String("master") + URL_fw_bin;
+        URL_version += String("master") + URL_fw_version;
     }
-
-    client.print(String("GET ") + URL + F(" HTTP/1.1\r\n") +
+    client.print(String("GET ") + URL_version + F(" HTTP/1.1\r\n") +
                 F("Host: ") + host + "\r\n" +
                 F("User-Agent: BuildFailureDetectorESP8266\r\n") +
                 F("Connection: close\r\n\r\n"));
@@ -1588,7 +1591,7 @@ HeapSelectIram ephemeral;
     {
         Serial.println(F("New firmware detected"));
         // ESPhttpUpdate.setLedPin(LED_BUILTIN, LOW); 
-        t_httpUpdate_return ret = ESPhttpUpdate.update(client, URL);
+        t_httpUpdate_return ret = ESPhttpUpdate.update(client, URL_binary);
             
         switch (ret) {
         case HTTP_UPDATE_FAILED:
@@ -1674,7 +1677,6 @@ HeapSelectIram ephemeral;
     for(auto filename : files)
     {
         int contentLength = -1;
-// Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
         Serial.print(filename);
         int count = 0;
         if(client.probeMaxFragmentLength(host, httpsPort, 512))

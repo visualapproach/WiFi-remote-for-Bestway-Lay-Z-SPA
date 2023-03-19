@@ -41,12 +41,12 @@
             Do not power off or reset the ESP until finished! It will take a few minutes!
             Files will always be downloaded. FW only if different.
         </section>
-        <section>
+        <!-- <section>
 			<input type="radio" id="master" name="branch" checked="checked">
 			<label for="master">Master (stable)</label><br>
 			<input type="radio" id="dev" name="branch">
 			<label for="dev">Beta (development)</label><br>
-        </section>
+        </section> -->
         <section>
             <p id="current">Loading...</p>
             <p id="stable">Loading...</p>
@@ -55,7 +55,8 @@
 
 		<footer>
 			<p class="center"><a class="button" href="/">Home</a></p><br>
-			<p class="center"><a class="button_red" onclick="buttonConfirm(this, 'Wait until main page is loaded!', 150); update();">Update data files, then firmware</a></p>
+			<p class="center"><a class="button_red" href="/update/" onclick="buttonConfirm(this, 'Wait until main page is loaded!', 150)">MASTER: Update data files, then firmware</a></p>
+			<p class="center"><a class="button_red" href="/update_beta/" onclick="buttonConfirm(this, 'Wait until main page is loaded!', 150)">BETA: Update data files, then firmware</a></p>
 		</footer>
 	</div>
 <script>
@@ -78,15 +79,15 @@
         }
     }
 
-    function update()
-    {
-        var req = new XMLHttpRequest();
-        if(document.getElementById('master').checked)
-            req.open('GET', '/update/');
-        else
-            req.open('GET', '/update_beta/');
-        req.send();
-    }
+    // function update()
+    // {
+    //     var req = new XMLHttpRequest();
+    //     if(document.getElementById('master').checked)
+    //         req.open('POST', '/update/');
+    //     else
+    //         req.open('POST', '/update_beta/');
+    //     req.send();
+    // }
 </script>        
 </body>
 </html>
