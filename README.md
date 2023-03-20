@@ -1,6 +1,6 @@
-Change log
+Change log v4
 
- - Update firmware via web UI (not filesystem for the moment)
+ - Update firmware and html-files via web UI
  - Brightness slider in HA
  - Brightness temporarily increases on button press
  - Non blocking audio and text
@@ -16,14 +16,13 @@ Change log
  - Set hardware config from web ui (Pump, display and PCB model)
  - Use any 6-wire display with any pump
 
-Only install if you have time for failure and can revert to old version (master branch)
 Feedback is welcome in discussion #428
 State your hardware config and your feedback.
 
 WiFi-remote-for-Bestway-Lay-Z-SPA
 =================================
 ESP8266 hack to use as WiFi remote control for Bestway Lay-Z-Spa Whirlpools (including 2021 year models) <br>
-Latest code found in [Development branch](https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/tree/development_v4)
+Latest code found in [Development branch](https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/tree/development_v4)<br>
 
 - [Features](#features)
 - [BOM](#bom)
