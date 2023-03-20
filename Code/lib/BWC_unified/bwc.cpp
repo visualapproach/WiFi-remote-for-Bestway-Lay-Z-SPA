@@ -752,6 +752,21 @@ void BWC::print(const String &txt)
     to_dsp_states.text += txt;
 }
 
+String BWC::getDebugData()
+{
+    String res = "from cio ";
+    res += from_cio_states.toString();
+    res += "to dsp ";
+    res += to_dsp_states.toString();
+    res += "from dsp ";
+    res += from_dsp_states.toString();
+    res += "to cio ";
+    res += to_cio_states.toString();
+    res += "BtnQLen: ";
+    res += _cio->_button_que_len;
+    return res;
+}
+
 void BWC::setAmbientTemperature(int64_t amb, bool unit)
 {
     _ambient_temp = (int)amb;
@@ -1284,9 +1299,12 @@ void BWC::saveRebootInfo(){
     StaticJsonDocument<256> doc;
 
     // Set the values in the document
-    reboot_time = DateTime.format(DateFormatter::SIMPLE);
+    time_t boot_timestamp = DateTime.getBootTime();
+    tm * boot_time_tm = localtime(&boot_timestamp);
+    char boot_time_str[64];
+    strftime(boot_time_str, 64, DateFormatter::SIMPLE, boot_time_tm);
     #ifdef ESP8266
-    doc["BOOTINFO"] = ESP.getResetReason() + " " + reboot_time;
+    doc["BOOTINFO"] = ESP.getResetReason() + " " + boot_time_str;
     #endif
 
     // Serialize JSON to file

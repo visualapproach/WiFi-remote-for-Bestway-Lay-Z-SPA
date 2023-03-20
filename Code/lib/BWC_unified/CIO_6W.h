@@ -51,10 +51,9 @@ class CIO_6W : public CIO
         const uint8_t DSP_DIM_ON = 0x8;
         volatile bool _new_packet_available;
         bool _packet_transm_active;
-        sStates _requested_states;
-        sStates _actual_states;
-        int _button_que_len = 0;  //length of buttonQ
         volatile uint16_t _button_code;
         uint8_t _pressed_button = NOBTN;
+        // sToggles _requested_states; //not used
+        sStates _actual_states;
 };
 

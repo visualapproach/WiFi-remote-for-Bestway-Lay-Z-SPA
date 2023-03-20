@@ -26,6 +26,10 @@ class CIO
         virtual bool getHasair() = 0;
         String debug();
 
+    /*TODO: Should be protected and moved to CIO_6W.h! Public here for debugging only*/
+    public:
+        int _button_que_len = 0;  //length of buttonQ
+
     protected:
         std::vector<uint8_t> _raw_payload_to_cio = {0,0,0,0,0,0,0};
         std::vector<uint8_t> _raw_payload_from_cio = {0,0,0,0,0,0,0};
