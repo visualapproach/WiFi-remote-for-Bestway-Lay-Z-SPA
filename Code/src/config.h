@@ -7,7 +7,6 @@
 #define DEVICE_NAME "layzspa"
 #define FW_VERSION "2023-03-19-1908"
 
-// String FW_VERSION = String(__DATE__) + "-" + __TIME__ + "-beta";
 #define HA_PREFIX "homeassistant"
 #define PROM_NAMESPACE "layzspa"
 
