@@ -143,13 +143,13 @@ struct sStates
     String text ="";
     int audiofrequency = 0;
 
-    String toString()
-    {
-        char res[130];
-        PGM_P resfmt = PSTR("LCK: %d PWR: %d UNT: %d AIR: %d GRN: %d RED: %d HTR: %d FLT: %d TMP: %d TGT: %d JET: %d TIMLED1 %d TIMLED2: %d TIMLEDBTN: %d\n");
-        sprintf_P(res, resfmt, locked, power, unit, bubbles, heatgrn, heatred, heat, pump, temperature, target, jets, timerled1, timerled2, timerbuttonled);
-        return String(res);
-    }
+    // String toString()
+    // {
+    //     char res[130];
+    //     PGM_P resfmt = PSTR("LCK: %d PWR: %d UNT: %d AIR: %d GRN: %d RED: %d HTR: %d FLT: %d TMP: %d TGT: %d JET: %d TIMLED1 %d TIMLED2: %d TIMLEDBTN: %d\n");
+    //     sprintf_P(res, resfmt, locked, power, unit, bubbles, heatgrn, heatred, heat, pump, temperature, target, jets, timerled1, timerled2, timerbuttonled);
+    //     return String(res);
+    // }
 
     inline bool operator==(const sStates& rhs)
     {
@@ -203,13 +203,13 @@ struct sToggles
     /*Requested state, not toggled*/
     uint8_t no_of_heater_elements_on = 0;
 
-    String toString()
-    {
-        char res[130];
-        PGM_P resfmt = PSTR("Toggle: LCK: %d PWR: %d UNT: %d AIR: %d HTR: %d FLT: %d JET: %d   Set: TGT: %d BTN: %d\n");
-        sprintf_P(res, resfmt, locked_change, power_change, unit_change, bubbles_change, heat_change, pump_change, jets_change, target, pressed_button);
-        return String(res);
-    }
+    // String toString()
+    // {
+    //     char res[130];
+    //     PGM_P resfmt = PSTR("Toggle: LCK: %d PWR: %d UNT: %d AIR: %d HTR: %d FLT: %d JET: %d   Set: TGT: %d BTN: %d\n");
+    //     sprintf_P(res, resfmt, locked_change, power_change, unit_change, bubbles_change, heat_change, pump_change, jets_change, target, pressed_button);
+    //     return String(res);
+    // }
 
     inline bool operator==(const sToggles& rhs)
     {
