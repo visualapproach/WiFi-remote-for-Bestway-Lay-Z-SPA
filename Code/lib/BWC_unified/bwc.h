@@ -83,7 +83,7 @@ class BWC {
         String getModel();
         void print(const String& txt);
 
-        String getDebugData();
+        // String getDebugData();
 
     public:
         String reboot_time;
