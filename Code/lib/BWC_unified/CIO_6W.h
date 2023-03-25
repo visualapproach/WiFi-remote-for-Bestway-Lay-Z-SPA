@@ -18,7 +18,7 @@ class CIO_6W : public CIO
         CIO_6W();
         virtual ~CIO_6W(){};
         Power getPower(){return power;};
-        void setStates(const sToggles& requested_toggles);
+        void handleToggles();
         bool getHasgod() {return false;}
         virtual bool getHasjets() = 0;
         virtual bool getHasair() = 0;
@@ -54,6 +54,6 @@ class CIO_6W : public CIO
         volatile uint16_t _button_code;
         uint8_t _pressed_button = NOBTN;
         // sToggles _requested_states; //not used
-        sStates _actual_states;
+        // sStates cio_states;
 };
 

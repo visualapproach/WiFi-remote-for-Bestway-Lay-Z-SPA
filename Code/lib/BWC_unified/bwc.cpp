@@ -21,7 +21,6 @@ BWC::BWC()
     _restore_states_on_start = false;
     _ambient_temp = 20;
     _virtual_temp_fix = -99;
-    to_cio_states.power_change = 1;
 };
 
 void save_settings_cb(BWC* bwcInstance)
@@ -70,73 +69,74 @@ void BWC::setup(void){
     switch(ciomodel)
     {
         case PRE2021:
-            _cio = new CIO_PRE2021;
+            cio = new CIO_PRE2021;
             break;
         case MIAMI2021:
-            _cio = new CIO_2021;
+            cio = new CIO_2021;
             break;
         case MALDIVES2021:
-            _cio = new CIO_2021_HJT;
+            cio = new CIO_2021_HJT;
             break;
         case M54149E:
-            _cio = new CIO_54149E;
+            cio = new CIO_54149E;
             break;
         case M54173:
-            _cio = new CIO_54173;
+            cio = new CIO_54173;
             break;
         case M54154:
-            _cio = new CIO_54154;
+            cio = new CIO_54154;
             break;
         case M54144:
-            _cio = new CIO_54144;
+            cio = new CIO_54144;
             break;
         case M54138:
-            _cio = new CIO_54138;
+            cio = new CIO_54138;
             break;
         case M54123:
-            _cio = new CIO_54123;
+            cio = new CIO_54123;
             break;
         default:
-            _cio = new CIO_PRE2021;
+            cio = new CIO_PRE2021;
             break;
     }
     switch(dspmodel)
     {
         case PRE2021:
-            _dsp = new DSP_PRE2021;
+            dsp = new DSP_PRE2021;
             break;
         case MIAMI2021:
-            _dsp = new DSP_2021;
+            dsp = new DSP_2021;
             break;
         case MALDIVES2021:
-            _dsp = new DSP_2021_HJT;
+            dsp = new DSP_2021_HJT;
             break;
         case M54149E:
-            _dsp = new DSP_54149E;
+            dsp = new DSP_54149E;
             break;
         case M54173:
-            _dsp = new DSP_54173;
+            dsp = new DSP_54173;
             break;
         case M54154:
-            _dsp = new DSP_54154;
+            dsp = new DSP_54154;
             break;
         case M54144:
-            _dsp = new DSP_54144;
+            dsp = new DSP_54144;
             break;
         case M54138:
-            _dsp = new DSP_54138;
+            dsp = new DSP_54138;
             break;
         case M54123:
-            _dsp = new DSP_54123;
+            dsp = new DSP_54123;
             break;
         default:
-            _dsp = new DSP_PRE2021;
+            dsp = new DSP_PRE2021;
             break;
     }
-    _cio->setup(pins[0], pins[1], pins[2]);
-    _dsp->setup(pins[3], pins[4], pins[5], pins[6]);
-    hasjets = _cio->getHasjets();
-    hasgod = _cio->getHasgod();
+    cio->setup(pins[0], pins[1], pins[2]);
+    dsp->setup(pins[3], pins[4], pins[5], pins[6]);
+    hasjets = cio->getHasjets();
+    hasgod = cio->getHasgod();
+    cio->cio_toggles.power_change = 1;
     begin();
 }
 
@@ -145,8 +145,8 @@ void BWC::begin(){
     _loadCommandQueue();
     _restoreStates();
     // _save_melody("melody.bin");
-    // if(_audio_enabled) _dsp->playIntro();
-    // _dsp->LEDshow();
+    // if(_audio_enabled) dsp->playIntro();
+    // dsp->LEDshow();
     _save_settings_ticker.attach(3600.0f, save_settings_cb, this);
     _scroll_text_ticker.attach(0.25f, scroll_text_cb, this);
 
@@ -161,81 +161,40 @@ void BWC::loop(){
     #endif
     _timestamp_secs = DateTime.now();
     _updateTimes();
-    if(_scroll && (to_dsp_states.text.length() > 0)) 
+    if(_scroll && (dsp->text.length() > 0)) 
     {
-        to_dsp_states.text.remove(0,1);
+        dsp->text.remove(0,1);
         _scroll = false;
     }
-    from_cio_states = _cio->getStates();
-    to_dsp_states.locked = from_cio_states.locked;
-    to_dsp_states.power = from_cio_states.power;
-    to_dsp_states.unit = from_cio_states.unit;
-    to_dsp_states.bubbles = from_cio_states.bubbles;
-    to_dsp_states.heatgrn = from_cio_states.heatgrn;
-    to_dsp_states.heatred = from_cio_states.heatred;
-    to_dsp_states.heat = from_cio_states.heat;
-    to_dsp_states.pump = from_cio_states.pump;
-    to_dsp_states.temperature = from_cio_states.temperature;
-    to_dsp_states.char1 = from_cio_states.char1;
-    to_dsp_states.char2 = from_cio_states.char2;
-    to_dsp_states.char3 = from_cio_states.char3;
-    to_dsp_states.jets = from_cio_states.jets;
-    to_dsp_states.error = from_cio_states.error;
-    to_dsp_states.timerled1 = from_cio_states.timerled1;
-    to_dsp_states.timerled2 = from_cio_states.timerled2;
-    to_dsp_states.timerbuttonled = from_cio_states.timerbuttonled;
-    to_dsp_states.godmode = from_cio_states.godmode;
+    cio->updateStates();
+    dsp->dsp_states = cio->cio_states;
     
-    /*Modify and use to_dsp_states here if we want to show text or something*/
-    _dsp->setRawPayload(_cio->getRawPayload());
-    _dsp->setStates(to_dsp_states);
+    /*Modify and use dsp->dsp_states here if we want to show text or something*/
+    dsp->setRawPayload(cio->getRawPayload());
+    /*Increase screen brightness when pressing buttons*/
+    adjust_brightness();
+    dsp->handleStates();
 
-    from_dsp_states = _dsp->getStates();
+    dsp->updateToggles();
+    cio->cio_toggles = dsp->dsp_toggles;
 
-    /*Light up screen when pressing buttons*/
-    if(from_dsp_states.pressed_button != NOBTN) _override_dsp_brt_timer = 5000;
-    if(_override_dsp_brt_timer > 0)
-    {
-        to_dsp_states.brightness = _dsp_brightness + 1;
-        if(to_dsp_states.brightness > 8) to_dsp_states.brightness = 8;
-    }
-    else
-    {
-        to_dsp_states.brightness = _dsp_brightness;
-    }
+    play_sound();
 
-    if(from_dsp_states.pressed_button == UP) 
-    {
-        _sweepup();
-        _dsp_tgt_used = true;
-    }
-    if(from_dsp_states.pressed_button == DOWN) 
-    {
-        _sweepdown();
-        _dsp_tgt_used = true;
-    }
-    if(from_dsp_states.pressed_button == TIMER) _beep();
-    to_cio_states.locked_change = from_dsp_states.locked_change;
-    to_cio_states.power_change = from_dsp_states.power_change;
     if(_dsp_tgt_used)
-        to_cio_states.target = from_cio_states.target;
-    if(from_dsp_states.unit_change) 
+        cio->cio_toggles.target = cio->cio_states.target;
+    else
+        cio->cio_toggles.target = _web_target;
+        
+    if(dsp->dsp_toggles.unit_change) 
     {
-        from_cio_states.unit ? to_cio_states.target = C2F(to_cio_states.target) : to_cio_states.target = F2C(to_cio_states.target); 
+        cio->cio_states.unit ? cio->cio_toggles.target = C2F(cio->cio_toggles.target) : cio->cio_toggles.target = F2C(cio->cio_toggles.target); 
     }
-    to_cio_states.unit_change = from_dsp_states.unit_change;
-    to_cio_states.bubbles_change = from_dsp_states.bubbles_change;
-    to_cio_states.heat_change = from_dsp_states.heat_change;
-    to_cio_states.pump_change = from_dsp_states.pump_change;
-    to_cio_states.jets_change = from_dsp_states.jets_change;
-    to_cio_states.pressed_button = from_dsp_states.pressed_button;
-    if(from_dsp_states.bubbles_change || from_dsp_states.heat_change || from_dsp_states.jets_change || from_dsp_states.locked_change || from_dsp_states.power_change || from_dsp_states.pump_change ||from_dsp_states.unit_change) _accord();
     
     /*following method will change target temp and set _dsp_tgt_used to false if target temp is changed*/
     _handleCommandQ();
     /*If new target was not set above, use whatever the cio says*/
-    _cio->setRawPayload(_dsp->getRawPayload());
-    _cio->setStates(to_cio_states);
+    cio->setRawPayload(dsp->getRawPayload());
+    cio->handleToggles();
 
     if(_save_settings_needed) saveSettings();
     if(_save_cmdq_needed) _saveCommandQueue();
@@ -246,120 +205,56 @@ void BWC::loop(){
     // logstates();
 }
 
-// String BWC::get_fromcio()
-// {
-//     DynamicJsonDocument doc(512);
+void BWC::adjust_brightness()
+{
+    if(dsp->dsp_toggles.pressed_button != NOBTN) _override_dsp_brt_timer = 5000;
+    if(_override_dsp_brt_timer > 0)
+    {
+        dsp->dsp_states.brightness = _dsp_brightness + 1;
+        if(dsp->dsp_states.brightness > 8) dsp->dsp_states.brightness = 8;
+    }
+    else
+    {
+        dsp->dsp_states.brightness = _dsp_brightness;
+    }
+}
 
-    // Set the values in the document
-    // doc["CONTENT"] = "from_cio";
-    // doc["TIME"] = _timestamp_secs;
-    // doc["LCK"] = from_cio_states.locked;
-    // doc["PWR"] = from_cio_states.power;
-    // doc["UNT"] = from_cio_states.unit;
-    // doc["AIR"] = from_cio_states.bubbles;
-    // doc["CH1"] = from_cio_states.char1;
-    // doc["CH2"] = from_cio_states.char2;
-    // doc["CH3"] = from_cio_states.char3;
-    // doc["BRT"] = from_cio_states.brightness;
-    // doc["TGT"] = from_cio_states.target;
-    // doc["TMP"] = from_cio_states.temperature;
-    // doc["cod"] = _cio->_button_code;
-    // doc["bql"] = _cio->_button_que_len;
-    // doc["str"] = _cio->debugmsg;
-    // Serialize JSON to string
-//     String jsonmsg;
-//     if (serializeJson(doc, jsonmsg) == 0) {
-//         jsonmsg = "{\"error\": \"Failed to serialize message\"}";
-//     }
-//     _cio->debugmsg = "";
-//     return jsonmsg;
-// }
+void BWC::play_sound()
+{
+    switch(dsp->dsp_toggles.pressed_button)
+    {
+        case UP:
+            _sweepup();
+            _dsp_tgt_used = true;
+            break;
+        case DOWN:
+            _sweepdown();
+            _dsp_tgt_used = true;
+            break;
+        case TIMER:
+            _beep();
+            break;
+        default:
 
-// String BWC::get_todsp()
-// {
-    // DynamicJsonDocument doc(1536);
-
-    // // Set the values in the document
-    // doc["CONTENT"] = "to_dsp";
-    // doc["TIME"] = _timestamp_secs;
-    // doc["LCK"] = to_dsp_states.locked;
-    // doc["PWR"] = to_dsp_states.power;
-    // doc["UNT"] = to_dsp_states.unit;
-    // doc["AIR"] = to_dsp_states.bubbles;
-    // doc["CH1"] = to_dsp_states.char1;
-    // doc["CH2"] = to_dsp_states.char2;
-    // doc["CH3"] = to_dsp_states.char3;
-    // doc["BRT"] = to_dsp_states.brightness;
-    // doc["TGT"] = to_dsp_states.target;
-    // doc["TMP"] = to_dsp_states.temperature;
-    // doc["TXT"] = to_dsp_states.text;
-    // doc["LOOP"] = loop_count;
-    // loop_count = 0;
-    // // Serialize JSON to string
-    // String jsonmsg;
-    // if (serializeJson(doc, jsonmsg) == 0) {
-    //     jsonmsg = "{\"error\": \"Failed to serialize message\"}";
-    // }
-    // return jsonmsg;
-// }
-
-// String BWC::get_fromdsp()
-// {
-    // DynamicJsonDocument doc(1536);
-
-    // // Set the values in the document
-    // doc["CONTENT"] = "from_dsp";
-    // doc["TIME"] = _timestamp_secs;
-    // doc["LCK"] = from_dsp_states.locked;
-    // doc["PWR"] = from_dsp_states.power;
-    // doc["UNT"] = from_dsp_states.unit;
-    // doc["AIR"] = from_dsp_states.bubbles;
-    // doc["CH1"] = from_dsp_states.char1;
-    // doc["CH2"] = from_dsp_states.char2;
-    // doc["CH3"] = from_dsp_states.char3;
-    // doc["BRT"] = from_dsp_states.brightness;
-    // doc["TGT"] = from_dsp_states.target;
-    // doc["TMP"] = from_dsp_states.temperature;
-    // // Serialize JSON to string
-    // String jsonmsg;
-    // if (serializeJson(doc, jsonmsg) == 0) {
-    //     jsonmsg = "{\"error\": \"Failed to serialize message\"}";
-    // }
-    // return jsonmsg;
-// }
-
-// String BWC::get_tocio()
-// {
-//     DynamicJsonDocument doc(1536);
-
-//     // Set the values in the document
-//     doc["CONTENT"] = "to_cio";
-//     doc["TIME"] = _timestamp_secs;
-//     doc["LCK"] = to_cio_states.locked;
-//     doc["PWR"] = to_cio_states.power;
-//     doc["UNT"] = to_cio_states.unit;
-//     doc["AIR"] = to_cio_states.bubbles;
-//     doc["CH1"] = to_cio_states.char1;
-//     doc["CH2"] = to_cio_states.char2;
-//     doc["CH3"] = to_cio_states.char3;
-//     doc["BRT"] = to_cio_states.brightness;
-//     doc["TGT"] = to_cio_states.target;
-//     doc["TMP"] = to_cio_states.temperature;
-//     // Serialize JSON to string
-//     String jsonmsg;
-//     if (serializeJson(doc, jsonmsg) == 0) {
-//         jsonmsg = "{\"error\": \"Failed to serialize message\"}";
-//     }
-//     return jsonmsg;
-// }
+            break;
+    }
+    if
+    (
+        dsp->dsp_toggles.bubbles_change || dsp->dsp_toggles.heat_change || 
+        dsp->dsp_toggles.jets_change || dsp->dsp_toggles.locked_change || 
+        dsp->dsp_toggles.power_change || dsp->dsp_toggles.pump_change ||
+        dsp->dsp_toggles.unit_change
+    ) 
+        _accord();
+}
 
 void BWC::stop(){
     _save_settings_ticker.detach();
     _scroll_text_ticker.detach();
-    _cio->stop();
-    delete _cio;
-    _dsp->stop();
-    delete _dsp;
+    cio->stop();
+    delete cio;
+    dsp->stop();
+    delete dsp;
 }
 
 void BWC::pause_resume(bool action)
@@ -373,8 +268,8 @@ void BWC::pause_resume(bool action)
         _save_settings_ticker.attach(3600.0f, save_settings_cb, this);
         _scroll_text_ticker.attach(0.25f, scroll_text_cb, this);
     }
-    _cio->pause_resume(action);
-    _dsp->pause_resume(action);
+    cio->pause_resume(action);
+    dsp->pause_resume(action);
 }
 
 /*Sort by xtime, ascending*/
@@ -399,8 +294,8 @@ void BWC::_handleNotification()
     if(!(_command_que[0].cmd == SETBUBBLES || _command_que[0].cmd == SETHEATER || _command_que[0].cmd == SETJETS || _command_que[0].cmd == SETPUMP)) return;
 
     if(_audio_enabled) _sweepup();
-    to_dsp_states.text += "  --" + String(_next_notification_time) + "--";
-    // to_dsp_states.text = "i-i-";
+    dsp->text += "  --" + String(_next_notification_time) + "--";
+    // dsp->dsp_states.text = "i-i-";
     if(_next_notification_time <= 2)
         _next_notification_time = -10; //postpone "alarm" until after the command xtime (will be reset on command execution)
     else
@@ -438,38 +333,39 @@ void BWC::_handleCommandQ() {
 bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
 {
     
-    to_dsp_states.text += String(" ") + txt;
+    dsp->text += String(" ") + txt;
     switch (cmd)
     {
     case SETTARGET:
     {
         if(! ((val > 0 && val < 41) || (val > 50 && val < 105)) ) break;
         bool implied_unit_is_celsius = (val < 41);
-        bool required_unit = from_cio_states.unit;
+        bool required_unit = cio->cio_states.unit;
         if(implied_unit_is_celsius && !required_unit)
-            to_cio_states.target = round(C2F(val));
+            cio->cio_toggles.target = round(C2F(val));
         else if(!implied_unit_is_celsius && required_unit)
-            to_cio_states.target = round(F2C(val));
+            cio->cio_toggles.target = round(F2C(val));
         else
-            to_cio_states.target = val;
+            cio->cio_toggles.target = val;
         /*Send this value to cio instead of results from button presses on the display*/
         _dsp_tgt_used = false;
+        _web_target = cio->cio_toggles.target;
         break;
     }
     case SETUNIT:
-        if(hasgod && !to_cio_states.godmode) break;
-        if(val == 1 && from_cio_states.unit == 0) to_cio_states.target = round(F2C(to_cio_states.target)); 
-        if(val == 0 && from_cio_states.unit == 1) to_cio_states.target = round(C2F(to_cio_states.target)); 
-        if((uint8_t)val != from_cio_states.unit) to_cio_states.unit_change = 1;
+        if(hasgod && !cio->cio_toggles.godmode) break;
+        if(val == 1 && cio->cio_states.unit == 0) cio->cio_toggles.target = round(F2C(cio->cio_toggles.target)); 
+        if(val == 0 && cio->cio_states.unit == 1) cio->cio_toggles.target = round(C2F(cio->cio_toggles.target)); 
+        if((uint8_t)val != cio->cio_states.unit) cio->cio_toggles.unit_change = 1;
         break;
     case SETBUBBLES:
-        if(val != from_cio_states.bubbles) to_cio_states.bubbles_change = 1;
+        if(val != cio->cio_states.bubbles) cio->cio_toggles.bubbles_change = 1;
         break;
     case SETHEATER:
-        if(val != from_cio_states.heat) to_cio_states.heat_change = 1;
+        if(val != cio->cio_states.heat) cio->cio_toggles.heat_change = 1;
         break;
     case SETPUMP:
-        if(val != from_cio_states.pump) to_cio_states.pump_change = 1;
+        if(val != cio->cio_states.pump) cio->cio_toggles.pump_change = 1;
         break;
     case GETTARGET:
         /*Not used atm*/
@@ -497,7 +393,7 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
         _save_settings_needed = true;
         break;
     case SETJETS:
-        if(val != from_cio_states.jets) to_cio_states.jets_change = 1;
+        if(val != cio->cio_states.jets) cio->cio_toggles.jets_change = 1;
         break;
     case SETBRIGHTNESS:
         _dsp_brightness = val;
@@ -516,14 +412,14 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
         _energy_daily_Ws = 0;
         break;
     case SETGODMODE:
-        to_cio_states.godmode = val > 0;
+        cio->cio_toggles.godmode = val > 0;
         break;
     case SETREADY:
         {
-            Serial.print(_timestamp_secs);
-            Serial.print("  ");
-            Serial.print((val - _estHeatingTime() * 3600.0f - 7200));
-            Serial.println((int64_t)_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200));
+            // Serial.print(_timestamp_secs);
+            // Serial.print("  ");
+            // Serial.print((val - _estHeatingTime() * 3600.0f - 7200));
+            // Serial.println((int64_t)_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200));
             command_que_item item;
             if((int64_t)_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200)) //2 hours extra margin
             {
@@ -557,44 +453,44 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
 
 void BWC::_handleStateChanges()
 {
-    if(_prev_cio_states != from_cio_states || _prev_dsp_states.brightness != to_dsp_states.brightness) _new_data_available = true;
-    if(from_cio_states.temperature != _prev_cio_states.temperature)
+    if(_prev_cio_states != cio->cio_states || _prev_dsp_states.brightness != dsp->dsp_states.brightness) _new_data_available = true;
+    if(cio->cio_states.temperature != _prev_cio_states.temperature)
     {
-        _deltatemp = from_cio_states.temperature - _prev_cio_states.temperature;
+        _deltatemp = cio->cio_states.temperature - _prev_cio_states.temperature;
         _updateVirtualTempFix_ontempchange();
         _temp_change_timestamp_ms = millis();
     }
 
     // Store virtual temp data point
-    if(from_cio_states.heatred != _prev_cio_states.heatred)
+    if(cio->cio_states.heatred != _prev_cio_states.heatred)
     {
         _heatred_change_timestamp_ms = millis();
         _updateVirtualTempFix_onheaterchange();
     }
 
-    if(from_cio_states.pump != _prev_cio_states.pump)
+    if(cio->cio_states.pump != _prev_cio_states.pump)
     {
         _pump_change_timestamp_ms = millis();
     }
 
-    if(from_cio_states.bubbles != _prev_cio_states.bubbles)
+    if(cio->cio_states.bubbles != _prev_cio_states.bubbles)
     {
         _bubbles_change_timestamp_ms = millis();
     }
 
-    if(from_cio_states.unit != _prev_cio_states.unit || from_cio_states.pump != _prev_cio_states.pump || from_cio_states.heat != _prev_cio_states.heat)
+    if(cio->cio_states.unit != _prev_cio_states.unit || cio->cio_states.pump != _prev_cio_states.pump || cio->cio_states.heat != _prev_cio_states.heat)
         _save_states_needed = true;
 
-    _prev_cio_states = from_cio_states;
-    _prev_dsp_states = to_dsp_states;
+    _prev_cio_states = cio->cio_states;
+    _prev_dsp_states = dsp->dsp_states;
     /* check changes from DSP 4W - go to antigodmode if someone presses a button*/
 }
 
 // return how many hours until pool is ready. (provided the heater is on)
 float BWC::_estHeatingTime()
 {
-    int targetInC = from_cio_states.target;
-    if(!from_cio_states.unit) targetInC = F2C(targetInC);
+    int targetInC = cio->cio_states.target;
+    if(!cio->cio_states.unit) targetInC = F2C(targetInC);
     if(_virtual_temp > targetInC) return -2;  //Already
 
     // float degAboveAmbient = _virtual_temp - (float)_ambient_temp;
@@ -636,8 +532,8 @@ void BWC::_calcVirtualTemp()
     //startup init
     if(millis() < 30000)
     {
-        int tempInC = from_cio_states.temperature;
-        if(!from_cio_states.unit) {
+        int tempInC = cio->cio_states.temperature;
+        if(!cio->cio_states.unit) {
             tempInC = F2C(tempInC);
         }
         _virtual_temp_fix = tempInC;
@@ -651,7 +547,7 @@ void BWC::_calcVirtualTemp()
     float degAboveAmbient = _virtual_temp - _ambient_temp;
     double coolingPerHour = degAboveAmbient / _R_COOLING;
 
-    if(from_cio_states.heatred)
+    if(cio->cio_states.heatred)
     {
         netRisePerHour = _heating_degperhour - coolingPerHour;
     }
@@ -663,11 +559,11 @@ void BWC::_calcVirtualTemp()
     float newvt = _virtual_temp_fix + netRisePerHour * elapsed_hours;
 
     // clamp VT to +/- 1 from measured temperature if pump is running
-    if(from_cio_states.pump && ((millis()-_pump_change_timestamp_ms) > 5*60000))
+    if(cio->cio_states.pump && ((millis()-_pump_change_timestamp_ms) > 5*60000))
     {
-        float tempInC = from_cio_states.temperature;
+        float tempInC = cio->cio_states.temperature;
         float limit = 0.99;
-        if(!from_cio_states.unit)
+        if(!cio->cio_states.unit)
         {
             tempInC = F2C(tempInC);
             limit = 1/1.8;
@@ -703,9 +599,9 @@ void BWC::_calcVirtualTemp()
 //Called on temp change
 void BWC::_updateVirtualTempFix_ontempchange()
 {
-    int tempInC = from_cio_states.temperature;
+    int tempInC = cio->cio_states.temperature;
     float conversion = 1;
-    if(!from_cio_states.unit) {
+    if(!cio->cio_states.unit) {
         tempInC = F2C(tempInC);
         conversion = 1/1.8;
     }
@@ -713,7 +609,7 @@ void BWC::_updateVirtualTempFix_ontempchange()
     if(abs(_deltatemp) != 1) return;
 
     //readings are only valid if pump is running and has been running for 5 min.
-    if(!from_cio_states.pump || ((millis()-_pump_change_timestamp_ms) < 5*60000)) return;
+    if(!cio->cio_states.pump || ((millis()-_pump_change_timestamp_ms) < 5*60000)) return;
 
     _virtual_temp = tempInC;
     _virtual_temp_fix = tempInC;
@@ -730,7 +626,7 @@ void BWC::_updateVirtualTempFix_ontempchange()
     // rate of heating is not subject to change (fixed wattage and pool size) so do this only if cooling
     // and do not calibrate if bubbles has been on
     if(_vt_calibrated) return;
-    if(from_cio_states.heatred || from_cio_states.bubbles || (_bubbles_change_timestamp_ms < _temp_change_timestamp_ms)) return;
+    if(cio->cio_states.heatred || cio->cio_states.bubbles || (_bubbles_change_timestamp_ms < _temp_change_timestamp_ms)) return;
     if(_deltatemp > 0 && _virtual_temp > _ambient_temp) return; //temp is rising when it should be falling. Bail out
     if(_deltatemp < 0 && _virtual_temp < _ambient_temp) return; //temp is falling when it should be rising. Bail out
     float degAboveAmbient = _virtual_temp - _ambient_temp;
@@ -749,21 +645,21 @@ void BWC::_updateVirtualTempFix_onheaterchange()
 
 void BWC::print(const String &txt)
 {
-    to_dsp_states.text += txt;
+    dsp->text += txt;
 }
 
 // String BWC::getDebugData()
 // {
 //     String res = "from cio ";
-//     res += from_cio_states.toString();
+//     res += cio->cio_states.toString();
 //     res += "to dsp ";
-//     res += to_dsp_states.toString();
+//     res += dsp->dsp_states.toString();
 //     res += "from dsp ";
-//     res += from_dsp_states.toString();
+//     res += dsp->dsp_toggles.toString();
 //     res += "to cio ";
-//     res += to_cio_states.toString();
+//     res += cio->cio_toggles.toString();
 //     res += "BtnQLen: ";
-//     res += _cio->_button_que_len;
+//     res += cio->_button_que_len;
 //     return res;
 // }
 
@@ -778,7 +674,7 @@ void BWC::setAmbientTemperature(int64_t amb, bool unit)
 
 String BWC::getModel()
 {
-    return _cio->getModel();
+    return cio->getModel();
 }
 
 bool BWC::add_command(command_que_item command_item)
@@ -825,37 +721,37 @@ String BWC::getJSONStates() {
     DynamicJsonDocument doc(1536);
 
     // Set the values in the document
-    doc["CONTENT"] = "STATES";
+    doc["CONTENT"] = F("STATES");
     doc["TIME"] = _timestamp_secs;
-    doc["LCK"] = from_cio_states.locked;
-    doc["PWR"] = from_cio_states.power;
-    doc["UNT"] = from_cio_states.unit;
-    doc["AIR"] = from_cio_states.bubbles;
-    doc["GRN"] = from_cio_states.heatgrn;
-    doc["RED"] = from_cio_states.heatred;
-    doc["FLT"] = from_cio_states.pump;
-    doc["CH1"] = from_cio_states.char1;
-    doc["CH2"] = from_cio_states.char2;
-    doc["CH3"] = from_cio_states.char3;
-    doc["HJT"] = from_cio_states.jets;
-    doc["BRT"] = to_dsp_states.brightness;
-    doc["ERR"] = from_cio_states.error;
-    doc["GOD"] = from_cio_states.godmode;
-    doc["TGT"] = from_cio_states.target;
-    doc["TMP"] = from_cio_states.temperature;
+    doc["LCK"] = cio->cio_states.locked;
+    doc["PWR"] = cio->cio_states.power;
+    doc["UNT"] = cio->cio_states.unit;
+    doc["AIR"] = cio->cio_states.bubbles;
+    doc["GRN"] = cio->cio_states.heatgrn;
+    doc["RED"] = cio->cio_states.heatred;
+    doc["FLT"] = cio->cio_states.pump;
+    doc["CH1"] = cio->cio_states.char1;
+    doc["CH2"] = cio->cio_states.char2;
+    doc["CH3"] = cio->cio_states.char3;
+    doc["HJT"] = cio->cio_states.jets;
+    doc["BRT"] = dsp->dsp_states.brightness;
+    doc["ERR"] = cio->cio_states.error;
+    doc["GOD"] = cio->cio_states.godmode;
+    doc["TGT"] = cio->cio_states.target;
+    doc["TMP"] = cio->cio_states.temperature;
     doc["VTMC"] = _virtual_temp;
     doc["VTMF"] = C2F(_virtual_temp);
     doc["AMBC"] = _ambient_temp;
     doc["AMBF"] = round(C2F(_ambient_temp));
-    if(from_cio_states.unit)
+    if(cio->cio_states.unit)
     {
         //celsius
         doc["AMB"] = _ambient_temp;
         doc["VTM"] = _virtual_temp;
-        doc["TGTC"] = from_cio_states.target;
-        doc["TMPC"] = from_cio_states.temperature;
-        doc["TGTF"] = round(C2F((float)from_cio_states.target));
-        doc["TMPF"] = round(C2F((float)from_cio_states.temperature));
+        doc["TGTC"] = cio->cio_states.target;
+        doc["TMPC"] = cio->cio_states.temperature;
+        doc["TGTF"] = round(C2F((float)cio->cio_states.target));
+        doc["TMPF"] = round(C2F((float)cio->cio_states.temperature));
         doc["VTMF"] = C2F(_virtual_temp);
     }
     else
@@ -863,17 +759,17 @@ String BWC::getJSONStates() {
         //farenheit
         doc["AMB"] = round(C2F(_ambient_temp));
         doc["VTM"] = C2F(_virtual_temp);
-        doc["TGTF"] = from_cio_states.target;
-        doc["TMPF"] = from_cio_states.temperature;
-        doc["TGTC"] = round(F2C((float)from_cio_states.target));
-        doc["TMPC"] = round(F2C((float)from_cio_states.temperature));
+        doc["TGTF"] = cio->cio_states.target;
+        doc["TMPF"] = cio->cio_states.temperature;
+        doc["TGTC"] = round(F2C((float)cio->cio_states.target));
+        doc["TMPC"] = round(F2C((float)cio->cio_states.temperature));
         doc["VTMC"] = _virtual_temp;
     }
 
     // Serialize JSON to string
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
-        jsonmsg = "{\"error\": \"Failed to serialize message\"}";
+        jsonmsg = F("{\"error\": \"Failed to serialize states\"}");
     }
     return jsonmsg;
 }
@@ -889,7 +785,7 @@ String BWC::getJSONTimes() {
     DynamicJsonDocument doc(1024);
 
     // Set the values in the document
-    doc["CONTENT"] = "TIMES";
+    doc["CONTENT"] = F("TIMES");
     doc["TIME"] = _timestamp_secs;
     doc["CLTIME"] = _cl_timestamp_s;
     doc["FTIME"] = _filter_timestamp_s;
@@ -909,14 +805,14 @@ String BWC::getJSONTimes() {
     if(t2r == -2) t2r_string = F("Already");
     if(t2r == -1) t2r_string = F("Never");
     doc["T2R"] = t2r_string;
-    String s = _cio->debug();
+    String s = cio->debug();
     doc["DBG"] = s;
-    //_cio->clk_per = 1000;  //reset minimum clock period
+    //cio->clk_per = 1000;  //reset minimum clock period
 
     // Serialize JSON to string
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
-        jsonmsg = "{\"error\": \"Failed to serialize message\"}";
+        jsonmsg = F("{\"error\": \"Failed to serialize times\"}");
     }
     return jsonmsg;
 }
@@ -932,7 +828,7 @@ String BWC::getJSONSettings(){
     DynamicJsonDocument doc(1024);
 
     // Set the values in the document
-    doc["CONTENT"] = "SETTINGS";
+    doc["CONTENT"] = F("SETTINGS");
     doc["PRICE"] = _price;
     doc["FINT"] = _filter_interval;
     doc["CLINT"] = _cl_interval;
@@ -942,14 +838,14 @@ String BWC::getJSONSettings(){
     #endif
     doc["REBOOTTIME"] = DateTime.getBootTime();
     doc["RESTORE"] = _restore_states_on_start;
-    doc["MODEL"] = _cio->getModel();
+    doc["MODEL"] = cio->getModel();
     doc["NOTIFY"] = _notify;
     doc["NOTIFTIME"] = _notification_time;
 
     // Serialize JSON to string
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
-        jsonmsg = "{\"error\": \"Failed to serialize message\"}";
+        jsonmsg = F("{\"error\": \"Failed to serialize settings\"}");
     }
     return jsonmsg;
 }
@@ -973,24 +869,24 @@ String BWC::getJSONCommandQueue(){
     // Serialize JSON to file
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
-        jsonmsg = "{\"error\": \"Failed to serialize message\"}";
+        jsonmsg = F("{\"error\": \"Failed to serialize cmdq\"}");
     }
     return jsonmsg;
 }
 
 /*TODO:*/
 uint8_t BWC::getState(int state){
-    // return _cio->getState(state);
+    // return cio->getState(state);
     return 0;
 }
 
 String BWC::getButtonName() {
-    return ButtonNames[from_dsp_states.pressed_button];
+    return ButtonNames[dsp->dsp_toggles.pressed_button];
 }
 
 Buttons BWC::getButton()
 {
-    return from_dsp_states.pressed_button;
+    return dsp->dsp_toggles.pressed_button;
 }
 
 void BWC::setJSONSettings(const String& message){
@@ -1045,23 +941,23 @@ void BWC::_updateTimes(){
     int elapsedtime_ms = now-prevtime;
     prevtime = now;
     // //(some of) these age-counters resets when the state changes
-    // for(unsigned int i = 0; i < _cio->getSizeofStates(); i++)
+    // for(unsigned int i = 0; i < cio->getSizeofStates(); i++)
     // {
-    //     _cio->setStateAge(i, _cio->getStateAge(i) + elapsedtime_ms);
+    //     cio->setStateAge(i, cio->getStateAge(i) + elapsedtime_ms);
     // }
     _virtual_temp_fix_age += elapsedtime_ms;
 
     if (elapsedtime_ms < 0) return; //millis() rollover every 24,8 days
-    if(from_cio_states.heatred){
+    if(cio->cio_states.heatred){
         _heatingtime_ms += elapsedtime_ms;
     }
-    if(from_cio_states.pump){
+    if(cio->cio_states.pump){
         _pumptime_ms += elapsedtime_ms;
     }
-    if(from_cio_states.bubbles){
+    if(cio->cio_states.bubbles){
         _airtime_ms += elapsedtime_ms;
     }
-    if(from_cio_states.jets){
+    if(cio->cio_states.jets){
         _jettime_ms += elapsedtime_ms;
     }
     _uptime_ms += elapsedtime_ms;
@@ -1083,23 +979,23 @@ void BWC::_updateTimes(){
     if(_override_dsp_brt_timer > 0) _override_dsp_brt_timer -= elapsedtime_ms; //counts down to or below zero
 
     // watts, kWh today, total kWh
-    float heatingEnergy = (_heatingtime+_heatingtime_ms/1000)/3600.0 * _cio->getPower().HEATERPOWER;
-    float pumpEnergy = (_pumptime+_pumptime_ms/1000)/3600.0 * _cio->getPower().PUMPPOWER;
-    float airEnergy = (_airtime+_airtime_ms/1000)/3600.0 * _cio->getPower().AIRPOWER;
-    float idleEnergy = (_uptime+_uptime_ms/1000)/3600.0 * _cio->getPower().IDLEPOWER;
-    float jetEnergy = (_jettime+_jettime_ms/1000)/3600.0 * _cio->getPower().JETPOWER;
+    float heatingEnergy = (_heatingtime+_heatingtime_ms/1000)/3600.0 * cio->getPower().HEATERPOWER;
+    float pumpEnergy = (_pumptime+_pumptime_ms/1000)/3600.0 * cio->getPower().PUMPPOWER;
+    float airEnergy = (_airtime+_airtime_ms/1000)/3600.0 * cio->getPower().AIRPOWER;
+    float idleEnergy = (_uptime+_uptime_ms/1000)/3600.0 * cio->getPower().IDLEPOWER;
+    float jetEnergy = (_jettime+_jettime_ms/1000)/3600.0 * cio->getPower().JETPOWER;
     _energy_total_kWh = (heatingEnergy + pumpEnergy + airEnergy + idleEnergy + jetEnergy)/1000; //Wh -> kWh
-    _energy_power_W = from_cio_states.heatred * _cio->getPower().HEATERPOWER;
-    _energy_power_W += from_cio_states.pump * _cio->getPower().PUMPPOWER;
-    _energy_power_W += from_cio_states.bubbles * _cio->getPower().AIRPOWER;
-    _energy_power_W += _cio->getPower().IDLEPOWER;
-    _energy_power_W += from_cio_states.jets * _cio->getPower().JETPOWER;
+    _energy_power_W = cio->cio_states.heatred * cio->getPower().HEATERPOWER;
+    _energy_power_W += cio->cio_states.pump * cio->getPower().PUMPPOWER;
+    _energy_power_W += cio->cio_states.bubbles * cio->getPower().AIRPOWER;
+    _energy_power_W += cio->getPower().IDLEPOWER;
+    _energy_power_W += cio->cio_states.jets * cio->getPower().JETPOWER;
 
     _energy_daily_Ws += elapsedtime_ms * _energy_power_W / 1000.0;
 
     if(_notes.size())
     {
-        to_dsp_states.audiofrequency = _notes.back().frequency_hz;
+        dsp->audiofrequency = _notes.back().frequency_hz;
         _note_duration += elapsedtime_ms;
         if(_note_duration >= _notes.back().duration_ms)
         {
@@ -1110,7 +1006,7 @@ void BWC::_updateTimes(){
     }
     else
     {
-        to_dsp_states.audiofrequency = 0;
+        dsp->audiofrequency = 0;
     }
 }
 
@@ -1332,10 +1228,10 @@ void BWC::_saveStates() {
     StaticJsonDocument<256> doc;
 
     // Set the values in the document
-    doc["UNT"] = from_cio_states.unit;
-    doc["HTR"] = from_cio_states.heat;
-    doc["FLT"] = from_cio_states.pump;
-    doc["TGT"] = from_cio_states.target;
+    doc["UNT"] = cio->cio_states.unit;
+    doc["HTR"] = cio->cio_states.heat;
+    doc["FLT"] = cio->cio_states.pump;
+    doc["TGT"] = cio->cio_states.target;
 
     // Serialize JSON to file
     if (serializeJson(doc, file) == 0) {

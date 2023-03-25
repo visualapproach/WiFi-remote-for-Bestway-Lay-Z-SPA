@@ -11,13 +11,13 @@ void CIO_4W::setup(int cio_rx, int cio_tx, int dummy)
     _cio_serial.begin(9600, SWSERIAL_8N1, cio_tx, cio_rx, false, 63);
     _cio_serial.setTimeout(20);
 
-    _actual_states.target = 20;
-    _actual_states.locked = false;
-    _actual_states.power = true;
-    _actual_states.unit = true;
-    _actual_states.char1 = ' ';
-    _actual_states.char2 = ' ';
-    _actual_states.char3 = ' ';
+    cio_states.target = 20;
+    cio_states.locked = false;
+    cio_states.power = true;
+    cio_states.unit = true;
+    cio_states.char1 = ' ';
+    cio_states.char2 = ' ';
+    cio_states.char3 = ' ';
     
     _currentStateIndex = 0;
 }
@@ -38,13 +38,13 @@ void CIO_4W::pause_resume(bool action)
     }
 }
 
-void CIO_4W::setStates(const sToggles& requested_toggles)
+void CIO_4W::handleToggles()
 {
     uint64_t elapsed_time_ms = 0;
     uint64_t prev_ms = millis();
     elapsed_time_ms = millis() - prev_ms;
     prev_ms = millis();
-    _actual_states.target = requested_toggles.target;
+    cio_states.target = cio_toggles.target;
 
     if(_heater2_countdown_ms > 0) _heater2_countdown_ms -= elapsed_time_ms;
     if(_cool_heater_countdown_ms > 0) _cool_heater_countdown_ms -= elapsed_time_ms;
@@ -56,41 +56,41 @@ void CIO_4W::setStates(const sToggles& requested_toggles)
         _turn_off_pump_flag = false;
     }
 
-    if(!requested_toggles.godmode)
+    if(!cio_toggles.godmode)
     {
         /*Copy raw payload to CIO*/
         for(unsigned int i = 0; i < sizeof(_to_CIO_buf); i++)
             _to_CIO_buf[i] = _raw_payload_to_cio[i];
-        // _cio_serial.write(_to_CIO_buf, PAYLOADSIZE); //this is done in getStates()
-        _actual_states.godmode = false;
+        // _cio_serial.write(_to_CIO_buf, PAYLOADSIZE); //this is done in updateStates()
+        cio_states.godmode = false;
         return;
     } else {
-        _actual_states.godmode = true;
+        cio_states.godmode = true;
     }
 
-    if(requested_toggles.unit_change)
+    if(cio_toggles.unit_change)
     {
-        _actual_states.unit = !_actual_states.unit;
+        cio_states.unit = !cio_states.unit;
         /*requested target is converted in bwc.cpp*/
-        // _actual_states.unit ? _actual_states.target = round(F2C(_actual_states.target)) : _actual_states.target = round(C2F(_actual_states.target));
-        _actual_states.unit ? _actual_states.temperature = round(F2C(_actual_states.temperature)) : _actual_states.temperature = round(C2F(_actual_states.temperature));
+        // cio_states.unit ? cio_states.target = round(F2C(cio_states.target)) : cio_states.target = round(C2F(cio_states.target));
+        cio_states.unit ? cio_states.temperature = round(F2C(cio_states.temperature)) : cio_states.temperature = round(C2F(cio_states.temperature));
     }
 
-    if(requested_toggles.heat_change)
+    if(cio_toggles.heat_change)
     {
         _currentStateIndex = getJumptable(_currentStateIndex, HEATTOGGLE);
         togglestates();
     }
 
-    if(requested_toggles.bubbles_change && getHasair())
+    if(cio_toggles.bubbles_change && getHasair())
     {
             _currentStateIndex = getJumptable(_currentStateIndex, BUBBLETOGGLE);
             togglestates();
     }
 
-    if(requested_toggles.pump_change)
+    if(cio_toggles.pump_change)
     {
-        if(!_actual_states.pump)
+        if(!cio_states.pump)
         {
             _currentStateIndex = getJumptable(_currentStateIndex, PUMPTOGGLE);
             togglestates();
@@ -98,7 +98,7 @@ void CIO_4W::setStates(const sToggles& requested_toggles)
         else
         {
             /*Pump turning OFF -> turn off heaters first, and start countdown*/
-            if(_actual_states.heat)
+            if(cio_states.heat)
             {
                 _currentStateIndex = getJumptable(_currentStateIndex, HEATTOGGLE);
                 togglestates();
@@ -113,17 +113,17 @@ void CIO_4W::setStates(const sToggles& requested_toggles)
         }
     }
 
-    if(requested_toggles.jets_change && getHasjets())
+    if(cio_toggles.jets_change && getHasjets())
     {
         _currentStateIndex = getJumptable(_currentStateIndex, JETSTOGGLE);
         togglestates();
     }
 
-    if(requested_toggles.no_of_heater_elements_on < 2)
+    if(cio_toggles.no_of_heater_elements_on < 2)
     {
         _heat_bitmask = getHeatBitmask1();
     }
-    _actual_states.no_of_heater_elements_on = requested_toggles.no_of_heater_elements_on;
+    cio_states.no_of_heater_elements_on = cio_toggles.no_of_heater_elements_on;
 
     regulateTemp();
     antifreeze();
@@ -138,11 +138,11 @@ void CIO_4W::generatePayload()
     _to_CIO_buf[3] = 48;
     _to_CIO_buf[4] = 0;
     _to_CIO_buf[6] = B10101010; //End of file
-    _actual_states.heatgrn = !_actual_states.heatred && _actual_states.heat;
-    _to_CIO_buf[COMMANDINDEX] =  (_actual_states.heatred * _heat_bitmask)    |
-                                (_actual_states.jets * getJetsBitmask())       |
-                                (_actual_states.bubbles * getBubblesBitmask()) |
-                                (_actual_states.pump * getPumpBitmask());
+    cio_states.heatgrn = !cio_states.heatred && cio_states.heat;
+    _to_CIO_buf[COMMANDINDEX] =  (cio_states.heatred * _heat_bitmask)    |
+                                (cio_states.jets * getJetsBitmask())       |
+                                (cio_states.bubbles * getBubblesBitmask()) |
+                                (cio_states.pump * getPumpBitmask());
     if(_to_CIO_buf[COMMANDINDEX] > 0) _to_CIO_buf[COMMANDINDEX] |= getPowerBitmask();
 
     //calc checksum -> byte5
@@ -150,20 +150,20 @@ void CIO_4W::generatePayload()
     _to_CIO_buf[CIO_CHECKSUMINDEX] = _to_CIO_buf[1] + _to_CIO_buf[2] + _to_CIO_buf[3] + _to_CIO_buf[4];
 }
 
-sStates CIO_4W::getStates()
+void CIO_4W::updateStates()
 {
     int msglen = 0;
     //check if CIO has sent a message
-    if(!_cio_serial.available()) return _actual_states;
+    if(!_cio_serial.available()) return;
     uint8_t tempbuffer[PAYLOADSIZE];
     msglen = _cio_serial.readBytes(tempbuffer, PAYLOADSIZE);
-    if(msglen != PAYLOADSIZE) return _actual_states;
+    if(msglen != PAYLOADSIZE) return;
     uint8_t calculatedChecksum;
     calculatedChecksum = tempbuffer[1]+tempbuffer[2]+tempbuffer[3]+tempbuffer[4];
     if(tempbuffer[CIO_CHECKSUMINDEX] != calculatedChecksum)
     {
         //badCIO_checksum++;
-        return _actual_states;
+        return;
     }
     /*message is good if we get here. Continue*/
 
@@ -177,63 +177,63 @@ sStates CIO_4W::getStates()
         _raw_payload_from_cio[i] = tempbuffer[i];
     }
 
-    _actual_states.temperature = _from_CIO_buf[TEMPINDEX];
-    if(!_actual_states.unit) _actual_states.temperature = C2F(_actual_states.temperature);
-    _actual_states.error = _from_CIO_buf[ERRORINDEX];
+    cio_states.temperature = _from_CIO_buf[TEMPINDEX];
+    if(!cio_states.unit) cio_states.temperature = C2F(cio_states.temperature);
+    cio_states.error = _from_CIO_buf[ERRORINDEX];
     /*Show temp in web UI display*/
-    _actual_states.char1 = 48+(_actual_states.temperature)/100;
-    _actual_states.char2 = 48+(_actual_states.temperature % 100)/10;
-    _actual_states.char3 = 48+(_actual_states.temperature % 10);
+    cio_states.char1 = 48+(cio_states.temperature)/100;
+    cio_states.char2 = 48+(cio_states.temperature % 100)/10;
+    cio_states.char3 = 48+(cio_states.temperature % 10);
     //check if cio send error msg
-    if(_actual_states.error)
+    if(cio_states.error)
     {
         _to_CIO_buf[COMMANDINDEX] = 0; //clear any commands
-        _actual_states.godmode = false;
-        _actual_states.char1 = 'E';
-        _actual_states.char2 = (char)(48+(_from_CIO_buf[ERRORINDEX]/10));
-        _actual_states.char3 = (char)(48+(_from_CIO_buf[ERRORINDEX]%10));
+        cio_states.godmode = false;
+        cio_states.char1 = 'E';
+        cio_states.char2 = (char)(48+(_from_CIO_buf[ERRORINDEX]/10));
+        cio_states.char3 = (char)(48+(_from_CIO_buf[ERRORINDEX]%10));
     }
     /*This is placed here so we send messages at the same rate as the cio.*/
     _cio_serial.write(_to_CIO_buf, PAYLOADSIZE);
-    return _actual_states;
+    return;
 }
 
 void CIO_4W::togglestates()
 {
-    _actual_states.bubbles = getAllowedstates(_currentStateIndex, BUBBLETOGGLE);
-    _actual_states.jets = getAllowedstates(_currentStateIndex, JETSTOGGLE);
-    _actual_states.pump = getAllowedstates(_currentStateIndex, PUMPTOGGLE);
-    _actual_states.heat = getAllowedstates(_currentStateIndex, HEATTOGGLE)>0;
+    cio_states.bubbles = getAllowedstates(_currentStateIndex, BUBBLETOGGLE);
+    cio_states.jets = getAllowedstates(_currentStateIndex, JETSTOGGLE);
+    cio_states.pump = getAllowedstates(_currentStateIndex, PUMPTOGGLE);
+    cio_states.heat = getAllowedstates(_currentStateIndex, HEATTOGGLE)>0;
 }
 
 void CIO_4W::regulateTemp()
 {
     //this is a simple thermostat with hysteresis. Will heat until target+1 and then cool until target-1
     static uint8_t hysteresis = 0;
-    if(!_actual_states.heat)
+    if(!cio_states.heat)
     {
-        _actual_states.heatred = 0;
+        cio_states.heatred = 0;
         return;
     }
 
-    if( (_actual_states.temperature + hysteresis) <= _actual_states.target)
+    if( (cio_states.temperature + hysteresis) <= cio_states.target)
     {
-        if(!_actual_states.heatred)
+        if(!cio_states.heatred)
         {
             _heat_bitmask = getHeatBitmask1(); //half power at start
-            _actual_states.heatred = 1;   //on
+            cio_states.heatred = 1;   //on
             _heater2_countdown_ms = _HEATER2_DELAY_MS;
         }
         hysteresis = 0;
     }
     else
     {
-        _actual_states.heatred = 0; //off
+        cio_states.heatred = 0; //off
         hysteresis = 1;
     }
 
     /*Start 2nd heater element*/
-    if((_heater2_countdown_ms <= 0) && (_actual_states.no_of_heater_elements_on == 2))
+    if((_heater2_countdown_ms <= 0) && (cio_states.no_of_heater_elements_on == 2))
     {
         _heat_bitmask = getHeatBitmask1() | getHeatBitmask2();
     }
@@ -247,25 +247,25 @@ void CIO_4W::antifreeze()
         - Will start pump and heater and set target temperature to 10.
         - Pump will run until "manually" turned off. (From Panel, Web UI or MQTT)
     */
-    int tempC = _actual_states.temperature;
+    int tempC = cio_states.temperature;
     int targetC;
-    if(!_actual_states.unit) tempC = F2C(tempC);
+    if(!cio_states.unit) tempC = F2C(tempC);
     if(tempC < 10)
     {
-        if(!_actual_states.pump)
+        if(!cio_states.pump)
         {
             _currentStateIndex = getJumptable(_currentStateIndex, PUMPTOGGLE);
             togglestates();
         } 
-        if(!_actual_states.heat)
+        if(!cio_states.heat)
         {
             _currentStateIndex = getJumptable(_currentStateIndex, HEATTOGGLE);
             togglestates();
         } 
         targetC = 10;
         Serial.printf("antifrz active\n");
-        if(_actual_states.unit) _actual_states.target = targetC;
-        else _actual_states.target = C2F(targetC);
+        if(cio_states.unit) cio_states.target = targetC;
+        else cio_states.target = C2F(targetC);
     }
 }
 
@@ -274,18 +274,18 @@ void CIO_4W::antiboil()
     /*
         Anti overtemp
     */
-    int tempC = _actual_states.temperature;
-    if(!_actual_states.unit) tempC = F2C(tempC);
+    int tempC = cio_states.temperature;
+    if(!cio_states.unit) tempC = F2C(tempC);
 
     if(tempC > 41)
     {
         /*Turn ON pump, and OFF heat*/
-        if(!_actual_states.pump)
+        if(!cio_states.pump)
         {
             _currentStateIndex = getJumptable(_currentStateIndex, PUMPTOGGLE);
             togglestates();
         }
-        if(_actual_states.heat)
+        if(cio_states.heat)
         {
             _currentStateIndex = getJumptable(_currentStateIndex, HEATTOGGLE);
             togglestates();

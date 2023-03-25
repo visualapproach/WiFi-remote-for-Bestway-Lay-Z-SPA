@@ -51,7 +51,7 @@ enum States: byte
     ERROR
 };
 
-const uint8_t CHARS[] = {
+const uint8_t CHARS[] PROGMEM = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '-', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 
     'h', 'H', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z'
 };
@@ -140,8 +140,6 @@ struct sStates
     // bool fullpower = false;
     uint8_t no_of_heater_elements_on = 0;
     bool godmode = false;
-    String text ="";
-    int audiofrequency = 0;
 
     // String toString()
     // {
@@ -178,8 +176,6 @@ struct sStates
         // result &= fullpower == rhs.fullpower;
         result &= no_of_heater_elements_on == rhs.no_of_heater_elements_on;
         result &= godmode == rhs.godmode;
-        result &= text == rhs.text;
-        result &= audiofrequency == rhs.audiofrequency;
         
         return result;
     }  

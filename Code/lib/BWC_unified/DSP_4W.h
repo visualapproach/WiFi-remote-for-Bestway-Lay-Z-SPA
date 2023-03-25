@@ -12,9 +12,9 @@ class DSP_4W : public DSP
         void setup(int dsp_rx, int dsp_tx, int dummy, int dummy2);
         void stop();
         void pause_resume(bool action) override;
-        sToggles getStates();
-        void setStates(const sStates& to_dsp_states);
-
+        void updateToggles();
+        void handleStates();
+  
     protected:
         virtual uint8_t getPumpBitmask() = 0;
         virtual uint8_t getBubblesBitmask() = 0;
@@ -29,8 +29,6 @@ class DSP_4W : public DSP
         void generatePayload();
 
     private:
-        sToggles _from_dsp_states;
-        sStates _to_dsp_states;
         SoftwareSerial _dsp_serial;
         /*ESP to DSP*/
         uint8_t _to_DSP_buf[7] = {};

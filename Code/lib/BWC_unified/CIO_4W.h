@@ -16,8 +16,8 @@ class CIO_4W : public CIO
         void setup(int cio_rx, int cio_tx, int dummy);
         void stop();
         void pause_resume(bool action);
-        void setStates(const sToggles& requested_toggles);
-        sStates getStates();
+        void handleToggles();
+        void updateStates();
         bool getHasgod() {return true;}
         virtual bool getHasjets() = 0;
         virtual bool getHasair() = 0;
@@ -54,7 +54,7 @@ class CIO_4W : public CIO
         const uint8_t COMMANDINDEX = 2;
         const uint8_t DSP_CHECKSUMINDEX = 5;
         const uint8_t PAYLOADSIZE = 7;
-        sStates _actual_states;
+        // sStates cio_states;
 
         const uint32_t _HEATER2_DELAY_MS = 10000;
         const uint32_t _HEATERCOOLING_DELAY_MS = 5000;

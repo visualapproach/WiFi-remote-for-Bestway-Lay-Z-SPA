@@ -55,6 +55,8 @@ class BWC {
         void on_save_settings();
         void on_scroll_text();
         void loop();
+        void adjust_brightness();
+        void play_sound();
         // String get_fromcio();
         // String get_todsp();
         // String get_fromdsp();
@@ -87,11 +89,11 @@ class BWC {
 
     public:
         String reboot_time;
-        sStates from_cio_states, to_dsp_states;
-        sToggles to_cio_states, from_dsp_states;
         int pins[7];
         unsigned int loop_count = 0;
         bool hasjets, hasgod;
+        CIO* cio;
+        DSP* dsp;
 
     private:
         bool _loadHardware(Models& cioNo, Models& dspNo, int pins[]);
@@ -119,8 +121,6 @@ class BWC {
         void _accord();
 
     private:
-        CIO* _cio;
-        DSP* _dsp;
         bool _notify;
         int _notification_time, _next_notification_time;
         Ticker _save_settings_ticker;
@@ -165,6 +165,7 @@ class BWC {
         uint32_t _virtual_temp_fix_age;
         bool _new_data_available = false;
         bool _dsp_tgt_used = true;
+        uint8_t _web_target = 20; 
         sStates _prev_cio_states, _prev_dsp_states;
         unsigned long _temp_change_timestamp_ms, _heatred_change_timestamp_ms;
         unsigned long _pump_change_timestamp_ms, _bubbles_change_timestamp_ms;

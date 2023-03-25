@@ -13,7 +13,7 @@ class CIO_6_TYPE1: public CIO_6W
         void pause_resume(bool action) override;
         void IRAM_ATTR isr_packetHandler();
         void isr_clkHandler();
-        sStates getStates();
+        void updateStates();
 
     protected:
         virtual uint16_t getButtonCode(Buttons button_index) = 0;

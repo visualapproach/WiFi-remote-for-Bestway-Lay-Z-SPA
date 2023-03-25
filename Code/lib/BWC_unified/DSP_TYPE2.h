@@ -10,7 +10,7 @@ class DSP_6_TYPE2 : public DSP_6W
         virtual ~DSP_6_TYPE2(){};
         void setup(int dsp_td_pin, int dsp_clk_pin, int dsp_ld_pin, int dsp_audio_pin);
         void stop();
-        void setStates(const sStates& to_dsp_states) override;
+        void handleStates() override;
 
     protected:
         void uploadPayload(uint8_t brightness) override;
@@ -98,10 +98,10 @@ class DSP_6_TYPE2 : public DSP_6W
             0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F, 0x00, 0x40, 0x77, 0x7C, 0x39, 0x5E, 0x79, 0x71, 0x7D,
             0x74, 0x76, 0x30, 0x0E, 0x70, 0x38, 0x00, 0x54, 0x5C, 0x73, 0x67, 0x50, 0x6D, 0x78, 0x1C, 0x3E, 0x00, 0x6E, 0x5B
         };
-        const uint8_t CHARS[38] = {
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '-', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-            'h', 'H', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z'
-        };
+        // const uint8_t CHARS[38] = {
+        //     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '-', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
+        //     'h', 'H', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z'
+        // };
         unsigned long _dsp_last_refreshtime = 0;
         unsigned long _dsp_getbutton_last_time = 0;
         //Pins

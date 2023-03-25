@@ -62,11 +62,10 @@ void setup()
     char stack;
     stack_start = &stack;
 
-    bwc.setup();
-    bwc.loop();
     Serial.begin(115200);
     Serial.println(F("\nStart"));
-
+    bwc.setup();
+    bwc.loop();
     periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
     startComplete.attach(60, []{ if(useMqtt) enableMqtt = true; startComplete.detach(); });
@@ -206,10 +205,8 @@ void loop()
  */
 void sendWS()
 {
-    String json;
-
     // send states
-    json = bwc.getJSONStates();
+    String json = bwc.getJSONStates();
     webSocket.broadcastTXT(json);
     // send times
     json = bwc.getJSONTimes();
@@ -228,7 +225,7 @@ String getOtherInfo()
     StaticJsonDocument<512> doc;
     String json = "";
     // Set the values in the document
-    doc["CONTENT"] = "OTHER";
+    doc["CONTENT"] = F("OTHER");
     doc["MQTT"] = mqttClient.state();
     /*TODO: add these:*/
     //   doc["PressedButton"] = bwc.getPressedButton();
@@ -245,7 +242,7 @@ String getOtherInfo()
     // Serialize JSON to string
     if (serializeJson(doc, json) == 0)
     {
-        json = "{\"error\": \"Failed to serialize message\"}";
+        json = F("{\"error\": \"Failed to serialize other\"}");
     }
     return json;
 }
@@ -616,11 +613,11 @@ void handleHWtest()
         errors += digitalRead(bwc.pins[pin+3]) != state;
         }
         if(errors > 499)
-        result += "CIO to DSP pin " + String(pin+3) + " fail!";
+        result += F("CIO to DSP pin ") + String(pin+3) + F(" fail!");
         else if(errors == 0)
-        result += "CIO to DSP pin " + String(pin+3) + " success!";
+        result += F("CIO to DSP pin ") + String(pin+3) + F(" success!");
         else
-        result += "CIO to DSP pin " + String(pin+3) + " " + String(errors/500) + "\% bad";
+        result += F("CIO to DSP pin ") + String(pin+3) + " " + String(errors/500) + F("\% bad");
         errors = 0;
         delay(0);
     }
@@ -636,11 +633,11 @@ void handleHWtest()
         errors += digitalRead(bwc.pins[pin]) != state;
         }
         if(errors > 499)
-        result += "DSP to CIO pin " + String(pin+3) + " fail!";
+        result += F("DSP to CIO pin ") + String(pin+3) + F(" fail!");
         else if(errors == 0)
-        result += "DSP to CIO pin " + String(pin+3) + " success!";
+        result += F("DSP to CIO pin ") + String(pin+3) + F(" success!");
         else
-        result += "DSP to CIO pin " + String(pin+3) + " " + String(errors/500) + "\% bad";
+        result += F("DSP to CIO pin ") + String(pin+3) + " " + String(errors/500) + F("\% bad");
         errors = 0;
         delay(0);
     }
@@ -874,7 +871,7 @@ void handleGetWebConfig()
     String json;
     if (serializeJson(doc, json) == 0)
     {
-        json = F("{\"error\": \"Failed to serialize message\"}");
+        json = F("{\"error\": \"Failed to serialize webcfg\"}");
     }
     server.send(200, "application/json", json);
 }
@@ -1306,9 +1303,9 @@ void handleDir()
     while (root.next())
     {
         // Serial.println(root.fileName());
-        mydir += "<a href=\"/" + root.fileName() + "\">" + root.fileName() + "</a>";
+        mydir += F("<a href=\"/") + root.fileName() + "\">" + root.fileName() + "</a>";
         mydir += F("   Size: ") + String(root.fileSize()) + F(" Bytes ");
-        mydir += F("   <a href=\"/remove/?FileToRemove=") + root.fileName() + "\">remove" + "</a><br>";
+        mydir += F("   <a href=\"/remove/?FileToRemove=") + root.fileName() + F("\">remove</a><br>");
     }
     server.send(200, "text/html", mydir);
     #endif
@@ -1355,8 +1352,8 @@ void handleFileUpload()
         {
             // Write the received bytes to the file
             fsUploadFile.write(upload.buf, upload.currentSize);
-            Serial.print("file write ");
-            Serial.println(path);
+            // Serial.print("file write ");
+            // Serial.println(path);
         }
     }
     else if (upload.status == UPLOAD_FILE_END)
@@ -1379,13 +1376,13 @@ void handleFileUpload()
         }
         else
         {
-            Serial.println("err: 500");
+            Serial.println(F("err: 500"));
             server.send(500, "text/plain", "500: couldn't create file");
         }
     }
     else
     {
-        Serial.print("upload status");
+        Serial.print(F("upload status"));
         Serial.println(upload.status);
         server.send(500, "text/plain", "500: upload aborted");
     }
@@ -1479,14 +1476,14 @@ HeapSelectIram ephemeral;
             return "check failed";
         }
     }
-    String URL = URL_part1;
+    String URL = FPSTR(URL_part1);
     if(betaversion)
     {
-        URL += String("development_v4") + URL_fw_version;
+        URL += String("development_v4") + FPSTR(URL_fw_version);
     }
     else
     {
-        URL += String("master") + URL_fw_version;
+        URL += String("master") + FPSTR(URL_fw_version);
     }
 
     client.print(String("GET ") + URL + F(" HTTP/1.1\r\n") +
@@ -1553,17 +1550,17 @@ HeapSelectIram ephemeral;
     ESPhttpUpdate.onEnd(updateEnd);
     // ESPhttpUpdate.onProgress(udpateProgress);
     ESPhttpUpdate.onError(updateError);
-    String URL_binary = URL_fw_bin_part1;
-    String URL_version = URL_part1;
+    String URL_binary = FPSTR(URL_fw_bin_part1);
+    String URL_version = FPSTR(URL_part1);
     if(betaversion)
     {
-        URL_binary += String("development_v4") + URL_fw_bin;
-        URL_version += String("development_v4") + URL_fw_version;
+        URL_binary += String("development_v4") + FPSTR(URL_fw_bin);
+        URL_version += String("development_v4") + FPSTR(URL_fw_version);
     }
     else
     {
-        URL_binary += String("master") + URL_fw_bin;
-        URL_version += String("master") + URL_fw_version;
+        URL_binary += String("master") + FPSTR(URL_fw_bin);
+        URL_version += String("master") + FPSTR(URL_fw_version);
     }
     client.print(String("GET ") + URL_version + F(" HTTP/1.1\r\n") +
                 F("Host: ") + host + "\r\n" +
@@ -1601,11 +1598,11 @@ HeapSelectIram ephemeral;
             break;
 
         case HTTP_UPDATE_NO_UPDATES:
-            Serial.println("HTTP_UPDATE_NO_UPDATES");
+            Serial.println(F("HTTP_UPDATE_NO_UPDATES"));
             break;
 
         case HTTP_UPDATE_OK:
-            Serial.println("HTTP_UPDATE_OK");
+            Serial.println(F("HTTP_UPDATE_OK"));
             break;
         }
     }
@@ -1631,14 +1628,14 @@ HeapSelectIram ephemeral;
     ESPhttpUpdate.onEnd(updateEnd);
     // ESPhttpUpdate.onProgress(udpateProgress);
     ESPhttpUpdate.onError(updateError);
-    String URL = URL_part1;
+    String URL = FPSTR(URL_part1);
     if(betaversion)
     {
-        URL += String("development_v4") + URL_filelist;
+        URL += String("development_v4") + FPSTR(URL_filelist);
     }
     else
     {
-        URL += String("master") + URL_filelist;
+        URL += String("master") + FPSTR(URL_filelist);
     }
 
     client.print(String("GET ") + URL + F(" HTTP/1.1\r\n") +
@@ -1666,14 +1663,14 @@ HeapSelectIram ephemeral;
     // server.send(303);
 
     /*Load the files to flash*/
-    URL = URL_part1;
+    URL = FPSTR(URL_part1);
     if(betaversion)
     {
-        URL += String("development_v4") + URL_filedir;
+        URL += String("development_v4") + FPSTR(URL_filedir);
     }
     else
     {
-        URL += String("master") + URL_filedir;
+        URL += String("master") + FPSTR(URL_filedir);
     }
 
     for(auto filename : files)
@@ -1706,7 +1703,7 @@ HeapSelectIram ephemeral;
         yield();
         File f = LittleFS.open("/"+filename, "w");
         if(!f) {
-            Serial.println("file error");
+            Serial.println(F("file error"));
             return false;
         }
         uint8_t buf[512] = {0};
@@ -1904,7 +1901,7 @@ void handleESPInfo()
     size_t const BUFSIZE = 1024;
     char response[BUFSIZE];
     char const *response_template =
-    "Stack size:          %u \n"
+    PSTR("Stack size:          %u \n"
     "Free Heap:           %u \n"
     "Min  Heap:           %u \n"
     "Core version:        %s \n"
@@ -1913,9 +1910,9 @@ void handleESPInfo()
     "Free cont stack:     %u \n"
     "Sketch size:         %u \n"
     "Free sketch space:   %u \n"
-    "Max free block size: %u \n";
+    "Max free block size: %u \n");
 
-    snprintf(response, BUFSIZE, response_template,
+    snprintf_P(response, BUFSIZE, response_template,
         stacksize,
         ESP.getFreeHeap(),
         heap_water_mark,

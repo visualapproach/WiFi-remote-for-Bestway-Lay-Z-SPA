@@ -93,72 +93,69 @@ Buttons DSP_6_TYPE2::getPressedButton()
     return (_old_button);
 }
 
-void DSP_6_TYPE2::setStates(const sStates& toDspStates)
+void DSP_6_TYPE2::handleStates()
 {
-    _to_dsp_states = toDspStates;
-    // _from_dsp_states = toDspStates;
-    
-    if(toDspStates.text.length())
+    if(text.length())
     {
-        _payload[getDGT1_IDX()] = charTo7SegmCode(toDspStates.text[0]);
-        toDspStates.text.length() > 1 ? _payload[getDGT2_IDX()] = charTo7SegmCode(toDspStates.text[1]) : _payload[getDGT2_IDX()] = 1;
-        toDspStates.text.length() > 2 ? _payload[getDGT3_IDX()] = charTo7SegmCode(toDspStates.text[2]) : _payload[getDGT3_IDX()] = 1;
+        _payload[getDGT1_IDX()] = charTo7SegmCode(text[0]);
+        text.length() > 1 ? _payload[getDGT2_IDX()] = charTo7SegmCode(text[1]) : _payload[getDGT2_IDX()] = 1;
+        text.length() > 2 ? _payload[getDGT3_IDX()] = charTo7SegmCode(text[2]) : _payload[getDGT3_IDX()] = 1;
     }
     else
     {
-        _payload[getDGT1_IDX()] = charTo7SegmCode(toDspStates.char1);
-        _payload[getDGT2_IDX()] = charTo7SegmCode(toDspStates.char2);
-        _payload[getDGT3_IDX()] = charTo7SegmCode(toDspStates.char3);
+        _payload[getDGT1_IDX()] = charTo7SegmCode(dsp_states.char1);
+        _payload[getDGT2_IDX()] = charTo7SegmCode(dsp_states.char2);
+        _payload[getDGT3_IDX()] = charTo7SegmCode(dsp_states.char3);
     }
 
-    if(toDspStates.power)
+    if(dsp_states.power)
     {
         _payload[getLCK_IDX()] &= ~(1<<getLCK_BIT());
-        _payload[getLCK_IDX()] |= toDspStates.locked << getLCK_BIT();
+        _payload[getLCK_IDX()] |= dsp_states.locked << getLCK_BIT();
 
         _payload[getTMRBTNLED_IDX()] &= ~(1<<getTMRBTNLED_BIT());
-        _payload[getTMRBTNLED_IDX()] |= toDspStates.timerbuttonled << getTMRBTNLED_BIT();
+        _payload[getTMRBTNLED_IDX()] |= dsp_states.timerbuttonled << getTMRBTNLED_BIT();
 //
         _payload[getTMR1_IDX()] &= ~(1<<getTMR1_BIT());
-        _payload[getTMR1_IDX()] |= toDspStates.timerled1 << getTMR1_BIT();
+        _payload[getTMR1_IDX()] |= dsp_states.timerled1 << getTMR1_BIT();
 
         _payload[getTMR2_IDX()] &= ~(1<<getTMR2_BIT());
-        _payload[getTMR2_IDX()] |= toDspStates.timerled2 << getTMR2_BIT();
+        _payload[getTMR2_IDX()] |= dsp_states.timerled2 << getTMR2_BIT();
 //
         _payload[getREDHTR_IDX()] &= ~(1<<getREDHTR_BIT());
-        _payload[getREDHTR_IDX()] |= toDspStates.heatred << getREDHTR_BIT();
+        _payload[getREDHTR_IDX()] |= dsp_states.heatred << getREDHTR_BIT();
 
         _payload[getGRNHTR_IDX()] &= ~(1<<getGRNHTR_BIT());
-        _payload[getGRNHTR_IDX()] |= toDspStates.heatgrn << getGRNHTR_BIT();
+        _payload[getGRNHTR_IDX()] |= dsp_states.heatgrn << getGRNHTR_BIT();
 
         _payload[getAIR_IDX()] &= ~(1<<getAIR_BIT());
-        _payload[getAIR_IDX()] |= toDspStates.bubbles << getAIR_BIT();
+        _payload[getAIR_IDX()] |= dsp_states.bubbles << getAIR_BIT();
 
         _payload[getFLT_IDX()] &= ~(1<<getFLT_BIT());
-        _payload[getFLT_IDX()] |= toDspStates.pump << getFLT_BIT();
+        _payload[getFLT_IDX()] |= dsp_states.pump << getFLT_BIT();
 
         _payload[getC_IDX()] &= ~(1<<getC_BIT());
-        _payload[getC_IDX()] |= toDspStates.unit << getC_BIT();
+        _payload[getC_IDX()] |= dsp_states.unit << getC_BIT();
 
         _payload[getF_IDX()] &= ~(1<<getF_BIT());
-        _payload[getF_IDX()] |= !toDspStates.unit << getF_BIT();
+        _payload[getF_IDX()] |= !dsp_states.unit << getF_BIT();
 
         _payload[getPWR_IDX()] &= ~(1<<getPWR_BIT());
-        _payload[getPWR_IDX()] |= toDspStates.power << getPWR_BIT();
+        _payload[getPWR_IDX()] |= dsp_states.power << getPWR_BIT();
 
         _payload[getHJT_IDX()] &= ~(1<<getHJT_BIT());
-        _payload[getHJT_IDX()] |= toDspStates.jets << getHJT_BIT();
+        _payload[getHJT_IDX()] |= dsp_states.jets << getHJT_BIT();
     }
     else
     {
         clearpayload();
     }
-    if(toDspStates.audiofrequency)
-        tone(getAUDIO(), toDspStates.audiofrequency);
+    if(audiofrequency)
+        tone(getAUDIO(), audiofrequency);
     else
         noTone(getAUDIO());
 
-    uploadPayload(toDspStates.brightness);
+    uploadPayload(dsp_states.brightness);
 }
 
 /*Send payload[] to display*/
