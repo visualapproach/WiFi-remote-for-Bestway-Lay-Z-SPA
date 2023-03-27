@@ -7,8 +7,8 @@ BWC::BWC()
     //Initialize variables
 
     _dsp_brightness = 7;
-    _cl_timestamp_s = DateTime.now();
-    _filter_timestamp_s = DateTime.now();
+    _cl_timestamp_s = time(nullptr);
+    _filter_timestamp_s = time(nullptr);
     _uptime = 0;
     _pumptime = 0;
     _heatingtime = 0;
@@ -159,7 +159,7 @@ void BWC::loop(){
     #ifdef ESP8266
     ESP.wdtFeed();
     #endif
-    _timestamp_secs = DateTime.now();
+    _timestamp_secs = time(nullptr);
     _updateTimes();
     if(_scroll && (dsp->text.length() > 0)) 
     {
@@ -721,49 +721,49 @@ String BWC::getJSONStates() {
     DynamicJsonDocument doc(1536);
 
     // Set the values in the document
-    doc["CONTENT"] = F("STATES");
-    doc["TIME"] = _timestamp_secs;
-    doc["LCK"] = cio->cio_states.locked;
-    doc["PWR"] = cio->cio_states.power;
-    doc["UNT"] = cio->cio_states.unit;
-    doc["AIR"] = cio->cio_states.bubbles;
-    doc["GRN"] = cio->cio_states.heatgrn;
-    doc["RED"] = cio->cio_states.heatred;
-    doc["FLT"] = cio->cio_states.pump;
-    doc["CH1"] = cio->cio_states.char1;
-    doc["CH2"] = cio->cio_states.char2;
-    doc["CH3"] = cio->cio_states.char3;
-    doc["HJT"] = cio->cio_states.jets;
-    doc["BRT"] = dsp->dsp_states.brightness;
-    doc["ERR"] = cio->cio_states.error;
-    doc["GOD"] = cio->cio_states.godmode;
-    doc["TGT"] = cio->cio_states.target;
-    doc["TMP"] = cio->cio_states.temperature;
-    doc["VTMC"] = _virtual_temp;
-    doc["VTMF"] = C2F(_virtual_temp);
-    doc["AMBC"] = _ambient_temp;
-    doc["AMBF"] = round(C2F(_ambient_temp));
+    doc[F("CONTENT")] = F("STATES");
+    doc[F("TIME")] = _timestamp_secs;
+    doc[F("LCK")] = cio->cio_states.locked;
+    doc[F("PWR")] = cio->cio_states.power;
+    doc[F("UNT")] = cio->cio_states.unit;
+    doc[F("AIR")] = cio->cio_states.bubbles;
+    doc[F("GRN")] = cio->cio_states.heatgrn;
+    doc[F("RED")] = cio->cio_states.heatred;
+    doc[F("FLT")] = cio->cio_states.pump;
+    doc[F("CH1")] = cio->cio_states.char1;
+    doc[F("CH2")] = cio->cio_states.char2;
+    doc[F("CH3")] = cio->cio_states.char3;
+    doc[F("HJT")] = cio->cio_states.jets;
+    doc[F("BRT")] = dsp->dsp_states.brightness;
+    doc[F("ERR")] = cio->cio_states.error;
+    doc[F("GOD")] = cio->cio_states.godmode;
+    doc[F("TGT")] = cio->cio_states.target;
+    doc[F("TMP")] = cio->cio_states.temperature;
+    doc[F("VTMC")] = _virtual_temp;
+    doc[F("VTMF")] = C2F(_virtual_temp);
+    doc[F("AMBC")] = _ambient_temp;
+    doc[F("AMBF")] = round(C2F(_ambient_temp));
     if(cio->cio_states.unit)
     {
         //celsius
-        doc["AMB"] = _ambient_temp;
-        doc["VTM"] = _virtual_temp;
-        doc["TGTC"] = cio->cio_states.target;
-        doc["TMPC"] = cio->cio_states.temperature;
-        doc["TGTF"] = round(C2F((float)cio->cio_states.target));
-        doc["TMPF"] = round(C2F((float)cio->cio_states.temperature));
-        doc["VTMF"] = C2F(_virtual_temp);
+        doc[F("AMB")] = _ambient_temp;
+        doc[F("VTM")] = _virtual_temp;
+        doc[F("TGTC")] = cio->cio_states.target;
+        doc[F("TMPC")] = cio->cio_states.temperature;
+        doc[F("TGTF")] = round(C2F((float)cio->cio_states.target));
+        doc[F("TMPF")] = round(C2F((float)cio->cio_states.temperature));
+        doc[F("VTMF")] = C2F(_virtual_temp);
     }
     else
     {
         //farenheit
-        doc["AMB"] = round(C2F(_ambient_temp));
-        doc["VTM"] = C2F(_virtual_temp);
-        doc["TGTF"] = cio->cio_states.target;
-        doc["TMPF"] = cio->cio_states.temperature;
-        doc["TGTC"] = round(F2C((float)cio->cio_states.target));
-        doc["TMPC"] = round(F2C((float)cio->cio_states.temperature));
-        doc["VTMC"] = _virtual_temp;
+        doc[F("AMB")] = round(C2F(_ambient_temp));
+        doc[F("VTM")] = C2F(_virtual_temp);
+        doc[F("TGTF")] = cio->cio_states.target;
+        doc[F("TMPF")] = cio->cio_states.temperature;
+        doc[F("TGTC")] = round(F2C((float)cio->cio_states.target));
+        doc[F("TMPC")] = round(F2C((float)cio->cio_states.temperature));
+        doc[F("VTMC")] = _virtual_temp;
     }
 
     // Serialize JSON to string
@@ -785,28 +785,28 @@ String BWC::getJSONTimes() {
     DynamicJsonDocument doc(1024);
 
     // Set the values in the document
-    doc["CONTENT"] = F("TIMES");
-    doc["TIME"] = _timestamp_secs;
-    doc["CLTIME"] = _cl_timestamp_s;
-    doc["FTIME"] = _filter_timestamp_s;
-    doc["UPTIME"] = _uptime + _uptime_ms/1000;
-    doc["PUMPTIME"] = _pumptime + _pumptime_ms/1000;
-    doc["HEATINGTIME"] = _heatingtime + _heatingtime_ms/1000;
-    doc["AIRTIME"] = _airtime + _airtime_ms/1000;
-    doc["JETTIME"] = _jettime + _jettime_ms/1000;
-    doc["COST"] = _energy_total_kWh * _price;
-    doc["FINT"] = _filter_interval;
-    doc["CLINT"] = _cl_interval;
-    doc["KWH"] = _energy_total_kWh;
-    doc["KWHD"] = _energy_daily_Ws / 3600000.0; //Ws -> kWh
-    doc["WATT"] = _energy_power_W;
+    doc[F("CONTENT")] = F("TIMES");
+    doc[F("TIME")] = _timestamp_secs;
+    doc[F("CLTIME")] = _cl_timestamp_s;
+    doc[F("FTIME")] = _filter_timestamp_s;
+    doc[F("UPTIME")] = _uptime + _uptime_ms/1000;
+    doc[F("PUMPTIME")] = _pumptime + _pumptime_ms/1000;
+    doc[F("HEATINGTIME")] = _heatingtime + _heatingtime_ms/1000;
+    doc[F("AIRTIME")] = _airtime + _airtime_ms/1000;
+    doc[F("JETTIME")] = _jettime + _jettime_ms/1000;
+    doc[F("COST")] = _energy_total_kWh * _price;
+    doc[F("FINT")] = _filter_interval;
+    doc[F("CLINT")] = _cl_interval;
+    doc[F("KWH")] = _energy_total_kWh;
+    doc[F("KWHD")] = _energy_daily_Ws / 3600000.0; //Ws -> kWh
+    doc[F("WATT")] = _energy_power_W;
     float t2r = _estHeatingTime();
     String t2r_string = String(t2r);
     if(t2r == -2) t2r_string = F("Already");
     if(t2r == -1) t2r_string = F("Never");
-    doc["T2R"] = t2r_string;
+    doc[F("T2R")] = t2r_string;
     String s = cio->debug();
-    doc["DBG"] = s;
+    doc[F("DBG")] = s;
     //cio->clk_per = 1000;  //reset minimum clock period
 
     // Serialize JSON to string
@@ -828,19 +828,19 @@ String BWC::getJSONSettings(){
     DynamicJsonDocument doc(1024);
 
     // Set the values in the document
-    doc["CONTENT"] = F("SETTINGS");
-    doc["PRICE"] = _price;
-    doc["FINT"] = _filter_interval;
-    doc["CLINT"] = _cl_interval;
-    doc["AUDIO"] = _audio_enabled;
+    doc[F("CONTENT")] = F("SETTINGS");
+    doc[F("PRICE")] = _price;
+    doc[F("FINT")] = _filter_interval;
+    doc[F("CLINT")] = _cl_interval;
+    doc[F("AUDIO")] = _audio_enabled;
     #ifdef ESP8266
-    doc["REBOOTINFO"] = ESP.getResetReason();
+    doc[F("REBOOTINFO")] = ESP.getResetReason();
     #endif
-    doc["REBOOTTIME"] = DateTime.getBootTime();
-    doc["RESTORE"] = _restore_states_on_start;
-    doc["MODEL"] = cio->getModel();
-    doc["NOTIFY"] = _notify;
-    doc["NOTIFTIME"] = _notification_time;
+    doc[F("REBOOTTIME")] = reboot_time_t;
+    doc[F("RESTORE")] = _restore_states_on_start;
+    doc[F("MODEL")] = cio->getModel();
+    doc[F("NOTIFY")] = _notify;
+    doc[F("NOTIFTIME")] = _notification_time;
 
     // Serialize JSON to string
     String jsonmsg;
@@ -857,13 +857,13 @@ String BWC::getJSONCommandQueue(){
     #endif
     DynamicJsonDocument doc(1024);
     // Set the values in the document
-    doc["LEN"] = _command_que.size();
+    doc[F("LEN")] = _command_que.size();
     for(unsigned int i = 0; i < _command_que.size(); i++){
-        doc["CMD"][i] = _command_que[i].cmd;
-        doc["VALUE"][i] = _command_que[i].val;
-        doc["XTIME"][i] = _command_que[i].xtime;
-        doc["INTERVAL"][i] = _command_que[i].interval;
-        doc["TXT"][i] = _command_que[i].text;
+        doc[F("CMD")][i] = _command_que[i].cmd;
+        doc[F("VALUE")][i] = _command_que[i].val;
+        doc[F("XTIME")][i] = _command_que[i].xtime;
+        doc[F("INTERVAL")][i] = _command_que[i].interval;
+        doc[F("TXT")][i] = _command_que[i].text;
     }
 
     // Serialize JSON to file
@@ -902,14 +902,14 @@ void BWC::setJSONSettings(const String& message){
     }
 
     // Copy values from the JsonDocument to the variables
-    _price = doc["PRICE"];
-    _filter_interval = doc["FINT"];
-    _cl_interval = doc["CLINT"];
-    _audio_enabled = doc["AUDIO"];
-    _restore_states_on_start = doc["RESTORE"];
-    _notify = doc["NOTIFY"];
-    _notification_time = doc["NOTIFTIME"];
-    _vt_calibrated = doc["VTCAL"];
+    _price = doc[F("PRICE")];
+    _filter_interval = doc[F("FINT")];
+    _cl_interval = doc[F("CLINT")];
+    _audio_enabled = doc[F("AUDIO")];
+    _restore_states_on_start = doc[F("RESTORE")];
+    _notify = doc[F("NOTIFY")];
+    _notification_time = doc[F("NOTIFTIME")];
+    _vt_calibrated = doc[F("VTCAL")];
     saveSettings();
 }
 
@@ -917,22 +917,6 @@ bool BWC::newData(){
     bool result = _new_data_available;
     _new_data_available = false;
     return result;
-}
-
-void BWC::_startNTP() {
-    // setup this after wifi connected
-    DateTime.setServer("pool.ntp.org");
-    DateTime.begin();
-    DateTime.begin();
-    int c = 0;
-    while (!DateTime.isTimeValid()) {
-        // Serial.println(F("Failed to get time from server. Trying again."));
-        delay(1000);
-        //DateTime.setServer("time.cloudflare.com");
-        DateTime.begin();
-        if (c++ > 5) break;
-    }
-    // Serial.println(DateTime.format(DateFormatter::SIMPLE));
 }
 
 void BWC::_updateTimes(){
@@ -1031,16 +1015,16 @@ bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
         return false;
     }
     file.close();
-    cioNo = doc["cio"];
-    dspNo = doc["dsp"];
-    String pcbname = doc["pcb"].as<String>();
+    cioNo = doc[F("cio")];
+    dspNo = doc[F("dsp")];
+    String pcbname = doc[F("pcb")].as<String>();
     // int pins[7];
     #ifdef ESP8266
     int DtoGPIO[] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
     #endif
     for(int i = 0; i < 7; i++)
     {
-        pins[i] = doc["pins"][i];
+        pins[i] = doc[F("pins")][i];
     #ifdef ESP8266
         pins[i] = DtoGPIO[pins[i]];
     #endif
@@ -1070,26 +1054,26 @@ void BWC::_loadSettings(){
     }
 
     // Copy values from the JsonDocument to the variables
-    _cl_timestamp_s = doc["CLTIME"];
-    _filter_timestamp_s = doc["FTIME"];
-    _uptime = doc["UPTIME"];
-    _pumptime = doc["PUMPTIME"];
-    _heatingtime = doc["HEATINGTIME"];
-    _airtime = doc["AIRTIME"];
-    _jettime = doc["JETTIME"];
-    _price = doc["PRICE"];
-    _filter_interval = doc["FINT"];
-    _cl_interval = doc["CLINT"];
-    _audio_enabled = doc["AUDIO"];
-    _notify = doc["NOTIFY"];
-    _notification_time = doc["NOTIFTIME"];
-    _energy_total_kWh = doc["KWH"];
-    _energy_daily_Ws = doc["KWHD"];
-    _restore_states_on_start = doc["RESTORE"];
-    _R_COOLING = doc["R"] | 20; //else use default
-    _ambient_temp = doc["AMB"] | 20;
-    _dsp_brightness = doc["BRT"] | 7;
-    _vt_calibrated = doc["VTCAL"] | false;
+    _cl_timestamp_s = doc[F("CLTIME")];
+    _filter_timestamp_s = doc[F("FTIME")];
+    _uptime = doc[F("UPTIME")];
+    _pumptime = doc[F("PUMPTIME")];
+    _heatingtime = doc[F("HEATINGTIME")];
+    _airtime = doc[F("AIRTIME")];
+    _jettime = doc[F("JETTIME")];
+    _price = doc[F("PRICE")];
+    _filter_interval = doc[F("FINT")];
+    _cl_interval = doc[F("CLINT")];
+    _audio_enabled = doc[F("AUDIO")];
+    _notify = doc[F("NOTIFY")];
+    _notification_time = doc[F("NOTIFTIME")];
+    _energy_total_kWh = doc[F("KWH")];
+    _energy_daily_Ws = doc[F("KWHD")];
+    _restore_states_on_start = doc[F("RESTORE")];
+    _R_COOLING = doc[F("R")] | 20; //else use default
+    _ambient_temp = doc[F("AMB")] | 20;
+    _dsp_brightness = doc[F("BRT")] | 7;
+    _vt_calibrated = doc[F("VTCAL")] | false;
 
     file.close();
 }
@@ -1111,10 +1095,10 @@ void BWC::_restoreStates() {
         return;
     }
 
-    uint8_t unt = doc["UNT"];
-    uint8_t flt = doc["FLT"];
-    uint8_t htr = doc["HTR"];
-    uint8_t tgt = doc["TGT"] | 20;
+    uint8_t unt = doc[F("UNT")];
+    uint8_t flt = doc[F("FLT")];
+    uint8_t htr = doc[F("HTR")];
+    uint8_t tgt = doc[F("TGT")] | 20;
     command_que_item item;
     item.cmd = SETUNIT;
     item.val = unt;
@@ -1166,13 +1150,13 @@ void BWC::_loadCommandQueue(){
     }
 
     // Set the values in the variables
-    for(int i = 0; i < doc["LEN"]; i++){
+    for(int i = 0; i < doc[F("LEN")]; i++){
         command_que_item item;
-        item.cmd = doc["CMD"][i];
-        item.val = doc["VALUE"][i];
-        item.xtime = doc["XTIME"][i];
-        item.interval = doc["INTERVAL"][i];
-        String s = doc["TXT"][i] | "";
+        item.cmd = doc[F("CMD")][i];
+        item.val = doc[F("VALUE")][i];
+        item.xtime = doc[F("XTIME")][i];
+        item.interval = doc[F("INTERVAL")][i];
+        String s = doc[F("TXT")][i] | "";
         item.text = s;
         _command_que.push_back(item);
     }
@@ -1195,12 +1179,8 @@ void BWC::saveRebootInfo(){
     StaticJsonDocument<256> doc;
 
     // Set the values in the document
-    time_t boot_timestamp = DateTime.getBootTime();
-    tm * boot_time_tm = localtime(&boot_timestamp);
-    char boot_time_str[64];
-    strftime(boot_time_str, 64, DateFormatter::SIMPLE, boot_time_tm);
     #ifdef ESP8266
-    doc["BOOTINFO"] = ESP.getResetReason() + " " + boot_time_str;
+    doc[F("BOOTINFO")] = ESP.getResetReason() + " " + reboot_time_str;
     #endif
 
     // Serialize JSON to file
@@ -1228,10 +1208,10 @@ void BWC::_saveStates() {
     StaticJsonDocument<256> doc;
 
     // Set the values in the document
-    doc["UNT"] = cio->cio_states.unit;
-    doc["HTR"] = cio->cio_states.heat;
-    doc["FLT"] = cio->cio_states.pump;
-    doc["TGT"] = cio->cio_states.target;
+    doc[F("UNT")] = cio->cio_states.unit;
+    doc[F("HTR")] = cio->cio_states.heat;
+    doc[F("FLT")] = cio->cio_states.pump;
+    doc[F("TGT")] = cio->cio_states.target;
 
     // Serialize JSON to file
     if (serializeJson(doc, file) == 0) {
@@ -1262,13 +1242,13 @@ void BWC::_saveCommandQueue(){
     DynamicJsonDocument doc(1024);
 
     // Set the values in the document
-    doc["LEN"] = _command_que.size();
+    doc[F("LEN")] = _command_que.size();
     for(unsigned int i = 0; i < _command_que.size(); i++){
-        doc["CMD"][i] = _command_que[i].cmd;
-        doc["VALUE"][i] = _command_que[i].val;
-        doc["XTIME"][i] = _command_que[i].xtime;
-        doc["INTERVAL"][i] = _command_que[i].interval;
-        doc["TXT"][i] = _command_que[i].text;
+        doc[F("CMD")][i] = _command_que[i].cmd;
+        doc[F("VALUE")][i] = _command_que[i].val;
+        doc[F("XTIME")][i] = _command_que[i].xtime;
+        doc[F("INTERVAL")][i] = _command_que[i].interval;
+        doc[F("TXT")][i] = _command_que[i].text;
     }
 
     // Serialize JSON to file
@@ -1308,27 +1288,27 @@ void BWC::saveSettings(){
     _airtime_ms = 0;
     _uptime_ms = 0;
     // Set the values in the document
-    doc["CLTIME"] = _cl_timestamp_s;
-    doc["FTIME"] = _filter_timestamp_s;
-    doc["UPTIME"] = _uptime;
-    doc["PUMPTIME"] = _pumptime;
-    doc["HEATINGTIME"] = _heatingtime;
-    doc["AIRTIME"] = _airtime;
-    doc["JETTIME"] = _jettime;
-    doc["PRICE"] = _price;
-    doc["FINT"] = _filter_interval;
-    doc["CLINT"] = _cl_interval;
-    doc["AUDIO"] = _audio_enabled;
-    doc["KWH"] = _energy_total_kWh;
-    doc["KWHD"] = _energy_daily_Ws;
-    doc["SAVETIME"] = DateTime.format(DateFormatter::SIMPLE);
-    doc["RESTORE"] = _restore_states_on_start;
-    doc["R"] = _R_COOLING;
-    doc["AMB"] = _ambient_temp;
-    doc["BRT"] = _dsp_brightness;
-    doc["NOTIFY"] = _notify;
-    doc["NOTIFTIME"] = _notification_time;
-    doc["VTCAL"] = _vt_calibrated;
+    doc[F("CLTIME")] = _cl_timestamp_s;
+    doc[F("FTIME")] = _filter_timestamp_s;
+    doc[F("UPTIME")] = _uptime;
+    doc[F("PUMPTIME")] = _pumptime;
+    doc[F("HEATINGTIME")] = _heatingtime;
+    doc[F("AIRTIME")] = _airtime;
+    doc[F("JETTIME")] = _jettime;
+    doc[F("PRICE")] = _price;
+    doc[F("FINT")] = _filter_interval;
+    doc[F("CLINT")] = _cl_interval;
+    doc[F("AUDIO")] = _audio_enabled;
+    doc[F("KWH")] = _energy_total_kWh;
+    doc[F("KWHD")] = _energy_daily_Ws;
+    // doc[F("SAVETIME")] = DateTime.format(DateFormatter::SIMPLE);
+    doc[F("RESTORE")] = _restore_states_on_start;
+    doc[F("R")] = _R_COOLING;
+    doc[F("AMB")] = _ambient_temp;
+    doc[F("BRT")] = _dsp_brightness;
+    doc[F("NOTIFY")] = _notify;
+    doc[F("NOTIFTIME")] = _notification_time;
+    doc[F("VTCAL")] = _vt_calibrated;
 
     // Serialize JSON to file
     if (serializeJson(doc, file) == 0) {
@@ -1350,8 +1330,8 @@ void BWC::saveDebugInfo(const String& s){
     DynamicJsonDocument doc(1024);
 
     // Set the values in the document
-    doc["timestamp"] = DateTime.format(DateFormatter::SIMPLE);
-    doc["message"] = s;
+    doc[F("timestamp")] = time(nullptr);
+    doc[F("message")] = s;
     // Serialize JSON to file
     if (serializeJson(doc, file) == 0) {
         // Serial.println(F("Failed to write debug.txt"));

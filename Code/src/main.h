@@ -9,10 +9,10 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 #include <WiFiClientSecure.h>
+#include <time.h>
 // #include "certs.h"
 #include <CertStoreBearSSL.h>
 BearSSL::CertStore certStore;
-#include <time.h>
 
 #else
 
@@ -137,6 +137,7 @@ void updateError(int err);
 void startMqtt();
 void mqttCallback(char* topic, byte* payload, unsigned int length);
 void mqttConnect();
+time_t getBootTime();
 void handleESPInfo();
 
 void setupHA();

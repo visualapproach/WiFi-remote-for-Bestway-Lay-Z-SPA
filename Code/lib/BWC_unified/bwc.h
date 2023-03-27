@@ -10,7 +10,7 @@
 //long long needed in arduino core v3+
 #define ARDUINOJSON_USE_LONG_LONG 1
 #include <ArduinoJson.h>
-#include "ESPDateTime.h"
+// #include "ESPDateTime.h"
 #include <LittleFS.h>
 #include <Ticker.h>
 #include <vector>
@@ -88,7 +88,8 @@ class BWC {
         // String getDebugData();
 
     public:
-        String reboot_time;
+        String reboot_time_str;
+        time_t reboot_time_t;
         int pins[7];
         unsigned int loop_count = 0;
         bool hasjets, hasgod;
@@ -99,7 +100,6 @@ class BWC {
         bool _loadHardware(Models& cioNo, Models& dspNo, int pins[]);
         bool _handlecommand(int64_t cmd, int64_t val, String txt);
         void _handleCommandQ();
-        void _startNTP();
         void _loadSettings();
         void _loadCommandQueue();
         void _saveCommandQueue();
