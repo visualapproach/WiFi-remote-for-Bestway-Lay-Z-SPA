@@ -12,9 +12,8 @@ class DSP_6W : public DSP
         virtual void setup(int dsp_data_pin, int dsp_clk_pin, int dsp_cs_pin, int dsp_audio_pin) = 0;
         virtual void stop() = 0;
         void pause_resume(bool action) override {}
-        sToggles getStates();
-        virtual void setStates(const sStates& to_dsp_states) = 0;
-
+        void updateToggles();
+        virtual void handleStates() = 0;
 
         /*Internal use*/
     protected:
@@ -56,8 +55,6 @@ class DSP_6W : public DSP
         virtual Buttons getPressedButton() = 0;
 
     protected:
-        sToggles _from_dsp_states;
-        sStates _to_dsp_states;
 
     private:
         uint8_t _brightness;

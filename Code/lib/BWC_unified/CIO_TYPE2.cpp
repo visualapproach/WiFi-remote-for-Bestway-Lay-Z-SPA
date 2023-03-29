@@ -55,17 +55,17 @@ void CIO_6_TYPE2::pause_resume(bool action)
     }
 }
 
-sStates CIO_6_TYPE2::getStates()
+void CIO_6_TYPE2::updateStates()
 {
     /*update all states*/
 
     //newdata is true when a data packet has arrived from cio
-    if(!_new_packet_available) return _actual_states;
+    if(!_new_packet_available) return;
     _new_packet_available = false;
     // if(_packet_error)
     // {
     //     _packet_error = false;
-    //     return _actual_states;
+    //     return cio_states;
     // }
     static uint32_t buttonReleaseTime;
     enum Readmode: int {readtemperature, uncertain, readtarget};
@@ -79,7 +79,7 @@ sStates CIO_6_TYPE2::getStates()
     // }
     // if(checksum != prev_checksum) {
     //     prev_checksum = checksum;
-    //     return _actual_states;
+    //     return cio_states;
     // }
 
     //copy private array to public array
@@ -88,61 +88,61 @@ sStates CIO_6_TYPE2::getStates()
     }
 
     brightness = _brightness & 7; //extract only the brightness bits (0-7)
-    _actual_states.locked = (payload[LCK_IDX] & (1 << LCK_BIT)) > 0;
-    _actual_states.power = 1; //(payload[PWR_IDX] & (1 << PWR_BIT)) > 0;
+    cio_states.locked = (payload[LCK_IDX] & (1 << LCK_BIT)) > 0;
+    cio_states.power = 1; //(payload[PWR_IDX] & (1 << PWR_BIT)) > 0;
     /*If both leds are out, don't change (When TIMER is pressed)*/
     if(payload[C_IDX] & (1 << C_BIT) || payload[F_IDX] & (1 << F_BIT))
-        _actual_states.unit = (payload[C_IDX] & (1 << C_BIT)) > 0;
-    _actual_states.bubbles = (payload[AIR_IDX] & (1 << AIR_BIT)) > 0;
-    _actual_states.heatgrn = (payload[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
-    _actual_states.heatred = (payload[REDHTR_IDX] & (1 << REDHTR_BIT)) > 0;
-    _actual_states.timerled1 = (payload[TMR1_IDX] & (1 << TMR1_BIT)) > 0;
-    _actual_states.timerled2 = (payload[TMR2_IDX] & (1 << TMR2_BIT)) > 0;
-    _actual_states.timerbuttonled = (payload[TMRBTNLED_IDX] & (1 << TMRBTNLED_BIT)) > 0;
-    _actual_states.heat = _actual_states.heatgrn || _actual_states.heatred;
-    _actual_states.pump = (payload[FLT_IDX] & (1 << FLT_BIT)) > 0;
-    _actual_states.char1 = (uint8_t)_getChar(payload[DGT1_IDX]);
-    _actual_states.char2 = (uint8_t)_getChar(payload[DGT2_IDX]);
-    _actual_states.char3 = (uint8_t)_getChar(payload[DGT3_IDX]);
+        cio_states.unit = (payload[C_IDX] & (1 << C_BIT)) > 0;
+    cio_states.bubbles = (payload[AIR_IDX] & (1 << AIR_BIT)) > 0;
+    cio_states.heatgrn = (payload[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
+    cio_states.heatred = (payload[REDHTR_IDX] & (1 << REDHTR_BIT)) > 0;
+    cio_states.timerled1 = (payload[TMR1_IDX] & (1 << TMR1_BIT)) > 0;
+    cio_states.timerled2 = (payload[TMR2_IDX] & (1 << TMR2_BIT)) > 0;
+    cio_states.timerbuttonled = (payload[TMRBTNLED_IDX] & (1 << TMRBTNLED_BIT)) > 0;
+    cio_states.heat = cio_states.heatgrn || cio_states.heatred;
+    cio_states.pump = (payload[FLT_IDX] & (1 << FLT_BIT)) > 0;
+    cio_states.char1 = (uint8_t)_getChar(payload[DGT1_IDX]);
+    cio_states.char2 = (uint8_t)_getChar(payload[DGT2_IDX]);
+    cio_states.char3 = (uint8_t)_getChar(payload[DGT3_IDX]);
     if(getHasjets()) 
-        _actual_states.jets = (payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
+        cio_states.jets = (payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
     else 
-        _actual_states.jets = 0;
+        cio_states.jets = 0;
 
     //Determine if display is showing target temp or actual temp or anything else.
     //Unreadable characters - exit
-    if(_actual_states.char1 == '*' || _actual_states.char2 == '*' || _actual_states.char3 == '*') return _actual_states;
+    if(cio_states.char1 == '*' || cio_states.char2 == '*' || cio_states.char3 == '*') return;
     //Error or user plays with timer button - exit (error notification can be dealt with in main.cpp or elsewhere)
-    if(_actual_states.char1 == 'E' || _actual_states.char3 == 'H' || _actual_states.char3 == ' ') return _actual_states;
+    if(cio_states.char1 == 'E' || cio_states.char3 == 'H' || cio_states.char3 == ' ') return;
 
     //capture TARGET after UP/DOWN has been pressed...
     if ((_button_code == getButtonCode(UP)) || (_button_code == getButtonCode(DOWN)))
     {
         buttonReleaseTime = millis(); //updated as long as buttons are pressed
-        if(_actual_states.power && !_actual_states.locked) capturePhase = readtarget;
+        if(cio_states.power && !cio_states.locked) capturePhase = readtarget;
     }
 
     //Stop expecting target temp after timeout
     if((millis()-buttonReleaseTime) > 2000) capturePhase = uncertain;
     if((millis()-buttonReleaseTime) > 6000) capturePhase = readtemperature;
     //convert text on display to a value if the chars are recognized
-    String tempstring = String((char)_actual_states.char1)+String((char)_actual_states.char2)+String((char)_actual_states.char3);
+    String tempstring = String((char)cio_states.char1)+String((char)cio_states.char2)+String((char)cio_states.char3);
     uint8_t parsedValue = tempstring.toInt();
     //capture target temperature only if showing plausible values (not blank screen while blinking)
     if( (capturePhase == readtarget) && (parsedValue > 19) ) 
     {
-        _actual_states.target = parsedValue;
+        cio_states.target = parsedValue;
     }
     //wait 6 seconds after UP/DOWN is released to be sure that actual temp is shown
     if(capturePhase == readtemperature)
     {
-        if(_actual_states.temperature != parsedValue)
+        if(cio_states.temperature != parsedValue)
         {
-        _actual_states.temperature = parsedValue;
+        cio_states.temperature = parsedValue;
         }
     }
 
-    return _actual_states;
+    return;
 }
 
 //CIO comm
@@ -178,7 +178,7 @@ void IRAM_ATTR CIO_6_TYPE2::clkHandler(void) {
         //overwrite the old payload bit with new bit
         _payload[_byte_count-1] = (_payload[_byte_count-1] & ~(1 << ld_bitnumber)) | ((READ_PERI_REG(PIN_IN) & (1 << _CIO_LD_PIN))>0) << ld_bitnumber;
         }
-        //store brightness in _cio local variable. It is not used, but put here in case we want to obey the pump.
+        //store brightness in cio local variable. It is not used, but put here in case we want to obey the pump.
         if(_bit_count == 7 && (_received_cmd & B11000000) == B10000000) _brightness = _received_cmd;
         _bit_count++;
     } else {

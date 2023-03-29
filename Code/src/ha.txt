@@ -18,13 +18,13 @@ void setupHA()
   mintemp = 68;
   DynamicJsonDocument devicedoc(512);
   DynamicJsonDocument doc(1536);
-  devicedoc["dev"]["configuration_url"] = "http://" + WiFi.localIP().toString();
-  devicedoc["dev"]["connections"].add(serialized("[\"mac\",\"" + WiFi.macAddress()+"\"]" ));
-  devicedoc["dev"]["identifiers"] = mychipid;
-  devicedoc["dev"]["manufacturer"] = F("Visualapproach");
-  devicedoc["dev"]["model"] = bwc.getModel();
-  devicedoc["dev"]["name"] = F("Layzspa WiFi controller");
-  devicedoc["dev"]["sw_version"] = FW_VERSION;
+  devicedoc["dev"][F("configuration_url")] = "http://" + WiFi.localIP().toString();
+  devicedoc["dev"][F("connections")].add(serialized("[\"mac\",\"" + WiFi.macAddress()+"\"]" ));
+  devicedoc["dev"][F("identifiers")] = mychipid;
+  devicedoc["dev"][F("manufacturer")] = F("Visualapproach");
+  devicedoc["dev"][F("model")] = bwc.getModel();
+  devicedoc["dev"][F("name")] = F("Layzspa WiFi controller");
+  devicedoc["dev"][F("sw_version")] = FW_VERSION;
 
 
   //brightness slider
@@ -33,7 +33,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/number/layzspa_brightness/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa brightness");
-  doc["uniq_id"] = "input_number.layzspa_brightness"+mychipid;
+  doc["uniq_id"] = F("input_number.layzspa_brightness")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["avty_t"] = mqttBaseTopic+F("/Status");
   doc["pl_avail"] = F("Alive");
@@ -61,7 +61,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_pressed_button/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa pressed button");
-  doc["uniq_id"] = "sensor.layzspa_pressed_button"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_pressed_button")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/button");
   doc["avty_t"] = mqttBaseTopic+F("/Status");
   doc["pl_avail"] = F("Alive");
@@ -83,7 +83,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_reboot_time/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa reboot time");
-  doc["uniq_id"] = "sensor.layzspa_reboot_time"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_reboot_time")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/reboot_time");
   doc["val_tpl"] = F("{{as_timestamp(as_datetime(value).isoformat()) | timestamp_custom('%F %T')}}");
   doc["avty_t"] = mqttBaseTopic+F("/Status");
@@ -106,7 +106,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_reboot_reason/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa reboot reason");
-  doc["uniq_id"] = "sensor.layzspa_reboot_reason"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_reboot_reason")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/reboot_reason");
   doc["avty_t"] = mqttBaseTopic+F("/Status");
   doc["pl_avail"] = "Alive";
@@ -128,7 +128,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_ssid/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa ssid");
-  doc["uniq_id"] = "sensor.layzspa_ssid"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_ssid")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/other");
   doc["val_tpl"] = F("{{ value_json.SSID }}");
   doc["expire_after"] = 700;
@@ -152,7 +152,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_rssi/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa rssi");
-  doc["uniq_id"] = "sensor.layzspa_rssi"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_rssi")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/other");
   doc["unit_of_meas"] = F("dBm");
   doc["val_tpl"] = F("{{ value_json.RSSI }}");
@@ -177,7 +177,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_ip/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa ip");
-  doc["uniq_id"] = "sensor.layzspa_ip"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_ip")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/other");
   doc["val_tpl"] = F("{{ value_json.IP }}");
   doc["expire_after"] = 700;
@@ -202,7 +202,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_connect_count/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa connect count");
-  doc["uniq_id"] = "sensor.layzspa_connect_count"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_connect_count")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/MQTT_Connect_Count");
   doc["avty_t"] = mqttBaseTopic+F("/Status");
   doc["pl_avail"] = F("Alive");
@@ -226,7 +226,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_time_to_target/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa time to target");
-  doc["uniq_id"] = "sensor.layzspa_time_to_target"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_time_to_target")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/times");
   doc["unit_of_meas"] = F("hours");
   doc["val_tpl"] = F("{{ (value_json.TTTT / 3600 | float) | round(2) }}");
@@ -252,7 +252,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_time_to_ready/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa time to ready");
-  doc["uniq_id"] = "sensor.layzspa_time_to_ready"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_time_to_ready")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/times");
   doc["unit_of_meas"] = F("hours");
   doc["val_tpl"] = F("{{ value_json.T2R }}");
@@ -279,7 +279,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_energy/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa energy");
-  doc["uniq_id"] = "sensor.layzspa_energy"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_energy")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/times");
   doc["unit_of_meas"] = F("kWh");
   doc["val_tpl"] = F("{{ value_json.KWH | round(3) }}");
@@ -307,7 +307,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_today/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa today");
-  doc["uniq_id"] = "sensor.layzspa_today"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_today")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/times");
   doc["unit_of_meas"] = F("kWh");
   doc["val_tpl"] = F("{{ value_json.KWHD | round(3) }}");
@@ -335,7 +335,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_power/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa power");
-  doc["uniq_id"] = "sensor.layzspa_power"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_power")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/times");
   doc["unit_of_meas"] = F("W");
   doc["val_tpl"] = F("{{ value_json.WATT | int }}");
@@ -363,7 +363,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_chlorine_age/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa chlorine age");
-  doc["uniq_id"] = "sensor.layzspa_chlorine_age"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_chlorine_age")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/times");
   doc["unit_of_meas"] = F("days");
   doc["val_tpl"] = F("{{ ( ( (now().timestamp()|int) - value_json.CLTIME|int)/3600/24) | round(2) }}");
@@ -389,7 +389,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_filter_age/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa filter age");
-  doc["uniq_id"] = "sensor.layzspa_filter_age"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_filter_age")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/times");
   doc["unit_of_meas"] = F("days");
   doc["val_tpl"] = F("{{ ( ( (now().timestamp()|int) - value_json.FTIME|int)/3600/24) | round(2) }}");
@@ -415,7 +415,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_uptime/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa uptime");
-  doc["uniq_id"] = "sensor.layzspa_uptime"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_uptime")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/times");
   doc["unit_of_meas"] = F("days");
   doc["val_tpl"] = F("{{ ( (value_json.UPTIME|int)/3600/24) | round(2) }}");
@@ -441,7 +441,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_pumptime/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa pump time");
-  doc["uniq_id"] = "sensor.layzspa_pumptime"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_pumptime")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/times");
   doc["unit_of_meas"] = F("hours");
   doc["val_tpl"] = F("{{ ( (value_json.PUMPTIME|int)/3600) | round(2) }}");
@@ -467,7 +467,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_heatertime/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa heater time");
-  doc["uniq_id"] = "sensor.layzspa_heatertime"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_heatertime")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/times");
   doc["unit_of_meas"] = F("hours");
   doc["val_tpl"] = F("{{ ( (value_json.HEATINGTIME|int)/3600) | round(2) }}");
@@ -493,7 +493,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_airtime/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa air time");
-  doc["uniq_id"] = "sensor.layzspa_airtime"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_airtime")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/times");
   doc["unit_of_meas"] = F("hours");
   doc["val_tpl"] = F("{{ ( (value_json.AIRTIME|int)/3600) | round(2) }}");
@@ -519,7 +519,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/binary_sensor/layzspa_lock/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa lock");
-  doc["uniq_id"] = "binary_sensor.layzspa_lock"+mychipid;
+  doc["uniq_id"] = F("binary_sensor.layzspa_lock")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["val_tpl"] = F("{% if value_json.LCK == 1 %}OFF{% else %}ON{% endif %}");
   doc["dev_cla"] = F("lock");
@@ -544,7 +544,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/binary_sensor/layzspa_heater/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa heater");
-  doc["uniq_id"] = "binary_sensor.layzspa_heater"+mychipid;
+  doc["uniq_id"] = F("binary_sensor.layzspa_heater")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["val_tpl"] = F("{% if value_json.RED == 1 %}ON{% else %}OFF{% endif %}");
   doc["dev_cla"] = F("heat");
@@ -569,7 +569,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/binary_sensor/layzspa_ready/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa ready");
-  doc["uniq_id"] = "binary_sensor.layzspa_ready"+mychipid;
+  doc["uniq_id"] = F("binary_sensor.layzspa_ready")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["val_tpl"] = F("{% if value_json.TMP > 30 %}{% if value_json.TMP >= value_json.TGT-1 %}ON{% else %}OFF{% endif %}{% else %}OFF{% endif %}");
   doc["expire_after"] = 700;
@@ -594,7 +594,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/binary_sensor/layzspa_connection/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa connection");
-  doc["uniq_id"] = "binary_sensor.layzspa_connection"+mychipid;
+  doc["uniq_id"] = F("binary_sensor.layzspa_connection")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/Status");
   doc["dev_cla"] = F("connectivity");
   doc["avty_t"] = mqttBaseTopic+F("/Status");
@@ -619,7 +619,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/switch/layzspa_heat_regulation/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa heat regulation");
-  doc["uniq_id"] = "switch.layzspa_heat_regulation"+mychipid;
+  doc["uniq_id"] = F("switch.layzspa_heat_regulation")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["cmd_t"] = mqttBaseTopic+F("/command");
   doc["val_tpl"] = F("{% if value_json.RED == 1 %}1{% elif value_json.GRN == 1 %}1{% else %}0{% endif %}");
@@ -653,7 +653,7 @@ void setupHA()
     topic = String(HA_PREFIX) + F("/switch/layzspa_jets/config");
     // Serial.println(topic);
     doc["name"] = F("Layzspa jets");
-    doc["uniq_id"] = "switch.layzspa_jets"+mychipid;
+    doc["uniq_id"] = F("switch.layzspa_jets")+mychipid;
     doc["stat_t"] = mqttBaseTopic+F("/message");
     doc["cmd_t"] = mqttBaseTopic+F("/command");
     doc["val_tpl"] = F("{{ value_json.HJT }}");
@@ -684,7 +684,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/switch/layzspa_airbubbles/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa airbubbles");
-  doc["uniq_id"] = "switch.layzspa_airbubbles"+mychipid;
+  doc["uniq_id"] = F("switch.layzspa_airbubbles")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["cmd_t"] = mqttBaseTopic+F("/command");
   doc["val_tpl"] = F("{{ value_json.AIR }}");
@@ -714,7 +714,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/switch/layzspa_pump/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa pump");
-  doc["uniq_id"] = "switch.layzspa_pump"+mychipid;
+  doc["uniq_id"] = F("switch.layzspa_pump")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["cmd_t"] = mqttBaseTopic+F("/command");
   doc["val_tpl"] = F("{{ value_json.FLT }}");
@@ -744,7 +744,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/switch/layzspa_temperature_unit/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa temperature unit F-C");
-  doc["uniq_id"] = "switch.layzspa_unit"+mychipid;
+  doc["uniq_id"] = F("switch.layzspa_unit")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["cmd_t"] = mqttBaseTopic+F("/command");
   doc["val_tpl"] = F("{{ value_json.UNT }}");
@@ -774,7 +774,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/button/layzspa_reset_chlorine/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa reset chlorine timer");
-  doc["uniq_id"] = "button.layzspa_reset_chlorine"+mychipid;
+  doc["uniq_id"] = F("button.layzspa_reset_chlorine")+mychipid;
   doc["cmd_t"] = mqttBaseTopic+F("/command");
   doc["payload_press"] = F("{CMD:9,VALUE:true,XTIME:0,INTERVAL:0}");
   doc["icon"] = F("mdi:restart");
@@ -798,7 +798,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/button/layzspa_reset_filter/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa reset filter timer");
-  doc["uniq_id"] = "button.layzspa_reset_filter"+mychipid;
+  doc["uniq_id"] = F("button.layzspa_reset_filter")+mychipid;
   doc["cmd_t"] = mqttBaseTopic+F("/command");
   doc["payload_press"] = F("{CMD:10,VALUE:true,XTIME:0,INTERVAL:0}");
   doc["icon"] = F("mdi:restart");
@@ -822,7 +822,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/button/layzspa_restart_esp/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa restart esp");
-  doc["uniq_id"] = "button.layzspa_restart_esp"+mychipid;
+  doc["uniq_id"] = F("button.layzspa_restart_esp")+mychipid;
   doc["cmd_t"] = mqttBaseTopic+F("/command");
   doc["payload_press"] = F("{CMD:6,VALUE:true,XTIME:0,INTERVAL:0}");
   doc["icon"] = F("mdi:restart");
@@ -850,7 +850,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_temperature_f/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa temp (F)");
-  doc["uniq_id"] = "sensor.layzspa_temp_f"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_temp_f")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["unit_of_meas"] = "°F";
   doc["val_tpl"] = F("{{ value_json.TMPF }}");
@@ -876,7 +876,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_temp_c/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa temp (C)");
-  doc["uniq_id"] = "sensor.layzspa_temp_c"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_temp_c")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["unit_of_meas"] = "°C";
   doc["val_tpl"] = F("{{ value_json.TMPC }}");
@@ -902,7 +902,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_virtualtemp_f/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa virtual temp (F)");
-  doc["uniq_id"] = "sensor.layzspa_virtual_temp_f"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_virtual_temp_f")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["unit_of_meas"] = "°F";
   doc["val_tpl"] = F("{{ value_json.VTMF | round(2) }}");
@@ -928,7 +928,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_virtualtemp_c/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa virtual temp (C)");
-  doc["uniq_id"] = "sensor.layzspa_virtual_temp_c"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_virtual_temp_c")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["unit_of_meas"] = "°C";
   doc["val_tpl"] = F("{{ value_json.VTMC | round(2) }}");
@@ -954,7 +954,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_target_temp_f/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa target temp (F)");
-  doc["uniq_id"] = "sensor.layzspa_target_temp_f"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_target_temp_f")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["unit_of_meas"] = "°F";
   doc["val_tpl"] = F("{{ value_json.TGTF }}");
@@ -980,7 +980,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_target_temp_c/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa target temp (C)");
-  doc["uniq_id"] = "sensor.layzspa_target_temp_c"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_target_temp_c")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["unit_of_meas"] = "°C";
   doc["val_tpl"] = F("{{ value_json.TGTC }}");
@@ -1006,7 +1006,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/sensor/layzspa_amb_temp_c/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa ambient temp (C)");
-  doc["uniq_id"] = "sensor.layzspa_amb_temp_c"+mychipid;
+  doc["uniq_id"] = F("sensor.layzspa_amb_temp_c")+mychipid;
   doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["unit_of_meas"] = "°C";
   doc["val_tpl"] = F("{{ value_json.AMBC }}");
@@ -1034,7 +1034,7 @@ void setupHA()
   topic = String(HA_PREFIX) + F("/climate/layzspa_climate/config");
   // Serial.println(topic);
   doc["name"] = F("Layzspa temperature control");
-  doc["uniq_id"] = "climate.layzspa_climate"+mychipid;
+  doc["uniq_id"] = F("climate.layzspa_climate")+mychipid;
   doc["max_temp"] = maxtemp;
   doc["min_temp"] = mintemp;
   doc["precision"] = 1.0;

@@ -62,18 +62,17 @@ void setup()
     char stack;
     stack_start = &stack;
 
-    bwc.setup();
-    bwc.loop();
     Serial.begin(115200);
     Serial.println(F("\nStart"));
-
+    bwc.setup();
+    bwc.loop();
     periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
     startComplete.attach(60, []{ if(useMqtt) enableMqtt = true; startComplete.detach(); });
     // update webpage every 2 seconds. (will also be updated on state changes)
     updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
     // when NTP time is valid we save bootlog.txt and this timer stops
-    bootlogTimer.attach(5, []{ if(DateTime.isTimeValid()) {bwc.saveRebootInfo(); bootlogTimer.detach();} });
+    bootlogTimer.attach(5, []{ if(time(nullptr)>57600) {bwc.saveRebootInfo(); bootlogTimer.detach();} });
     loadWifi();
     loadWebConfig();
     startWiFi();
@@ -175,10 +174,10 @@ void loop()
             // could be interesting to display the IP
             //bwc.print(WiFi.localIP().toString());
 
-            if (!DateTime.isTimeValid())
+            if (time(nullptr)<57600)
             {
                 // Serial.println(F("NTP > Start synchronisation"));
-                DateTime.begin();
+                startNTP();
             }
 
             if (enableMqtt && !mqttClient.loop())
@@ -206,10 +205,8 @@ void loop()
  */
 void sendWS()
 {
-    String json;
-
     // send states
-    json = bwc.getJSONStates();
+    String json = bwc.getJSONStates();
     webSocket.broadcastTXT(json);
     // send times
     json = bwc.getJSONTimes();
@@ -220,6 +217,11 @@ void sendWS()
 
     // json = bwc.getDebugData();
     // webSocket.broadcastTXT(json);
+    time_t now = time(nullptr);
+    struct tm timeinfo;
+    gmtime_r(&now, &timeinfo);
+    // Serial.print("Current time: ");
+    // Serial.print(asctime(&timeinfo));
 }
 
 String getOtherInfo()
@@ -228,24 +230,24 @@ String getOtherInfo()
     StaticJsonDocument<512> doc;
     String json = "";
     // Set the values in the document
-    doc["CONTENT"] = "OTHER";
-    doc["MQTT"] = mqttClient.state();
+    doc[F("CONTENT")] = F("OTHER");
+    doc[F("MQTT")] = mqttClient.state();
     /*TODO: add these:*/
-    //   doc["PressedButton"] = bwc.getPressedButton();
-    doc["HASJETS"] = bwc.hasjets;
-    doc["HASGOD"] = bwc.hasgod;
-    doc["MODEL"] = bwc.getModel();
-    doc["RSSI"] = WiFi.RSSI();
-    doc["IP"] = WiFi.localIP().toString();
-    doc["SSID"] = WiFi.SSID();
-    doc["FW"] = FW_VERSION;
-    doc["loopfq"] = bwc.loop_count;
+    //   doc[F("PressedButton")] = bwc.getPressedButton();
+    doc[F("HASJETS")] = bwc.hasjets;
+    doc[F("HASGOD")] = bwc.hasgod;
+    doc[F("MODEL")] = bwc.getModel();
+    doc[F("RSSI")] = WiFi.RSSI();
+    doc[F("IP")] = WiFi.localIP().toString();
+    doc[F("SSID")] = WiFi.SSID();
+    doc[F("FW")] = FW_VERSION;
+    doc[F("loopfq")] = bwc.loop_count;
     bwc.loop_count = 0;
 
     // Serialize JSON to string
     if (serializeJson(doc, json) == 0)
     {
-        json = "{\"error\": \"Failed to serialize message\"}";
+        json = F("{\"error\": \"Failed to serialize other\"}");
     }
     return json;
 }
@@ -393,8 +395,25 @@ void startWiFiConfigPortal()
  */
 void startNTP()
 {
-    DateTime.setServer("pool.ntp.org");
-    DateTime.begin(3000);
+    configTime(0,0,"pool.ntp.org", "time.nist.gov");
+    time_t now = time(nullptr);
+    while (now < 8 * 3600 * 2) {
+        delay(500);
+        Serial.print(".");
+        now = time(nullptr);
+    }
+    Serial.println();
+    struct tm timeinfo;
+    gmtime_r(&now, &timeinfo);
+    // Serial.print("Current time: ");
+    // Serial.print(asctime(&timeinfo));
+
+    time_t boot_timestamp = getBootTime();
+    tm * boot_time_tm = gmtime(&boot_timestamp);
+    char boot_time_str[64];
+    strftime(boot_time_str, 64, "%F %T", boot_time_tm);
+    bwc.reboot_time_str = String(boot_time_str);
+    bwc.reboot_time_t = boot_timestamp;
 }
 
 void startOTA()
@@ -501,11 +520,11 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
             }
 
             // Copy values from the JsonDocument to the Config
-            int64_t command = doc["CMD"];
-            int64_t value = doc["VALUE"];
-            int64_t xtime = doc["XTIME"];
-            int64_t interval = doc["INTERVAL"];
-            String txt = doc["TXT"] | "";
+            int64_t command = doc[F("CMD")];
+            int64_t value = doc[F("VALUE")];
+            int64_t xtime = doc[F("XTIME")];
+            int64_t interval = doc[F("INTERVAL")];
+            String txt = doc[F("TXT")] | "";
             command_que_item item;
             item.cmd = command;
             item.val = value;
@@ -616,11 +635,11 @@ void handleHWtest()
         errors += digitalRead(bwc.pins[pin+3]) != state;
         }
         if(errors > 499)
-        result += "CIO to DSP pin " + String(pin+3) + " fail!";
+        result += F("CIO to DSP pin ") + String(pin+3) + F(" fail!");
         else if(errors == 0)
-        result += "CIO to DSP pin " + String(pin+3) + " success!";
+        result += F("CIO to DSP pin ") + String(pin+3) + F(" success!");
         else
-        result += "CIO to DSP pin " + String(pin+3) + " " + String(errors/500) + "\% bad";
+        result += F("CIO to DSP pin ") + String(pin+3) + " " + String(errors/500) + F("\% bad");
         errors = 0;
         delay(0);
     }
@@ -636,11 +655,11 @@ void handleHWtest()
         errors += digitalRead(bwc.pins[pin]) != state;
         }
         if(errors > 499)
-        result += "DSP to CIO pin " + String(pin+3) + " fail!";
+        result += F("DSP to CIO pin ") + String(pin+3) + F(" fail!");
         else if(errors == 0)
-        result += "DSP to CIO pin " + String(pin+3) + " success!";
+        result += F("DSP to CIO pin ") + String(pin+3) + F(" success!");
         else
-        result += "DSP to CIO pin " + String(pin+3) + " " + String(errors/500) + "\% bad";
+        result += F("DSP to CIO pin ") + String(pin+3) + " " + String(errors/500) + F("\% bad");
         errors = 0;
         delay(0);
     }
@@ -675,6 +694,7 @@ String getContentType(const String& filename)
  */
 bool handleFileRead(String path)
 {
+    HeapSelectIram ephemeral;
     // Serial.println("HTTP > request: " + path);
     // If a folder is requested, send the index file
     if (path.endsWith("/"))
@@ -773,11 +793,11 @@ void handleAddCommand()
         return;
     }
 
-    int64_t command = doc["CMD"];
-    int64_t value = doc["VALUE"];
-    int64_t xtime = doc["XTIME"];
-    int64_t interval = doc["INTERVAL"];
-    String txt = doc["TXT"] | "";
+    int64_t command = doc[F("CMD")];
+    int64_t value = doc[F("VALUE")];
+    int64_t xtime = doc[F("XTIME")];
+    int64_t interval = doc[F("INTERVAL")];
+    String txt = doc[F("TXT")] | "";
     command_que_item item;
     item.cmd = command;
     item.val = value;
@@ -813,13 +833,13 @@ void loadWebConfig()
         // Serial.println(F("Failed to read webconfig.json. Using defaults."));
     }
 
-    showSectionTemperature = (doc.containsKey("SST") ? doc["SST"] : true);
-    showSectionDisplay = (doc.containsKey("SSD") ? doc["SSD"] : true);
-    showSectionControl = (doc.containsKey("SSC") ? doc["SSC"] : true);
-    showSectionButtons = (doc.containsKey("SSB") ? doc["SSB"] : true);
-    showSectionTimer = (doc.containsKey("SSTIM") ? doc["SSTIM"] : true);
-    showSectionTotals = (doc.containsKey("SSTOT") ? doc["SSTOT"] : true);
-    useControlSelector = (doc.containsKey("UCS") ? doc["UCS"] : false);
+    showSectionTemperature = (doc.containsKey("SST") ? doc[F("SST")] : true);
+    showSectionDisplay = (doc.containsKey("SSD") ? doc[F("SSD")] : true);
+    showSectionControl = (doc.containsKey("SSC") ? doc[F("SSC")] : true);
+    showSectionButtons = (doc.containsKey("SSB") ? doc[F("SSB")] : true);
+    showSectionTimer = (doc.containsKey("SSTIM") ? doc[F("SSTIM")] : true);
+    showSectionTotals = (doc.containsKey("SSTOT") ? doc[F("SSTOT")] : true);
+    useControlSelector = (doc.containsKey("UCS") ? doc[F("UCS")] : false);
 }
 
 /**
@@ -837,13 +857,13 @@ void saveWebConfig()
     // DynamicJsonDocument doc(256);
     StaticJsonDocument<256> doc;
 
-    doc["SST"] = showSectionTemperature;
-    doc["SSD"] = showSectionDisplay;
-    doc["SSC"] = showSectionControl;
-    doc["SSB"] = showSectionButtons;
-    doc["SSTIM"] = showSectionTimer;
-    doc["SSTOT"] = showSectionTotals;
-    doc["UCS"] = useControlSelector;
+    doc[F("SST")] = showSectionTemperature;
+    doc[F("SSD")] = showSectionDisplay;
+    doc[F("SSC")] = showSectionControl;
+    doc[F("SSB")] = showSectionButtons;
+    doc[F("SSTIM")] = showSectionTimer;
+    doc[F("SSTOT")] = showSectionTotals;
+    doc[F("UCS")] = useControlSelector;
 
     if (serializeJson(doc, file) == 0)
     {
@@ -863,18 +883,18 @@ void handleGetWebConfig()
     // DynamicJsonDocument doc(256);
     StaticJsonDocument<256> doc;
 
-    doc["SST"] = showSectionTemperature;
-    doc["SSD"] = showSectionDisplay;
-    doc["SSC"] = showSectionControl;
-    doc["SSB"] = showSectionButtons;
-    doc["SSTIM"] = showSectionTimer;
-    doc["SSTOT"] = showSectionTotals;
-    doc["UCS"] = useControlSelector;
+    doc[F("SST")] = showSectionTemperature;
+    doc[F("SSD")] = showSectionDisplay;
+    doc[F("SSC")] = showSectionControl;
+    doc[F("SSB")] = showSectionButtons;
+    doc[F("SSTIM")] = showSectionTimer;
+    doc[F("SSTOT")] = showSectionTotals;
+    doc[F("UCS")] = useControlSelector;
 
     String json;
     if (serializeJson(doc, json) == 0)
     {
-        json = F("{\"error\": \"Failed to serialize message\"}");
+        json = F("{\"error\": \"Failed to serialize webcfg\"}");
     }
     server.send(200, "application/json", json);
 }
@@ -898,13 +918,13 @@ void handleSetWebConfig()
         return;
     }
 
-    showSectionTemperature = doc["SST"];
-    showSectionDisplay = doc["SSD"];
-    showSectionControl = doc["SSC"];
-    showSectionButtons = doc["SSB"];
-    showSectionTimer = doc["SSTIM"];
-    showSectionTotals = doc["SSTOT"];
-    useControlSelector = doc["UCS"];
+    showSectionTemperature = doc[F("SST")];
+    showSectionDisplay = doc[F("SSD")];
+    showSectionControl = doc[F("SSC")];
+    showSectionButtons = doc[F("SSB")];
+    showSectionTimer = doc[F("SSTIM")];
+    showSectionTotals = doc[F("SSTOT")];
+    useControlSelector = doc[F("UCS")];
 
     saveWebConfig();
 
@@ -933,32 +953,32 @@ void loadWifi()
         return;
     }
 
-    enableAp = doc["enableAp"];
-    if(doc.containsKey("enableWM")) enableWmApFallback = doc["enableWM"];
-    apSsid = doc["apSsid"].as<String>();
-    apPwd = doc["apPwd"].as<String>();
+    enableAp = doc[F("enableAp")];
+    if(doc.containsKey("enableWM")) enableWmApFallback = doc[F("enableWM")];
+    apSsid = doc[F("apSsid")].as<String>();
+    apPwd = doc[F("apPwd")].as<String>();
 
-    enableStaticIp4 = doc["enableStaticIp4"];
-    ip4Address[0] = doc["ip4Address"][0];
-    ip4Address[1] = doc["ip4Address"][1];
-    ip4Address[2] = doc["ip4Address"][2];
-    ip4Address[3] = doc["ip4Address"][3];
-    ip4Gateway[0] = doc["ip4Gateway"][0];
-    ip4Gateway[1] = doc["ip4Gateway"][1];
-    ip4Gateway[2] = doc["ip4Gateway"][2];
-    ip4Gateway[3] = doc["ip4Gateway"][3];
-    ip4Subnet[0] = doc["ip4Subnet"][0];
-    ip4Subnet[1] = doc["ip4Subnet"][1];
-    ip4Subnet[2] = doc["ip4Subnet"][2];
-    ip4Subnet[3] = doc["ip4Subnet"][3];
-    ip4DnsPrimary[0] = doc["ip4DnsPrimary"][0];
-    ip4DnsPrimary[1] = doc["ip4DnsPrimary"][1];
-    ip4DnsPrimary[2] = doc["ip4DnsPrimary"][2];
-    ip4DnsPrimary[3] = doc["ip4DnsPrimary"][3];
-    ip4DnsSecondary[0] = doc["ip4DnsSecondary"][0];
-    ip4DnsSecondary[1] = doc["ip4DnsSecondary"][1];
-    ip4DnsSecondary[2] = doc["ip4DnsSecondary"][2];
-    ip4DnsSecondary[3] = doc["ip4DnsSecondary"][3];
+    enableStaticIp4 = doc[F("enableStaticIp4")];
+    ip4Address[0] = doc[F("ip4Address")][0];
+    ip4Address[1] = doc[F("ip4Address")][1];
+    ip4Address[2] = doc[F("ip4Address")][2];
+    ip4Address[3] = doc[F("ip4Address")][3];
+    ip4Gateway[0] = doc[F("ip4Gateway")][0];
+    ip4Gateway[1] = doc[F("ip4Gateway")][1];
+    ip4Gateway[2] = doc[F("ip4Gateway")][2];
+    ip4Gateway[3] = doc[F("ip4Gateway")][3];
+    ip4Subnet[0] = doc[F("ip4Subnet")][0];
+    ip4Subnet[1] = doc[F("ip4Subnet")][1];
+    ip4Subnet[2] = doc[F("ip4Subnet")][2];
+    ip4Subnet[3] = doc[F("ip4Subnet")][3];
+    ip4DnsPrimary[0] = doc[F("ip4DnsPrimary")][0];
+    ip4DnsPrimary[1] = doc[F("ip4DnsPrimary")][1];
+    ip4DnsPrimary[2] = doc[F("ip4DnsPrimary")][2];
+    ip4DnsPrimary[3] = doc[F("ip4DnsPrimary")][3];
+    ip4DnsSecondary[0] = doc[F("ip4DnsSecondary")][0];
+    ip4DnsSecondary[1] = doc[F("ip4DnsSecondary")][1];
+    ip4DnsSecondary[2] = doc[F("ip4DnsSecondary")][2];
+    ip4DnsSecondary[3] = doc[F("ip4DnsSecondary")][3];
 }
 
 /**
@@ -975,32 +995,32 @@ void saveWifi()
 
     DynamicJsonDocument doc(1024);
 
-    doc["enableAp"] = enableAp;
-    doc["enableWM"] = enableWmApFallback;
-    doc["apSsid"] = apSsid;
-    doc["apPwd"] = apPwd;
+    doc[F("enableAp")] = enableAp;
+    doc[F("enableWM")] = enableWmApFallback;
+    doc[F("apSsid")] = apSsid;
+    doc[F("apPwd")] = apPwd;
 
-    doc["enableStaticIp4"] = enableStaticIp4;
-    doc["ip4Address"][0] = ip4Address[0];
-    doc["ip4Address"][1] = ip4Address[1];
-    doc["ip4Address"][2] = ip4Address[2];
-    doc["ip4Address"][3] = ip4Address[3];
-    doc["ip4Gateway"][0] = ip4Gateway[0];
-    doc["ip4Gateway"][1] = ip4Gateway[1];
-    doc["ip4Gateway"][2] = ip4Gateway[2];
-    doc["ip4Gateway"][3] = ip4Gateway[3];
-    doc["ip4Subnet"][0] = ip4Subnet[0];
-    doc["ip4Subnet"][1] = ip4Subnet[1];
-    doc["ip4Subnet"][2] = ip4Subnet[2];
-    doc["ip4Subnet"][3] = ip4Subnet[3];
-    doc["ip4DnsPrimary"][0] = ip4DnsPrimary[0];
-    doc["ip4DnsPrimary"][1] = ip4DnsPrimary[1];
-    doc["ip4DnsPrimary"][2] = ip4DnsPrimary[2];
-    doc["ip4DnsPrimary"][3] = ip4DnsPrimary[3];
-    doc["ip4DnsSecondary"][0] = ip4DnsSecondary[0];
-    doc["ip4DnsSecondary"][1] = ip4DnsSecondary[1];
-    doc["ip4DnsSecondary"][2] = ip4DnsSecondary[2];
-    doc["ip4DnsSecondary"][3] = ip4DnsSecondary[3];
+    doc[F("enableStaticIp4")] = enableStaticIp4;
+    doc[F("ip4Address")][0] = ip4Address[0];
+    doc[F("ip4Address")][1] = ip4Address[1];
+    doc[F("ip4Address")][2] = ip4Address[2];
+    doc[F("ip4Address")][3] = ip4Address[3];
+    doc[F("ip4Gateway")][0] = ip4Gateway[0];
+    doc[F("ip4Gateway")][1] = ip4Gateway[1];
+    doc[F("ip4Gateway")][2] = ip4Gateway[2];
+    doc[F("ip4Gateway")][3] = ip4Gateway[3];
+    doc[F("ip4Subnet")][0] = ip4Subnet[0];
+    doc[F("ip4Subnet")][1] = ip4Subnet[1];
+    doc[F("ip4Subnet")][2] = ip4Subnet[2];
+    doc[F("ip4Subnet")][3] = ip4Subnet[3];
+    doc[F("ip4DnsPrimary")][0] = ip4DnsPrimary[0];
+    doc[F("ip4DnsPrimary")][1] = ip4DnsPrimary[1];
+    doc[F("ip4DnsPrimary")][2] = ip4DnsPrimary[2];
+    doc[F("ip4DnsPrimary")][3] = ip4DnsPrimary[3];
+    doc[F("ip4DnsSecondary")][0] = ip4DnsSecondary[0];
+    doc[F("ip4DnsSecondary")][1] = ip4DnsSecondary[1];
+    doc[F("ip4DnsSecondary")][2] = ip4DnsSecondary[2];
+    doc[F("ip4DnsSecondary")][3] = ip4DnsSecondary[3];
 
     if (serializeJson(doc, file) == 0)
     {
@@ -1019,36 +1039,36 @@ void handleGetWifi()
 
     DynamicJsonDocument doc(1024);
 
-    doc["enableAp"] = enableAp;
-    doc["enableWM"] = enableWmApFallback;
-    doc["apSsid"] = apSsid;
-    doc["apPwd"] = "<enter password>";
+    doc[F("enableAp")] = enableAp;
+    doc[F("enableWM")] = enableWmApFallback;
+    doc[F("apSsid")] = apSsid;
+    doc[F("apPwd")] = "<enter password>";
     if (!hidePasswords)
     {
-        doc["apPwd"] = apPwd;
+        doc[F("apPwd")] = apPwd;
     }
 
-    doc["enableStaticIp4"] = enableStaticIp4;
-    doc["ip4Address"][0] = ip4Address[0];
-    doc["ip4Address"][1] = ip4Address[1];
-    doc["ip4Address"][2] = ip4Address[2];
-    doc["ip4Address"][3] = ip4Address[3];
-    doc["ip4Gateway"][0] = ip4Gateway[0];
-    doc["ip4Gateway"][1] = ip4Gateway[1];
-    doc["ip4Gateway"][2] = ip4Gateway[2];
-    doc["ip4Gateway"][3] = ip4Gateway[3];
-    doc["ip4Subnet"][0] = ip4Subnet[0];
-    doc["ip4Subnet"][1] = ip4Subnet[1];
-    doc["ip4Subnet"][2] = ip4Subnet[2];
-    doc["ip4Subnet"][3] = ip4Subnet[3];
-    doc["ip4DnsPrimary"][0] = ip4DnsPrimary[0];
-    doc["ip4DnsPrimary"][1] = ip4DnsPrimary[1];
-    doc["ip4DnsPrimary"][2] = ip4DnsPrimary[2];
-    doc["ip4DnsPrimary"][3] = ip4DnsPrimary[3];
-    doc["ip4DnsSecondary"][0] = ip4DnsSecondary[0];
-    doc["ip4DnsSecondary"][1] = ip4DnsSecondary[1];
-    doc["ip4DnsSecondary"][2] = ip4DnsSecondary[2];
-    doc["ip4DnsSecondary"][3] = ip4DnsSecondary[3];
+    doc[F("enableStaticIp4")] = enableStaticIp4;
+    doc[F("ip4Address")][0] = ip4Address[0];
+    doc[F("ip4Address")][1] = ip4Address[1];
+    doc[F("ip4Address")][2] = ip4Address[2];
+    doc[F("ip4Address")][3] = ip4Address[3];
+    doc[F("ip4Gateway")][0] = ip4Gateway[0];
+    doc[F("ip4Gateway")][1] = ip4Gateway[1];
+    doc[F("ip4Gateway")][2] = ip4Gateway[2];
+    doc[F("ip4Gateway")][3] = ip4Gateway[3];
+    doc[F("ip4Subnet")][0] = ip4Subnet[0];
+    doc[F("ip4Subnet")][1] = ip4Subnet[1];
+    doc[F("ip4Subnet")][2] = ip4Subnet[2];
+    doc[F("ip4Subnet")][3] = ip4Subnet[3];
+    doc[F("ip4DnsPrimary")][0] = ip4DnsPrimary[0];
+    doc[F("ip4DnsPrimary")][1] = ip4DnsPrimary[1];
+    doc[F("ip4DnsPrimary")][2] = ip4DnsPrimary[2];
+    doc[F("ip4DnsPrimary")][3] = ip4DnsPrimary[3];
+    doc[F("ip4DnsSecondary")][0] = ip4DnsSecondary[0];
+    doc[F("ip4DnsSecondary")][1] = ip4DnsSecondary[1];
+    doc[F("ip4DnsSecondary")][2] = ip4DnsSecondary[2];
+    doc[F("ip4DnsSecondary")][3] = ip4DnsSecondary[3];
 
     String json;
     if (serializeJson(doc, json) == 0)
@@ -1076,32 +1096,32 @@ void handleSetWifi()
         return;
     }
 
-    enableAp = doc["enableAp"];
-    if(doc.containsKey("enableWM")) enableWmApFallback = doc["enableWM"];
-    apSsid = doc["apSsid"].as<String>();
-    apPwd = doc["apPwd"].as<String>();
+    enableAp = doc[F("enableAp")];
+    if(doc.containsKey("enableWM")) enableWmApFallback = doc[F("enableWM")];
+    apSsid = doc[F("apSsid")].as<String>();
+    apPwd = doc[F("apPwd")].as<String>();
 
-    enableStaticIp4 = doc["enableStaticIp4"];
-    ip4Address[0] = doc["ip4Address"][0];
-    ip4Address[1] = doc["ip4Address"][1];
-    ip4Address[2] = doc["ip4Address"][2];
-    ip4Address[3] = doc["ip4Address"][3];
-    ip4Gateway[0] = doc["ip4Gateway"][0];
-    ip4Gateway[1] = doc["ip4Gateway"][1];
-    ip4Gateway[2] = doc["ip4Gateway"][2];
-    ip4Gateway[3] = doc["ip4Gateway"][3];
-    ip4Subnet[0] = doc["ip4Subnet"][0];
-    ip4Subnet[1] = doc["ip4Subnet"][1];
-    ip4Subnet[2] = doc["ip4Subnet"][2];
-    ip4Subnet[3] = doc["ip4Subnet"][3];
-    ip4DnsPrimary[0] = doc["ip4DnsPrimary"][0];
-    ip4DnsPrimary[1] = doc["ip4DnsPrimary"][1];
-    ip4DnsPrimary[2] = doc["ip4DnsPrimary"][2];
-    ip4DnsPrimary[3] = doc["ip4DnsPrimary"][3];
-    ip4DnsSecondary[0] = doc["ip4DnsSecondary"][0];
-    ip4DnsSecondary[1] = doc["ip4DnsSecondary"][1];
-    ip4DnsSecondary[2] = doc["ip4DnsSecondary"][2];
-    ip4DnsSecondary[3] = doc["ip4DnsSecondary"][3];
+    enableStaticIp4 = doc[F("enableStaticIp4")];
+    ip4Address[0] = doc[F("ip4Address")][0];
+    ip4Address[1] = doc[F("ip4Address")][1];
+    ip4Address[2] = doc[F("ip4Address")][2];
+    ip4Address[3] = doc[F("ip4Address")][3];
+    ip4Gateway[0] = doc[F("ip4Gateway")][0];
+    ip4Gateway[1] = doc[F("ip4Gateway")][1];
+    ip4Gateway[2] = doc[F("ip4Gateway")][2];
+    ip4Gateway[3] = doc[F("ip4Gateway")][3];
+    ip4Subnet[0] = doc[F("ip4Subnet")][0];
+    ip4Subnet[1] = doc[F("ip4Subnet")][1];
+    ip4Subnet[2] = doc[F("ip4Subnet")][2];
+    ip4Subnet[3] = doc[F("ip4Subnet")][3];
+    ip4DnsPrimary[0] = doc[F("ip4DnsPrimary")][0];
+    ip4DnsPrimary[1] = doc[F("ip4DnsPrimary")][1];
+    ip4DnsPrimary[2] = doc[F("ip4DnsPrimary")][2];
+    ip4DnsPrimary[3] = doc[F("ip4DnsPrimary")][3];
+    ip4DnsSecondary[0] = doc[F("ip4DnsSecondary")][0];
+    ip4DnsSecondary[1] = doc[F("ip4DnsSecondary")][1];
+    ip4DnsSecondary[2] = doc[F("ip4DnsSecondary")][2];
+    ip4DnsSecondary[3] = doc[F("ip4DnsSecondary")][3];
 
     saveWifi();
 
@@ -1176,18 +1196,18 @@ void loadMqtt()
         return;
     }
 
-    useMqtt = doc["enableMqtt"];
+    useMqtt = doc[F("enableMqtt")];
     enableMqtt = useMqtt;
-    mqttIpAddress[0] = doc["mqttIpAddress"][0];
-    mqttIpAddress[1] = doc["mqttIpAddress"][1];
-    mqttIpAddress[2] = doc["mqttIpAddress"][2];
-    mqttIpAddress[3] = doc["mqttIpAddress"][3];
-    mqttPort = doc["mqttPort"];
-    mqttUsername = doc["mqttUsername"].as<String>();
-    mqttPassword = doc["mqttPassword"].as<String>();
-    mqttClientId = doc["mqttClientId"].as<String>();
-    mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
-    mqttTelemetryInterval = doc["mqttTelemetryInterval"];
+    mqttIpAddress[0] = doc[F("mqttIpAddress")][0];
+    mqttIpAddress[1] = doc[F("mqttIpAddress")][1];
+    mqttIpAddress[2] = doc[F("mqttIpAddress")][2];
+    mqttIpAddress[3] = doc[F("mqttIpAddress")][3];
+    mqttPort = doc[F("mqttPort")];
+    mqttUsername = doc[F("mqttUsername")].as<String>();
+    mqttPassword = doc[F("mqttPassword")].as<String>();
+    mqttClientId = doc[F("mqttClientId")].as<String>();
+    mqttBaseTopic = doc[F("mqttBaseTopic")].as<String>();
+    mqttTelemetryInterval = doc[F("mqttTelemetryInterval")];
 }
 
 /**
@@ -1204,17 +1224,17 @@ void saveMqtt()
 
     DynamicJsonDocument doc(1024);
 
-    doc["enableMqtt"] = useMqtt;
-    doc["mqttIpAddress"][0] = mqttIpAddress[0];
-    doc["mqttIpAddress"][1] = mqttIpAddress[1];
-    doc["mqttIpAddress"][2] = mqttIpAddress[2];
-    doc["mqttIpAddress"][3] = mqttIpAddress[3];
-    doc["mqttPort"] = mqttPort;
-    doc["mqttUsername"] = mqttUsername;
-    doc["mqttPassword"] = mqttPassword;
-    doc["mqttClientId"] = mqttClientId;
-    doc["mqttBaseTopic"] = mqttBaseTopic;
-    doc["mqttTelemetryInterval"] = mqttTelemetryInterval;
+    doc[F("enableMqtt")] = useMqtt;
+    doc[F("mqttIpAddress")][0] = mqttIpAddress[0];
+    doc[F("mqttIpAddress")][1] = mqttIpAddress[1];
+    doc[F("mqttIpAddress")][2] = mqttIpAddress[2];
+    doc[F("mqttIpAddress")][3] = mqttIpAddress[3];
+    doc[F("mqttPort")] = mqttPort;
+    doc[F("mqttUsername")] = mqttUsername;
+    doc[F("mqttPassword")] = mqttPassword;
+    doc[F("mqttClientId")] = mqttClientId;
+    doc[F("mqttBaseTopic")] = mqttBaseTopic;
+    doc[F("mqttTelemetryInterval")] = mqttTelemetryInterval;
 
     if (serializeJson(doc, file) == 0)
     {
@@ -1233,21 +1253,21 @@ void handleGetMqtt()
 
     DynamicJsonDocument doc(1024);
 
-    doc["enableMqtt"] = useMqtt;
-    doc["mqttIpAddress"][0] = mqttIpAddress[0];
-    doc["mqttIpAddress"][1] = mqttIpAddress[1];
-    doc["mqttIpAddress"][2] = mqttIpAddress[2];
-    doc["mqttIpAddress"][3] = mqttIpAddress[3];
-    doc["mqttPort"] = mqttPort;
-    doc["mqttUsername"] = mqttUsername;
-    doc["mqttPassword"] = "<enter password>";
+    doc[F("enableMqtt")] = useMqtt;
+    doc[F("mqttIpAddress")][0] = mqttIpAddress[0];
+    doc[F("mqttIpAddress")][1] = mqttIpAddress[1];
+    doc[F("mqttIpAddress")][2] = mqttIpAddress[2];
+    doc[F("mqttIpAddress")][3] = mqttIpAddress[3];
+    doc[F("mqttPort")] = mqttPort;
+    doc[F("mqttUsername")] = mqttUsername;
+    doc[F("mqttPassword")] = "<enter password>";
     if (!hidePasswords)
     {
-        doc["mqttPassword"] = mqttPassword;
+        doc[F("mqttPassword")] = mqttPassword;
     }
-    doc["mqttClientId"] = mqttClientId;
-    doc["mqttBaseTopic"] = mqttBaseTopic;
-    doc["mqttTelemetryInterval"] = mqttTelemetryInterval;
+    doc[F("mqttClientId")] = mqttClientId;
+    doc[F("mqttBaseTopic")] = mqttBaseTopic;
+    doc[F("mqttTelemetryInterval")] = mqttTelemetryInterval;
 
     String json;
     if (serializeJson(doc, json) == 0)
@@ -1275,18 +1295,18 @@ void handleSetMqtt()
         return;
     }
 
-    useMqtt = doc["enableMqtt"];
+    useMqtt = doc[F("enableMqtt")];
     enableMqtt = useMqtt;
-    mqttIpAddress[0] = doc["mqttIpAddress"][0];
-    mqttIpAddress[1] = doc["mqttIpAddress"][1];
-    mqttIpAddress[2] = doc["mqttIpAddress"][2];
-    mqttIpAddress[3] = doc["mqttIpAddress"][3];
-    mqttPort = doc["mqttPort"];
-    mqttUsername = doc["mqttUsername"].as<String>();
-    mqttPassword = doc["mqttPassword"].as<String>();
-    mqttClientId = doc["mqttClientId"].as<String>();
-    mqttBaseTopic = doc["mqttBaseTopic"].as<String>();
-    mqttTelemetryInterval = doc["mqttTelemetryInterval"];
+    mqttIpAddress[0] = doc[F("mqttIpAddress")][0];
+    mqttIpAddress[1] = doc[F("mqttIpAddress")][1];
+    mqttIpAddress[2] = doc[F("mqttIpAddress")][2];
+    mqttIpAddress[3] = doc[F("mqttIpAddress")][3];
+    mqttPort = doc[F("mqttPort")];
+    mqttUsername = doc[F("mqttUsername")].as<String>();
+    mqttPassword = doc[F("mqttPassword")].as<String>();
+    mqttClientId = doc[F("mqttClientId")].as<String>();
+    mqttBaseTopic = doc[F("mqttBaseTopic")].as<String>();
+    mqttTelemetryInterval = doc[F("mqttTelemetryInterval")];
 
     server.send(200, "text/plain", "");
 
@@ -1306,9 +1326,9 @@ void handleDir()
     while (root.next())
     {
         // Serial.println(root.fileName());
-        mydir += "<a href=\"/" + root.fileName() + "\">" + root.fileName() + "</a>";
+        mydir += F("<a href=\"/") + root.fileName() + "\">" + root.fileName() + "</a>";
         mydir += F("   Size: ") + String(root.fileSize()) + F(" Bytes ");
-        mydir += F("   <a href=\"/remove/?FileToRemove=") + root.fileName() + "\">remove" + "</a><br>";
+        mydir += F("   <a href=\"/remove/?FileToRemove=") + root.fileName() + F("\">remove</a><br>");
     }
     server.send(200, "text/html", mydir);
     #endif
@@ -1355,8 +1375,8 @@ void handleFileUpload()
         {
             // Write the received bytes to the file
             fsUploadFile.write(upload.buf, upload.currentSize);
-            Serial.print("file write ");
-            Serial.println(path);
+            // Serial.print("file write ");
+            // Serial.println(path);
         }
     }
     else if (upload.status == UPLOAD_FILE_END)
@@ -1379,13 +1399,13 @@ void handleFileUpload()
         }
         else
         {
-            Serial.println("err: 500");
+            Serial.println(F("err: 500"));
             server.send(500, "text/plain", "500: couldn't create file");
         }
     }
     else
     {
-        Serial.print("upload status");
+        Serial.print(F("upload status"));
         Serial.println(upload.status);
         server.send(500, "text/plain", "500: upload aborted");
     }
@@ -1451,9 +1471,9 @@ void handleGetVersions()
     StaticJsonDocument<256> doc;
     String json = "";
     // Set the values in the document
-    doc["current"] = FW_VERSION;
-    doc["available"] = master;
-    doc["beta"] = beta;
+    doc[F("current")] = FW_VERSION;
+    doc[F("available")] = master;
+    doc[F("beta")] = beta;
     // Serialize JSON to string
     if (serializeJson(doc, json) == 0)
     {
@@ -1465,7 +1485,7 @@ void handleGetVersions()
 String checkFirmwareUpdate(bool betaversion)
 {
     pause_resume(true);
-HeapSelectIram ephemeral;
+    HeapSelectIram ephemeral;
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     if(client.probeMaxFragmentLength(host, httpsPort, 512))
@@ -1479,14 +1499,14 @@ HeapSelectIram ephemeral;
             return "check failed";
         }
     }
-    String URL = URL_part1;
+    String URL = FPSTR(URL_part1);
     if(betaversion)
     {
-        URL += String("development_v4") + URL_fw_version;
+        URL += String("development_v4") + FPSTR(URL_fw_version);
     }
     else
     {
-        URL += String("master") + URL_fw_version;
+        URL += String("master") + FPSTR(URL_fw_version);
     }
 
     client.print(String("GET ") + URL + F(" HTTP/1.1\r\n") +
@@ -1533,7 +1553,7 @@ void handleUpdate(bool betaversion)
     }
     delay(1000);
     // setClock();
-HeapSelectIram ephemeral;
+    HeapSelectIram ephemeral;
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     // client.setInsecure();
@@ -1553,17 +1573,17 @@ HeapSelectIram ephemeral;
     ESPhttpUpdate.onEnd(updateEnd);
     // ESPhttpUpdate.onProgress(udpateProgress);
     ESPhttpUpdate.onError(updateError);
-    String URL_binary = URL_fw_bin_part1;
-    String URL_version = URL_part1;
+    String URL_binary = FPSTR(URL_fw_bin_part1);
+    String URL_version = FPSTR(URL_part1);
     if(betaversion)
     {
-        URL_binary += String("development_v4") + URL_fw_bin;
-        URL_version += String("development_v4") + URL_fw_version;
+        URL_binary += String("development_v4") + FPSTR(URL_fw_bin);
+        URL_version += String("development_v4") + FPSTR(URL_fw_version);
     }
     else
     {
-        URL_binary += String("master") + URL_fw_bin;
-        URL_version += String("master") + URL_fw_version;
+        URL_binary += String("master") + FPSTR(URL_fw_bin);
+        URL_version += String("master") + FPSTR(URL_fw_version);
     }
     client.print(String("GET ") + URL_version + F(" HTTP/1.1\r\n") +
                 F("Host: ") + host + "\r\n" +
@@ -1601,11 +1621,11 @@ HeapSelectIram ephemeral;
             break;
 
         case HTTP_UPDATE_NO_UPDATES:
-            Serial.println("HTTP_UPDATE_NO_UPDATES");
+            Serial.println(F("HTTP_UPDATE_NO_UPDATES"));
             break;
 
         case HTTP_UPDATE_OK:
-            Serial.println("HTTP_UPDATE_OK");
+            Serial.println(F("HTTP_UPDATE_OK"));
             break;
         }
     }
@@ -1614,7 +1634,7 @@ HeapSelectIram ephemeral;
 
 bool updateFiles(bool betaversion)
 {
-HeapSelectIram ephemeral;
+    HeapSelectIram ephemeral;
 // Serial.printf("Heap: %d, frag: %d\n", ESP.getFreeHeap(), ESP.getHeapFragmentation());
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
@@ -1631,14 +1651,14 @@ HeapSelectIram ephemeral;
     ESPhttpUpdate.onEnd(updateEnd);
     // ESPhttpUpdate.onProgress(udpateProgress);
     ESPhttpUpdate.onError(updateError);
-    String URL = URL_part1;
+    String URL = FPSTR(URL_part1);
     if(betaversion)
     {
-        URL += String("development_v4") + URL_filelist;
+        URL += String("development_v4") + FPSTR(URL_filelist);
     }
     else
     {
-        URL += String("master") + URL_filelist;
+        URL += String("master") + FPSTR(URL_filelist);
     }
 
     client.print(String("GET ") + URL + F(" HTTP/1.1\r\n") +
@@ -1666,14 +1686,14 @@ HeapSelectIram ephemeral;
     // server.send(303);
 
     /*Load the files to flash*/
-    URL = URL_part1;
+    URL = FPSTR(URL_part1);
     if(betaversion)
     {
-        URL += String("development_v4") + URL_filedir;
+        URL += String("development_v4") + FPSTR(URL_filedir);
     }
     else
     {
-        URL += String("master") + URL_filedir;
+        URL += String("master") + FPSTR(URL_filedir);
     }
 
     for(auto filename : files)
@@ -1706,7 +1726,7 @@ HeapSelectIram ephemeral;
         yield();
         File f = LittleFS.open("/"+filename, "w");
         if(!f) {
-            Serial.println("file error");
+            Serial.println(F("file error"));
             return false;
         }
         uint8_t buf[512] = {0};
@@ -1732,10 +1752,10 @@ void updateEnd(){
     Serial.println(F("update finish"));
 }
 void udpateProgress(int cur, int total){
-    Serial.printf("update process at %d of %d bytes...\n", cur, total);
+    Serial.printf_P(PSTR("update process at %d of %d bytes...\n"), cur, total);
 }
 void updateError(int err){
-    Serial.printf("update fatal error code %d\n", err);
+    Serial.printf_P(PSTR("update fatal error code %d\n"), err);
 }
 
 /**
@@ -1774,7 +1794,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
 {
     // Serial.print(F("MQTT > Message arrived ["));
     // Serial.print(topic);
-    // Serial.print("] ");
+    // Serial.print(")] ");
     for (unsigned int i = 0; i < length; i++)
     {
         // Serial.print((char)payload[i]);
@@ -1791,11 +1811,11 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
         return;
         }
 
-        int64_t command = doc["CMD"];
-        int64_t value = doc["VALUE"];
-        int64_t xtime = doc["XTIME"];
-        int64_t interval = doc["INTERVAL"];
-        String txt = doc["TXT"] | "";
+        int64_t command = doc[F("CMD")];
+        int64_t value = doc[F("VALUE")];
+        int64_t xtime = doc[F("XTIME")];
+        int64_t interval = doc[F("INTERVAL")];
+        String txt = doc[F("TXT")] | "";
         command_que_item item;
         item.cmd = command;
         item.val = value;
@@ -1819,11 +1839,11 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
         JsonArray commandArray = doc.as<JsonArray>();
 
         for (JsonVariant commandItem : commandArray) {
-            int64_t command = commandItem["CMD"];
-            int64_t value = commandItem["VALUE"];
-            int64_t xtime = commandItem["XTIME"];
-            int64_t interval = commandItem["INTERVAL"];
-            String txt = doc["TXT"] | "";
+            int64_t command = commandItem[F("CMD")];
+            int64_t value = commandItem[F("VALUE")];
+            int64_t xtime = commandItem[F("XTIME")];
+            int64_t interval = commandItem[F("INTERVAL")];
+            String txt = doc[F("TXT")] | "";
             command_que_item item;
             item.cmd = command;
             item.val = value;
@@ -1877,11 +1897,7 @@ void mqttConnect()
 
         #ifdef ESP8266
         // mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), DateTime.format(DateFormatter::SIMPLE).c_str(), true);
-        time_t boot_timestamp = DateTime.getBootTime();
-        tm * boot_time_tm = localtime(&boot_timestamp);
-        char boot_time_str[64];
-        strftime(boot_time_str, 64, DateFormatter::SIMPLE, boot_time_tm);
-        mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), (String(boot_time_str)+'Z').c_str(), true);
+        mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), (bwc.reboot_time_str+'Z').c_str(), true);
         mqttClient.publish((String(mqttBaseTopic) + "/reboot_reason").c_str(), ESP.getResetReason().c_str(), true);
         mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), bwc.getButtonName().c_str(), true);
         mqttClient.loop();
@@ -1896,6 +1912,13 @@ void mqttConnect()
     }
 }
 
+time_t getBootTime()
+{
+    time_t seconds = millis() / 1000;
+    time_t result = time(nullptr) - seconds;
+    return result;
+}
+
 void handleESPInfo()
 {
     #ifdef ESP8266
@@ -1904,7 +1927,7 @@ void handleESPInfo()
     size_t const BUFSIZE = 1024;
     char response[BUFSIZE];
     char const *response_template =
-    "Stack size:          %u \n"
+    PSTR("Stack size:          %u \n"
     "Free Heap:           %u \n"
     "Min  Heap:           %u \n"
     "Core version:        %s \n"
@@ -1913,9 +1936,9 @@ void handleESPInfo()
     "Free cont stack:     %u \n"
     "Sketch size:         %u \n"
     "Free sketch space:   %u \n"
-    "Max free block size: %u \n";
+    "Max free block size: %u \n");
 
-    snprintf(response, BUFSIZE, response_template,
+    snprintf_P(response, BUFSIZE, response_template,
         stacksize,
         ESP.getFreeHeap(),
         heap_water_mark,

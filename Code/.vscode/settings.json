@@ -1,5 +1,10 @@
 {
     "files.associations": {
-        "*.txt": "cpp"
-    }
+        "*.txt": "cpp",
+        "ctime": "cpp"
+    },
+    "githubPullRequests.ignoredPullRequestBranches": [
+        "master"
+    ],
+    "cmake.configureOnOpen": false
 }

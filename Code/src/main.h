@@ -9,10 +9,10 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266httpUpdate.h>
 #include <WiFiClientSecure.h>
+#include <time.h>
 // #include "certs.h"
 #include <CertStoreBearSSL.h>
 BearSSL::CertStore certStore;
-#include <time.h>
 
 #else
 
@@ -25,7 +25,9 @@ BearSSL::CertStore certStore;
 #include <PubSubClient.h> // ** Requires library 2.8.0 or higher ** https://github.com/knolleary/pubsubclient
 #include <Ticker.h>
 #include <WebSocketsServer.h>
-#include <ESP_WiFiManager.h>
+// #include <ESP_WiFiManager.h>
+#include <WiFiManager.h>
+#define ESP_WiFiManager WiFiManager
 #include "bwc.h"
 #include <umm_malloc/umm_heap_select.h>
 
@@ -135,6 +137,7 @@ void updateError(int err);
 void startMqtt();
 void mqttCallback(char* topic, byte* payload, unsigned int length);
 void mqttConnect();
+time_t getBootTime();
 void handleESPInfo();
 
 void setupHA();

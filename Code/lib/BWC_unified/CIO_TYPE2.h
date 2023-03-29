@@ -13,7 +13,7 @@ class CIO_6_TYPE2: public CIO_6W
         void pause_resume(bool action) override;
         void LED_Handler();
         void clkHandler();
-        sStates getStates();
+        void updateStates();
 
     protected:
         virtual uint16_t getButtonCode(Buttons button_index) = 0;

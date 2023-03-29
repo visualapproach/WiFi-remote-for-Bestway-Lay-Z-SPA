@@ -10,7 +10,7 @@ class DSP_6_TYPE1 : public DSP_6W
         virtual ~DSP_6_TYPE1(){};
         void setup(int dsp_data_pin, int dsp_clk_pin, int dsp_cs_pin, int dsp_audio_pin);
         void stop();
-        void setStates(const sStates& to_dsp_states) override;
+        void handleStates() override;
 
     protected:
         void uploadPayload(uint8_t brightness) override;
@@ -21,37 +21,37 @@ class DSP_6_TYPE1 : public DSP_6W
         void _sendBitsToDSP(uint32_t out_bits, int bit_count);
         uint16_t _receiveBitsFromDSP();
         void clearpayload();
-        uint8_t getDGT1_IDX() override {return DGT1_IDX;};
-        uint8_t getDGT2_IDX() override {return DGT2_IDX;};
-        uint8_t getDGT3_IDX() override {return DGT3_IDX;};
-        uint8_t getTMR2_IDX() override {return TMR2_IDX;};
-        uint8_t getTMR2_BIT() override {return TMR2_BIT;};
-        uint8_t getTMR1_IDX() override {return TMR1_IDX;};
-        uint8_t getTMR1_BIT() override {return TMR1_BIT;};
-        uint8_t getLCK_IDX() override {return LCK_IDX;};
-        uint8_t getLCK_BIT() override {return LCK_BIT;};
-        uint8_t getTMRBTNLED_IDX() override {return TMRBTNLED_IDX;};
-        uint8_t getTMRBTNLED_BIT() override {return TMRBTNLED_BIT;};
-        uint8_t getREDHTR_IDX() override {return REDHTR_IDX;};
-        uint8_t getREDHTR_BIT() override {return REDHTR_BIT;};
-        uint8_t getGRNHTR_IDX() override {return GRNHTR_IDX;};
-        uint8_t getGRNHTR_BIT() override {return GRNHTR_BIT;};
-        uint8_t getAIR_IDX() override {return AIR_IDX;};
-        uint8_t getAIR_BIT() override {return AIR_BIT;};
-        uint8_t getFLT_IDX() override {return FLT_IDX;};
-        uint8_t getFLT_BIT() override {return FLT_BIT;};
-        uint8_t getC_IDX() override {return C_IDX;};
-        uint8_t getC_BIT() override {return C_BIT;};
-        uint8_t getF_IDX() override {return F_IDX;};
-        uint8_t getF_BIT() override {return F_BIT;};
-        uint8_t getPWR_IDX() override {return PWR_IDX;};
-        uint8_t getPWR_BIT() override {return PWR_BIT;};
-        uint8_t getHJT_IDX() override {return HJT_IDX;};
-        uint8_t getHJT_BIT() override {return HJT_BIT;};
-        uint8_t getCS() override {return _CS_PIN;};
-        uint8_t getCLK() override {return _CLK_PIN;};
-        uint8_t getDATA() override {return _DATA_PIN;};
-        uint8_t getAUDIO() override {return _AUDIO_PIN;};
+        uint8_t getDGT1_IDX() override {return DGT1_IDX;}
+        uint8_t getDGT2_IDX() override {return DGT2_IDX;}
+        uint8_t getDGT3_IDX() override {return DGT3_IDX;}
+        uint8_t getTMR2_IDX() override {return TMR2_IDX;}
+        uint8_t getTMR2_BIT() override {return TMR2_BIT;}
+        uint8_t getTMR1_IDX() override {return TMR1_IDX;}
+        uint8_t getTMR1_BIT() override {return TMR1_BIT;}
+        uint8_t getLCK_IDX() override {return LCK_IDX;}
+        uint8_t getLCK_BIT() override {return LCK_BIT;}
+        uint8_t getTMRBTNLED_IDX() override {return TMRBTNLED_IDX;}
+        uint8_t getTMRBTNLED_BIT() override {return TMRBTNLED_BIT;}
+        uint8_t getREDHTR_IDX() override {return REDHTR_IDX;}
+        uint8_t getREDHTR_BIT() override {return REDHTR_BIT;}
+        uint8_t getGRNHTR_IDX() override {return GRNHTR_IDX;}
+        uint8_t getGRNHTR_BIT() override {return GRNHTR_BIT;}
+        uint8_t getAIR_IDX() override {return AIR_IDX;}
+        uint8_t getAIR_BIT() override {return AIR_BIT;}
+        uint8_t getFLT_IDX() override {return FLT_IDX;}
+        uint8_t getFLT_BIT() override {return FLT_BIT;}
+        uint8_t getC_IDX() override {return C_IDX;}
+        uint8_t getC_BIT() override {return C_BIT;}
+        uint8_t getF_IDX() override {return F_IDX;}
+        uint8_t getF_BIT() override {return F_BIT;}
+        uint8_t getPWR_IDX() override {return PWR_IDX;}
+        uint8_t getPWR_BIT() override {return PWR_BIT;}
+        uint8_t getHJT_IDX() override {return HJT_IDX;}
+        uint8_t getHJT_BIT() override {return HJT_BIT;}
+        uint8_t getCS() override {return _CS_PIN;}
+        uint8_t getCLK() override {return _CLK_PIN;}
+        uint8_t getDATA() override {return _DATA_PIN;}
+        uint8_t getAUDIO() override {return _AUDIO_PIN;}
         Buttons getPressedButton() override;
 
     protected:
@@ -98,10 +98,10 @@ class DSP_6_TYPE1 : public DSP_6W
             0x7F, 0x0D, 0xB7, 0x9F, 0xCD, 0xDB, 0xFB, 0x0F, 0xFF, 0xDF, 0x01, 0x81, 0xEF, 0xF9, 0x73, 0xBD, 0xF3, 0xE3, 0xFB,
             0xE9, 0xED, 0x61, 0x1D, 0xE1, 0x71, 0x01, 0xA9, 0xB9, 0xE7, 0xCF, 0xA1, 0xDB, 0xF1, 0x39, 0x7D, 0x01, 0xDD, 0xB7
         };
-        const uint8_t CHARS[38] = {
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '-', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-            'h', 'H', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z'
-        };
+        // const uint8_t CHARS[38] = {
+        //     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '-', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
+        //     'h', 'H', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z'
+        // };
         unsigned long _dsp_last_refreshtime = 0;
         unsigned long _dsp_getbutton_last_time = 0;
         //Pins
