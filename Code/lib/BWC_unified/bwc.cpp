@@ -478,7 +478,12 @@ void BWC::_handleStateChanges()
         _bubbles_change_timestamp_ms = millis();
     }
 
-    if(cio->cio_states.unit != _prev_cio_states.unit || cio->cio_states.pump != _prev_cio_states.pump || cio->cio_states.heat != _prev_cio_states.heat)
+    if(
+        cio->cio_states.unit   != _prev_cio_states.unit || 
+        cio->cio_states.pump   != _prev_cio_states.pump || 
+        cio->cio_states.heat   != _prev_cio_states.heat || 
+        cio->cio_states.target != _prev_cio_states.target
+      )
         _save_states_needed = true;
 
     _prev_cio_states = cio->cio_states;
