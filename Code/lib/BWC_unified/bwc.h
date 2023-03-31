@@ -113,7 +113,8 @@ class BWC {
         void _handleStateChanges();
         void _handleNotification();
         static bool _compare_command(const command_que_item& i1, const command_que_item& i2);
-        void _add_melody(const String& filename);
+        bool _load_melody_json(const String &filename);
+        void _add_melody(const String &filename);
         void _save_melody(const String& filename);
         void _sweepdown();
         void _sweepup();

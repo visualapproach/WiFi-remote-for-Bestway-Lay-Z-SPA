@@ -17,7 +17,7 @@ class CIO_6W : public CIO
     public:
         CIO_6W();
         virtual ~CIO_6W(){};
-        Power getPower(){return power;};
+        Power getPower(){return power;}
         void handleToggles();
         bool getHasgod() {return false;}
         virtual bool getHasjets() = 0;

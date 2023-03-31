@@ -185,7 +185,7 @@ void BWC::loop(){
     else
         cio->cio_toggles.target = _web_target;
         
-    if(dsp->dsp_toggles.unit_change) 
+    if(dsp->dsp_toggles.unit_change)
     {
         cio->cio_states.unit ? cio->cio_toggles.target = C2F(cio->cio_toggles.target) : cio->cio_toggles.target = F2C(cio->cio_toggles.target); 
     }
@@ -310,7 +310,7 @@ void BWC::_handleCommandQ() {
     //If interval > 0 then append to commandQ with updated xtime.
     if(_command_que[0].interval > 0)
     {
-       _command_que[0].xtime += _command_que[0].interval;
+       _command_que[0].xtime = (uint64_t)time(nullptr) + _command_que[0].interval;
        _command_que.push_back(_command_que[0]);
     } 
     _handlecommand(_command_que[0].cmd, _command_que[0].val, _command_que[0].text);
@@ -357,6 +357,8 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
         if(val == 1 && cio->cio_states.unit == 0) cio->cio_toggles.target = round(F2C(cio->cio_toggles.target)); 
         if(val == 0 && cio->cio_states.unit == 1) cio->cio_toggles.target = round(C2F(cio->cio_toggles.target)); 
         if((uint8_t)val != cio->cio_states.unit) cio->cio_toggles.unit_change = 1;
+        _dsp_tgt_used = false;
+        _web_target = cio->cio_toggles.target;
         break;
     case SETBUBBLES:
         if(val != cio->cio_states.bubbles) cio->cio_toggles.bubbles_change = 1;
@@ -400,7 +402,8 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
         break;
     case SETBEEP:
         if(val == 0) _beep();
-        if(val == 1) _accord();
+        else if(val == 1) _accord();
+        else _load_melody_json(txt);
         break;
     case SETAMBIENTF:
         setAmbientTemperature(val, false);
@@ -1346,13 +1349,66 @@ void BWC::saveDebugInfo(const String& s){
 
 /* SOUND */
 
-void BWC::_save_melody(const String& filename)
+/*temporary function to render some soundfiles*/
+// void BWC::_save_melody(const String& filename)
+// {
+//     File file = LittleFS.open(filename, "w");
+//     if (!file) return;
+//     sNote n = {1000, 500};
+//     file.write((byte*)&n, sizeof(n));
+//     file.close();
+// }
+
+bool BWC::_load_melody_json(const String& filename)
 {
-    File file = LittleFS.open(filename, "w");
-    if (!file) return;
-    sNote n = {1000, 500};
-    file.write((byte*)&n, sizeof(n));
+    if(_notes.size() || !_audio_enabled){
+        // Serial.println("Q busy");
+        return false;
+    } 
+    File file = LittleFS.open(filename, "r");
+    if (!file){
+        // Serial.println("file error");
+        return false; 
+    } 
+    int beat_period;
+    float note_duty_cycle;
+    const double a = 1.059463094359; //2^(1/12)
+    const int A4 = 440;
+    sNote n;
+
+    /*file format: 
+    beat period
+    note duty cycle
+    halfstep above a4
+    note type (fraction of beat period, like a quarter = 4)
+    halfstep above a4
+    note type (fraction of beat period, like a quarter = 4)
+    ...eof
+    */
+    String s = file.readStringUntil('\n');
+    beat_period = s.toInt();
+    s = file.readStringUntil('\n');
+    note_duty_cycle = s.toFloat();
+    while(file.available())
+    {
+        s = file.readStringUntil('\n');
+        if(s.toInt() == -47) n.frequency_hz = 0;
+        else n.frequency_hz = A4 * pow(a, s.toInt()) ;
+        s = file.readStringUntil('\n');
+        n.duration_ms = beat_period / s.toFloat();
+        n.duration_ms *= note_duty_cycle;
+        _notes.push_back(n);
+        /*add a little break between the notes (will be placed before each note due to reversing)*/
+        n.frequency_hz = 0;
+        n.duration_ms = beat_period / s.toFloat();
+        n.duration_ms *= (1-note_duty_cycle);
+        _notes.push_back(n);
+    }
+
+    std::reverse(_notes.begin(), _notes.end());
     file.close();
+
+    return true;
 }
 
 void BWC::_add_melody(const String &filename)
