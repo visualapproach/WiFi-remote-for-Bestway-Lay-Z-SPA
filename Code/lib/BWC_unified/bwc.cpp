@@ -630,11 +630,11 @@ void BWC::_updateVirtualTempFix_ontempchange()
 
     // We can only know something about rate of change if we had continous cooling since last update
     // (Nobody messed with the heater during the 1 degree change)
-    if(_heatred_change_timestamp_ms < _temp_change_timestamp_ms) return;
+    if(_heatred_change_timestamp_ms > _temp_change_timestamp_ms) return; //bugfix by @cobaltfish
     // rate of heating is not subject to change (fixed wattage and pool size) so do this only if cooling
     // and do not calibrate if bubbles has been on
     if(_vt_calibrated) return;
-    if(cio->cio_states.heatred || cio->cio_states.bubbles || (_bubbles_change_timestamp_ms < _temp_change_timestamp_ms)) return;
+    if(cio->cio_states.heatred || cio->cio_states.bubbles || (_bubbles_change_timestamp_ms > _temp_change_timestamp_ms)) return;
     if(_deltatemp > 0 && _virtual_temp > _ambient_temp) return; //temp is rising when it should be falling. Bail out
     if(_deltatemp < 0 && _virtual_temp < _ambient_temp) return; //temp is falling when it should be rising. Bail out
     float degAboveAmbient = _virtual_temp - _ambient_temp;
@@ -849,7 +849,7 @@ String BWC::getJSONSettings(){
     doc[F("MODEL")] = cio->getModel();
     doc[F("NOTIFY")] = _notify;
     doc[F("NOTIFTIME")] = _notification_time;
-
+    doc[F("VTCAL")] = _vt_calibrated;
     // Serialize JSON to string
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
