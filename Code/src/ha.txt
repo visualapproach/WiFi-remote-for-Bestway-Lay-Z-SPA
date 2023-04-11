@@ -220,31 +220,31 @@ void setupHA()
 
 
 
-  // spa time to target temperature sensor
-  doc["dev"] = devicedoc["dev"];
-  payload = "";
-  topic = String(HA_PREFIX) + F("/sensor/layzspa_time_to_target/config");
-  // Serial.println(topic);
-  doc["name"] = F("Layzspa time to target");
-  doc["uniq_id"] = F("sensor.layzspa_time_to_target")+mychipid;
-  doc["stat_t"] = mqttBaseTopic+F("/times");
-  doc["unit_of_meas"] = F("hours");
-  doc["val_tpl"] = F("{{ (value_json.TTTT / 3600 | float) | round(2) }}");
-  doc["expire_after"] = 700;
-  doc["icon"] = F("mdi:clock");
-  doc["avty_t"] = mqttBaseTopic+F("/Status");
-  doc["pl_avail"] = F("Alive");
-  doc["pl_not_avail"] = F("Dead");
-  if (serializeJson(doc, payload) == 0)
-  {
-    // Serial.println(F("Failed to serialize HA message!"));
-    return;
-  }
-  mqttClient.publish(topic.c_str(), payload.c_str(), true);
-  mqttClient.loop();
-  // Serial.println(payload);
-  doc.clear();
-  doc.garbageCollect();
+//   // spa time to target temperature sensor
+//   doc["dev"] = devicedoc["dev"];
+//   payload = "";
+//   topic = String(HA_PREFIX) + F("/sensor/layzspa_time_to_target/config");
+//   // Serial.println(topic);
+//   doc["name"] = F("Layzspa time to target");
+//   doc["uniq_id"] = F("sensor.layzspa_time_to_target")+mychipid;
+//   doc["stat_t"] = mqttBaseTopic+F("/times");
+//   doc["unit_of_meas"] = F("hours");
+//   doc["val_tpl"] = F("{{ (value_json.TTTT / 3600 | float) | round(2) }}");
+//   doc["expire_after"] = 700;
+//   doc["icon"] = F("mdi:clock");
+//   doc["avty_t"] = mqttBaseTopic+F("/Status");
+//   doc["pl_avail"] = F("Alive");
+//   doc["pl_not_avail"] = F("Dead");
+//   if (serializeJson(doc, payload) == 0)
+//   {
+//     // Serial.println(F("Failed to serialize HA message!"));
+//     return;
+//   }
+//   mqttClient.publish(topic.c_str(), payload.c_str(), true);
+//   mqttClient.loop();
+//   // Serial.println(payload);
+//   doc.clear();
+//   doc.garbageCollect();
 
   // spa time to ready sensor
   doc["dev"] = devicedoc["dev"];
