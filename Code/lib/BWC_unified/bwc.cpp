@@ -203,6 +203,41 @@ void BWC::loop(){
     _handleStateChanges();
     _calcVirtualTemp();
     // logstates();
+    if(BWC_DEBUG) _log();
+}
+
+void BWC::_log()
+{
+    static uint32_t writes = 0;
+    static std::vector<uint8_t> prev_fromcio;
+    static std::vector<uint8_t> prev_fromdsp;
+    std::vector<uint8_t> fromcio = cio->getRawPayload();
+    std::vector<uint8_t> fromdsp = dsp->getRawPayload();
+    if((fromcio == prev_fromcio) && (fromdsp == prev_fromdsp)) return;
+    prev_fromcio = fromcio;
+    prev_fromdsp = fromdsp;
+    
+    File file = LittleFS.open("log.txt", "a");
+    if (!file) {
+        // Serial.println(F("Failed to save states.txt"));
+        return;
+    }
+    if(++writes > 1000) return;
+    file.print(_timestamp_secs);
+    file.print(':');
+    for(unsigned int i = 0; i< fromcio.size(); i++)
+    {
+        if(i>0)file.print(",");
+        file.print(fromcio[i], HEX);
+    }
+    file.print('\t');
+    for(unsigned int i = 0; i< fromdsp.size(); i++)
+    {
+        file.print(",");
+        file.print(fromdsp[i], HEX);
+    }
+    file.print('\n');
+    file.close();
 }
 
 void BWC::adjust_brightness()

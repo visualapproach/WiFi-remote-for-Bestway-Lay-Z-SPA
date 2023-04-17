@@ -5,7 +5,7 @@
 #include <WiFi.h>
 #endif
 #define DEVICE_NAME "layzspa"
-#define FW_VERSION "2023-04-09-1840"
+#define FW_VERSION "2023-04-17-1042"
 
 // String FW_VERSION = String(__DATE__) + "-" + __TIME__ + "-beta";
 #define HA_PREFIX "homeassistant"

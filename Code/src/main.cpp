@@ -1,5 +1,4 @@
 #include "main.h"
-#include "config.h"
 
 BWC bwc;
 
@@ -195,9 +194,6 @@ void loop()
     //     ESP.reset();
     //   }
     //handleAUX();
-
-    // You can add own code here, but don't stall!
-    // If CPU is choking you can try to run @ 160 MHz, but that's cheating!
 }
 
 /**
@@ -456,6 +452,7 @@ void stopall()
     mqttClient.disconnect();
 }
 
+/*pause: action=true cont: action=false*/
 void pause_resume(bool action)
 {
     if(action)
@@ -570,9 +567,11 @@ void startHttpServer()
     server.on(F("/info/"), handleESPInfo);
     server.on(F("/sethardware/"), handleSetHardware);
     server.on(F("/gethardware/"), handleGetHardware);
-    server.on(F("/update/"), handleUpdateMaster);    
-    server.on(F("/update_beta/"), handleUpdateBeta);    
-    server.on(F("/getversions/"), handleGetVersions);    
+    server.on(F("/update/"), handleUpdateMaster);
+    server.on(F("/update_beta/"), handleUpdateBeta);
+    server.on(F("/getversions/"), handleGetVersions);
+    server.on(F("/debug-on/"), [](){bwc.BWC_DEBUG = true; server.send(200, "text/plain", "ok");});
+    server.on(F("/debug-off/"), [](){bwc.BWC_DEBUG = false; server.send(200, "text/plain", "ok");});
     // server.on(F("/getfiles/"), updateFiles);    
 
     // if someone requests any other file or page, go to function 'handleNotFound'

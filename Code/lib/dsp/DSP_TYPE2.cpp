@@ -84,6 +84,8 @@ Buttons DSP_6_TYPE2::getPressedButton()
     digitalWrite(_DSP_CLK_PIN, HIGH);
 
     newButton = buttonCodeToIndex(newButtonCode);
+    _raw_payload_from_dsp[0] = newButtonCode >> 8;
+    _raw_payload_from_dsp[1] = newButtonCode & 0xFF;
     //work around for glitches. Only register change after two consecutive and equal values
     if(newButton == _prev_button){
         _old_button = newButton;

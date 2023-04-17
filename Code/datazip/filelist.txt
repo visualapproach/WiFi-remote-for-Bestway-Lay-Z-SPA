@@ -1,6 +1,5 @@
 chkupdatefw.html.gz
 config.html.gz
-debug.html.gz
 favicon.ico
 favicon.png
 function.js.gz

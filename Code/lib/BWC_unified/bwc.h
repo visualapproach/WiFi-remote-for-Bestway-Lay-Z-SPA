@@ -95,6 +95,7 @@ class BWC {
         bool hasjets, hasgod;
         CIO* cio;
         DSP* dsp;
+        bool BWC_DEBUG = false;
 
     private:
         bool _loadHardware(Models& cioNo, Models& dspNo, int pins[]);
@@ -120,6 +121,7 @@ class BWC {
         void _sweepup();
         void _beep();
         void _accord();
+        void _log();
 
     private:
         bool _notify;
