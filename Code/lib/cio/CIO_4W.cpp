@@ -41,9 +41,8 @@ void CIO_4W::pause_resume(bool action)
 void CIO_4W::handleToggles()
 {
     uint64_t elapsed_time_ms = 0;
-    uint64_t prev_ms = millis();
-    elapsed_time_ms = millis() - prev_ms;
-    prev_ms = millis();
+    elapsed_time_ms = millis() - _prev_ms;
+    _prev_ms = millis();
     cio_states.target = cio_toggles.target;
 
     if(_heater2_countdown_ms > 0) _heater2_countdown_ms -= elapsed_time_ms;

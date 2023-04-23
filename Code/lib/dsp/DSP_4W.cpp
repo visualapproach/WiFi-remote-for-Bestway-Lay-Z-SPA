@@ -10,7 +10,7 @@ void DSP_4W::setup(int dsp_rx, int dsp_tx, int dummy, int dummy2)
     dsp_toggles.unit_change = 0;
     // dsp_toggles.error = 0;
     dsp_toggles.pressed_button = NOBTN;
-    dsp_toggles.no_of_heater_elements_on = 0;
+    dsp_toggles.no_of_heater_elements_on = 2;
     dsp_toggles.godmode = 0;
 }
 

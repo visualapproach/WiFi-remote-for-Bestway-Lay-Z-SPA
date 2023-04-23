@@ -138,7 +138,7 @@ struct sStates
     uint8_t brightness = 8;
     bool gettarget = false;
     // bool fullpower = false;
-    uint8_t no_of_heater_elements_on = 0;
+    uint8_t no_of_heater_elements_on = 2;
     bool godmode = false;
 
     // String toString()
@@ -197,7 +197,7 @@ struct sToggles
     /*Requested state, not toggled*/
     uint8_t target = 20;
     /*Requested state, not toggled*/
-    uint8_t no_of_heater_elements_on = 0;
+    uint8_t no_of_heater_elements_on = 2;
 
     // String toString()
     // {

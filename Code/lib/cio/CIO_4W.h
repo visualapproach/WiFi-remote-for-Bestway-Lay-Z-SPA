@@ -45,6 +45,7 @@ class CIO_4W : public CIO
         uint8_t _from_CIO_buf[7] = {};
         uint8_t _to_CIO_buf[7] = {};
         uint8_t _currentStateIndex;
+        uint64_t _prev_ms;
 
         //cio
         const uint8_t TEMPINDEX = 2;
