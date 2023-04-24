@@ -1,6 +1,7 @@
 #include "bwc.h"
 #include "util.h"
 #include "pitches.h"
+#include <algorithm>
 
 BWC::BWC()
 {
@@ -365,7 +366,7 @@ void BWC::_handleCommandQ() {
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
 }
 
-bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
+bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
 {
     
     dsp->text += String(" ") + txt;
@@ -404,6 +405,8 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
     case SETPUMP:
         if(val != cio->cio_states.pump) cio->cio_toggles.pump_change = 1;
         break;
+    /*RESETQ - special handling in calling function*/
+    /*REBOOTESP - special handling in calling function*/
     case GETTARGET:
         /*Not used atm*/
         break;
@@ -452,12 +455,13 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
     case SETGODMODE:
         cio->cio_toggles.godmode = val > 0;
         break;
+    case SETFULLPOWER:
+        val = std::clamp((int)val, 0, 1);
+        cio->cio_toggles.no_of_heater_elements_on = val+1;
+        break;
+    /*PRINTTEXT is not a command per se. Every command prints the txt string, and if we ONLY want to print txt we do nothing to the command.*/
     case SETREADY:
         {
-            // Serial.print(_timestamp_secs);
-            // Serial.print("  ");
-            // Serial.print((val - _estHeatingTime() * 3600.0f - 7200));
-            // Serial.println((int64_t)_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200));
             command_que_item item;
             if((int64_t)_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200)) //2 hours extra margin
             {

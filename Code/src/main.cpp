@@ -517,7 +517,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
             }
 
             // Copy values from the JsonDocument to the Config
-            int64_t command = doc[F("CMD")];
+            Commands command = doc[F("CMD")];
             int64_t value = doc[F("VALUE")];
             int64_t xtime = doc[F("XTIME")];
             int64_t interval = doc[F("INTERVAL")];
@@ -792,7 +792,7 @@ void handleAddCommand()
         return;
     }
 
-    int64_t command = doc[F("CMD")];
+    Commands command = doc[F("CMD")];
     int64_t value = doc[F("VALUE")];
     int64_t xtime = doc[F("XTIME")];
     int64_t interval = doc[F("INTERVAL")];
@@ -1810,7 +1810,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
         return;
         }
 
-        int64_t command = doc[F("CMD")];
+        Commands command = doc[F("CMD")];
         int64_t value = doc[F("VALUE")];
         int64_t xtime = doc[F("XTIME")];
         int64_t interval = doc[F("INTERVAL")];
@@ -1838,7 +1838,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
         JsonArray commandArray = doc.as<JsonArray>();
 
         for (JsonVariant commandItem : commandArray) {
-            int64_t command = commandItem[F("CMD")];
+            Commands command = commandItem[F("CMD")];
             int64_t value = commandItem[F("VALUE")];
             int64_t xtime = commandItem[F("XTIME")];
             int64_t interval = commandItem[F("INTERVAL")];
