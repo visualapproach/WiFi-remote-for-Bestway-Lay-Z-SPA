@@ -85,9 +85,10 @@ Open the project in editor and download gerber files.
 Upload them to a PCB factory like [JLCPCB](https://jlcpcb.com/). 
 You can also find the gerber files in the code/PCB folder here.
 There is a v2 also which has slots for both kinds of LLC, and room for low pass filter if needed. I have ordered this but not tested yet!<br>
-<img src="./pics/pcb v2.png" width="300">New pin numbers. Must edit code before use!<br>
+<img src="./pics/pcb v2.png" width="300"><br>
+New pin numbers. Choose hardware in web UI!<br>
 Technical details in the [Documentation](bwc_docs.xlsx).
-Build instructions and more: [Instructions](Build-instructions-Bestway-WiFi-remote.pdf)
+Build instructions and more: [Instructions](bwc-manual.pdf)
 
 <img src="./pics/txs0108e.jpg" width="300"> 
 @misterpeee's wife made and shared this case for 3d printing https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/discussions/265#discussion-4062382
