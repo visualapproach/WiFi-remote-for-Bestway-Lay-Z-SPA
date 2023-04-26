@@ -75,29 +75,14 @@ see build instructions for more info.
 <img src="./pics/pump.jpg" width="300">
 
 #### Schematics
-<img src="./pics/schematic.png">
+It's in this project [PCB_V2](https://easyeda.com/editor#cmd=new_schematic,cmd_for_project=57033b6b623846b390539aaa0ca06959)
+Open the PCB tab and go to menu Fabrication, Gerber files. Order the PCB_V2B.
 
 #### Installation
-Link to my version of the PCB (use with LLC below): 
-[oshwlab.com](https://oshwlab.com/Visualapproach/bestway-wifi-controller) | [easyeda.com](https://easyeda.com/Visualapproach/bestway-wifi-controller) 
-
-Open the project in editor and download gerber files. 
-Upload them to a PCB factory like [JLCPCB](https://jlcpcb.com/). 
-You can also find the gerber files in the code/PCB folder here.
-There is a v2 also which has slots for both kinds of LLC, and room for low pass filter if needed. I have ordered this but not tested yet!<br>
-<img src="./pics/pcb v2.png" width="300"><br>
-New pin numbers. Choose hardware in web UI!<br>
-Technical details in the [Documentation](bwc_docs.xlsx).
 Build instructions and more: [Instructions](bwc-manual.pdf)
+Technical details in the [Documentation](bwc_docs.xlsx).
 
-<img src="./pics/txs0108e.jpg" width="300"> 
-@misterpeee's wife made and shared this case for 3d printing https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/discussions/265#discussion-4062382
-
-#### Installation (Alternative)
-[Eric's PCB](https://easyeda.com/Naesstrom/lay-z-spa_remote) (use with LLC below, choose 1x8 ch or 2x4 ch according to the PCB). 
-Replace the resistors with wires. They cause more problems than they solve. 
-
-<img src="./pics/LLC_eric.jpg" width="300"><br>
+@misterpeee's wife made and shared this case for 3d printing https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/discussions/265#discussion-4062382 but it's for the PCB_V1 which is deprecated. Latest PCB is PCB_V2B.
 
 #### Problems?
 Read the [FAQ](https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/discussions/46), other [discussions](https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/discussions) and current [issues](https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/issues).
