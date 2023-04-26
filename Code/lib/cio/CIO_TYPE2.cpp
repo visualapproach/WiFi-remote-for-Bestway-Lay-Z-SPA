@@ -83,29 +83,29 @@ void CIO_6_TYPE2::updateStates()
     // }
 
     //copy private array to public array
-    for(unsigned int i = 0; i < sizeof(payload); i++){
-        payload[i] = _payload[i];
+    for(unsigned int i = 0; i < sizeof(_payload); i++){
+        _raw_payload_from_cio[i] = _payload[i];
     }
 
     brightness = _brightness & 7; //extract only the brightness bits (0-7)
-    cio_states.locked = (payload[LCK_IDX] & (1 << LCK_BIT)) > 0;
-    cio_states.power = 1; //(payload[PWR_IDX] & (1 << PWR_BIT)) > 0;
+    cio_states.locked = (_raw_payload_from_cio[LCK_IDX] & (1 << LCK_BIT)) > 0;
+    cio_states.power = 1; //(_raw_payload_from_cio[PWR_IDX] & (1 << PWR_BIT)) > 0;
     /*If both leds are out, don't change (When TIMER is pressed)*/
-    if(payload[C_IDX] & (1 << C_BIT) || payload[F_IDX] & (1 << F_BIT))
-        cio_states.unit = (payload[C_IDX] & (1 << C_BIT)) > 0;
-    cio_states.bubbles = (payload[AIR_IDX] & (1 << AIR_BIT)) > 0;
-    cio_states.heatgrn = (payload[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
-    cio_states.heatred = (payload[REDHTR_IDX] & (1 << REDHTR_BIT)) > 0;
-    cio_states.timerled1 = (payload[TMR1_IDX] & (1 << TMR1_BIT)) > 0;
-    cio_states.timerled2 = (payload[TMR2_IDX] & (1 << TMR2_BIT)) > 0;
-    cio_states.timerbuttonled = (payload[TMRBTNLED_IDX] & (1 << TMRBTNLED_BIT)) > 0;
+    if(_raw_payload_from_cio[C_IDX] & (1 << C_BIT) || _raw_payload_from_cio[F_IDX] & (1 << F_BIT))
+        cio_states.unit = (_raw_payload_from_cio[C_IDX] & (1 << C_BIT)) > 0;
+    cio_states.bubbles = (_raw_payload_from_cio[AIR_IDX] & (1 << AIR_BIT)) > 0;
+    cio_states.heatgrn = (_raw_payload_from_cio[GRNHTR_IDX] & (1 << GRNHTR_BIT)) > 0;
+    cio_states.heatred = (_raw_payload_from_cio[REDHTR_IDX] & (1 << REDHTR_BIT)) > 0;
+    cio_states.timerled1 = (_raw_payload_from_cio[TMR1_IDX] & (1 << TMR1_BIT)) > 0;
+    cio_states.timerled2 = (_raw_payload_from_cio[TMR2_IDX] & (1 << TMR2_BIT)) > 0;
+    cio_states.timerbuttonled = (_raw_payload_from_cio[TMRBTNLED_IDX] & (1 << TMRBTNLED_BIT)) > 0;
     cio_states.heat = cio_states.heatgrn || cio_states.heatred;
-    cio_states.pump = (payload[FLT_IDX] & (1 << FLT_BIT)) > 0;
-    cio_states.char1 = (uint8_t)_getChar(payload[DGT1_IDX]);
-    cio_states.char2 = (uint8_t)_getChar(payload[DGT2_IDX]);
-    cio_states.char3 = (uint8_t)_getChar(payload[DGT3_IDX]);
+    cio_states.pump = (_raw_payload_from_cio[FLT_IDX] & (1 << FLT_BIT)) > 0;
+    cio_states.char1 = (uint8_t)_getChar(_raw_payload_from_cio[DGT1_IDX]);
+    cio_states.char2 = (uint8_t)_getChar(_raw_payload_from_cio[DGT2_IDX]);
+    cio_states.char3 = (uint8_t)_getChar(_raw_payload_from_cio[DGT3_IDX]);
     if(getHasjets()) 
-        cio_states.jets = (payload[HJT_IDX] & (1 << HJT_BIT)) > 0;
+        cio_states.jets = (_raw_payload_from_cio[HJT_IDX] & (1 << HJT_BIT)) > 0;
     else 
         cio_states.jets = 0;
 
@@ -174,8 +174,8 @@ void IRAM_ATTR CIO_6_TYPE2::clkHandler(void) {
         if(_byte_count == 0){
         _received_cmd |= ((READ_PERI_REG(PIN_IN) & (1 << _CIO_LD_PIN))>0) << ld_bitnumber;
         }
-        else if( (_byte_count<6) && (_received_cmd == CMD2) ){ //only write to payload after CMD2. Also protect from buffer overflow
-        //overwrite the old payload bit with new bit
+        else if( (_byte_count<6) && (_received_cmd == CMD2) ){ //only write to _raw_payload_from_cio after CMD2. Also protect from buffer overflow
+        //overwrite the old _raw_payload_from_cio bit with new bit
         _payload[_byte_count-1] = (_payload[_byte_count-1] & ~(1 << ld_bitnumber)) | ((READ_PERI_REG(PIN_IN) & (1 << _CIO_LD_PIN))>0) << ld_bitnumber;
         }
         //store brightness in cio local variable. It is not used, but put here in case we want to obey the pump.

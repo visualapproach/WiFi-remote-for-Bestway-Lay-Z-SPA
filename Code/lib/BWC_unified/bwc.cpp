@@ -1,6 +1,7 @@
 #include "bwc.h"
 #include "util.h"
 #include "pitches.h"
+#include <algorithm>
 
 BWC::BWC()
 {
@@ -185,7 +186,7 @@ void BWC::loop(){
     else
         cio->cio_toggles.target = _web_target;
         
-    if(dsp->dsp_toggles.unit_change) 
+    if(dsp->dsp_toggles.unit_change)
     {
         cio->cio_states.unit ? cio->cio_toggles.target = C2F(cio->cio_toggles.target) : cio->cio_toggles.target = F2C(cio->cio_toggles.target); 
     }
@@ -203,6 +204,41 @@ void BWC::loop(){
     _handleStateChanges();
     _calcVirtualTemp();
     // logstates();
+    if(BWC_DEBUG) _log();
+}
+
+void BWC::_log()
+{
+    static uint32_t writes = 0;
+    static std::vector<uint8_t> prev_fromcio;
+    static std::vector<uint8_t> prev_fromdsp;
+    std::vector<uint8_t> fromcio = cio->getRawPayload();
+    std::vector<uint8_t> fromdsp = dsp->getRawPayload();
+    if((fromcio == prev_fromcio) && (fromdsp == prev_fromdsp)) return;
+    prev_fromcio = fromcio;
+    prev_fromdsp = fromdsp;
+    
+    File file = LittleFS.open("log.txt", "a");
+    if (!file) {
+        // Serial.println(F("Failed to save states.txt"));
+        return;
+    }
+    if(++writes > 1000) return;
+    file.print(_timestamp_secs);
+    file.print(':');
+    for(unsigned int i = 0; i< fromcio.size(); i++)
+    {
+        if(i>0)file.print(",");
+        file.print(fromcio[i], HEX);
+    }
+    file.print('\t');
+    for(unsigned int i = 0; i< fromdsp.size(); i++)
+    {
+        file.print(",");
+        file.print(fromdsp[i], HEX);
+    }
+    file.print('\n');
+    file.close();
 }
 
 void BWC::adjust_brightness()
@@ -310,7 +346,7 @@ void BWC::_handleCommandQ() {
     //If interval > 0 then append to commandQ with updated xtime.
     if(_command_que[0].interval > 0)
     {
-       _command_que[0].xtime += _command_que[0].interval;
+       _command_que[0].xtime = (uint64_t)time(nullptr) + _command_que[0].interval;
        _command_que.push_back(_command_que[0]);
     } 
     _handlecommand(_command_que[0].cmd, _command_que[0].val, _command_que[0].text);
@@ -330,7 +366,7 @@ void BWC::_handleCommandQ() {
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
 }
 
-bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
+bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
 {
     
     dsp->text += String(" ") + txt;
@@ -357,6 +393,8 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
         if(val == 1 && cio->cio_states.unit == 0) cio->cio_toggles.target = round(F2C(cio->cio_toggles.target)); 
         if(val == 0 && cio->cio_states.unit == 1) cio->cio_toggles.target = round(C2F(cio->cio_toggles.target)); 
         if((uint8_t)val != cio->cio_states.unit) cio->cio_toggles.unit_change = 1;
+        _dsp_tgt_used = false;
+        _web_target = cio->cio_toggles.target;
         break;
     case SETBUBBLES:
         if(val != cio->cio_states.bubbles) cio->cio_toggles.bubbles_change = 1;
@@ -367,6 +405,8 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
     case SETPUMP:
         if(val != cio->cio_states.pump) cio->cio_toggles.pump_change = 1;
         break;
+    /*RESETQ - special handling in calling function*/
+    /*REBOOTESP - special handling in calling function*/
     case GETTARGET:
         /*Not used atm*/
         break;
@@ -400,7 +440,8 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
         break;
     case SETBEEP:
         if(val == 0) _beep();
-        if(val == 1) _accord();
+        else if(val == 1) _accord();
+        else _load_melody_json(txt);
         break;
     case SETAMBIENTF:
         setAmbientTemperature(val, false);
@@ -414,12 +455,13 @@ bool BWC::_handlecommand(int64_t cmd, int64_t val, String txt="")
     case SETGODMODE:
         cio->cio_toggles.godmode = val > 0;
         break;
+    case SETFULLPOWER:
+        val = std::clamp((int)val, 0, 1);
+        cio->cio_toggles.no_of_heater_elements_on = val+1;
+        break;
+    /*PRINTTEXT is not a command per se. Every command prints the txt string, and if we ONLY want to print txt we do nothing to the command.*/
     case SETREADY:
         {
-            // Serial.print(_timestamp_secs);
-            // Serial.print("  ");
-            // Serial.print((val - _estHeatingTime() * 3600.0f - 7200));
-            // Serial.println((int64_t)_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200));
             command_que_item item;
             if((int64_t)_timestamp_secs > (int64_t)(val - _estHeatingTime() * 3600.0f - 7200)) //2 hours extra margin
             {
@@ -478,7 +520,12 @@ void BWC::_handleStateChanges()
         _bubbles_change_timestamp_ms = millis();
     }
 
-    if(cio->cio_states.unit != _prev_cio_states.unit || cio->cio_states.pump != _prev_cio_states.pump || cio->cio_states.heat != _prev_cio_states.heat)
+    if(
+        cio->cio_states.unit   != _prev_cio_states.unit || 
+        cio->cio_states.pump   != _prev_cio_states.pump || 
+        cio->cio_states.heat   != _prev_cio_states.heat || 
+        cio->cio_states.target != _prev_cio_states.target
+      )
         _save_states_needed = true;
 
     _prev_cio_states = cio->cio_states;
@@ -622,11 +669,11 @@ void BWC::_updateVirtualTempFix_ontempchange()
 
     // We can only know something about rate of change if we had continous cooling since last update
     // (Nobody messed with the heater during the 1 degree change)
-    if(_heatred_change_timestamp_ms < _temp_change_timestamp_ms) return;
+    if(_heatred_change_timestamp_ms > _temp_change_timestamp_ms) return; //bugfix by @cobaltfish
     // rate of heating is not subject to change (fixed wattage and pool size) so do this only if cooling
     // and do not calibrate if bubbles has been on
     if(_vt_calibrated) return;
-    if(cio->cio_states.heatred || cio->cio_states.bubbles || (_bubbles_change_timestamp_ms < _temp_change_timestamp_ms)) return;
+    if(cio->cio_states.heatred || cio->cio_states.bubbles || (_bubbles_change_timestamp_ms > _temp_change_timestamp_ms)) return;
     if(_deltatemp > 0 && _virtual_temp > _ambient_temp) return; //temp is rising when it should be falling. Bail out
     if(_deltatemp < 0 && _virtual_temp < _ambient_temp) return; //temp is falling when it should be rising. Bail out
     float degAboveAmbient = _virtual_temp - _ambient_temp;
@@ -841,7 +888,7 @@ String BWC::getJSONSettings(){
     doc[F("MODEL")] = cio->getModel();
     doc[F("NOTIFY")] = _notify;
     doc[F("NOTIFTIME")] = _notification_time;
-
+    doc[F("VTCAL")] = _vt_calibrated;
     // Serialize JSON to string
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
@@ -1341,13 +1388,66 @@ void BWC::saveDebugInfo(const String& s){
 
 /* SOUND */
 
-void BWC::_save_melody(const String& filename)
+/*temporary function to render some soundfiles*/
+// void BWC::_save_melody(const String& filename)
+// {
+//     File file = LittleFS.open(filename, "w");
+//     if (!file) return;
+//     sNote n = {1000, 500};
+//     file.write((byte*)&n, sizeof(n));
+//     file.close();
+// }
+
+bool BWC::_load_melody_json(const String& filename)
 {
-    File file = LittleFS.open(filename, "w");
-    if (!file) return;
-    sNote n = {1000, 500};
-    file.write((byte*)&n, sizeof(n));
+    if(_notes.size() || !_audio_enabled){
+        // Serial.println("Q busy");
+        return false;
+    } 
+    File file = LittleFS.open(filename, "r");
+    if (!file){
+        // Serial.println("file error");
+        return false; 
+    } 
+    int beat_period;
+    float note_duty_cycle;
+    const double a = 1.059463094359; //2^(1/12)
+    const int A4 = 440;
+    sNote n;
+
+    /*file format: 
+    beat period
+    note duty cycle
+    halfstep above a4
+    note type (fraction of beat period, like a quarter = 4)
+    halfstep above a4
+    note type (fraction of beat period, like a quarter = 4)
+    ...eof
+    */
+    String s = file.readStringUntil('\n');
+    beat_period = s.toInt();
+    s = file.readStringUntil('\n');
+    note_duty_cycle = s.toFloat();
+    while(file.available())
+    {
+        s = file.readStringUntil('\n');
+        if(s.toInt() == -47) n.frequency_hz = 0;
+        else n.frequency_hz = A4 * pow(a, s.toInt()) ;
+        s = file.readStringUntil('\n');
+        n.duration_ms = beat_period / s.toFloat();
+        n.duration_ms *= note_duty_cycle;
+        _notes.push_back(n);
+        /*add a little break between the notes (will be placed before each note due to reversing)*/
+        n.frequency_hz = 0;
+        n.duration_ms = beat_period / s.toFloat();
+        n.duration_ms *= (1-note_duty_cycle);
+        _notes.push_back(n);
+    }
+
+    std::reverse(_notes.begin(), _notes.end());
     file.close();
+
+    return true;
 }
 
 void BWC::_add_melody(const String &filename)

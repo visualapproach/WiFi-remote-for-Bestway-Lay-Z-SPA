@@ -21,9 +21,6 @@ class CIO_6_TYPE1: public CIO_6W
         virtual bool getHasjets() = 0;
         virtual bool getHasair() = 0;
 
-    protected:
-        uint8_t payload[11];
-
     private:
         char _getChar(uint8_t value);
         void eopHandler();

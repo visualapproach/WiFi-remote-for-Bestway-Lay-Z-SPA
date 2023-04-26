@@ -93,6 +93,8 @@ Buttons DSP_6_TYPE1::getPressedButton()
 
     newButton = buttonCodeToIndex(newButtonCode);
     _old_button = newButton;
+    _raw_payload_from_dsp[0] = newButtonCode >> 8;
+    _raw_payload_from_dsp[1] = newButtonCode & 0xFF;
     return newButton;
 }
 

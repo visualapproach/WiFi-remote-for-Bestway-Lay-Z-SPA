@@ -17,7 +17,7 @@ std::vector<uint8_t> CIO::getRawPayload()
 String CIO::debug()
 {
     String s;
-    for(int i = 0; i<7; i++) s += ' ' + String(_raw_payload_from_cio[i]);
-    s += "msg count:" + String(good_packets_count);
+    for(unsigned int i = 0; i < _raw_payload_from_cio.size(); i++) s += ' ' + String(_raw_payload_from_cio[i]);
+    s += F(" good pkt:") + String(good_packets_count);
     return s;
 }

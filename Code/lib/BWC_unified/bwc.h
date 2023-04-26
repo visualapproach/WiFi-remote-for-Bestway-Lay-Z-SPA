@@ -39,7 +39,7 @@ constexpr int MAXCOMMANDS = 20;
 
 struct command_que_item
 {
-    uint8_t cmd;
+    Commands cmd;
     int64_t val;
     uint64_t xtime;
     uint32_t interval;
@@ -95,10 +95,11 @@ class BWC {
         bool hasjets, hasgod;
         CIO* cio;
         DSP* dsp;
+        bool BWC_DEBUG = false;
 
     private:
         bool _loadHardware(Models& cioNo, Models& dspNo, int pins[]);
-        bool _handlecommand(int64_t cmd, int64_t val, String txt);
+        bool _handlecommand(Commands cmd, int64_t val, const String& txt);
         void _handleCommandQ();
         void _loadSettings();
         void _loadCommandQueue();
@@ -113,12 +114,14 @@ class BWC {
         void _handleStateChanges();
         void _handleNotification();
         static bool _compare_command(const command_que_item& i1, const command_que_item& i2);
-        void _add_melody(const String& filename);
+        bool _load_melody_json(const String &filename);
+        void _add_melody(const String &filename);
         void _save_melody(const String& filename);
         void _sweepdown();
         void _sweepup();
         void _beep();
         void _accord();
+        void _log();
 
     private:
         bool _notify;

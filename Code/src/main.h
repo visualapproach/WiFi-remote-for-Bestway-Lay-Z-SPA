@@ -28,8 +28,10 @@ BearSSL::CertStore certStore;
 // #include <ESP_WiFiManager.h>
 #include <WiFiManager.h>
 #define ESP_WiFiManager WiFiManager
-#include "bwc.h"
 #include <umm_malloc/umm_heap_select.h>
+
+#include "bwc.h"
+#include "config.h"
 
 /**  */
 Ticker bootlogTimer;

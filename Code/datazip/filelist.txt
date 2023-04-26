@@ -1,9 +1,9 @@
 chkupdatefw.html.gz
 config.html.gz
-debug.html.gz
 favicon.ico
 favicon.png
 function.js.gz
+furelise.tune
 hwconfig.html.gz
 hwtest1.jpg
 hwtest2.jpg

@@ -99,7 +99,7 @@ void CIO_6W::handleToggles()
         _qButton(item);
     }
 
-    if((cio_toggles.target != cio_states.target))
+    if((cio_toggles.target != cio_states.target) && (_button_que_len == 0))
     {
         unlock();
         Buttons dir;
@@ -107,12 +107,12 @@ void CIO_6W::handleToggles()
         item.btncode = getButtonCode(dir);
         item.p_state = &sStates::target;
         item.value = cio_toggles.target;
-        item.duration_ms = 1000;
+        item.duration_ms = 800;
         _qButton(item);
         item.btncode = getButtonCode(NOBTN);
         item.p_state = &sStates::char1;
         item.value = 0xFF;
-        item.duration_ms = 500;
+        item.duration_ms = 400;
         _qButton(item);
     }
 

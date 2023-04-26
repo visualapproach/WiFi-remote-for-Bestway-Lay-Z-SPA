@@ -41,9 +41,8 @@ void CIO_4W::pause_resume(bool action)
 void CIO_4W::handleToggles()
 {
     uint64_t elapsed_time_ms = 0;
-    uint64_t prev_ms = millis();
-    elapsed_time_ms = millis() - prev_ms;
-    prev_ms = millis();
+    elapsed_time_ms = millis() - _prev_ms;
+    _prev_ms = millis();
     cio_states.target = cio_toggles.target;
 
     if(_heater2_countdown_ms > 0) _heater2_countdown_ms -= elapsed_time_ms;
@@ -63,6 +62,8 @@ void CIO_4W::handleToggles()
             _to_CIO_buf[i] = _raw_payload_to_cio[i];
         // _cio_serial.write(_to_CIO_buf, PAYLOADSIZE); //this is done in updateStates()
         cio_states.godmode = false;
+        _power.HEATERPOWER = ((_to_CIO_buf[COMMANDINDEX] & getHeatBitmask1()) == getHeatBitmask1()) * 950 + 
+                             ((_to_CIO_buf[COMMANDINDEX] & getHeatBitmask2()) == getHeatBitmask2()) * 950;
         return;
     } else {
         cio_states.godmode = true;
@@ -223,6 +224,7 @@ void CIO_4W::regulateTemp()
             _heat_bitmask = getHeatBitmask1(); //half power at start
             cio_states.heatred = 1;   //on
             _heater2_countdown_ms = _HEATER2_DELAY_MS;
+            _power.HEATERPOWER = 950;
         }
         hysteresis = 0;
     }
@@ -236,6 +238,7 @@ void CIO_4W::regulateTemp()
     if((_heater2_countdown_ms <= 0) && (cio_states.no_of_heater_elements_on == 2))
     {
         _heat_bitmask = getHeatBitmask1() | getHeatBitmask2();
+        _power.HEATERPOWER = 1900;
     }
 }
 
