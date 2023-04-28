@@ -75,7 +75,7 @@ see build instructions for more info.
 <img src="./pics/pump.jpg" width="300">
 
 #### Schematics
-It's in this project [PCB_V2](https://easyeda.com/editor#cmd=new_schematic,cmd_for_project=57033b6b623846b390539aaa0ca06959)
+It's in this project [PCB_V2B](https://oshwlab.com/visualapproach/bestway-wireless-controller-2_copy)
 Open the PCB tab and go to menu Fabrication, Gerber files. Order the PCB_V2B.
 
 #### Installation
