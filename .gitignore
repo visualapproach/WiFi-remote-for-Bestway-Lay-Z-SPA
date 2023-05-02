@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+Code/.vscode/extensions.json
+
+.pio
+.vscode

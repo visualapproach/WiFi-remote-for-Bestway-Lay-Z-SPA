@@ -87,6 +87,7 @@ void setup()
     bwc.print(FW_VERSION);
     Serial.println(F("End of setup()"));
     heap_water_mark = ESP.getFreeHeap();
+    bwc.loadCommandQueue();
 }
 
 void loop()

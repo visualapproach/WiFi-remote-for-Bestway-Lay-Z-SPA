@@ -84,6 +84,7 @@ class BWC {
         void setAmbientTemperature(int64_t amb, bool unit);
         String getModel();
         void print(const String& txt);
+        void loadCommandQueue();
 
         // String getDebugData();
 
@@ -102,7 +103,6 @@ class BWC {
         bool _handlecommand(Commands cmd, int64_t val, const String& txt);
         void _handleCommandQ();
         void _loadSettings();
-        void _loadCommandQueue();
         void _saveCommandQueue();
         void _updateTimes();
         void _restoreStates();
