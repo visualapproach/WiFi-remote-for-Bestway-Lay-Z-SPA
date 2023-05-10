@@ -1268,7 +1268,7 @@ void BWC::_saveStates() {
     doc[F("HTR")] = cio->cio_states.heat;
     doc[F("FLT")] = cio->cio_states.pump;
     doc[F("TGT")] = cio->cio_states.target;
-    doc[F("GOD")] = cio->cio_states.godmode;
+    doc[F("GOD")] = (uint8_t)cio->cio_states.godmode;  //makes the file look better
 
     // Serialize JSON to file
     if (serializeJson(doc, file) == 0) {
