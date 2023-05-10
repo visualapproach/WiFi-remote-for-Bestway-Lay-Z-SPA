@@ -1144,7 +1144,14 @@ void BWC::_restoreStates() {
     uint8_t flt = doc[F("FLT")];
     uint8_t htr = doc[F("HTR")];
     uint8_t tgt = doc[F("TGT")] | 20;
+    uint8_t god = doc[F("GOD")] ;
     command_que_item item;
+    item.cmd = SETGODMODE;
+    item.val = god;
+    item.xtime = 0;
+    item.interval = 0;
+    item.text = "";
+    add_command(item);
     item.cmd = SETUNIT;
     item.val = unt;
     item.xtime = 0;
@@ -1261,6 +1268,7 @@ void BWC::_saveStates() {
     doc[F("HTR")] = cio->cio_states.heat;
     doc[F("FLT")] = cio->cio_states.pump;
     doc[F("TGT")] = cio->cio_states.target;
+    doc[F("GOD")] = cio->cio_states.godmode;
 
     // Serialize JSON to file
     if (serializeJson(doc, file) == 0) {
