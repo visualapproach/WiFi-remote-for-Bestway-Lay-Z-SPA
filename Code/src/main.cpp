@@ -1328,7 +1328,9 @@ void handleDir()
     while (root.next())
     {
         // Serial.println(root.fileName());
-        mydir += F("<a href=\"/") + root.fileName() + "\">" + root.fileName() + "</a>";
+        String href = root.fileName();
+        if (href.endsWith(".gz")) href.remove(href.length()-3);
+        mydir += F("<a href=\"/") + href + "\">" + root.fileName() + "</a>";
         mydir += F("   Size: ") + String(root.fileSize()) + F(" Bytes ");
         mydir += F("   <a href=\"/remove/?FileToRemove=") + root.fileName() + F("\">remove</a><br>");
     }
