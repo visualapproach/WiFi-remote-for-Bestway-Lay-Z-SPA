@@ -52,8 +52,8 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 -----END CERTIFICATE-----
 )EOF";
 X509List cert(trustRoot);
-extern const unsigned char caCert[] PROGMEM;
-extern const unsigned int caCertLen;
+// extern const unsigned char caCert[] PROGMEM;
+// extern const unsigned int caCertLen;
 
 void setup()
 {
@@ -87,6 +87,7 @@ void setup()
     bwc.print(FW_VERSION);
     Serial.println(F("End of setup()"));
     heap_water_mark = ESP.getFreeHeap();
+    bwc.loadCommandQueue();
 }
 
 void loop()
@@ -679,13 +680,13 @@ void handleNotFound()
 
 String getContentType(const String& filename)
 {
-    if (filename.endsWith(".html")) return "text/html";
-    else if (filename.endsWith(".css")) return "text/css";
-    else if (filename.endsWith(".js")) return "application/javascript";
-    else if (filename.endsWith(".ico")) return "image/x-icon";
-    else if (filename.endsWith(".gz")) return "application/x-gzip";
-    else if (filename.endsWith(".json")) return "application/json";
-    return "text/plain";
+    if (filename.endsWith(".html")) return F("text/html");
+    else if (filename.endsWith(".css")) return F("text/css");
+    else if (filename.endsWith(".js")) return F("application/javascript");
+    else if (filename.endsWith(".ico")) return F("image/x-icon");
+    else if (filename.endsWith(".gz")) return F("application/x-gzip");
+    else if (filename.endsWith(".json")) return F("application/json");
+    return F("text/plain");
 }
 
 /**
@@ -711,12 +712,14 @@ bool handleFileRead(String path)
     String pathWithGz = path + ".gz";
     if (LittleFS.exists(pathWithGz) || LittleFS.exists(path)) { // If the file exists, either as a compressed archive, or normal
         if (LittleFS.exists(pathWithGz))                         // If there's a compressed version available
-        path += ".gz";                                         // Use the compressed version
+            path += ".gz";                                         // Use the compressed version
         File file = LittleFS.open(path, "r");                    // Open the file
-        // size_t sent = server.streamFile(file, contentType);    // Send it to the client
-        server.streamFile(file, contentType);    // Send it to the client
+        size_t fsize = file.size();
+        size_t sent = server.streamFile(file, contentType);    // Send it to the client
+        // server.streamFile(file, contentType);    // Send it to the client
         file.close();                                          // Close the file again
-        // Serial.println("HTTP > file sent: " + path + " (" + sent + " bytes)");
+        Serial.println(F("File size: ") + String(fsize));
+        Serial.println(F("HTTP > file sent: ") + path + F(" (") + sent + F(" bytes)"));
         return true;
     }
     // Serial.println("HTTP > file not found: " + path);   // If the file doesn't exist, return false
@@ -1325,7 +1328,9 @@ void handleDir()
     while (root.next())
     {
         // Serial.println(root.fileName());
-        mydir += F("<a href=\"/") + root.fileName() + "\">" + root.fileName() + "</a>";
+        String href = root.fileName();
+        if (href.endsWith(".gz")) href.remove(href.length()-3);
+        mydir += F("<a href=\"/") + href + "\">" + root.fileName() + "</a>";
         mydir += F("   Size: ") + String(root.fileSize()) + F(" Bytes ");
         mydir += F("   <a href=\"/remove/?FileToRemove=") + root.fileName() + F("\">remove</a><br>");
     }

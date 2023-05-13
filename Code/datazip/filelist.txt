@@ -1,6 +1,6 @@
 chkupdatefw.html.gz
 config.html.gz
-favicon.ico
+favicon.ico.gz
 favicon.png
 function.js.gz
 furelise.tune

@@ -142,9 +142,6 @@ void BWC::setup(void){
 }
 
 void BWC::begin(){
-    _loadSettings();
-    _loadCommandQueue();
-    _restoreStates();
     // _save_melody("melody.bin");
     // if(_audio_enabled) dsp->playIntro();
     // dsp->LEDshow();
@@ -681,6 +678,7 @@ void BWC::_updateVirtualTempFix_ontempchange()
     if(abs(degAboveAmbient) <= 1) return;
     _R_COOLING = ((millis()-_temp_change_timestamp_ms)/3600000.0) / log((conversion*degAboveAmbient) / (conversion*(degAboveAmbient + _deltatemp)));
     _vt_calibrated = true;
+    _save_settings_needed = true;
 }
 
 //Called on heater state change
@@ -1146,7 +1144,14 @@ void BWC::_restoreStates() {
     uint8_t flt = doc[F("FLT")];
     uint8_t htr = doc[F("HTR")];
     uint8_t tgt = doc[F("TGT")] | 20;
+    uint8_t god = doc[F("GOD")] ;
     command_que_item item;
+    item.cmd = SETGODMODE;
+    item.val = god;
+    item.xtime = 0;
+    item.interval = 0;
+    item.text = "";
+    add_command(item);
     item.cmd = SETUNIT;
     item.val = unt;
     item.xtime = 0;
@@ -1176,11 +1181,11 @@ void BWC::_restoreStates() {
 }
 
 void BWC::reloadCommandQueue(){
-    _loadCommandQueue();
+    loadCommandQueue();
     return;
 }
 
-void BWC::_loadCommandQueue(){
+void BWC::loadCommandQueue(){
     File file = LittleFS.open("/cmdq.json", "r");
     if (!file) {
         // Serial.println(F("Failed to read cmdq.json"));
@@ -1205,10 +1210,14 @@ void BWC::_loadCommandQueue(){
         item.interval = doc[F("INTERVAL")][i];
         String s = doc[F("TXT")][i] | "";
         item.text = s;
+        while((item.interval > 0) && (item.xtime < (uint64_t)time(nullptr))) item.xtime += item.interval;
         _command_que.push_back(item);
     }
-
     file.close();
+    std::sort(_command_que.begin(), _command_que.end(), _compare_command);
+    _loadSettings();
+    _restoreStates();
+
 }
 
 /*          */
@@ -1259,6 +1268,7 @@ void BWC::_saveStates() {
     doc[F("HTR")] = cio->cio_states.heat;
     doc[F("FLT")] = cio->cio_states.pump;
     doc[F("TGT")] = cio->cio_states.target;
+    doc[F("GOD")] = (uint8_t)cio->cio_states.godmode;  //makes the file look better
 
     // Serialize JSON to file
     if (serializeJson(doc, file) == 0) {

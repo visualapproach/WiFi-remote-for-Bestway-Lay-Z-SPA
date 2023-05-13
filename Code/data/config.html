@@ -88,12 +88,12 @@
 							<option value="2">Set air bubbles (0/1)</option>
 							<option value="3">Set heater (0/1)</option>
 							<option value="4">Set filter pump (0/1)</option>
-							<option value="5">Reset queue (not used)</option>
+							<option value="5">Reset queue (-)</option>
 							<option value="6">Reboot ESP</option>
-							<option value="7">Internal command (get target) (not used)</option>
-							<option value="8">Reset times (not used)</option>
-							<option value="9">Reset Cl timer (not used)</option>
-							<option value="10">Reset filter timer (not used)</option>
+							<option value="7">Internal command (get target) (-)</option>
+							<option value="8">Reset times (-)</option>
+							<option value="9">Reset Cl timer (-)</option>
+							<option value="10">Reset filter timer (-)</option>
 							<option value="11">Set hydrojets (0/1)</option>
 							<option value="12">Set display brightness (0-8)</option>
 							<option value="13">Set beep (0/1 or 2+text=filename)</option>
@@ -103,7 +103,7 @@
 							<option value="17">Take control (0/1)</option>
 							<option value="18">Set full power (0/1)</option>
 							<option value="19">Print (text)</option>
-							<option value="20">Set ready time (not used)</option>
+							<option value="20">Set ready time (-)</option>
 						</select>
 					</td>
 				</tr>
@@ -292,7 +292,7 @@ function resetCommandQueue()
 
 function toggleCalibration()
 {
-    let obj = document.getElementById("calibration");
+    let obj = document.getElementById('calibration');
     if(obj.checked) obj.checked = false;
 }
 </script>
