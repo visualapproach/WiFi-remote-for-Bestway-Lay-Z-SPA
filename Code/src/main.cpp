@@ -52,8 +52,8 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 -----END CERTIFICATE-----
 )EOF";
 X509List cert(trustRoot);
-extern const unsigned char caCert[] PROGMEM;
-extern const unsigned int caCertLen;
+// extern const unsigned char caCert[] PROGMEM;
+// extern const unsigned int caCertLen;
 
 void setup()
 {
