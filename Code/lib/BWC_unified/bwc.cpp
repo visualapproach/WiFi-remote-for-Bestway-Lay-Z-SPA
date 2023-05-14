@@ -781,7 +781,7 @@ String BWC::getJSONStates() {
     doc[F("HJT")] = cio->cio_states.jets;
     doc[F("BRT")] = dsp->dsp_states.brightness;
     doc[F("ERR")] = cio->cio_states.error;
-    doc[F("GOD")] = cio->cio_states.godmode;
+    doc[F("GOD")] = (uint8_t)cio->cio_states.godmode;
     doc[F("TGT")] = cio->cio_states.target;
     doc[F("TMP")] = cio->cio_states.temperature;
     doc[F("VTMC")] = _virtual_temp;
