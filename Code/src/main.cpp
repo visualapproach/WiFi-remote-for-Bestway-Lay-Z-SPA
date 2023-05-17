@@ -635,14 +635,15 @@ void handleHWtest()
         errors += digitalRead(bwc.pins[pin+3]) != state;
         }
         if(errors > 499)
-        result += F("CIO to DSP pin ") + String(pin+3) + F(" fail!");
+        result += F("CIO to DSP pin ") + String(pin+3) + F(" fail!\n");
         else if(errors == 0)
-        result += F("CIO to DSP pin ") + String(pin+3) + F(" success!");
+        result += F("CIO to DSP pin ") + String(pin+3) + F(" success!\n");
         else
-        result += F("CIO to DSP pin ") + String(pin+3) + " " + String(errors/500) + F("\% bad");
+        result += F("CIO to DSP pin ") + String(pin+3) + " " + String(errors/500) + F("\% bad\n");
         errors = 0;
         delay(0);
     }
+    result += F("\n");
     for(int pin = 0; pin < 3; pin++)
     {
         pinMode(bwc.pins[pin+3], OUTPUT);
@@ -655,11 +656,11 @@ void handleHWtest()
         errors += digitalRead(bwc.pins[pin]) != state;
         }
         if(errors > 499)
-        result += F("DSP to CIO pin ") + String(pin+3) + F(" fail!");
+        result += F("DSP to CIO pin ") + String(pin+3) + F(" fail!\n");
         else if(errors == 0)
-        result += F("DSP to CIO pin ") + String(pin+3) + F(" success!");
+        result += F("DSP to CIO pin ") + String(pin+3) + F(" success!\n");
         else
-        result += F("DSP to CIO pin ") + String(pin+3) + " " + String(errors/500) + F("\% bad");
+        result += F("DSP to CIO pin ") + String(pin+3) + " " + String(errors/500) + F("\% bad\n");
         errors = 0;
         delay(0);
     }
