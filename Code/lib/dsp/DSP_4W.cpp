@@ -1,7 +1,7 @@
 #include "DSP_4W.h"
 #include "util.h"
 
-void DSP_4W::setup(int dsp_rx, int dsp_tx, int dummy, int dummy2)
+void DSP_4W::setup(int dsp_tx, int dsp_rx, int dummy, int dummy2)
 {
     _dsp_serial.begin(9600, SWSERIAL_8N1, dsp_tx, dsp_rx, false, 63);
     _dsp_serial.setTimeout(20);

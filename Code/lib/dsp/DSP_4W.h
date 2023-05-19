@@ -9,7 +9,7 @@ class DSP_4W : public DSP
     public:
         DSP_4W(){};
         virtual ~DSP_4W(){};
-        void setup(int dsp_rx, int dsp_tx, int dummy, int dummy2);
+        void setup(int dsp_tx, int dsp_rx, int dummy, int dummy2);
         void stop();
         void pause_resume(bool action) override;
         void updateToggles();

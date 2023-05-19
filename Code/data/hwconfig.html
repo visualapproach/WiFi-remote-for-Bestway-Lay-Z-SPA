@@ -119,8 +119,8 @@
 				<tr>
 					<td>DSP</td>
 					<td>
-						data/td/rx<input type="text" id="pin4" maxlength="2" style="width:30px">
-						clk/tx<input type="text" id="pin5" maxlength="2" style="width:30px">
+						data/td/tx<input type="text" id="pin4" maxlength="2" style="width:30px">
+						clk/rx<input type="text" id="pin5" maxlength="2" style="width:30px">
 						cs/ld<input type="text" id="pin6" maxlength="2" style="width:30px">
 						audio<input type="text" id="pin7" maxlength="2" style="width:30px">
 					</td>
@@ -174,8 +174,8 @@ function setPins()
 			}
 			if(dsp == 4 || dsp == 5 || dsp == 6 || dsp == 7 || dsp == 8)
 			{
-				p4 = 7;
-				p5 = 6;
+				p4 = 6;
+				p5 = 7;
 				p6 = null;
 				p7 = null;
 			}
@@ -202,8 +202,8 @@ function setPins()
 			}
 			if(dsp == 4 || dsp == 5 || dsp == 6 || dsp == 7 || dsp == 8)
 			{
-				p4 = 5;
-				p5 = 4;
+				p4 = 4;
+				p5 = 5;
 				p6 = null;
 				p7 = null;
 			}
@@ -230,8 +230,8 @@ function setPins()
 			}
 			if(dsp == 4 || dsp == 5 || dsp == 6 || dsp == 7 || dsp == 8)
 			{
-				p4 = 3;
-				p5 = 4;
+				p4 = 4;
+				p5 = 3;
 				p6 = null;
 				p7 = null;
 			}
