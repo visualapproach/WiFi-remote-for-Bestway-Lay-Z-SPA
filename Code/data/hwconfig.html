@@ -105,7 +105,7 @@
 		</section>
 
 		<section>
-			<p>Pinout<span data-text="D0-D8 as labeled on the ESP, but without the 'D'. The ESP will convert to GPIO numbers." class="tooltip">?</span></p>
+			<p>Pinout <span data-text="D0-D8 as labeled on the ESP, but without the 'D'. The ESP will convert to GPIO numbers." class="tooltip">?</span></p>
 		</p>
 			<table>
 				<tr>
@@ -124,6 +124,16 @@
 						cs/ld<input type="text" id="pin6" maxlength="2" style="width:30px">
 						audio<input type="text" id="pin7" maxlength="2" style="width:30px">
 					</td>
+				</tr>
+			</table>
+		</section>
+		
+		<section>
+			<p>Ambient Temperature Sensor <span data-text="Requires a DS18B20 sensor to be connected to the pin labeled 'Sensor Pin'. The sensor will update the 'Ambient Temperature' periodically." class="tooltip">?</span></p>
+			<table>
+				<tr>
+					<td>Enable <input type="checkbox" id="hasTempSensor" name="hasTempSensor" value="checked"></td>
+					<td>Sensor Pin <span data-text="D0-D8 as labeled on the ESP, but without the 'D'. The ESP will convert to GPIO numbers." class="tooltip">?</span> <input type="text" id="pin8" maxlength="2" style="width:30px"></td>
 				</tr>
 			</table>
 		</section>
@@ -149,7 +159,9 @@ function setPins()
 	var cio = document.querySelector("input[name='cio_model']:checked").value;
 	var dsp = document.querySelector("input[name='dsp_model']:checked").value;
 	var pcb = document.querySelector("input[name='pcb']:checked").value;
-	var p1, p2, p3, p4, p5, p6, p7;
+	var p1, p2, p3, p4, p5, p6, p7, p8;
+	p8 = null;
+
 	switch(pcb)
 	{
 		case 'v1':
@@ -254,6 +266,11 @@ function setPins()
 	document.getElementById('pin5').value = p5;
 	document.getElementById('pin6').value = p6;
 	document.getElementById('pin7').value = p7;
+	
+	if(document.getElementById('pin8').value === undefined || p8 !== null)
+	{
+		document.getElementById('pin8').value = p8;
+	}
 }
 
 function loadHardwareConfig()
@@ -274,6 +291,13 @@ function loadHardwareConfig()
 			document.getElementById("cio_" + json.cio.toString()).checked = true;
 			document.getElementById("dsp_" + json.dsp.toString()).checked = true;
 			document.getElementById(json.pcb.toString()).checked = true;
+			if(json.hasTempSensor == '1')
+			{
+				document.getElementById('hasTempSensor').checked = true;
+			}
+			
+			// Set Temperature Sensor Pin from file
+			document.getElementById('pin8').value = json.pins[7];
 			if(json.pcb == 'custom')
 			{
 				document.getElementById('pin1').value = json.pins[0];
@@ -296,6 +320,11 @@ function saveHardwareConfig()
 {
 	console.log("Sending sethardware request");
 	buttonConfirm(document.getElementById('save'), "saved &check; (Don't forget to restart the ESP.)", 6);
+	var hasTempSensor = "0";
+	if(document.querySelector("input[name='hasTempSensor']").checked)
+	{
+		hasTempSensor = "1";
+	}
 
 	var req = new XMLHttpRequest();
 	req.open('POST', '/sethardware/');
@@ -303,6 +332,7 @@ function saveHardwareConfig()
 		'cio': document.querySelector("input[name='cio_model']:checked").value,
 		'dsp': document.querySelector("input[name='dsp_model']:checked").value,
 		'pcb': document.querySelector("input[name='pcb']:checked").value,
+		'hasTempSensor': hasTempSensor,
 		'pins': [
 			document.getElementById('pin1').value,
 			document.getElementById('pin2').value,
@@ -310,7 +340,8 @@ function saveHardwareConfig()
 			document.getElementById('pin4').value,
 			document.getElementById('pin5').value,
 			document.getElementById('pin6').value,
-			document.getElementById('pin7').value
+			document.getElementById('pin7').value,
+			document.getElementById('pin8').value
 		]
 	};
 	req.send(JSON.stringify(json));

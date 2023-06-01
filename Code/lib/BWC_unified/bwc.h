@@ -91,12 +91,14 @@ class BWC {
     public:
         String reboot_time_str;
         time_t reboot_time_t;
-        int pins[7];
+        int pins[8];
         unsigned int loop_count = 0;
         bool hasjets, hasgod;
         CIO* cio;
         DSP* dsp;
         bool BWC_DEBUG = false;
+        bool hasTempSensor = false;
+        int tempSensorPin;
 
     private:
         bool _loadHardware(Models& cioNo, Models& dspNo, int pins[]);
