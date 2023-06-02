@@ -1421,17 +1421,15 @@ bool BWC::_load_melody_json(const String& filename)
     } 
     int beat_period;
     float note_duty_cycle;
-    const double a = 1.059463094359; //2^(1/12)
-    const int A4 = 440;
     sNote n;
 
-    /*file format: 
+    /*new file format: 
     beat period
     note duty cycle
-    halfstep above a4
-    note type (fraction of beat period, like a quarter = 4)
-    halfstep above a4
-    note type (fraction of beat period, like a quarter = 4)
+    frequency
+    duration (fraction of beat_period)
+    frequency
+    duration
     ...eof
     */
     String s = file.readStringUntil('\n');
@@ -1441,15 +1439,14 @@ bool BWC::_load_melody_json(const String& filename)
     while(file.available())
     {
         s = file.readStringUntil('\n');
-        if(s.toInt() == -47) n.frequency_hz = 0;
-        else n.frequency_hz = A4 * pow(a, s.toInt()) ;
+        n.frequency_hz = s.toInt();
         s = file.readStringUntil('\n');
-        n.duration_ms = beat_period / s.toFloat();
+        n.duration_ms = beat_period * s.toFloat();
         n.duration_ms *= note_duty_cycle;
         _notes.push_back(n);
         /*add a little break between the notes (will be placed before each note due to reversing)*/
         n.frequency_hz = 0;
-        n.duration_ms = beat_period / s.toFloat();
+        n.duration_ms = beat_period * s.toFloat();
         n.duration_ms *= (1-note_duty_cycle);
         _notes.push_back(n);
     }
@@ -1460,21 +1457,21 @@ bool BWC::_load_melody_json(const String& filename)
     return true;
 }
 
-void BWC::_add_melody(const String &filename)
-{
-    if(_notes.size() || !_audio_enabled) return;
-    File file = LittleFS.open(filename, "r");
-    if (!file) return;
-    while(file.available())
-    {
-        sNote n;
-        file.readBytes((char*)&n, sizeof(n));
-        _notes.push_back(n);
-    }
-    file.close();
-    /* We read and erase from the back of the vector (faster) so if notes are stored in the natural order we need to reverse*/
-    std::reverse(_notes.begin(), _notes.end());
-}
+// void BWC::_add_melody(const String &filename)
+// {
+//     if(_notes.size() || !_audio_enabled) return;
+//     File file = LittleFS.open(filename, "r");
+//     if (!file) return;
+//     while(file.available())
+//     {
+//         sNote n;
+//         file.readBytes((char*)&n, sizeof(n));
+//         _notes.push_back(n);
+//     }
+//     file.close();
+//     /* We read and erase from the back of the vector (faster) so if notes are stored in the natural order we need to reverse*/
+//     std::reverse(_notes.begin(), _notes.end());
+// }
 
 void BWC::_sweepdown()
 {
