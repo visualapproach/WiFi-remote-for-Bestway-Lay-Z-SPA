@@ -40,11 +40,11 @@ class CIO_4W : public CIO
 
     private:
         Power _power = {1900, 40, 800, 2, 400};
-        uint8_t _heat_bitmask;
+        uint8_t _heat_bitmask = 0;
         SoftwareSerial _cio_serial;
         uint8_t _from_CIO_buf[7] = {};
         uint8_t _to_CIO_buf[7] = {};
-        uint8_t _currentStateIndex;
+        uint8_t _currentStateIndex = 0;
         uint64_t _prev_ms;
 
         //cio

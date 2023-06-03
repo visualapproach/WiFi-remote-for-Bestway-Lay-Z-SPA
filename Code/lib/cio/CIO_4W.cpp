@@ -40,7 +40,7 @@ void CIO_4W::pause_resume(bool action)
 
 void CIO_4W::handleToggles()
 {
-    uint64_t elapsed_time_ms = 0;
+    uint32_t elapsed_time_ms = 0;
     elapsed_time_ms = millis() - _prev_ms;
     _prev_ms = millis();
     cio_states.target = cio_toggles.target;
