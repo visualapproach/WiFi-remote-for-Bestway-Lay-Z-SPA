@@ -1200,7 +1200,7 @@ void loadMqtt()
     }
 
     useMqtt = doc[F("enableMqtt")];
-    enableMqtt = useMqtt;
+    // enableMqtt = useMqtt; //will be set with start complete timer
     mqttIpAddress[0] = doc[F("mqttIpAddress")][0];
     mqttIpAddress[1] = doc[F("mqttIpAddress")][1];
     mqttIpAddress[2] = doc[F("mqttIpAddress")][2];
