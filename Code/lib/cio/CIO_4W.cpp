@@ -134,21 +134,23 @@ void CIO_4W::handleToggles()
 
 void CIO_4W::generatePayload()
 {
-    _to_CIO_buf[0] = B01010101; //Start of file
-    _to_CIO_buf[1] = 1;
-    _to_CIO_buf[3] = 48;
-    _to_CIO_buf[4] = 0;
-    _to_CIO_buf[6] = B10101010; //End of file
+    /* 2023-06-11 edit: Revert back to just copying the unknowns instead of generating a fixed value */
+    _to_CIO_buf[0] = _raw_payload_to_cio[0]; //Start of file
+    _to_CIO_buf[1] = _raw_payload_to_cio[1]; //Unknown, usually 1
     cio_states.heatgrn = !cio_states.heatred && cio_states.heat;
     _to_CIO_buf[COMMANDINDEX] =  (cio_states.heatred * _heat_bitmask)    |
                                 (cio_states.jets * getJetsBitmask())       |
                                 (cio_states.bubbles * getBubblesBitmask()) |
                                 (cio_states.pump * getPumpBitmask());
     if(_to_CIO_buf[COMMANDINDEX] > 0) _to_CIO_buf[COMMANDINDEX] |= getPowerBitmask();
+    _to_CIO_buf[3] = _raw_payload_to_cio[3]; //Unknown, usually 48
+    _to_CIO_buf[4] = _raw_payload_to_cio[4]; //Unknown, usually 0
 
     //calc checksum -> byte5
     //THIS NEEDS TO BE IMPROVED IF OTHER CHECKSUMS IS USED (FOR OTHER BYTES in different models)
     _to_CIO_buf[CIO_CHECKSUMINDEX] = _to_CIO_buf[1] + _to_CIO_buf[2] + _to_CIO_buf[3] + _to_CIO_buf[4];
+
+    _to_CIO_buf[6] = _raw_payload_to_cio[6]; //End of file
 }
 
 void CIO_4W::updateStates()

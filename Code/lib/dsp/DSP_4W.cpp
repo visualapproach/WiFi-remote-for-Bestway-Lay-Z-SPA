@@ -117,14 +117,15 @@ void DSP_4W::handleStates()
 
 void DSP_4W::generatePayload()
 {
+    /* 2023-06-11 edit: revert to copying unknown values instead of generating a fixed value */
     int tempC;
     dsp_states.unit ? tempC = dsp_states.temperature : tempC = F2C(dsp_states.temperature);
 
-    _to_DSP_buf[0] = B10101010;
-    _to_DSP_buf[1] = 2;
+    _to_DSP_buf[0] = _raw_payload_to_dsp[0]; //SoF
+    _to_DSP_buf[1] = _raw_payload_to_dsp[1]; //Unknown, usually 2
     _to_DSP_buf[2] = tempC;
     _to_DSP_buf[3] = dsp_states.error;
-    _to_DSP_buf[4] = 0;
-    _to_DSP_buf[5] = _to_DSP_buf[1]+_to_DSP_buf[2]+_to_DSP_buf[3]+_to_DSP_buf[4];
-    _to_DSP_buf[6] = B10101010;
+    _to_DSP_buf[4] = _raw_payload_to_dsp[4]; //Ready flags?
+    _to_DSP_buf[5] = _to_DSP_buf[1]+_to_DSP_buf[2]+_to_DSP_buf[3]+_to_DSP_buf[4]; //Checksum
+    _to_DSP_buf[6] = _raw_payload_to_dsp[6]; //EoF
 }
