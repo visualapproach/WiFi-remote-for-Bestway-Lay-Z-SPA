@@ -484,6 +484,11 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
             }
         }
         break;
+    case SETR:
+        _R_COOLING = val/1000000.0f;
+        _vt_calibrated = true;
+        _save_settings_needed = true;
+        break;
     default:
         break;
     }
