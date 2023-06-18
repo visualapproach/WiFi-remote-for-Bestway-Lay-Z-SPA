@@ -851,10 +851,11 @@ String BWC::getJSONTimes() {
     doc[F("KWHD")] = _energy_daily_Ws / 3600000.0; //Ws -> kWh
     doc[F("WATT")] = _energy_power_W;
     float t2r = _estHeatingTime();
-    String t2r_string = String(t2r);
-    if(t2r == -2) t2r_string = F("Already");
+    String t2r_string = F("Not ready");
+    if(t2r == -2) t2r_string = F("Ready");
     if(t2r == -1) t2r_string = F("Never");
-    doc[F("T2R")] = t2r_string;
+    doc[F("T2R")] = t2r;
+    doc[F("RS")] = t2r_string;
     String s = cio->debug();
     doc[F("DBG")] = s;
     //cio->clk_per = 1000;  //reset minimum clock period

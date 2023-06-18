@@ -246,7 +246,7 @@ function handlemsg(e)
 		document.getElementById('filtertime').innerHTML = s2dhms(msgobj.PUMPTIME);
 		document.getElementById('jettime').innerHTML = s2dhms(msgobj.JETTIME);
 		document.getElementById('cost').innerHTML = (msgobj.COST).toFixed(2);
-		document.getElementById('t2r').innerHTML = (msgobj.T2R);
+		document.getElementById('t2r').innerHTML = (msgobj.T2R) + " (" + msgobj.RS + ")";
 	}
 };
 
