@@ -1121,7 +1121,7 @@ void BWC::_loadSettings(){
     _energy_total_kWh = doc[F("KWH")];
     _energy_daily_Ws = doc[F("KWHD")];
     _restore_states_on_start = doc[F("RESTORE")];
-    _R_COOLING = doc[F("R")] | 20; //else use default
+    _R_COOLING = doc[F("R")] | 40.0f; //else use default
     _ambient_temp = doc[F("AMB")] | 20;
     _dsp_brightness = doc[F("BRT")] | 7;
     _vt_calibrated = doc[F("VTCAL")] | false;
