@@ -60,10 +60,11 @@ void BWC::setup(void){
         pins[4] = D5;
         pins[5] = D6;
         pins[6] = D7;
+        pins[7] = D8;
         
     }
     // Serial.printf("Cio loaded: %d, dsp model: %d\n", ciomodel, dspmodel);
-    for(int i = 0; i < 7; i++)
+    for(int i = 0; i < 8; i++)
     {
         // Serial.printf("pin%d: %d\n", i, pins[i]);
     }
@@ -135,6 +136,7 @@ void BWC::setup(void){
     }
     cio->setup(pins[0], pins[1], pins[2]);
     dsp->setup(pins[3], pins[4], pins[5], pins[6]);
+    tempSensorPin = pins[7];
     hasjets = cio->getHasjets();
     hasgod = cio->getHasgod();
     cio->cio_toggles.power_change = 1;
@@ -1058,7 +1060,7 @@ bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
         return false;
     }
     // DynamicJsonDocument doc(256);
-    StaticJsonDocument<256> doc;
+    StaticJsonDocument<272> doc;
     DeserializationError error = deserializeJson(doc, file);
     if (error) {
         // Serial.println(F("Failed to read settings.txt"));
@@ -1068,12 +1070,18 @@ bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
     file.close();
     cioNo = doc[F("cio")];
     dspNo = doc[F("dsp")];
+
+    if(doc[F("hasTempSensor")].as<int>() == 1)
+    {
+        hasTempSensor = true;
+    }
+
     String pcbname = doc[F("pcb")].as<String>();
     // int pins[7];
     #ifdef ESP8266
     int DtoGPIO[] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
     #endif
-    for(int i = 0; i < 7; i++)
+    for(int i = 0; i < 8; i++)
     {
         pins[i] = doc[F("pins")][i];
     #ifdef ESP8266
