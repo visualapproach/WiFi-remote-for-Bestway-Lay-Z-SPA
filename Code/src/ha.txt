@@ -265,7 +265,7 @@ void setupHA()
   // Serial.println(topic);
   doc["name"] = mqttBaseTopic + F(" ready state");
   doc["uniq_id"] = F("sensor.") + mqttBaseTopic + F("_rs")+mychipid;
-  doc["stat_t"] = mqttBaseTopic+F("/other");
+  doc["stat_t"] = mqttBaseTopic+F("/times");
   doc["val_tpl"] = F("{{ value_json.RS }}");
   doc["expire_after"] = 700;
   doc["avty_t"] = mqttBaseTopic+F("/Status");
@@ -767,7 +767,7 @@ void setupHA()
   // Serial.println(topic);
   doc["name"] = mqttBaseTopic + F(" ready");
   doc["uniq_id"] = F("binary_sensor.") + mqttBaseTopic + F("_ready")+mychipid;
-  doc["stat_t"] = mqttBaseTopic+F("/times");
+  doc["stat_t"] = mqttBaseTopic+F("/message");
   doc["val_tpl"] = F("{% if value_json.TMP > 30 %}{% if value_json.TMP >= value_json.TGT-1 %}ON{% else %}OFF{% endif %}{% else %}OFF{% endif %}");
   doc["expire_after"] = 700;
   doc["icon"] = F("mdi:hot-tub");
