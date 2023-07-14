@@ -422,20 +422,24 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _airtime_ms = 0;
         _energy_total_kWh = 0;
         _save_settings_needed = true;
+        _new_data_available = true;
         break;
     case RESETCLTIMER:
         _cl_timestamp_s = _timestamp_secs;
         _save_settings_needed = true;
+        _new_data_available = true;
         break;
     case RESETFTIMER:
         _filter_timestamp_s = _timestamp_secs;
         _save_settings_needed = true;
+        _new_data_available = true;
         break;
     case SETJETS:
         if(val != cio->cio_states.jets) cio->cio_toggles.jets_change = 1;
         break;
     case SETBRIGHTNESS:
         _dsp_brightness = val;
+        _new_data_available = true;
         break;
     case SETBEEP:
         if(val == 0) _beep();
@@ -444,12 +448,15 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         break;
     case SETAMBIENTF:
         setAmbientTemperature(val, false);
+        _new_data_available = true;
         break;
     case SETAMBIENTC:
         setAmbientTemperature(val, true);
+        _new_data_available = true;
         break;
     case RESETDAILY:
         _energy_daily_Ws = 0;
+        _new_data_available = true;
         break;
     case SETGODMODE:
         cio->cio_toggles.godmode = val > 0;
