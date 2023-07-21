@@ -54,6 +54,13 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 X509List cert(trustRoot);
 // extern const unsigned char caCert[] PROGMEM;
 // extern const unsigned int caCertLen;
+    
+// Setup a oneWire instance to communicate with any OneWire devices
+// Setting arbitrarily to 231 since this isn't an actual pin
+// Later during "setup" the correct pin will be set, if enabled 
+OneWire oneWire(231);
+// Pass our oneWire reference to Dallas Temperature sensor 
+DallasTemperature tempSensors(&oneWire);
 
 void setup()
 {
@@ -80,6 +87,11 @@ void setup()
     startHttpServer();
     startWebSocket();
     startMqtt();
+    if(bwc.hasTempSensor)
+    { 
+        oneWire.begin(bwc.tempSensorPin);
+        tempSensors.begin();
+    }
     Serial.println(WiFi.localIP().toString());
     bwc.print("   ");
     bwc.print(WiFi.localIP().toString());
@@ -186,6 +198,8 @@ void loop()
                 mqttConnect();
             }
         }
+        // Leverage the pre-existing periodicTimerFlag to also set temperature, if enabled
+        setTemperatureFromSensor();
     }
 
     //Only do this if locked out! (by pressing POWER - LOCK - TIMER - POWER)
@@ -1200,7 +1214,7 @@ void loadMqtt()
     }
 
     useMqtt = doc[F("enableMqtt")];
-    enableMqtt = useMqtt;
+    // enableMqtt = useMqtt; //will be set with start complete timer
     mqttIpAddress[0] = doc[F("mqttIpAddress")][0];
     mqttIpAddress[1] = doc[F("mqttIpAddress")][1];
     mqttIpAddress[2] = doc[F("mqttIpAddress")][2];
@@ -1956,6 +1970,26 @@ void handleESPInfo()
         ESP.getMaxFreeBlockSize() );
         server.send(200, "text/plain; charset=utf-8", response);
     #endif
+}
+
+void setTemperatureFromSensor()
+{
+    if(bwc.hasTempSensor)
+    { 
+            tempSensors.requestTemperatures(); 
+            float temperatureC = tempSensors.getTempCByIndex(0);
+            //float temperatureF = tempSensors.getTempFByIndex(0);
+            //Serial.print(temperatureC);
+            //Serial.println("ºC");
+            //Serial.print(temperatureF);
+            //Serial.println("ºF");
+
+            // Ignore bad reads
+            if(temperatureC >= -20.0)
+            {
+                bwc.setAmbientTemperature(temperatureC, true);
+            }
+    }
 }
 
     // void setupHA(){}

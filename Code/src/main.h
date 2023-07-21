@@ -21,6 +21,8 @@ BearSSL::CertStore certStore;
 
 #endif
 
+#include <OneWire.h>
+#include <DallasTemperature.h>
 #include <LittleFS.h>
 #include <PubSubClient.h> // ** Requires library 2.8.0 or higher ** https://github.com/knolleary/pubsubclient
 #include <Ticker.h>
@@ -141,6 +143,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length);
 void mqttConnect();
 time_t getBootTime();
 void handleESPInfo();
+void setTemperatureFromSensor();
 
 void setupHA();
 void handlePrometheusMetrics();

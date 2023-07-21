@@ -79,7 +79,8 @@ enum Commands: byte
     SETGODMODE,
     SETFULLPOWER,
     PRINTTEXT,
-    SETREADY
+    SETREADY,
+    SETR
 };
 
 enum ToggleButtons: byte

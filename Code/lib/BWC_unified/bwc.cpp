@@ -60,10 +60,11 @@ void BWC::setup(void){
         pins[4] = D5;
         pins[5] = D6;
         pins[6] = D7;
+        pins[7] = D8;
         
     }
     // Serial.printf("Cio loaded: %d, dsp model: %d\n", ciomodel, dspmodel);
-    for(int i = 0; i < 7; i++)
+    for(int i = 0; i < 8; i++)
     {
         // Serial.printf("pin%d: %d\n", i, pins[i]);
     }
@@ -135,6 +136,7 @@ void BWC::setup(void){
     }
     cio->setup(pins[0], pins[1], pins[2]);
     dsp->setup(pins[3], pins[4], pins[5], pins[6]);
+    tempSensorPin = pins[7];
     hasjets = cio->getHasjets();
     hasgod = cio->getHasgod();
     cio->cio_toggles.power_change = 1;
@@ -420,20 +422,24 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _airtime_ms = 0;
         _energy_total_kWh = 0;
         _save_settings_needed = true;
+        _new_data_available = true;
         break;
     case RESETCLTIMER:
         _cl_timestamp_s = _timestamp_secs;
         _save_settings_needed = true;
+        _new_data_available = true;
         break;
     case RESETFTIMER:
         _filter_timestamp_s = _timestamp_secs;
         _save_settings_needed = true;
+        _new_data_available = true;
         break;
     case SETJETS:
         if(val != cio->cio_states.jets) cio->cio_toggles.jets_change = 1;
         break;
     case SETBRIGHTNESS:
         _dsp_brightness = val;
+        _new_data_available = true;
         break;
     case SETBEEP:
         if(val == 0) _beep();
@@ -442,12 +448,15 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         break;
     case SETAMBIENTF:
         setAmbientTemperature(val, false);
+        _new_data_available = true;
         break;
     case SETAMBIENTC:
         setAmbientTemperature(val, true);
+        _new_data_available = true;
         break;
     case RESETDAILY:
         _energy_daily_Ws = 0;
+        _new_data_available = true;
         break;
     case SETGODMODE:
         cio->cio_toggles.godmode = val > 0;
@@ -483,6 +492,11 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
                 std::sort(_command_que.begin(), _command_que.end(), _compare_command);
             }
         }
+        break;
+    case SETR:
+        _R_COOLING = val/1000000.0f;
+        _vt_calibrated = true;
+        _save_settings_needed = true;
         break;
     default:
         break;
@@ -846,10 +860,11 @@ String BWC::getJSONTimes() {
     doc[F("KWHD")] = _energy_daily_Ws / 3600000.0; //Ws -> kWh
     doc[F("WATT")] = _energy_power_W;
     float t2r = _estHeatingTime();
-    String t2r_string = String(t2r);
-    if(t2r == -2) t2r_string = F("Already");
+    String t2r_string = F("Not ready");
+    if(t2r == -2) t2r_string = F("Ready");
     if(t2r == -1) t2r_string = F("Never");
-    doc[F("T2R")] = t2r_string;
+    doc[F("T2R")] = t2r;
+    doc[F("RS")] = t2r_string;
     String s = cio->debug();
     doc[F("DBG")] = s;
     //cio->clk_per = 1000;  //reset minimum clock period
@@ -1052,7 +1067,7 @@ bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
         return false;
     }
     // DynamicJsonDocument doc(256);
-    StaticJsonDocument<256> doc;
+    StaticJsonDocument<272> doc;
     DeserializationError error = deserializeJson(doc, file);
     if (error) {
         // Serial.println(F("Failed to read settings.txt"));
@@ -1062,12 +1077,18 @@ bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
     file.close();
     cioNo = doc[F("cio")];
     dspNo = doc[F("dsp")];
+
+    if(doc[F("hasTempSensor")].as<int>() == 1)
+    {
+        hasTempSensor = true;
+    }
+
     String pcbname = doc[F("pcb")].as<String>();
     // int pins[7];
     #ifdef ESP8266
     int DtoGPIO[] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
     #endif
-    for(int i = 0; i < 7; i++)
+    for(int i = 0; i < 8; i++)
     {
         pins[i] = doc[F("pins")][i];
     #ifdef ESP8266
@@ -1115,7 +1136,7 @@ void BWC::_loadSettings(){
     _energy_total_kWh = doc[F("KWH")];
     _energy_daily_Ws = doc[F("KWHD")];
     _restore_states_on_start = doc[F("RESTORE")];
-    _R_COOLING = doc[F("R")] | 20; //else use default
+    _R_COOLING = doc[F("R")] | 40.0f; //else use default
     _ambient_temp = doc[F("AMB")] | 20;
     _dsp_brightness = doc[F("BRT")] | 7;
     _vt_calibrated = doc[F("VTCAL")] | false;
@@ -1421,17 +1442,15 @@ bool BWC::_load_melody_json(const String& filename)
     } 
     int beat_period;
     float note_duty_cycle;
-    const double a = 1.059463094359; //2^(1/12)
-    const int A4 = 440;
     sNote n;
 
-    /*file format: 
+    /*new file format: 
     beat period
     note duty cycle
-    halfstep above a4
-    note type (fraction of beat period, like a quarter = 4)
-    halfstep above a4
-    note type (fraction of beat period, like a quarter = 4)
+    frequency
+    duration (fraction of beat_period)
+    frequency
+    duration
     ...eof
     */
     String s = file.readStringUntil('\n');
@@ -1441,15 +1460,14 @@ bool BWC::_load_melody_json(const String& filename)
     while(file.available())
     {
         s = file.readStringUntil('\n');
-        if(s.toInt() == -47) n.frequency_hz = 0;
-        else n.frequency_hz = A4 * pow(a, s.toInt()) ;
+        n.frequency_hz = s.toInt();
         s = file.readStringUntil('\n');
-        n.duration_ms = beat_period / s.toFloat();
+        n.duration_ms = beat_period * s.toFloat();
         n.duration_ms *= note_duty_cycle;
         _notes.push_back(n);
         /*add a little break between the notes (will be placed before each note due to reversing)*/
         n.frequency_hz = 0;
-        n.duration_ms = beat_period / s.toFloat();
+        n.duration_ms = beat_period * s.toFloat();
         n.duration_ms *= (1-note_duty_cycle);
         _notes.push_back(n);
     }
@@ -1460,21 +1478,21 @@ bool BWC::_load_melody_json(const String& filename)
     return true;
 }
 
-void BWC::_add_melody(const String &filename)
-{
-    if(_notes.size() || !_audio_enabled) return;
-    File file = LittleFS.open(filename, "r");
-    if (!file) return;
-    while(file.available())
-    {
-        sNote n;
-        file.readBytes((char*)&n, sizeof(n));
-        _notes.push_back(n);
-    }
-    file.close();
-    /* We read and erase from the back of the vector (faster) so if notes are stored in the natural order we need to reverse*/
-    std::reverse(_notes.begin(), _notes.end());
-}
+// void BWC::_add_melody(const String &filename)
+// {
+//     if(_notes.size() || !_audio_enabled) return;
+//     File file = LittleFS.open(filename, "r");
+//     if (!file) return;
+//     while(file.available())
+//     {
+//         sNote n;
+//         file.readBytes((char*)&n, sizeof(n));
+//         _notes.push_back(n);
+//     }
+//     file.close();
+//     /* We read and erase from the back of the vector (faster) so if notes are stored in the natural order we need to reverse*/
+//     std::reverse(_notes.begin(), _notes.end());
+// }
 
 void BWC::_sweepdown()
 {
