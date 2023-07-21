@@ -232,3 +232,18 @@ struct sNote
     int frequency_hz;
     int duration_ms;
 };
+
+struct sWifi_info
+{
+    bool enableAp;
+    bool enableWmApFallback;
+    String apSsid;
+    String apPwd;
+    bool enableStaticIp4;
+    String ip4Address_str;
+    String ip4Gateway_str;
+    String ip4Subnet_str;
+    String ip4DnsPrimary_str;
+    String ip4DnsSecondary_str;
+    String ip4NTP_str;
+};

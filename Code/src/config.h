@@ -5,7 +5,7 @@
 #include <WiFi.h>
 #endif
 #define DEVICE_NAME "layzspa"
-#define FW_VERSION "2023-07-14-1259"
+#define FW_VERSION "2023-07-21-1020"
 
 #define HA_PREFIX "homeassistant"
 #define PROM_NAMESPACE "layzspa"
@@ -86,38 +86,38 @@ const char *wmApName = "Lay-Z-Spa Module";
 const char *wmApPassword = "layzspam0dule";
 //const char *wmApPassword = NULL;
 
-/*
- * WiFi Access Point
- *
- * When a connection was established successfully, the 'enableAp' get automatically
- *  the state 'true' including writing credentials to the "wifi.json".
- *
- * You can modify this via Web UI.
- */
-/** get or set the state of the specific access point configuration */
-bool enableAp = false;
-/** get or set the name of the SSID */
-String apSsid = "ssid";
-/** get or set the password for the SSID */
-String apPwd = "pwd";
+        /*
+        * WiFi Access Point (deprecated)
+        *
+        * When a connection was established successfully, the 'enableAp' get automatically
+        *  the state 'true' including writing credentials to the "wifi.json".
+        *
+        * You can modify this via Web UI.
+        */
+        // /** get or set the state of the specific access point configuration */
+        // bool enableAp = false;
+        // /** get or set the name of the SSID */
+        // String apSsid = "ssid";
+        // /** get or set the password for the SSID */
+        // String apPwd = "pwd";
 
-/*
- * WiFi Static IP
- *
- * You can modify this via Web UI.
- */
-/** get or set the state of the static IP setup */
-bool enableStaticIp4 = false;
-/** get or set the IP address */
-IPAddress ip4Address(192,168,0,30);
-/** get or set the gateway address */
-IPAddress ip4Gateway(192,168,0,1);
-/** get or set the subnet mask */
-IPAddress ip4Subnet(255,255,255,0);
-/** get or set the primary DNS IP */
-IPAddress ip4DnsPrimary(8,8,8,8);
-/** get or set the secondary DNS IP */
-IPAddress ip4DnsSecondary(8,8,4,4);
+        // /*
+        //  * WiFi Static IP
+        //  *
+        //  * You can modify this via Web UI.
+        //  */
+        // /** get or set the state of the static IP setup */
+        // bool enableStaticIp4 = false;
+        // /** get or set the IP address */
+        // IPAddress ip4Address(192,168,0,30);
+        // /** get or set the gateway address */
+        // IPAddress ip4Gateway(192,168,0,1);
+        // /** get or set the subnet mask */
+        // IPAddress ip4Subnet(255,255,255,0);
+        // /** get or set the primary DNS IP */
+        // IPAddress ip4DnsPrimary(8,8,8,8);
+        // /** get or set the secondary DNS IP */
+        // IPAddress ip4DnsSecondary(8,8,4,4);
 
 /*
  * MQTT Server

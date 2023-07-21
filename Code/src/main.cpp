@@ -79,7 +79,7 @@ void setup()
     updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
     // when NTP time is valid we save bootlog.txt and this timer stops
     bootlogTimer.attach(5, []{ if(time(nullptr)>57600) {bwc.saveRebootInfo(); bootlogTimer.detach();} });
-    loadWifi();
+    // loadWifi();
     loadWebConfig();
     startWiFi();
     startNTP();
@@ -321,18 +321,31 @@ void startWiFi()
     WiFi.setAutoReconnect(true);
     WiFi.persistent(true);
     WiFi.hostname(netHostname);
+    sWifi_info wifi_info;
+    wifi_info = loadWifi();
 
-    if (enableStaticIp4)
+
+    if (wifi_info.enableStaticIp4)
     {
+        IPAddress ip4Address;
+        IPAddress ip4Gateway;
+        IPAddress ip4Subnet;
+        IPAddress ip4DnsPrimary;
+        IPAddress ip4DnsSecondary;
+        ip4Address.fromString(wifi_info.ip4Address_str);
+        ip4Gateway.fromString(wifi_info.ip4Gateway_str);
+        ip4Subnet.fromString(wifi_info.ip4Subnet_str);
+        ip4DnsPrimary.fromString(wifi_info.ip4DnsPrimary_str);
+        ip4DnsSecondary.fromString(wifi_info.ip4DnsSecondary_str);
         // Serial.println("WiFi > using static IP \"" + ip4Address.toString() + "\" on gateway \"" + ip4Gateway.toString() + "\"");
         WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
     }
 
-    if (enableAp)
+    if (wifi_info.enableAp)
     {
         // Serial.println("WiFi > using WiFi configuration with SSID \"" + apSsid + "\"");
 
-        WiFi.begin(apSsid.c_str(), apPwd.c_str());
+        WiFi.begin(wifi_info.apSsid.c_str(), wifi_info.apPwd.c_str());
 
         // Serial.print(F("WiFi > Trying to connect ..."));
         int maxTries = 10;
@@ -348,11 +361,11 @@ void startWiFi()
             {
                 // Serial.println("");
                 // Serial.println(F("WiFi > NOT connected!"));
-                if (enableWmApFallback)
+                if (wifi_info.enableWmApFallback)
                 {
                     // disable specific WiFi config
-                    enableAp = false;
-                    enableStaticIp4 = false;
+                    wifi_info.enableAp = false;
+                    wifi_info.enableStaticIp4 = false;
                     // fallback to WiFi config portal
                     startWiFiConfigPortal();
                 }
@@ -368,10 +381,10 @@ void startWiFi()
 
     if (WiFi.status() == WL_CONNECTED)
     {
-        enableAp = true;
-        apSsid = WiFi.SSID();
-        apPwd = WiFi.psk();
-        saveWifi();
+        wifi_info.enableAp = true;
+        wifi_info.apSsid = WiFi.SSID();
+        wifi_info.apPwd = WiFi.psk();
+        saveWifi(wifi_info);
 
         wifiConnected = true;
 
@@ -406,7 +419,11 @@ void startWiFiConfigPortal()
  */
 void startNTP()
 {
-    configTime(0,0,"pool.ntp.org", "time.nist.gov");
+    sWifi_info wifi_info;
+    wifi_info = loadWifi();
+
+    // configTime(0,0,"pool.ntp.org", "time.nist.gov");
+    configTime(0,0,wifi_info.ip4NTP_str, F("pool.ntp.org"), F("time.nist.gov"));
     time_t now = time(nullptr);
     while (now < 8 * 3600 * 2) {
         delay(500);
@@ -951,13 +968,14 @@ void handleSetWebConfig()
 /**
  * load WiFi json configuration from "wifi.json"
  */
-void loadWifi()
+sWifi_info loadWifi()
 {
+    sWifi_info wifi_info;
     File file = LittleFS.open("/wifi.json", "r");
     if (!file)
     {
         // Serial.println(F("Failed to read wifi.json. Using defaults."));
-        return;
+        return wifi_info;
     }
 
     DynamicJsonDocument doc(1024);
@@ -967,41 +985,51 @@ void loadWifi()
     {
         // Serial.println(F("Failed to deserialize wifi.json"));
         file.close();
-        return;
+        return wifi_info;
     }
 
-    enableAp = doc[F("enableAp")];
-    if(doc.containsKey("enableWM")) enableWmApFallback = doc[F("enableWM")];
-    apSsid = doc[F("apSsid")].as<String>();
-    apPwd = doc[F("apPwd")].as<String>();
+    wifi_info.enableAp = doc[F("enableAp")];
+    if(doc.containsKey("enableWM")) wifi_info.enableWmApFallback = doc[F("enableWM")];
+    wifi_info.apSsid = doc[F("apSsid")].as<String>();
+    wifi_info.apPwd = doc[F("apPwd")].as<String>();
 
-    enableStaticIp4 = doc[F("enableStaticIp4")];
-    ip4Address[0] = doc[F("ip4Address")][0];
-    ip4Address[1] = doc[F("ip4Address")][1];
-    ip4Address[2] = doc[F("ip4Address")][2];
-    ip4Address[3] = doc[F("ip4Address")][3];
-    ip4Gateway[0] = doc[F("ip4Gateway")][0];
-    ip4Gateway[1] = doc[F("ip4Gateway")][1];
-    ip4Gateway[2] = doc[F("ip4Gateway")][2];
-    ip4Gateway[3] = doc[F("ip4Gateway")][3];
-    ip4Subnet[0] = doc[F("ip4Subnet")][0];
-    ip4Subnet[1] = doc[F("ip4Subnet")][1];
-    ip4Subnet[2] = doc[F("ip4Subnet")][2];
-    ip4Subnet[3] = doc[F("ip4Subnet")][3];
-    ip4DnsPrimary[0] = doc[F("ip4DnsPrimary")][0];
-    ip4DnsPrimary[1] = doc[F("ip4DnsPrimary")][1];
-    ip4DnsPrimary[2] = doc[F("ip4DnsPrimary")][2];
-    ip4DnsPrimary[3] = doc[F("ip4DnsPrimary")][3];
-    ip4DnsSecondary[0] = doc[F("ip4DnsSecondary")][0];
-    ip4DnsSecondary[1] = doc[F("ip4DnsSecondary")][1];
-    ip4DnsSecondary[2] = doc[F("ip4DnsSecondary")][2];
-    ip4DnsSecondary[3] = doc[F("ip4DnsSecondary")][3];
+    wifi_info.enableStaticIp4 = doc[F("enableStaticIp4")];
+    String s(30);
+    wifi_info.ip4Address_str = doc[F("ip4Address")].as<String>();
+    wifi_info.ip4Gateway_str = doc[F("ip4Gateway")].as<String>();
+    wifi_info.ip4Subnet_str = doc[F("ip4Subnet")].as<String>();
+    wifi_info.ip4DnsPrimary_str = doc[F("ip4DnsPrimary")].as<String>();
+    wifi_info.ip4DnsSecondary_str = doc[F("ip4DnsSecondary")].as<String>();
+    wifi_info.ip4NTP_str = doc[F("ip4NTP")].as<String>();
+
+    return wifi_info;
+
+    // ip4Address[0] = doc[F("ip4Address")][0];
+    // ip4Address[1] = doc[F("ip4Address")][1];
+    // ip4Address[2] = doc[F("ip4Address")][2];
+    // ip4Address[3] = doc[F("ip4Address")][3];
+    // ip4Gateway[0] = doc[F("ip4Gateway")][0];
+    // ip4Gateway[1] = doc[F("ip4Gateway")][1];
+    // ip4Gateway[2] = doc[F("ip4Gateway")][2];
+    // ip4Gateway[3] = doc[F("ip4Gateway")][3];
+    // ip4Subnet[0] = doc[F("ip4Subnet")][0];
+    // ip4Subnet[1] = doc[F("ip4Subnet")][1];
+    // ip4Subnet[2] = doc[F("ip4Subnet")][2];
+    // ip4Subnet[3] = doc[F("ip4Subnet")][3];
+    // ip4DnsPrimary[0] = doc[F("ip4DnsPrimary")][0];
+    // ip4DnsPrimary[1] = doc[F("ip4DnsPrimary")][1];
+    // ip4DnsPrimary[2] = doc[F("ip4DnsPrimary")][2];
+    // ip4DnsPrimary[3] = doc[F("ip4DnsPrimary")][3];
+    // ip4DnsSecondary[0] = doc[F("ip4DnsSecondary")][0];
+    // ip4DnsSecondary[1] = doc[F("ip4DnsSecondary")][1];
+    // ip4DnsSecondary[2] = doc[F("ip4DnsSecondary")][2];
+    // ip4DnsSecondary[3] = doc[F("ip4DnsSecondary")][3];
 }
 
 /**
  * save WiFi json configuration to "wifi.json"
  */
-void saveWifi()
+void saveWifi(const sWifi_info& wifi_info)
 {
     File file = LittleFS.open("/wifi.json", "w");
     if (!file)
@@ -1012,32 +1040,17 @@ void saveWifi()
 
     DynamicJsonDocument doc(1024);
 
-    doc[F("enableAp")] = enableAp;
-    doc[F("enableWM")] = enableWmApFallback;
-    doc[F("apSsid")] = apSsid;
-    doc[F("apPwd")] = apPwd;
-
-    doc[F("enableStaticIp4")] = enableStaticIp4;
-    doc[F("ip4Address")][0] = ip4Address[0];
-    doc[F("ip4Address")][1] = ip4Address[1];
-    doc[F("ip4Address")][2] = ip4Address[2];
-    doc[F("ip4Address")][3] = ip4Address[3];
-    doc[F("ip4Gateway")][0] = ip4Gateway[0];
-    doc[F("ip4Gateway")][1] = ip4Gateway[1];
-    doc[F("ip4Gateway")][2] = ip4Gateway[2];
-    doc[F("ip4Gateway")][3] = ip4Gateway[3];
-    doc[F("ip4Subnet")][0] = ip4Subnet[0];
-    doc[F("ip4Subnet")][1] = ip4Subnet[1];
-    doc[F("ip4Subnet")][2] = ip4Subnet[2];
-    doc[F("ip4Subnet")][3] = ip4Subnet[3];
-    doc[F("ip4DnsPrimary")][0] = ip4DnsPrimary[0];
-    doc[F("ip4DnsPrimary")][1] = ip4DnsPrimary[1];
-    doc[F("ip4DnsPrimary")][2] = ip4DnsPrimary[2];
-    doc[F("ip4DnsPrimary")][3] = ip4DnsPrimary[3];
-    doc[F("ip4DnsSecondary")][0] = ip4DnsSecondary[0];
-    doc[F("ip4DnsSecondary")][1] = ip4DnsSecondary[1];
-    doc[F("ip4DnsSecondary")][2] = ip4DnsSecondary[2];
-    doc[F("ip4DnsSecondary")][3] = ip4DnsSecondary[3];
+    doc[F("enableAp")] = wifi_info.enableAp;
+    doc[F("enableWM")] = wifi_info.enableWmApFallback;
+    doc[F("apSsid")] = wifi_info.apSsid;
+    doc[F("apPwd")] = wifi_info.apPwd;
+    doc[F("enableStaticIp4")] = wifi_info.enableStaticIp4;
+    doc[F("ip4Address")] = wifi_info.ip4Address_str;
+    doc[F("ip4Gateway")] = wifi_info.ip4Gateway_str;
+    doc[F("ip4Subnet")] = wifi_info.ip4Subnet_str;
+    doc[F("ip4DnsPrimary")] = wifi_info.ip4DnsPrimary_str;
+    doc[F("ip4DnsSecondary")] = wifi_info.ip4DnsSecondary_str;
+    doc[F("ip4NTP")] = wifi_info.ip4NTP_str;
 
     if (serializeJson(doc, file) == 0)
     {
@@ -1056,37 +1069,25 @@ void handleGetWifi()
 
     DynamicJsonDocument doc(1024);
 
-    doc[F("enableAp")] = enableAp;
-    doc[F("enableWM")] = enableWmApFallback;
-    doc[F("apSsid")] = apSsid;
-    doc[F("apPwd")] = "<enter password>";
+    sWifi_info wifi_info;
+    wifi_info = loadWifi();
+
+    doc[F("enableAp")] = wifi_info.enableAp;
+    doc[F("enableWM")] = wifi_info.enableWmApFallback;
+    doc[F("apSsid")] = wifi_info.apSsid;
+    doc[F("apPwd")] = F("<enter password>");
     if (!hidePasswords)
     {
-        doc[F("apPwd")] = apPwd;
+        doc[F("apPwd")] = wifi_info.apPwd;
     }
 
-    doc[F("enableStaticIp4")] = enableStaticIp4;
-    doc[F("ip4Address")][0] = ip4Address[0];
-    doc[F("ip4Address")][1] = ip4Address[1];
-    doc[F("ip4Address")][2] = ip4Address[2];
-    doc[F("ip4Address")][3] = ip4Address[3];
-    doc[F("ip4Gateway")][0] = ip4Gateway[0];
-    doc[F("ip4Gateway")][1] = ip4Gateway[1];
-    doc[F("ip4Gateway")][2] = ip4Gateway[2];
-    doc[F("ip4Gateway")][3] = ip4Gateway[3];
-    doc[F("ip4Subnet")][0] = ip4Subnet[0];
-    doc[F("ip4Subnet")][1] = ip4Subnet[1];
-    doc[F("ip4Subnet")][2] = ip4Subnet[2];
-    doc[F("ip4Subnet")][3] = ip4Subnet[3];
-    doc[F("ip4DnsPrimary")][0] = ip4DnsPrimary[0];
-    doc[F("ip4DnsPrimary")][1] = ip4DnsPrimary[1];
-    doc[F("ip4DnsPrimary")][2] = ip4DnsPrimary[2];
-    doc[F("ip4DnsPrimary")][3] = ip4DnsPrimary[3];
-    doc[F("ip4DnsSecondary")][0] = ip4DnsSecondary[0];
-    doc[F("ip4DnsSecondary")][1] = ip4DnsSecondary[1];
-    doc[F("ip4DnsSecondary")][2] = ip4DnsSecondary[2];
-    doc[F("ip4DnsSecondary")][3] = ip4DnsSecondary[3];
-
+    doc[F("enableStaticIp4")] = wifi_info.enableStaticIp4;
+    doc[F("ip4Address")] = wifi_info.ip4Address_str;
+    doc[F("ip4Gateway")] = wifi_info.ip4Gateway_str;
+    doc[F("ip4Subnet")] = wifi_info.ip4Subnet_str;
+    doc[F("ip4DnsPrimary")] = wifi_info.ip4DnsPrimary_str;
+    doc[F("ip4DnsSecondary")] = wifi_info.ip4DnsSecondary_str;
+    doc[F("ip4NTP")] = wifi_info.ip4NTP_str;
     String json;
     if (serializeJson(doc, json) == 0)
     {
@@ -1113,39 +1114,27 @@ void handleSetWifi()
         return;
     }
 
-    enableAp = doc[F("enableAp")];
-    if(doc.containsKey("enableWM")) enableWmApFallback = doc[F("enableWM")];
-    apSsid = doc[F("apSsid")].as<String>();
-    apPwd = doc[F("apPwd")].as<String>();
+    sWifi_info wifi_info;
 
-    enableStaticIp4 = doc[F("enableStaticIp4")];
-    ip4Address[0] = doc[F("ip4Address")][0];
-    ip4Address[1] = doc[F("ip4Address")][1];
-    ip4Address[2] = doc[F("ip4Address")][2];
-    ip4Address[3] = doc[F("ip4Address")][3];
-    ip4Gateway[0] = doc[F("ip4Gateway")][0];
-    ip4Gateway[1] = doc[F("ip4Gateway")][1];
-    ip4Gateway[2] = doc[F("ip4Gateway")][2];
-    ip4Gateway[3] = doc[F("ip4Gateway")][3];
-    ip4Subnet[0] = doc[F("ip4Subnet")][0];
-    ip4Subnet[1] = doc[F("ip4Subnet")][1];
-    ip4Subnet[2] = doc[F("ip4Subnet")][2];
-    ip4Subnet[3] = doc[F("ip4Subnet")][3];
-    ip4DnsPrimary[0] = doc[F("ip4DnsPrimary")][0];
-    ip4DnsPrimary[1] = doc[F("ip4DnsPrimary")][1];
-    ip4DnsPrimary[2] = doc[F("ip4DnsPrimary")][2];
-    ip4DnsPrimary[3] = doc[F("ip4DnsPrimary")][3];
-    ip4DnsSecondary[0] = doc[F("ip4DnsSecondary")][0];
-    ip4DnsSecondary[1] = doc[F("ip4DnsSecondary")][1];
-    ip4DnsSecondary[2] = doc[F("ip4DnsSecondary")][2];
-    ip4DnsSecondary[3] = doc[F("ip4DnsSecondary")][3];
+    wifi_info.enableAp = doc[F("enableAp")];
+    if(doc.containsKey("enableWM")) wifi_info.enableWmApFallback = doc[F("enableWM")];
+    wifi_info.apSsid = doc[F("apSsid")].as<String>();
+    wifi_info.apPwd = doc[F("apPwd")].as<String>();
 
-    saveWifi();
+    wifi_info.enableStaticIp4 = doc[F("enableStaticIp4")];
+    wifi_info.ip4Address_str = doc[F("ip4Address")].as<String>();
+    wifi_info.ip4Gateway_str = doc[F("ip4Gateway")].as<String>();
+    wifi_info.ip4Subnet_str = doc[F("ip4Subnet")].as<String>();
+    wifi_info.ip4DnsPrimary_str = doc[F("ip4DnsPrimary")].as<String>();
+    wifi_info.ip4DnsSecondary_str = doc[F("ip4DnsSecondary")].as<String>();
+    wifi_info.ip4NTP_str = doc[F("ip4NTP")].as<String>();
+
+    saveWifi(wifi_info);
 
     server.send(200, "text/plain", "");
 }
 
-/**
+/*
  * response for /resetwifi/
  * do this before giving away the device (be aware of other credentials e.g. MQTT)
  * a complete flash erase should do the job but remember to upload the filesystem as well.
@@ -1178,12 +1167,12 @@ void resetWiFi()
     ESP.eraseConfig();
 #endif
     delay(1000);
-
-    enableAp = false;
-    enableWmApFallback = true;
-    apSsid = F("empty");
-    apPwd = F("empty");
-    saveWifi();
+    sWifi_info wifi_info;
+    wifi_info.enableAp = false;
+    wifi_info.enableWmApFallback = true;
+    wifi_info.apSsid = F("empty");
+    wifi_info.apPwd = F("empty");
+    saveWifi(wifi_info);
     delay(1000);
 
     wm.resetSettings();
