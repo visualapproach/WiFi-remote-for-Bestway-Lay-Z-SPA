@@ -3,6 +3,10 @@
     /*getbutton and make states from that*/
 void DSP_6W::updateToggles()
 {
+    static int buttontimer = 0;
+    static unsigned long prevmillis = millis();
+    int elapsed_time = millis()-prevmillis;
+    prevmillis = millis();
     Buttons btn = getPressedButton();
     dsp_toggles.pressed_button = btn;
     /*Reset all fields*/
@@ -23,8 +27,7 @@ void DSP_6W::updateToggles()
             switch(btn)
             {
                 case LOCK:
-                /*Need a way to determine long press*/
-                    dsp_toggles.locked_change = 1;
+                    buttontimer = 3000; //ms
                 break;
                 case TIMER:
                 break;
@@ -51,6 +54,7 @@ void DSP_6W::updateToggles()
                     dsp_toggles.jets_change = 1;
                 break;
                 case NOBTN:
+                break;
                 default:
                 break;
             }
@@ -64,11 +68,23 @@ void DSP_6W::updateToggles()
                     dsp_toggles.power_change = 1;
                     break;
                 case LOCK:
-                    if(dsp_states.power) dsp_toggles.locked_change = 1;
+                    if(dsp_states.power) buttontimer = 3000;
                     break;
                 case NOBTN:
                 default:
                     break;
+            }
+        }
+    }
+    else
+    /*no change in button pressed*/
+    {
+        if(btn == LOCK)
+        {
+            if(buttontimer > 0)
+            {
+                buttontimer -= elapsed_time;
+                if(buttontimer <= 0) dsp_toggles.locked_change = 1;
             }
         }
     }

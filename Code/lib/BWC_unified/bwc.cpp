@@ -259,15 +259,15 @@ void BWC::play_sound()
     switch(dsp->dsp_toggles.pressed_button)
     {
         case UP:
-            _sweepup();
+            if(!dsp->dsp_states.locked && dsp->dsp_states.power) _sweepup();
             _dsp_tgt_used = true;
             break;
         case DOWN:
-            _sweepdown();
+            if(!dsp->dsp_states.locked && dsp->dsp_states.power) _sweepdown();
             _dsp_tgt_used = true;
             break;
         case TIMER:
-            _beep();
+            if(!dsp->dsp_states.locked && dsp->dsp_states.power) _beep();
             break;
         default:
 
@@ -345,7 +345,8 @@ void BWC::_handleCommandQ() {
     //If interval > 0 then append to commandQ with updated xtime.
     if(_command_que[0].interval > 0)
     {
-       _command_que[0].xtime = (uint64_t)time(nullptr) + _command_que[0].interval;
+        while(_command_que[0].xtime < (uint64_t)time(nullptr))
+            _command_que[0].xtime += _command_que[0].interval;
        _command_que.push_back(_command_que[0]);
     } 
     _handlecommand(_command_que[0].cmd, _command_que[0].val, _command_que[0].text);
