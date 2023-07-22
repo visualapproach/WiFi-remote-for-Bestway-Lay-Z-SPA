@@ -72,10 +72,28 @@
 					<td><input type="checkbox" id="calibration" onclick="toggleCalibration()"><span data-text="Calibrate by keeping heat OFF and pump ON until temperature has dropped a couple of degrees. Do not toggle jets, bubbles etc meanwhile. Water temp must differ several degrees from ambient from start." class="tooltip">?</span></td>
                     <td><a href="calib.html">manual cal.</a></td>
 				</tr>
-				<tr>
-					<td colspan="2" class="center"><button id="save" class="button" onclick="buttonConfirm(this);saveConfig()">save</button></td>
-				</tr>
 			</table>
+    </section>
+    <section>
+            <table>Enabled display buttons
+                <tr>
+                    <td><label for="lock_btn">Lock</label><input type="checkbox" id="lock_btn"></td>
+                    <td><label for="timer_btn">Timer</label><input type="checkbox" id="timer_btn"></td>
+                    <td><label for="bubbles_btn">Air</label><input type="checkbox" id="bubbles_btn"></td>
+                    <td><label for="unit_btn">Unit</label><input type="checkbox" id="unit_btn"></td>
+                    <td><label for="heat_btn">Heat</label><input type="checkbox" id="heat_btn"></td>
+                </tr>
+                <tr>
+                    <td><label for="pump_btn">Pump</label><input type="checkbox" id="pump_btn"></td>
+                    <td><label for="down_btn">Down</label><input type="checkbox" id="down_btn"></td>
+                    <td><label for="up_btn">Up</label><input type="checkbox" id="up_btn"></td>
+                    <td><label for="power_btn">Pwr</label><input type="checkbox" id="power_btn"></td>
+                    <td><label for="hydrojets_btn">Jets</label><input type="checkbox" id="hydrojets_btn"></td>
+                </tr>
+            </table>
+            <table><tr>
+                <td colspan="2" class="center"><button id="save" class="button" onclick="buttonConfirm(this);saveConfig()">save</button></td>
+            </tr></table>
 		</section>
 
 		<section>
@@ -204,6 +222,16 @@ function loadConfig()
 			var date = new Date(json.REBOOTTIME * 1000);
 			document.getElementById('lastboot').innerHTML = 'Last boot: ' + date.toLocaleString() + ' ' + json.REBOOTINFO;
             document.getElementById('calibration').checked = json.VTCAL;
+            document.getElementById('lock_btn').checked = json.LCK;
+            document.getElementById('timer_btn').checked = json.TMR;
+            document.getElementById('bubbles_btn').checked = json.AIR;
+            document.getElementById('unit_btn').checked = json.UNT;
+            document.getElementById('heat_btn').checked = json.HTR;
+            document.getElementById('pump_btn').checked = json.FLT;
+            document.getElementById('down_btn').checked = json.DN;
+            document.getElementById('up_btn').checked = json.UP;
+            document.getElementById('power_btn').checked = json.PWR;
+            document.getElementById('hydrojets_btn').checked = json.HJT;
 		}
 	}
 
@@ -231,7 +259,17 @@ function saveConfig()
 		'NOTIFY':document.getElementById('notification').checked,
 		'NOTIFTIME':parseInt(document.getElementById('notificationtime').value),
 		'RESTORE':document.getElementById('restore').checked,
-        'VTCAL': document.getElementById('calibration').checked
+        'VTCAL':document.getElementById('calibration').checked,
+        'LCK':document.getElementById('lock_btn').checked,
+        'TMR':document.getElementById('timer_btn').checked,
+        'AIR':document.getElementById('bubbles_btn').checked,
+        'UNT':document.getElementById('unit_btn').checked,
+        'HTR':document.getElementById('heat_btn').checked,
+        'FLT':document.getElementById('pump_btn').checked,
+        'DN':document.getElementById('down_btn').checked,
+        'UP':document.getElementById('up_btn').checked,
+        'PWR':document.getElementById('power_btn').checked,
+        'HJT':document.getElementById('hydrojets_btn').checked
 	};
 	req.send(JSON.stringify(json));
 	console.log(json);

@@ -256,31 +256,35 @@ void BWC::adjust_brightness()
 
 void BWC::play_sound()
 {
-    switch(dsp->dsp_toggles.pressed_button)
+    if(!dsp->dsp_states.locked && dsp->dsp_states.power)
     {
-        case UP:
-            if(!dsp->dsp_states.locked && dsp->dsp_states.power) _sweepup();
-            _dsp_tgt_used = true;
-            break;
-        case DOWN:
-            if(!dsp->dsp_states.locked && dsp->dsp_states.power) _sweepdown();
-            _dsp_tgt_used = true;
-            break;
-        case TIMER:
-            if(!dsp->dsp_states.locked && dsp->dsp_states.power) _beep();
-            break;
-        default:
+        switch(dsp->dsp_toggles.pressed_button)
+        {
+            case UP:
+                if(dsp->EnabledButtons[UP]) _sweepup();
+                _dsp_tgt_used = true;
+                break;
+            case DOWN:
+                if(dsp->EnabledButtons[DOWN]) _sweepdown();
+                _dsp_tgt_used = true;
+                break;
+            case TIMER:
+                if(dsp->EnabledButtons[TIMER]) _beep();
+                break;
+            default:
 
-            break;
+                break;
+        }
     }
+
     if
     (
         dsp->dsp_toggles.bubbles_change || dsp->dsp_toggles.heat_change || 
-        dsp->dsp_toggles.jets_change || dsp->dsp_toggles.locked_change || 
-        dsp->dsp_toggles.power_change || dsp->dsp_toggles.pump_change ||
-        dsp->dsp_toggles.unit_change
+        dsp->dsp_toggles.jets_change    || dsp->dsp_toggles.power_change || 
+        dsp->dsp_toggles.pump_change    || dsp->dsp_toggles.unit_change
     ) 
         _accord();
+    /* Lock button sound is taken care of in _handleStateChanges() */
 }
 
 void BWC::stop(){
@@ -530,6 +534,11 @@ void BWC::_handleStateChanges()
     if(cio->cio_states.bubbles != _prev_cio_states.bubbles)
     {
         _bubbles_change_timestamp_ms = millis();
+    }
+
+    if((cio->cio_states.locked != _prev_cio_states.locked) && dsp->EnabledButtons[LOCK] && _audio_enabled && (dsp->dsp_toggles.pressed_button == LOCK))
+    {
+        _beep();
     }
 
     if(
@@ -903,6 +912,18 @@ String BWC::getJSONSettings(){
     doc[F("NOTIFY")] = _notify;
     doc[F("NOTIFTIME")] = _notification_time;
     doc[F("VTCAL")] = _vt_calibrated;
+
+    doc[F("LCK")] = dsp->EnabledButtons[LOCK];
+    doc[F("TMR")] = dsp->EnabledButtons[TIMER];
+    doc[F("AIR")] = dsp->EnabledButtons[BUBBLES];
+    doc[F("UNT")] = dsp->EnabledButtons[UNIT];
+    doc[F("HTR")] = dsp->EnabledButtons[HEAT];
+    doc[F("FLT")] = dsp->EnabledButtons[PUMP];
+    doc[F("DN")] = dsp->EnabledButtons[DOWN];
+    doc[F("UP")] = dsp->EnabledButtons[UP];
+    doc[F("PWR")] = dsp->EnabledButtons[POWER];
+    doc[F("HJT")] = dsp->EnabledButtons[HYDROJETS];
+
     // Serialize JSON to string
     String jsonmsg;
     if (serializeJson(doc, jsonmsg) == 0) {
@@ -971,6 +992,16 @@ void BWC::setJSONSettings(const String& message){
     _notify = doc[F("NOTIFY")];
     _notification_time = doc[F("NOTIFTIME")];
     _vt_calibrated = doc[F("VTCAL")];
+    dsp->EnabledButtons[LOCK] = doc[F("LCK")];
+    dsp->EnabledButtons[TIMER] = doc[F("TMR")];
+    dsp->EnabledButtons[BUBBLES] = doc[F("AIR")];
+    dsp->EnabledButtons[UNIT] = doc[F("UNT")];
+    dsp->EnabledButtons[HEAT] = doc[F("HTR")];
+    dsp->EnabledButtons[PUMP] = doc[F("FLT")];
+    dsp->EnabledButtons[DOWN] = doc[F("DN")];
+    dsp->EnabledButtons[UP] = doc[F("UP")];
+    dsp->EnabledButtons[POWER] = doc[F("PWR")];
+    dsp->EnabledButtons[HYDROJETS] = doc[F("HJT")];
     saveSettings();
 }
 
@@ -1141,6 +1172,17 @@ void BWC::_loadSettings(){
     _ambient_temp = doc[F("AMB")] | 20;
     _dsp_brightness = doc[F("BRT")] | 7;
     _vt_calibrated = doc[F("VTCAL")] | false;
+
+    dsp->EnabledButtons[LOCK] = doc[F("LCK")];
+    dsp->EnabledButtons[TIMER] = doc[F("TMR")];
+    dsp->EnabledButtons[BUBBLES] = doc[F("AIR")];
+    dsp->EnabledButtons[UNIT] = doc[F("UNT")];
+    dsp->EnabledButtons[HEAT] = doc[F("HTR")];
+    dsp->EnabledButtons[PUMP] = doc[F("FLT")];
+    dsp->EnabledButtons[DOWN] = doc[F("DN")];
+    dsp->EnabledButtons[UP] = doc[F("UP")];
+    dsp->EnabledButtons[POWER] = doc[F("PWR")];
+    dsp->EnabledButtons[HYDROJETS] = doc[F("HJT")];
 
     file.close();
 }
@@ -1388,6 +1430,16 @@ void BWC::saveSettings(){
     doc[F("NOTIFY")] = _notify;
     doc[F("NOTIFTIME")] = _notification_time;
     doc[F("VTCAL")] = _vt_calibrated;
+    doc[F("LCK")] = dsp->EnabledButtons[LOCK];
+    doc[F("TMR")] = dsp->EnabledButtons[TIMER];
+    doc[F("AIR")] = dsp->EnabledButtons[BUBBLES];
+    doc[F("UNT")] = dsp->EnabledButtons[UNIT];
+    doc[F("HTR")] = dsp->EnabledButtons[HEAT];
+    doc[F("FLT")] = dsp->EnabledButtons[PUMP];
+    doc[F("DN")] = dsp->EnabledButtons[DOWN];
+    doc[F("UP")] = dsp->EnabledButtons[UP];
+    doc[F("PWR")] = dsp->EnabledButtons[POWER];
+    doc[F("HJT")] = dsp->EnabledButtons[HYDROJETS];
 
     // Serialize JSON to file
     if (serializeJson(doc, file) == 0) {

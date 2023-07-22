@@ -185,13 +185,16 @@ struct sStates
 
 struct sToggles
 {
-    bool locked_change = 0;
+    bool locked_pressed = 0;
     bool power_change = 0;
     bool unit_change = 0;
     bool bubbles_change = 0;
     bool heat_change = 0;
     bool pump_change = 0;
     bool jets_change = 0;
+    bool timer_pressed = 0;
+    bool up_pressed = 0;
+    bool down_pressed = 0;
     Buttons pressed_button = NOBTN;
     /*Requested state, not toggled*/
     bool godmode = false;
@@ -204,14 +207,14 @@ struct sToggles
     // {
     //     char res[130];
     //     PGM_P resfmt = PSTR("Toggle: LCK: %d PWR: %d UNT: %d AIR: %d HTR: %d FLT: %d JET: %d   Set: TGT: %d BTN: %d\n");
-    //     sprintf_P(res, resfmt, locked_change, power_change, unit_change, bubbles_change, heat_change, pump_change, jets_change, target, pressed_button);
+    //     sprintf_P(res, resfmt, locked_pressed, power_change, unit_change, bubbles_change, heat_change, pump_change, jets_change, target, pressed_button);
     //     return String(res);
     // }
 
     inline bool operator==(const sToggles& rhs)
     {
         bool result = false;
-        result = locked_change == rhs.locked_change;
+        result = locked_pressed == rhs.locked_pressed;
         result &= power_change == rhs.power_change;
         result &= unit_change == rhs.unit_change;
         result &= bubbles_change == rhs.bubbles_change;

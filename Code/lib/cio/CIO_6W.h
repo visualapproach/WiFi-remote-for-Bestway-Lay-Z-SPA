@@ -35,13 +35,6 @@ class CIO_6W : public CIO
         Power power = {1900, 40, 800, 2, 400};
 
     public:
-        /*
-        Set to zero to disable chosen buttons.
-        Order: NOBTN,LOCK,TIMER,BUBBLES,UNIT,HEAT,PUMP,DOWN,UP,POWER,HYDROJETS
-        Example: to disable UNIT and TIMER set to 1,1,0,1,0,1,1,1,1,1,1
-        or use Buttons enum - "EnabledButtons[UNIT] = 0"
-        */
-        uint8_t EnabledButtons[11] = {1,1,1,1,1,1,1,1,1,1,1};
         uint8_t brightness;
 
     protected:
