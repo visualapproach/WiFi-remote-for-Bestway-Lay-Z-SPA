@@ -75,7 +75,7 @@
 			</table>
     </section>
     <section>
-            <table>Enabled display buttons
+            <table>Enabled display buttons.<label for="toggle_all"> All:</label><input type="checkbox" id="toggle_all" onclick="toggleAll()">
                 <tr>
                     <td><label for="lock_btn">Lock</label><input type="checkbox" id="lock_btn"></td>
                     <td><label for="timer_btn">Timer</label><input type="checkbox" id="timer_btn"></td>
@@ -273,6 +273,20 @@ function saveConfig()
 	};
 	req.send(JSON.stringify(json));
 	console.log(json);
+}
+
+function toggleAll()
+{
+    document.getElementById('lock_btn').checked = document.getElementById('toggle_all').checked;
+    document.getElementById('timer_btn').checked = document.getElementById('toggle_all').checked;
+    document.getElementById('bubbles_btn').checked = document.getElementById('toggle_all').checked;
+    document.getElementById('unit_btn').checked = document.getElementById('toggle_all').checked;
+    document.getElementById('heat_btn').checked = document.getElementById('toggle_all').checked;
+    document.getElementById('pump_btn').checked = document.getElementById('toggle_all').checked;
+    document.getElementById('down_btn').checked = document.getElementById('toggle_all').checked;
+    document.getElementById('up_btn').checked = document.getElementById('toggle_all').checked;
+    document.getElementById('power_btn').checked = document.getElementById('toggle_all').checked;
+    document.getElementById('hydrojets_btn').checked = document.getElementById('toggle_all').checked;
 }
 
 function loadCommandQueue()
