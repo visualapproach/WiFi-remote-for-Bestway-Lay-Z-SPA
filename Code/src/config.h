@@ -79,7 +79,7 @@ bool useControlSelector = false;
  *  you are not able to connect to the web ui without a connection.
  */
 /** get the state of the WiFi configuration manager fallback on wifi failures */
-bool enableWmApFallback = true;
+// bool enableWmApFallback = true;
 /** get the name for the WiFi configuration manager access point */
 const char *wmApName = "Lay-Z-Spa Module";
 /** get the password for the WiFi configuration manager (min. 8, max. 63 chars; NULL to disable) */

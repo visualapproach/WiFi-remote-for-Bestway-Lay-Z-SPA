@@ -236,10 +236,10 @@ struct sNote
 struct sWifi_info
 {
     bool enableAp;
-    bool enableWmApFallback;
+    bool enableWmApFallback = true;
     String apSsid;
     String apPwd;
-    bool enableStaticIp4;
+    bool enableStaticIp4 = false;
     String ip4Address_str;
     String ip4Gateway_str;
     String ip4Subnet_str;
