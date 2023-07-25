@@ -1407,6 +1407,7 @@ void BWC::saveSettings(){
     _heatingtime_ms = 0;
     _pumptime_ms = 0;
     _airtime_ms = 0;
+    _jettime_ms = 0;
     _uptime_ms = 0;
     // Set the values in the document
     doc[F("CLTIME")] = _cl_timestamp_s;
