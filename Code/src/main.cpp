@@ -580,6 +580,7 @@ void startHttpServer()
     server.on(F("/setconfig/"), handleSetConfig);
     server.on(F("/getcommands/"), handleGetCommandQueue);
     server.on(F("/addcommand/"), handleAddCommand);
+    server.on(F("/editcommand/"), handleEditCommand);
     server.on(F("/getwebconfig/"), handleGetWebConfig);
     server.on(F("/setwebconfig/"), handleSetWebConfig);
     server.on(F("/getwifi/"), handleGetWifi);
@@ -839,6 +840,41 @@ void handleAddCommand()
     item.interval = interval;
     item.text = txt;
     bwc.add_command(item);
+
+    server.send(200, "text/plain", "");
+}
+
+/**
+ * response for /editcommand/
+ * replace a command in the queue with new command
+ */
+void handleEditCommand()
+{
+    if (!checkHttpPost(server.method())) return;
+
+    // DynamicJsonDocument doc(256);
+    StaticJsonDocument<256> doc;
+    String message = server.arg(0);
+    DeserializationError error = deserializeJson(doc, message);
+    if (error)
+    {
+        server.send(400, "text/plain", "Error deserializing message");
+        return;
+    }
+
+    Commands command = doc[F("CMD")];
+    int64_t value = doc[F("VALUE")];
+    int64_t xtime = doc[F("XTIME")];
+    int64_t interval = doc[F("INTERVAL")];
+    String txt = doc[F("TXT")] | "";
+    uint8_t index = doc[F("IDX")];
+    command_que_item item;
+    item.cmd = command;
+    item.val = value;
+    item.xtime = xtime;
+    item.interval = interval;
+    item.text = txt;
+    bwc.edit_command(index, item);
 
     server.send(200, "text/plain", "");
 }

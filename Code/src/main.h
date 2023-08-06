@@ -111,6 +111,7 @@ void handleGetConfig();
 void handleSetConfig();
 void handleGetCommandQueue();
 void handleAddCommand();
+void handleEditCommand();
 void loadWebConfig();
 void saveWebConfig();
 void handleGetWebConfig();

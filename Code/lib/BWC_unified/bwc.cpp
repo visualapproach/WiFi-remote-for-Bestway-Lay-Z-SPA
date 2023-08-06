@@ -342,7 +342,6 @@ void BWC::_handleNotification()
 }
 
 void BWC::_handleCommandQ() {
-    bool restartESP = false;
     if(_command_que.size() < 1) return;
     /* time for next command? */
     if (_timestamp_secs < _command_que[0].xtime) return;
@@ -354,24 +353,11 @@ void BWC::_handleCommandQ() {
        _command_que.push_back(_command_que[0]);
     } 
     _handlecommand(_command_que[0].cmd, _command_que[0].val, _command_que[0].text);
-    restartESP = _command_que[0].cmd == REBOOTESP;
-    //remove from commandQ
-    _command_que.erase(_command_que.begin());
-    _next_notification_time = _notification_time; //reset alarm time
-    _save_cmdq_needed = true;
-    if(restartESP) {
-        saveSettings();
-        _saveCommandQueue();
-        stop();
-        delay(3000);
-        ESP.restart();
-    }
-    /*If we pushed back an item, we need to re-sort the que*/
-    std::sort(_command_que.begin(), _command_que.end(), _compare_command);
 }
 
 bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
 {
+    bool restartESP = false;
     
     dsp->text += String(" ") + txt;
     switch (cmd)
@@ -409,8 +395,15 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
     case SETPUMP:
         if(val != cio->cio_states.pump) cio->cio_toggles.pump_change = 1;
         break;
-    /*RESETQ - special handling in calling function*/
-    /*REBOOTESP - special handling in calling function*/
+    case RESETQ:
+        _command_que.clear();
+        _save_cmdq_needed = true;
+        _next_notification_time = _notification_time; //reset alarm time
+        return false;
+        break;
+    case REBOOTESP:
+        restartESP = true;
+        break;
     case GETTARGET:
         /*Not used atm*/
         break;
@@ -506,6 +499,19 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
     default:
         break;
     }
+    //remove from commandQ
+    _command_que.erase(_command_que.begin());
+    _next_notification_time = _notification_time; //reset alarm time
+    _save_cmdq_needed = true;
+    if(restartESP) {
+        saveSettings();
+        _saveCommandQueue();
+        stop();
+        delay(3000);
+        ESP.restart();
+    }
+    /*If we pushed back an item, we need to re-sort the que*/
+    std::sort(_command_que.begin(), _command_que.end(), _compare_command);
     return false;
 }
 
@@ -749,11 +755,12 @@ String BWC::getModel()
 bool BWC::add_command(command_que_item command_item)
 {
     _save_cmdq_needed = true;
-    if(command_item.cmd == RESETQ)
-    {
-        _command_que.clear();
-        return true;
-    }
+    /* TODO: handle resetq in handlecommandque() instead!!! */
+    // if(command_item.cmd == RESETQ)
+    // {
+    //     _command_que.clear();
+    //     return true;
+    // }
     if(command_item.cmd == SETREADY)
     {
         command_item.val = (int64_t)command_item.xtime; //Use val field to store the time to be ready
@@ -762,6 +769,28 @@ bool BWC::add_command(command_que_item command_item)
     }
     //add parameters to _command_que[rows][parameter columns] and sort the array on xtime.
     _command_que.push_back(command_item);
+    std::sort(_command_que.begin(), _command_que.end(), _compare_command);
+    return true;
+}
+
+bool BWC::edit_command(uint8_t index, command_que_item command_item)
+{
+    if(index > _command_que.size()) return false;
+    _save_cmdq_needed = true;
+    /* TODO: handle resetq in handlecommandque() instead!!! */
+    // if(command_item.cmd == RESETQ)
+    // {
+    //     _command_que.clear();
+    //     return true;
+    // }
+    if(command_item.cmd == SETREADY)
+    {
+        command_item.val = (int64_t)command_item.xtime; //Use val field to store the time to be ready
+        command_item.xtime = 0; //And start checking now
+        command_item.interval = 0;
+    }
+    //add parameters to _command_que[index] and sort the array on xtime.
+    _command_que.at(index) = command_item;
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
     return true;
 }
