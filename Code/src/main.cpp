@@ -1557,15 +1557,19 @@ String checkFirmwareUpdate(bool betaversion)
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     if(client.probeMaxFragmentLength(host, httpsPort, 512))
+    {
+        Serial.println(F("receive buf 512"));
         client.setBufferSizes(512, 256);
+    }
     int count = 0;
-    if (!client.connect(host, httpsPort)) {
-        Serial.println(F("Connection to github failed"));
+    while (!client.connect(host, httpsPort)) {
+        Serial.println(F("Connection to github failed (chk)"));
         if(++count > 5)
         {
             pause_resume(false);
             return "check failed";
         }
+        delay(1000);
     }
     String URL = FPSTR(URL_part1);
     if(betaversion)
@@ -1628,13 +1632,14 @@ void handleUpdate(bool betaversion)
     if(client.probeMaxFragmentLength(host, httpsPort, 1024))
         client.setBufferSizes(1024, 512);
     int count = 0;
-    if (!client.connect(host, httpsPort)) {
-        Serial.println(F("Connection to github failed"));
+    while (!client.connect(host, httpsPort)) {
+        Serial.println(F("Connection to github failed (update)"));
         if(++count > 5)
         {
             pause_resume(false);
             return;
         }
+        delay(1000);
     }
     // Serial.println(client.getMFLNStatus());
     ESPhttpUpdate.onStart(updateStart);
@@ -1771,9 +1776,10 @@ bool updateFiles(bool betaversion)
         int count = 0;
         if(client.probeMaxFragmentLength(host, httpsPort, 512))
             client.setBufferSizes(512, 256);
-        if (!client.connect(host, httpsPort)) {
+        while (!client.connect(host, httpsPort)) {
             Serial.println(F("Connection to file failed"));
             if(++count > 5) return false;
+            delay(1000);
         }
         client.print(String("GET ") + URL + filename + F(" HTTP/1.1\r\n") +
                     F("Host: ") + host + "\r\n" +
