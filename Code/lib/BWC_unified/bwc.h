@@ -65,6 +65,7 @@ class BWC {
         void pause_resume(bool action);
         bool add_command(command_que_item command_item);
         bool edit_command(uint8_t index, command_que_item command_item);
+        bool del_command(uint8_t index);
         // bool qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval);
         bool newData();
         String getJSONStates();

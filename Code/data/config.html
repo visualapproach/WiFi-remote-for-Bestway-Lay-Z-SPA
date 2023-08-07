@@ -318,7 +318,7 @@ function loadCommandQueue()
                 cell = row.insertCell(1);
                 cell.innerHTML = commandlist[json['CMD'][i]] + ':' + json['VALUE'][i] + '<br>' + date.toLocaleString() + '<br>Interval: ' + json['INTERVAL'][i] + 's';
                 cell = row.insertCell(2);
-                cell.innerHTML = '<button id="delCmd' + i + '" class="button_red" disabled onclick="delCommand('+i+')">Del</button>';
+                cell.innerHTML = '<button id="delCmd' + i + '" class="button_red" onclick="delCommand('+i+')">Del</button>';
 			}
 		}
 	}
@@ -382,7 +382,13 @@ function editCommandQueue(index)
 
 function delCommand(index)
 {
-
+	var req = new XMLHttpRequest();
+	req.open('POST', '/delcommand/');
+	var json = {
+        'IDX':index
+	};
+	req.send(JSON.stringify(json));
+	console.log(json);
 }
 
 function toggleCalibration()

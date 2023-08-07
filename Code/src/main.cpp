@@ -880,6 +880,30 @@ void handleEditCommand()
 }
 
 /**
+ * response for /delcommand/
+ * replace a command in the queue with new command
+ */
+void handleDelCommand()
+{
+    if (!checkHttpPost(server.method())) return;
+
+    // DynamicJsonDocument doc(256);
+    StaticJsonDocument<256> doc;
+    String message = server.arg(0);
+    DeserializationError error = deserializeJson(doc, message);
+    if (error)
+    {
+        server.send(400, "text/plain", "Error deserializing message");
+        return;
+    }
+
+    uint8_t index = doc[F("IDX")];
+    bwc.del_command(index);
+
+    server.send(200, "text/plain", "");
+}
+
+/**
  * load "Web Config" json configuration from "webconfig.json"
  */
 void loadWebConfig()
