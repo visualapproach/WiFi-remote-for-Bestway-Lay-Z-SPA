@@ -797,9 +797,10 @@ bool BWC::edit_command(uint8_t index, command_que_item command_item)
 
 bool BWC::del_command(uint8_t index)
 {
-    if(index > _command_que.size()) return false;
+    if(index >= _command_que.size()) return false;
     _save_cmdq_needed = true;
     _command_que.erase(_command_que.begin()+index);
+    return true;
 }
 
 //check for special button sequence

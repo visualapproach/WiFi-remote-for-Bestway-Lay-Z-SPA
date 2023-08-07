@@ -5,7 +5,7 @@
 #include <WiFi.h>
 #endif
 #define DEVICE_NAME "layzspa"
-#define FW_VERSION "2023-08-06-1821"
+#define FW_VERSION "2023-08-07-2214"
 
 #define HA_PREFIX "homeassistant"
 #define PROM_NAMESPACE "layzspa"
