@@ -1,3 +1,4 @@
+# NOT STABLE YET! TRYING TO FIX THE BROKEN UPDATE FUNCTIONS
 Change log v4
 
  - Update firmware and html-files via web UI
