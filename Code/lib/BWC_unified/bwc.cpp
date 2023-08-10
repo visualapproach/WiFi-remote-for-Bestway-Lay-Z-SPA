@@ -22,6 +22,11 @@ BWC::BWC()
     _restore_states_on_start = false;
     _ambient_temp = 20;
     _virtual_temp_fix = -99;
+}
+
+BWC::~BWC()
+{
+    stop();
 };
 
 void save_settings_cb(BWC* bwcInstance)
@@ -290,13 +295,24 @@ void BWC::play_sound()
 void BWC::stop(){
     _save_settings_ticker.detach();
     _scroll_text_ticker.detach();
+    if(cio != nullptr){
+Serial.println("stopping cio");
     cio->stop();
+Serial.println("del cio");
     delete cio;
+    cio = nullptr;
+    }
+    if(dsp != nullptr)
+    {
+Serial.println("stopping dsp");
     dsp->stop();
+Serial.println("del dsp");
     delete dsp;
+    dsp = nullptr;
+    }
 }
 
-void BWC::pause_resume(bool action)
+void BWC::pause_all(bool action)
 {
     if(action)
     {
@@ -307,8 +323,8 @@ void BWC::pause_resume(bool action)
         _save_settings_ticker.attach(3600.0f, save_settings_cb, this);
         _scroll_text_ticker.attach(0.25f, scroll_text_cb, this);
     }
-    cio->pause_resume(action);
-    dsp->pause_resume(action);
+    cio->pause_all(action);
+    dsp->pause_all(action);
 }
 
 /*Sort by xtime, ascending*/
@@ -816,7 +832,7 @@ bool BWC::getBtnSeqMatch()
     return false;
 }
 
-String BWC::getJSONStates() {
+void BWC::getJSONStates(String &rtn) {
         // Allocate a temporary JsonDocument
         // Don't forget to change the capacity to match your requirements.
         // Use arduinojson.org/assistant to compute the capacity.
@@ -873,14 +889,12 @@ String BWC::getJSONStates() {
     }
 
     // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-        jsonmsg = F("{\"error\": \"Failed to serialize states\"}");
+    if (serializeJson(doc, rtn) == 0) {
+        rtn = F("{\"error\": \"Failed to serialize states\"}");
     }
-    return jsonmsg;
 }
 
-String BWC::getJSONTimes() {
+void BWC::getJSONTimes(String &rtn) {
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
@@ -917,14 +931,12 @@ String BWC::getJSONTimes() {
     //cio->clk_per = 1000;  //reset minimum clock period
 
     // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-        jsonmsg = F("{\"error\": \"Failed to serialize times\"}");
+    if (serializeJson(doc, rtn) == 0) {
+        rtn = F("{\"error\": \"Failed to serialize times\"}");
     }
-    return jsonmsg;
 }
 
-String BWC::getJSONSettings(){
+void BWC::getJSONSettings(String &rtn){
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
@@ -962,11 +974,9 @@ String BWC::getJSONSettings(){
     doc[F("HJT")] = dsp->EnabledButtons[HYDROJETS];
 
     // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-        jsonmsg = F("{\"error\": \"Failed to serialize settings\"}");
+    if (serializeJson(doc, rtn) == 0) {
+        rtn = F("{\"error\": \"Failed to serialize settings\"}");
     }
-    return jsonmsg;
 }
 
 String BWC::getJSONCommandQueue(){
@@ -999,8 +1009,8 @@ uint8_t BWC::getState(int state){
     return 0;
 }
 
-String BWC::getButtonName() {
-    return ButtonNames[dsp->dsp_toggles.pressed_button];
+void BWC::getButtonName(String &rtn) {
+    rtn = ButtonNames[dsp->dsp_toggles.pressed_button];
 }
 
 Buttons BWC::getButton()

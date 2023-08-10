@@ -19,7 +19,7 @@ void DSP_4W::stop()
     _dsp_serial.stopListening();
 }
 
-void DSP_4W::pause_resume(bool action)
+void DSP_4W::pause_all(bool action)
 {
     if(action)
     {

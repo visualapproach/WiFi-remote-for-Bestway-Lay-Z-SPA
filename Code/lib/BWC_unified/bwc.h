@@ -50,6 +50,7 @@ class BWC {
 
     public:
         BWC();
+        ~BWC();
         void setup(void);
         void begin();
         void on_save_settings();
@@ -62,15 +63,15 @@ class BWC {
         // String get_fromdsp();
         // String get_tocio();
         void stop(void);
-        void pause_resume(bool action);
+        void pause_all(bool action);
         bool add_command(command_que_item command_item);
         bool edit_command(uint8_t index, command_que_item command_item);
         bool del_command(uint8_t index);
         // bool qCommand(int64_t cmd, int64_t val, int64_t xtime, int64_t interval);
         bool newData();
-        String getJSONStates();
-        String getJSONTimes();
-        String getJSONSettings();
+        void getJSONStates(String &rtn);
+        void getJSONTimes(String &rtn);
+        void getJSONSettings(String &rtn);
         void setJSONSettings(const String& message);
         String getJSONCommandQueue();
         uint8_t getState(int state);
@@ -78,7 +79,7 @@ class BWC {
         void saveSettings();
         void reloadCommandQueue();
         void reloadSettings();
-        String getButtonName();
+        void getButtonName(String &rtn);
         Buttons getButton();
         void saveDebugInfo(const String& s);
         void saveRebootInfo();

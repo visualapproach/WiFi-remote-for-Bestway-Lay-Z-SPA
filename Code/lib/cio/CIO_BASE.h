@@ -14,7 +14,7 @@ class CIO
         /*Stop the interrupts etc*/
         virtual void stop() = 0;
         /*action true = stop, false = resume*/
-        virtual void pause_resume(bool action) = 0;
+        virtual void pause_all(bool action) = 0;
         virtual void updateStates() = 0;
         virtual void handleToggles() = 0;
         void setRawPayload(const std::vector<uint8_t>& pl);

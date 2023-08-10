@@ -12,7 +12,6 @@
 #include <time.h>
 // #include "certs.h"
 #include <CertStoreBearSSL.h>
-BearSSL::CertStore certStore;
 
 #else
 
@@ -48,11 +47,11 @@ int periodicTimerInterval = 60;
 bool wifiConnected = false;
 
 /** a WiFi Manager for configurations via access point */
-ESP_WiFiManager wm;
+// ESP_WiFiManager wm;
 
 /** a webserver object that listens on port 80 */
 #if defined(ESP8266)
-ESP8266WebServer server(80);
+ESP8266WebServer *server;
 #elif defined(ESP32)
 WebServer server(80);
 #endif
@@ -60,16 +59,16 @@ WebServer server(80);
 File fsUploadFile;
 
 /** a websocket object that listens on port 81 */
-WebSocketsServer webSocket(81);
+WebSocketsServer *webSocket;
 /**  */
 Ticker updateWSTimer;
 /**  */
 bool sendWSFlag = false;
 
 /** a WiFi client beeing used by the MQTT client */
-WiFiClient aWifiClient;
+WiFiClient *aWifiClient;
 /** a MQTT client */
-PubSubClient mqttClient(aWifiClient);
+PubSubClient *mqttClient;
 /**  */
 bool checkMqttConnection = false;
 /** Count of how may times we've connected to the MQTT server since booting (should always be 1 or more) */
@@ -88,14 +87,14 @@ bool enableMqtt = false;
 bool runonce = true;
 
 void sendWS();
-String getOtherInfo();
+void getOtherInfo(String &rtn);
 void sendMQTT();
 void startWiFi();
 void startWiFiConfigPortal();
 void startNTP();
 void startOTA();
 void stopall();
-void pause_resume(bool action);
+void pause_all(bool action);
 void startWebSocket();
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len);
 void startHttpServer();

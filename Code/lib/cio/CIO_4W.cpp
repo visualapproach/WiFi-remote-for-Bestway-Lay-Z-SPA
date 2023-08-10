@@ -27,7 +27,7 @@ void CIO_4W::stop()
     _cio_serial.stopListening();
 }
 
-void CIO_4W::pause_resume(bool action)
+void CIO_4W::pause_all(bool action)
 {
     if(action)
     {

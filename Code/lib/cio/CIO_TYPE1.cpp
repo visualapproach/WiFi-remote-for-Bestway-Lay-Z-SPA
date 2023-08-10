@@ -43,7 +43,7 @@ void CIO_6_TYPE1::stop(){
     detachInterrupt(digitalPinToInterrupt(_CLK_PIN));
 }
 
-void CIO_6_TYPE1::pause_resume(bool action)
+void CIO_6_TYPE1::pause_all(bool action)
 {
     if(action)
     {
