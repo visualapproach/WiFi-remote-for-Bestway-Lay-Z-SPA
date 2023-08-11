@@ -66,9 +66,9 @@ Ticker updateWSTimer;
 bool sendWSFlag = false;
 
 /** a WiFi client beeing used by the MQTT client */
-WiFiClient *aWifiClient;
+WiFiClient aWifiClient;
 /** a MQTT client */
-PubSubClient *mqttClient;
+PubSubClient mqttClient(aWifiClient);
 /**  */
 bool checkMqttConnection = false;
 /** Count of how may times we've connected to the MQTT server since booting (should always be 1 or more) */
