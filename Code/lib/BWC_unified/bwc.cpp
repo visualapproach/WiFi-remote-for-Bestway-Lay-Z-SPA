@@ -22,6 +22,11 @@ BWC::BWC()
     _restore_states_on_start = false;
     _ambient_temp = 20;
     _virtual_temp_fix = -99;
+}
+
+BWC::~BWC()
+{
+    stop();
 };
 
 void save_settings_cb(BWC* bwcInstance)
@@ -256,43 +261,58 @@ void BWC::adjust_brightness()
 
 void BWC::play_sound()
 {
-    switch(dsp->dsp_toggles.pressed_button)
+    if(!dsp->dsp_states.locked && dsp->dsp_states.power)
     {
-        case UP:
-            _sweepup();
-            _dsp_tgt_used = true;
-            break;
-        case DOWN:
-            _sweepdown();
-            _dsp_tgt_used = true;
-            break;
-        case TIMER:
-            _beep();
-            break;
-        default:
+        switch(dsp->dsp_toggles.pressed_button)
+        {
+            case UP:
+                if(dsp->EnabledButtons[UP]) _sweepup();
+                _dsp_tgt_used = true;
+                break;
+            case DOWN:
+                if(dsp->EnabledButtons[DOWN]) _sweepdown();
+                _dsp_tgt_used = true;
+                break;
+            case TIMER:
+                if(dsp->EnabledButtons[TIMER]) _beep();
+                break;
+            default:
 
-            break;
+                break;
+        }
     }
+
     if
     (
         dsp->dsp_toggles.bubbles_change || dsp->dsp_toggles.heat_change || 
-        dsp->dsp_toggles.jets_change || dsp->dsp_toggles.locked_change || 
-        dsp->dsp_toggles.power_change || dsp->dsp_toggles.pump_change ||
-        dsp->dsp_toggles.unit_change
+        dsp->dsp_toggles.jets_change    || dsp->dsp_toggles.power_change || 
+        dsp->dsp_toggles.pump_change    || dsp->dsp_toggles.unit_change
     ) 
         _accord();
+    /* Lock button sound is taken care of in _handleStateChanges() */
 }
 
 void BWC::stop(){
     _save_settings_ticker.detach();
     _scroll_text_ticker.detach();
+    if(cio != nullptr){
+Serial.println("stopping cio");
     cio->stop();
+Serial.println("del cio");
     delete cio;
+    cio = nullptr;
+    }
+    if(dsp != nullptr)
+    {
+Serial.println("stopping dsp");
     dsp->stop();
+Serial.println("del dsp");
     delete dsp;
+    dsp = nullptr;
+    }
 }
 
-void BWC::pause_resume(bool action)
+void BWC::pause_all(bool action)
 {
     if(action)
     {
@@ -303,8 +323,8 @@ void BWC::pause_resume(bool action)
         _save_settings_ticker.attach(3600.0f, save_settings_cb, this);
         _scroll_text_ticker.attach(0.25f, scroll_text_cb, this);
     }
-    cio->pause_resume(action);
-    dsp->pause_resume(action);
+    cio->pause_all(action);
+    dsp->pause_all(action);
 }
 
 /*Sort by xtime, ascending*/
@@ -338,35 +358,22 @@ void BWC::_handleNotification()
 }
 
 void BWC::_handleCommandQ() {
-    bool restartESP = false;
     if(_command_que.size() < 1) return;
     /* time for next command? */
     if (_timestamp_secs < _command_que[0].xtime) return;
     //If interval > 0 then append to commandQ with updated xtime.
     if(_command_que[0].interval > 0)
     {
-       _command_que[0].xtime = (uint64_t)time(nullptr) + _command_que[0].interval;
+        while(_command_que[0].xtime < (uint64_t)time(nullptr))
+            _command_que[0].xtime += _command_que[0].interval;
        _command_que.push_back(_command_que[0]);
     } 
     _handlecommand(_command_que[0].cmd, _command_que[0].val, _command_que[0].text);
-    restartESP = _command_que[0].cmd == REBOOTESP;
-    //remove from commandQ
-    _command_que.erase(_command_que.begin());
-    _next_notification_time = _notification_time; //reset alarm time
-    _save_cmdq_needed = true;
-    if(restartESP) {
-        saveSettings();
-        _saveCommandQueue();
-        stop();
-        delay(3000);
-        ESP.restart();
-    }
-    /*If we pushed back an item, we need to re-sort the que*/
-    std::sort(_command_que.begin(), _command_que.end(), _compare_command);
 }
 
 bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
 {
+    bool restartESP = false;
     
     dsp->text += String(" ") + txt;
     switch (cmd)
@@ -404,8 +411,15 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
     case SETPUMP:
         if(val != cio->cio_states.pump) cio->cio_toggles.pump_change = 1;
         break;
-    /*RESETQ - special handling in calling function*/
-    /*REBOOTESP - special handling in calling function*/
+    case RESETQ:
+        _command_que.clear();
+        _save_cmdq_needed = true;
+        _next_notification_time = _notification_time; //reset alarm time
+        return false;
+        break;
+    case REBOOTESP:
+        restartESP = true;
+        break;
     case GETTARGET:
         /*Not used atm*/
         break;
@@ -501,6 +515,19 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
     default:
         break;
     }
+    //remove from commandQ
+    _command_que.erase(_command_que.begin());
+    _next_notification_time = _notification_time; //reset alarm time
+    _save_cmdq_needed = true;
+    if(restartESP) {
+        saveSettings();
+        _saveCommandQueue();
+        stop();
+        delay(3000);
+        ESP.restart();
+    }
+    /*If we pushed back an item, we need to re-sort the que*/
+    std::sort(_command_que.begin(), _command_que.end(), _compare_command);
     return false;
 }
 
@@ -529,6 +556,11 @@ void BWC::_handleStateChanges()
     if(cio->cio_states.bubbles != _prev_cio_states.bubbles)
     {
         _bubbles_change_timestamp_ms = millis();
+    }
+
+    if((cio->cio_states.locked != _prev_cio_states.locked) && dsp->EnabledButtons[LOCK] && _audio_enabled && (dsp->dsp_toggles.pressed_button == LOCK))
+    {
+        _beep();
     }
 
     if(
@@ -739,11 +771,12 @@ String BWC::getModel()
 bool BWC::add_command(command_que_item command_item)
 {
     _save_cmdq_needed = true;
-    if(command_item.cmd == RESETQ)
-    {
-        _command_que.clear();
-        return true;
-    }
+    /* TODO: handle resetq in handlecommandque() instead!!! */
+    // if(command_item.cmd == RESETQ)
+    // {
+    //     _command_que.clear();
+    //     return true;
+    // }
     if(command_item.cmd == SETREADY)
     {
         command_item.val = (int64_t)command_item.xtime; //Use val field to store the time to be ready
@@ -753,6 +786,36 @@ bool BWC::add_command(command_que_item command_item)
     //add parameters to _command_que[rows][parameter columns] and sort the array on xtime.
     _command_que.push_back(command_item);
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
+    return true;
+}
+
+bool BWC::edit_command(uint8_t index, command_que_item command_item)
+{
+    if(index > _command_que.size()) return false;
+    _save_cmdq_needed = true;
+    /* TODO: handle resetq in handlecommandque() instead!!! */
+    // if(command_item.cmd == RESETQ)
+    // {
+    //     _command_que.clear();
+    //     return true;
+    // }
+    if(command_item.cmd == SETREADY)
+    {
+        command_item.val = (int64_t)command_item.xtime; //Use val field to store the time to be ready
+        command_item.xtime = 0; //And start checking now
+        command_item.interval = 0;
+    }
+    //add parameters to _command_que[index] and sort the array on xtime.
+    _command_que.at(index) = command_item;
+    std::sort(_command_que.begin(), _command_que.end(), _compare_command);
+    return true;
+}
+
+bool BWC::del_command(uint8_t index)
+{
+    if(index >= _command_que.size()) return false;
+    _save_cmdq_needed = true;
+    _command_que.erase(_command_que.begin()+index);
     return true;
 }
 
@@ -769,7 +832,7 @@ bool BWC::getBtnSeqMatch()
     return false;
 }
 
-String BWC::getJSONStates() {
+void BWC::getJSONStates(String &rtn) {
         // Allocate a temporary JsonDocument
         // Don't forget to change the capacity to match your requirements.
         // Use arduinojson.org/assistant to compute the capacity.
@@ -826,14 +889,12 @@ String BWC::getJSONStates() {
     }
 
     // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-        jsonmsg = F("{\"error\": \"Failed to serialize states\"}");
+    if (serializeJson(doc, rtn) == 0) {
+        rtn = F("{\"error\": \"Failed to serialize states\"}");
     }
-    return jsonmsg;
 }
 
-String BWC::getJSONTimes() {
+void BWC::getJSONTimes(String &rtn) {
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
@@ -870,14 +931,12 @@ String BWC::getJSONTimes() {
     //cio->clk_per = 1000;  //reset minimum clock period
 
     // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-        jsonmsg = F("{\"error\": \"Failed to serialize times\"}");
+    if (serializeJson(doc, rtn) == 0) {
+        rtn = F("{\"error\": \"Failed to serialize times\"}");
     }
-    return jsonmsg;
 }
 
-String BWC::getJSONSettings(){
+void BWC::getJSONSettings(String &rtn){
     // Allocate a temporary JsonDocument
     // Don't forget to change the capacity to match your requirements.
     // Use arduinojson.org/assistant to compute the capacity.
@@ -902,12 +961,22 @@ String BWC::getJSONSettings(){
     doc[F("NOTIFY")] = _notify;
     doc[F("NOTIFTIME")] = _notification_time;
     doc[F("VTCAL")] = _vt_calibrated;
+
+    doc[F("LCK")] = dsp->EnabledButtons[LOCK];
+    doc[F("TMR")] = dsp->EnabledButtons[TIMER];
+    doc[F("AIR")] = dsp->EnabledButtons[BUBBLES];
+    doc[F("UNT")] = dsp->EnabledButtons[UNIT];
+    doc[F("HTR")] = dsp->EnabledButtons[HEAT];
+    doc[F("FLT")] = dsp->EnabledButtons[PUMP];
+    doc[F("DN")] = dsp->EnabledButtons[DOWN];
+    doc[F("UP")] = dsp->EnabledButtons[UP];
+    doc[F("PWR")] = dsp->EnabledButtons[POWER];
+    doc[F("HJT")] = dsp->EnabledButtons[HYDROJETS];
+
     // Serialize JSON to string
-    String jsonmsg;
-    if (serializeJson(doc, jsonmsg) == 0) {
-        jsonmsg = F("{\"error\": \"Failed to serialize settings\"}");
+    if (serializeJson(doc, rtn) == 0) {
+        rtn = F("{\"error\": \"Failed to serialize settings\"}");
     }
-    return jsonmsg;
 }
 
 String BWC::getJSONCommandQueue(){
@@ -940,8 +1009,8 @@ uint8_t BWC::getState(int state){
     return 0;
 }
 
-String BWC::getButtonName() {
-    return ButtonNames[dsp->dsp_toggles.pressed_button];
+void BWC::getButtonName(String &rtn) {
+    rtn = ButtonNames[dsp->dsp_toggles.pressed_button];
 }
 
 Buttons BWC::getButton()
@@ -970,6 +1039,16 @@ void BWC::setJSONSettings(const String& message){
     _notify = doc[F("NOTIFY")];
     _notification_time = doc[F("NOTIFTIME")];
     _vt_calibrated = doc[F("VTCAL")];
+    dsp->EnabledButtons[LOCK] = doc[F("LCK")];
+    dsp->EnabledButtons[TIMER] = doc[F("TMR")];
+    dsp->EnabledButtons[BUBBLES] = doc[F("AIR")];
+    dsp->EnabledButtons[UNIT] = doc[F("UNT")];
+    dsp->EnabledButtons[HEAT] = doc[F("HTR")];
+    dsp->EnabledButtons[PUMP] = doc[F("FLT")];
+    dsp->EnabledButtons[DOWN] = doc[F("DN")];
+    dsp->EnabledButtons[UP] = doc[F("UP")];
+    dsp->EnabledButtons[POWER] = doc[F("PWR")];
+    dsp->EnabledButtons[HYDROJETS] = doc[F("HJT")];
     saveSettings();
 }
 
@@ -1140,6 +1219,17 @@ void BWC::_loadSettings(){
     _ambient_temp = doc[F("AMB")] | 20;
     _dsp_brightness = doc[F("BRT")] | 7;
     _vt_calibrated = doc[F("VTCAL")] | false;
+
+    dsp->EnabledButtons[LOCK] = doc[F("LCK")];
+    dsp->EnabledButtons[TIMER] = doc[F("TMR")];
+    dsp->EnabledButtons[BUBBLES] = doc[F("AIR")];
+    dsp->EnabledButtons[UNIT] = doc[F("UNT")];
+    dsp->EnabledButtons[HEAT] = doc[F("HTR")];
+    dsp->EnabledButtons[PUMP] = doc[F("FLT")];
+    dsp->EnabledButtons[DOWN] = doc[F("DN")];
+    dsp->EnabledButtons[UP] = doc[F("UP")];
+    dsp->EnabledButtons[POWER] = doc[F("PWR")];
+    dsp->EnabledButtons[HYDROJETS] = doc[F("HJT")];
 
     file.close();
 }
@@ -1364,6 +1454,7 @@ void BWC::saveSettings(){
     _heatingtime_ms = 0;
     _pumptime_ms = 0;
     _airtime_ms = 0;
+    _jettime_ms = 0;
     _uptime_ms = 0;
     // Set the values in the document
     doc[F("CLTIME")] = _cl_timestamp_s;
@@ -1387,6 +1478,16 @@ void BWC::saveSettings(){
     doc[F("NOTIFY")] = _notify;
     doc[F("NOTIFTIME")] = _notification_time;
     doc[F("VTCAL")] = _vt_calibrated;
+    doc[F("LCK")] = dsp->EnabledButtons[LOCK];
+    doc[F("TMR")] = dsp->EnabledButtons[TIMER];
+    doc[F("AIR")] = dsp->EnabledButtons[BUBBLES];
+    doc[F("UNT")] = dsp->EnabledButtons[UNIT];
+    doc[F("HTR")] = dsp->EnabledButtons[HEAT];
+    doc[F("FLT")] = dsp->EnabledButtons[PUMP];
+    doc[F("DN")] = dsp->EnabledButtons[DOWN];
+    doc[F("UP")] = dsp->EnabledButtons[UP];
+    doc[F("PWR")] = dsp->EnabledButtons[POWER];
+    doc[F("HJT")] = dsp->EnabledButtons[HYDROJETS];
 
     // Serialize JSON to file
     if (serializeJson(doc, file) == 0) {

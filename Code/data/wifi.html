@@ -72,46 +72,43 @@
 				<tr>
 					<td>IP Address:</td>
 					<td>
-						<input type="text" id="ip4Address1" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4Address2" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4Address3" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4Address4" maxlength="3" style="width:30px">
+						<input type="text" id="ip4Address" maxlength="15" style="width:185px">
 					</td>
 				</tr>
 				<tr>
 					<td>Gateway IP Address:</td>
 					<td>
-						<input type="text" id="ip4Gateway1" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4Gateway2" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4Gateway3" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4Gateway4" maxlength="3" style="width:30px">
+						<input type="text" id="ip4Gateway" maxlength="15" style="width:185px">
 					</td>
 				</tr>
 				<tr>
 					<td>Subnet Mask:</td>
 					<td>
-						<input type="text" id="ip4Subnet1" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4Subnet2" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4Subnet3" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4Subnet4" maxlength="3" style="width:30px">
+						<input type="text" id="ip4Subnet" maxlength="15" style="width:185px">
 					</td>
 				</tr>
 				<tr>
 					<td>DNS Server (primary):</td>
 					<td>
-						<input type="text" id="ip4DnsPrimary1" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4DnsPrimary2" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4DnsPrimary3" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4DnsPrimary4" maxlength="3" style="width:30px">
+						<input type="text" id="ip4DnsPrimary" maxlength="15" style="width:185px">
 					</td>
 				</tr>
 				<tr>
 					<td>DNS Server (secondary):</td>
 					<td>
-						<input type="text" id="ip4DnsSecondary1" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4DnsSecondary2" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4DnsSecondary3" maxlength="3" style="width:30px">
-						. <input type="text" id="ip4DnsSecondary4" maxlength="3" style="width:30px">
+						<input type="text" id="ip4DnsSecondary" maxlength="15" style="width:185px">
+					</td>
+				</tr>
+			</table>
+		</section>
+
+		<section>
+			<h2>NTP server:</h2>
+			<table>
+				<tr>
+					<td>Domain name or IP address:</td>
+					<td>
+						<input type="text" id="ip4NTP" maxlength="30" style="width:185px" value="pool.ntp.org">
 					</td>
 				</tr>
 			</table>
@@ -163,26 +160,12 @@ function loadNetworkConfig()
 			document.getElementById('enableWM').checked = json.enableWM;
 
 			document.getElementById('enableStaticIp4').checked = json.enableStaticIp4;
-			document.getElementById('ip4Address1').value = json.ip4Address[0];
-			document.getElementById('ip4Address2').value = json.ip4Address[1];
-			document.getElementById('ip4Address3').value = json.ip4Address[2];
-			document.getElementById('ip4Address4').value = json.ip4Address[3];
-			document.getElementById('ip4Gateway1').value = json.ip4Gateway[0];
-			document.getElementById('ip4Gateway2').value = json.ip4Gateway[1];
-			document.getElementById('ip4Gateway3').value = json.ip4Gateway[2];
-			document.getElementById('ip4Gateway4').value = json.ip4Gateway[3];
-			document.getElementById('ip4Subnet1').value = json.ip4Subnet[0];
-			document.getElementById('ip4Subnet2').value = json.ip4Subnet[1];
-			document.getElementById('ip4Subnet3').value = json.ip4Subnet[2];
-			document.getElementById('ip4Subnet4').value = json.ip4Subnet[3];
-			document.getElementById('ip4DnsPrimary1').value = json.ip4DnsPrimary[0];
-			document.getElementById('ip4DnsPrimary2').value = json.ip4DnsPrimary[1];
-			document.getElementById('ip4DnsPrimary3').value = json.ip4DnsPrimary[2];
-			document.getElementById('ip4DnsPrimary4').value = json.ip4DnsPrimary[3];
-			document.getElementById('ip4DnsSecondary1').value = json.ip4DnsSecondary[0];
-			document.getElementById('ip4DnsSecondary2').value = json.ip4DnsSecondary[1];
-			document.getElementById('ip4DnsSecondary3').value = json.ip4DnsSecondary[2];
-			document.getElementById('ip4DnsSecondary4').value = json.ip4DnsSecondary[3];
+			document.getElementById('ip4Address').value = json.ip4Address;
+			document.getElementById('ip4Gateway').value = json.ip4Gateway;
+			document.getElementById('ip4Subnet').value = json.ip4Subnet;
+			document.getElementById('ip4DnsPrimary').value = json.ip4DnsPrimary;
+			document.getElementById('ip4DnsSecondary').value = json.ip4DnsSecondary;
+			document.getElementById('ip4NTP').value = json.ip4NTP;
 		}
 	}
 }
@@ -201,36 +184,12 @@ function saveNetworkConfig()
 		'apPwd':(document.getElementById('apPwd').value),
 		'enableWM':(document.getElementById('enableWM').checked),
 		'enableStaticIp4':(document.getElementById('enableStaticIp4').checked),
-		'ip4Address':[
-			parseInt(document.getElementById('ip4Address1').value),
-			parseInt(document.getElementById('ip4Address2').value),
-			parseInt(document.getElementById('ip4Address3').value),
-			parseInt(document.getElementById('ip4Address4').value)
-		],
-		'ip4Gateway':[
-			parseInt(document.getElementById('ip4Gateway1').value),
-			parseInt(document.getElementById('ip4Gateway2').value),
-			parseInt(document.getElementById('ip4Gateway3').value),
-			parseInt(document.getElementById('ip4Gateway4').value)
-		],
-		'ip4Subnet':[
-			parseInt(document.getElementById('ip4Subnet1').value),
-			parseInt(document.getElementById('ip4Subnet2').value),
-			parseInt(document.getElementById('ip4Subnet3').value),
-			parseInt(document.getElementById('ip4Subnet4').value)
-		],
-		'ip4DnsPrimary':[
-			parseInt(document.getElementById('ip4DnsPrimary1').value),
-			parseInt(document.getElementById('ip4DnsPrimary2').value),
-			parseInt(document.getElementById('ip4DnsPrimary3').value),
-			parseInt(document.getElementById('ip4DnsPrimary4').value)
-		],
-		'ip4DnsSecondary':[
-			parseInt(document.getElementById('ip4DnsSecondary1').value),
-			parseInt(document.getElementById('ip4DnsSecondary2').value),
-			parseInt(document.getElementById('ip4DnsSecondary3').value),
-			parseInt(document.getElementById('ip4DnsSecondary4').value)
-		]
+		'ip4Address':(document.getElementById('ip4Address').value),
+		'ip4Gateway':(document.getElementById('ip4Gateway').value),
+		'ip4Subnet':(document.getElementById('ip4Subnet').value),
+		'ip4DnsPrimary':(document.getElementById('ip4DnsPrimary').value),
+		'ip4DnsSecondary':(document.getElementById('ip4DnsSecondary').value),
+        'ip4NTP':(document.getElementById('ip4NTP').value)
 	};
 	req.send(JSON.stringify(json));
 	document.getElementById('apPwd').value = '<enter password>';

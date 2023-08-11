@@ -5,7 +5,7 @@
 #include <WiFi.h>
 #endif
 #define DEVICE_NAME "layzspa"
-#define FW_VERSION "2023-07-14-1259"
+#define FW_VERSION "2023-08-11-1232"
 
 #define HA_PREFIX "homeassistant"
 #define PROM_NAMESPACE "layzspa"
@@ -79,45 +79,45 @@ bool useControlSelector = false;
  *  you are not able to connect to the web ui without a connection.
  */
 /** get the state of the WiFi configuration manager fallback on wifi failures */
-bool enableWmApFallback = true;
+// bool enableWmApFallback = true;
 /** get the name for the WiFi configuration manager access point */
 const char *wmApName = "Lay-Z-Spa Module";
 /** get the password for the WiFi configuration manager (min. 8, max. 63 chars; NULL to disable) */
 const char *wmApPassword = "layzspam0dule";
 //const char *wmApPassword = NULL;
 
-/*
- * WiFi Access Point
- *
- * When a connection was established successfully, the 'enableAp' get automatically
- *  the state 'true' including writing credentials to the "wifi.json".
- *
- * You can modify this via Web UI.
- */
-/** get or set the state of the specific access point configuration */
-bool enableAp = false;
-/** get or set the name of the SSID */
-String apSsid = "ssid";
-/** get or set the password for the SSID */
-String apPwd = "pwd";
+        /*
+        * WiFi Access Point (deprecated)
+        *
+        * When a connection was established successfully, the 'enableAp' get automatically
+        *  the state 'true' including writing credentials to the "wifi.json".
+        *
+        * You can modify this via Web UI.
+        */
+        // /** get or set the state of the specific access point configuration */
+        // bool enableAp = false;
+        // /** get or set the name of the SSID */
+        // String apSsid = "ssid";
+        // /** get or set the password for the SSID */
+        // String apPwd = "pwd";
 
-/*
- * WiFi Static IP
- *
- * You can modify this via Web UI.
- */
-/** get or set the state of the static IP setup */
-bool enableStaticIp4 = false;
-/** get or set the IP address */
-IPAddress ip4Address(192,168,0,30);
-/** get or set the gateway address */
-IPAddress ip4Gateway(192,168,0,1);
-/** get or set the subnet mask */
-IPAddress ip4Subnet(255,255,255,0);
-/** get or set the primary DNS IP */
-IPAddress ip4DnsPrimary(8,8,8,8);
-/** get or set the secondary DNS IP */
-IPAddress ip4DnsSecondary(8,8,4,4);
+        // /*
+        //  * WiFi Static IP
+        //  *
+        //  * You can modify this via Web UI.
+        //  */
+        // /** get or set the state of the static IP setup */
+        // bool enableStaticIp4 = false;
+        // /** get or set the IP address */
+        // IPAddress ip4Address(192,168,0,30);
+        // /** get or set the gateway address */
+        // IPAddress ip4Gateway(192,168,0,1);
+        // /** get or set the subnet mask */
+        // IPAddress ip4Subnet(255,255,255,0);
+        // /** get or set the primary DNS IP */
+        // IPAddress ip4DnsPrimary(8,8,8,8);
+        // /** get or set the secondary DNS IP */
+        // IPAddress ip4DnsSecondary(8,8,4,4);
 
 /*
  * MQTT Server

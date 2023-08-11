@@ -5,7 +5,7 @@ void DSP_4W::setup(int dsp_tx, int dsp_rx, int dummy, int dummy2)
 {
     _dsp_serial.begin(9600, SWSERIAL_8N1, dsp_tx, dsp_rx, false, 63);
     _dsp_serial.setTimeout(20);
-    dsp_toggles.locked_change = 0;
+    dsp_toggles.locked_pressed = 0;
     dsp_toggles.power_change = 0;
     dsp_toggles.unit_change = 0;
     // dsp_toggles.error = 0;
@@ -19,7 +19,7 @@ void DSP_4W::stop()
     _dsp_serial.stopListening();
 }
 
-void DSP_4W::pause_resume(bool action)
+void DSP_4W::pause_all(bool action)
 {
     if(action)
     {
@@ -73,7 +73,7 @@ void DSP_4W::updateToggles()
         dsp_toggles.bubbles_change = _bubbles != bubbles;
         dsp_toggles.heat_change = 0;
         dsp_toggles.jets_change = _jets != jets;
-        dsp_toggles.locked_change = 0;
+        dsp_toggles.locked_pressed = 0;
         dsp_toggles.power_change = 0;
         dsp_toggles.pump_change = _pump != pump;
         dsp_toggles.unit_change = 0;

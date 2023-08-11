@@ -9,7 +9,7 @@ class DSP
         virtual ~DSP(){};
         virtual void setup(int dsp_data_pin, int dsp_clk_pin, int dsp_cs_pin, int dsp_audio_pin) = 0;
         virtual void stop() = 0;
-        virtual void pause_resume(bool action) = 0;
+        virtual void pause_all(bool action) = 0;
         virtual void updateToggles() = 0;
         virtual void handleStates() = 0;
         void setRawPayload(const std::vector<uint8_t>& pl);
@@ -21,9 +21,17 @@ class DSP
         sStates dsp_states;
         String text = "";
         int audiofrequency = 0;
+        /*
+        Set to zero to disable chosen buttons.
+        Order: NOBTN,LOCK,TIMER,BUBBLES,UNIT,HEAT,PUMP,DOWN,UP,POWER,HYDROJETS
+        Example: to disable UNIT and TIMER set to 1,1,0,1,0,1,1,1,1,1,1
+        or use Buttons enum - "EnabledButtons[UNIT] = 0"
+        */
+        bool EnabledButtons[11] = {1,1,1,1,1,1,1,1,1,1,1};
 
     protected:
         std::vector<uint8_t> _raw_payload_to_dsp = {0,0,0,0,0,0,0,0,0,0,0};
         std::vector<uint8_t> _raw_payload_from_dsp = {0,0,0,0,0,0,0,0,0,0,0};
         uint32_t good_packets_count = 0;
+
 };

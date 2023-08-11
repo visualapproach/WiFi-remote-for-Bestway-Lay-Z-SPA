@@ -1,3 +1,6 @@
+# FIXED: BROKEN UPDATE FUNCTIONS
+Unfortunately you need to update the old fashioned way through platformio. After that the UI will likely work again. Updating should also be more stable from now and not leaving zero sized files if failed.
+
 Change log v4
 
  - Update firmware and html-files via web UI

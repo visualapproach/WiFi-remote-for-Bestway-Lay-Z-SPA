@@ -53,14 +53,14 @@ char const *response_template =
   PROM_NAMESPACE "_unit_state %d\n");
 
   snprintf_P(response, BUFSIZE, response_template, FW_VERSION, DEVICE_NAME,
-            bwc.cio->cio_states.temperature,
-            bwc.cio->cio_states.target,
-            bwc.cio->cio_states.heat,
-            bwc.cio->cio_states.pump,
-            bwc.cio->cio_states.jets,
-            bwc.cio->cio_states.bubbles,
-            bwc.cio->cio_states.power,
-            bwc.cio->cio_states.locked,
-            bwc.cio->cio_states.unit);
-  server.send(200, "text/plain; charset=utf-8", response);
+            bwc->cio->cio_states.temperature,
+            bwc->cio->cio_states.target,
+            bwc->cio->cio_states.heat,
+            bwc->cio->cio_states.pump,
+            bwc->cio->cio_states.jets,
+            bwc->cio->cio_states.bubbles,
+            bwc->cio->cio_states.power,
+            bwc->cio->cio_states.locked,
+            bwc->cio->cio_states.unit);
+  server->send(200, F("text/plain; charset=utf-8"), response);
 }

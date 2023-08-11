@@ -18,12 +18,14 @@ void CIO_6W::handleToggles()
         return;
     }
 
-    if(cio_toggles.locked_change)
+    if(cio_toggles.locked_pressed && (_button_que_len == 0))
     {
         item.btncode = getButtonCode(LOCK);
-        item.p_state = &sStates::locked;
-        item.value = !cio_states.locked;
-        item.duration_ms = 5000;
+        // item.p_state = &sStates::locked;
+        // item.value = !cio_states.locked;
+        item.p_state = &sStates::char1; //This field will never meet the value condition.
+        item.value = 0xFF;              //Just a trick to press this button for the duration, no matter what
+        item.duration_ms = 100;
         _qButton(item);
         return;
     }
@@ -127,7 +129,37 @@ void CIO_6W::handleToggles()
         _qButton(item);
     }
 
-    _pressed_button = cio_toggles.pressed_button;
+    if((cio_toggles.timer_pressed) && (_button_que_len == 0))
+    {
+        unlock();
+        item.btncode = getButtonCode(TIMER);
+        item.p_state = &sStates::char1; //This field will never meet the value condition.
+        item.value = 0xFF;              //Just a trick to press this button for the duration, no matter what
+        item.duration_ms = 100;
+        _qButton(item);
+    }
+
+    if((cio_toggles.up_pressed) && (_button_que_len == 0))
+    {
+        unlock();
+        item.btncode = getButtonCode(UP);
+        item.p_state = &sStates::char1;
+        item.value = 0xFF;
+        item.duration_ms = 100;
+        _qButton(item);
+    }
+
+    if((cio_toggles.down_pressed) && (_button_que_len == 0))
+    {
+        unlock();
+        item.btncode = getButtonCode(DOWN);
+        item.p_state = &sStates::char1;
+        item.value = 0xFF;
+        item.duration_ms = 100;
+        _qButton(item);
+    }
+
+    // _pressed_button = cio_toggles.pressed_button; TODO: remove variable from class
 }
 
 void CIO_6W::unlock()
@@ -163,17 +195,17 @@ void CIO_6W::_handleButtonQ(void) {
     prevMillis = millis();
     uint8_t waitlimit = 0;
     if(_button_que_len == 0)
-    {
-        /*Buttonqueue is empty, so let the touchbuttons from display/bwc through*/
-        /*Avoiding write to variable when it's beeing sent to the cio*/
-        waitlimit = 0;
-        while(_packet_transm_active && ++waitlimit < 10) delay(1);
-        _button_code = getButtonCode(NOBTN);
-        if(_pressed_button == TIMER) _button_code = getButtonCode(TIMER);
-        if(_pressed_button == UP) _button_code = getButtonCode(UP);
-        if(_pressed_button == DOWN) _button_code = getButtonCode(DOWN);
+    // {
+    //     /*Buttonqueue is empty, so let the touchbuttons from display/bwc through*/
+    //     /*Avoiding write to variable when it's beeing sent to the cio*/
+    //     waitlimit = 0;
+    //     while(_packet_transm_active && ++waitlimit < 10) delay(1);
+    //     _button_code = getButtonCode(NOBTN);
+    //     if(_pressed_button == TIMER) _button_code = getButtonCode(TIMER);
+    //     if(_pressed_button == UP) _button_code = getButtonCode(UP);
+    //     if(_pressed_button == DOWN) _button_code = getButtonCode(DOWN);
         return;
-    }
+    // }
     // First subtract elapsed time from maxduration
     _button_que[0].duration_ms -= elapsedTime;
     //check if state is as desired, or duration is up. If so - remove row. Else set BTNCODE

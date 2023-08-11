@@ -40,7 +40,7 @@ void CIO_6_TYPE2::stop(){
     detachInterrupt(digitalPinToInterrupt(_CIO_CLK_PIN));
 }
 
-void CIO_6_TYPE2::pause_resume(bool action)
+void CIO_6_TYPE2::pause_all(bool action)
 {
     if(action)
     {
