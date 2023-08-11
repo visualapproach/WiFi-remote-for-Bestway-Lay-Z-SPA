@@ -601,6 +601,7 @@ void startHttpServer()
     server->on(F("/getcommands/"), handleGetCommandQueue);
     server->on(F("/addcommand/"), handleAddCommand);
     server->on(F("/editcommand/"), handleEditCommand);
+    server->on(F("/delcommand/"), handleDelCommand);
     server->on(F("/getwebconfig/"), handleGetWebConfig);
     server->on(F("/setwebconfig/"), handleSetWebConfig);
     server->on(F("/getwifi/"), handleGetWifi);
