@@ -63,7 +63,6 @@ DallasTemperature tempSensors(&oneWire);
 
 void setup()
 {
-    HeapSelectIram ephemeral;
     
     // init record of stack
     char stack;
@@ -71,10 +70,14 @@ void setup()
 
     Serial.begin(115200);
     Serial.println(F("\nStart"));
-    bwc = new BWC;
-    bwc->setup();
-    bwc->loadCommandQueue();
-    bwc->loop();
+    {
+        HeapSelectIram ephemeral;
+        Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
+        bwc = new BWC;
+        bwc->setup();
+        bwc->loadCommandQueue();
+        bwc->loop();
+    }
     periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
     startComplete.attach(61, []{ if(useMqtt) enableMqtt = true; startComplete.detach(); });
@@ -86,8 +89,12 @@ void setup()
     loadWebConfig();
     startWiFi();
     startNTP();
-    startOTA();
-    startHttpServer();
+    {
+        HeapSelectIram ephemeral;
+        Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
+        startOTA();
+        startHttpServer();
+    }
     startWebSocket();
     startMqtt();
     if(bwc->hasTempSensor)
@@ -221,10 +228,13 @@ void loop()
  */
 void sendWS()
 {
-    HeapSelectIram ephemeral;
+    
+    // HeapSelectIram ephemeral;
+    // Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
     // send states
     String json;
     json.reserve(320);
+
     bwc->getJSONStates(json);
     webSocket->broadcastTXT(json);
     // send times
@@ -281,6 +291,7 @@ void getOtherInfo(String &rtn)
 void sendMQTT()
 {
     HeapSelectIram ephemeral;
+    Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
     String json;
     json.reserve(320);
 
@@ -294,7 +305,7 @@ void sendMQTT()
     {
         //Serial.println(F("MQTT > message not published"));
     }
-delay(2);
+// delay(2);
 
     // send times
     json.clear();
@@ -307,7 +318,7 @@ delay(2);
     {
         //Serial.println(F("MQTT > times not published"));
     }
-delay(2);
+// delay(2);
 
     //send other info
     json.clear();
@@ -1977,7 +1988,8 @@ void updateError(int err){
  */
 void startMqtt()
 {
-    HeapSelectIram ephemeral;
+    // HeapSelectIram ephemeral;
+    // Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
 
     Serial.println("startmqtt");
     // if(!aWifiClient) aWifiClient = new WiFiClient;

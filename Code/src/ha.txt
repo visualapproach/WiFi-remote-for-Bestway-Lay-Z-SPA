@@ -8,7 +8,7 @@
     
     void setupHA()
     {
-        HeapSelectIram ephemeral;
+        //HeapSelectIram ephemeral;
         //HeapSelectDram ephemeral;
 
         const char* _dev = "dev";
@@ -33,6 +33,7 @@
         */
         String topic;
         String payload;
+        payload.reserve(1300);
         #if defined(ESP8266)
         String mychipid = String((unsigned int)ESP.getChipId());
         #elif defined(ESP32)
