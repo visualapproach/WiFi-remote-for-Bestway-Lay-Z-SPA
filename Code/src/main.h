@@ -112,6 +112,8 @@ void handleGetCommandQueue();
 void handleAddCommand();
 void handleEditCommand();
 void handleDelCommand();
+void handle_cmdq_file();
+void copyFile(String source, String dest);
 void loadWebConfig();
 void saveWebConfig();
 void handleGetWebConfig();

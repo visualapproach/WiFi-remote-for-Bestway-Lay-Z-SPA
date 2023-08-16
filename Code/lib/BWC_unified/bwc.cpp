@@ -1311,7 +1311,7 @@ void BWC::loadCommandQueue(){
         file.close();
         return;
     }
-
+    _command_que.clear();
     // Set the values in the variables
     for(int i = 0; i < doc[F("LEN")]; i++){
         command_que_item item;

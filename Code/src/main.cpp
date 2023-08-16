@@ -63,7 +63,6 @@ DallasTemperature tempSensors(&oneWire);
 
 void setup()
 {
-    HeapSelectIram ephemeral;
     
     // init record of stack
     char stack;
@@ -71,9 +70,14 @@ void setup()
 
     Serial.begin(115200);
     Serial.println(F("\nStart"));
-    bwc = new BWC;
-    bwc->setup();
-    bwc->loop();
+    {
+        HeapSelectIram ephemeral;
+        Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
+        bwc = new BWC;
+        bwc->setup();
+        bwc->loadCommandQueue();
+        bwc->loop();
+    }
     periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
     startComplete.attach(61, []{ if(useMqtt) enableMqtt = true; startComplete.detach(); });
@@ -85,8 +89,12 @@ void setup()
     loadWebConfig();
     startWiFi();
     startNTP();
-    startOTA();
-    startHttpServer();
+    {
+        HeapSelectIram ephemeral;
+        Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
+        startOTA();
+        startHttpServer();
+    }
     startWebSocket();
     startMqtt();
     if(bwc->hasTempSensor)
@@ -102,7 +110,6 @@ void setup()
     Serial.println(F("End of setup()"));
     heap_water_mark = ESP.getFreeHeap();
     Serial.println(ESP.getFreeHeap()); //26216
-    bwc->loadCommandQueue();
 }
 
 void loop()
@@ -221,10 +228,13 @@ void loop()
  */
 void sendWS()
 {
-    HeapSelectIram ephemeral;
+    
+    // HeapSelectIram ephemeral;
+    // Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
     // send states
     String json;
     json.reserve(320);
+
     bwc->getJSONStates(json);
     webSocket->broadcastTXT(json);
     // send times
@@ -281,6 +291,7 @@ void getOtherInfo(String &rtn)
 void sendMQTT()
 {
     HeapSelectIram ephemeral;
+    Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
     String json;
     json.reserve(320);
 
@@ -294,7 +305,7 @@ void sendMQTT()
     {
         //Serial.println(F("MQTT > message not published"));
     }
-delay(2);
+// delay(2);
 
     // send times
     json.clear();
@@ -307,7 +318,7 @@ delay(2);
     {
         //Serial.println(F("MQTT > times not published"));
     }
-delay(2);
+// delay(2);
 
     //send other info
     json.clear();
@@ -626,6 +637,7 @@ void startHttpServer()
     server->on(F("/getversions/"), handleGetVersions);
     server->on(F("/debug-on/"), [](){bwc->BWC_DEBUG = true; server->send(200, F("text/plain"), "ok");});
     server->on(F("/debug-off/"), [](){bwc->BWC_DEBUG = false; server->send(200, F("text/plain"), "ok");});
+    server->on(F("/cmdq_file/"), handle_cmdq_file);
     // server->on(F("/getfiles/"), updateFiles);    
 
     // if someone requests any other file or page, go to function 'handleNotFound'
@@ -923,6 +935,64 @@ void handleDelCommand()
     bwc->del_command(index);
 
     server->send(200, F("text/plain"), "");
+}
+
+void handle_cmdq_file()
+{
+    if (!checkHttpPost(server->method())) return;
+
+    // DynamicJsonDocument doc(256);
+    StaticJsonDocument<256> doc;
+    String message = server->arg(0);
+    DeserializationError error = deserializeJson(doc, message);
+    if (error)
+    {
+        server->send(400, F("text/plain"), F("Error deserializing message"));
+        return;
+    }
+
+    String action = doc[F("ACT")].as<String>();;
+    String filename = "/";
+    filename += doc[F("NAME")].as<String>();;
+
+    if(action.equals("load"))
+    {
+        copyFile("/cmdq.json", "/cmdq.backup");
+        copyFile(filename, "/cmdq.json");
+        bwc->reloadCommandQueue();
+    }
+    if(action.equals("save"))
+    {
+        copyFile("/cmdq.json", filename);
+    }
+
+    server->send(200, F("text/plain"), "");
+}
+
+void copyFile(String source, String dest)
+{
+    char ibuffer[64];  //declare a buffer
+    
+    File f_source = LittleFS.open(source, "r");    //open source file to read
+    if (!f_source)
+    {
+        return;
+    }
+
+    File f_dest = LittleFS.open(dest, "w");    //open destination file to write
+    if (!f_dest)
+    {
+        return;
+    }
+    
+    while (f_source.available() > 0)
+    {
+        byte i = f_source.readBytes(ibuffer, 64); // i = number of bytes placed in buffer from file f_source
+        f_dest.write(ibuffer, i);               // write i bytes from buffer to file f_dest
+    }
+    
+    f_dest.close(); // done, close the destination file
+    f_source.close(); // done, close the source file
 }
 
 /**
@@ -1918,7 +1988,8 @@ void updateError(int err){
  */
 void startMqtt()
 {
-    HeapSelectIram ephemeral;
+    // HeapSelectIram ephemeral;
+    // Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
 
     Serial.println("startmqtt");
     // if(!aWifiClient) aWifiClient = new WiFiClient;

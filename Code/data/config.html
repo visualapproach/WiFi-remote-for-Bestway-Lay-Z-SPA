@@ -157,8 +157,8 @@
                     <td colspan="2" class="center"><button id="resetq" class="button_red" onclick="buttonConfirm(this);resetCommandQueue()">Clear queue</button></td>
                 </tr>
                 <tr>
-                    <td colspan="2" class="center"><button id="saveq" class="button" onclick="savetofile()" disabled>Save to file</button></td>
-                    <td colspan="2" class="center"><button id="loadq" class="button" onclick="buttonConfirm(this);loadfromfile()" disabled>Load from file</button></td>
+                    <td colspan="2" class="center"><button id="saveq" class="button" onclick="savetofile()">Save to file</button></td>
+                    <td colspan="2" class="center"><button id="loadq" class="button" onclick="buttonConfirm(this);loadfromfile()">Load from file</button></td>
                 </tr>
             </table>
         </section>
@@ -356,12 +356,30 @@ function resetCommandQueue()
 
 function savetofile()
 {
-
+    var filename=prompt("Please enter a filename","mycommandqueue1");
+    if(filename == null) return;
+	var req = new XMLHttpRequest();
+	req.open('POST', '/cmdq_file/');
+	var json = {
+		'ACT':'save',
+		'NAME':filename
+	};
+	req.send(JSON.stringify(json));
+	console.log(json);
 }
 
 function loadfromfile()
 {
-
+    var filename=prompt("Please enter a filename","mycommandqueue1");
+    if(filename == null) return;
+	var req = new XMLHttpRequest();
+	req.open('POST', '/cmdq_file/');
+	var json = {
+		'ACT':'load',
+		'NAME':filename
+	};
+	req.send(JSON.stringify(json));
+	console.log(json);
 }
 
 function editCommandQueue(index)
