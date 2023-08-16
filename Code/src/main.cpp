@@ -215,11 +215,14 @@ void loop()
     }
 
     //Only do this if locked out! (by pressing POWER - LOCK - TIMER - POWER)
-    //   if(bwc->getBtnSeqMatch())
-    //   {
-    //     resetWiFi();
-    //     ESP.reset();
-    //   }
+      if(bwc->getBtnSeqMatch())
+      {
+        
+        resetWiFi();
+        delay(3000);
+        ESP.reset();
+        delay(3000);
+      }
     //handleAUX();
 }
 
@@ -349,6 +352,7 @@ void startWiFi()
 
     if (wifi_info.enableStaticIp4)
     {
+        Serial.println(F("Setting static IP"));
         IPAddress ip4Address;
         IPAddress ip4Gateway;
         IPAddress ip4Subnet;
@@ -365,11 +369,11 @@ void startWiFi()
 
     if (wifi_info.enableAp)
     {
-        // Serial.println("WiFi > using WiFi configuration with SSID \"" + apSsid + "\"");
+        Serial.println("WiFi > using WiFi configuration with SSID \"" + wifi_info.apSsid + "\"");
 
         WiFi.begin(wifi_info.apSsid.c_str(), wifi_info.apPwd.c_str());
 
-        // Serial.print(F("WiFi > Trying to connect ..."));
+        Serial.print(F("WiFi > Trying to connect ..."));
         int maxTries = 10;
         int tryCount = 0;
 
@@ -444,14 +448,16 @@ void startNTP()
 {
     sWifi_info wifi_info;
     wifi_info = loadWifi();
-
+    Serial.println(F("start NTP"));
     // configTime(0,0,"pool.ntp.org", "time.nist.gov");
     configTime(0,0,wifi_info.ip4NTP_str, F("pool.ntp.org"), F("time.nist.gov"));
     time_t now = time(nullptr);
+    int count = 0;
     while (now < 8 * 3600 * 2) {
         delay(500);
         Serial.print(".");
         now = time(nullptr);
+        if(count++ > 10) return;
     }
     Serial.println();
     struct tm timeinfo;
@@ -1309,6 +1315,13 @@ void handleResetWifi()
 
 void resetWiFi()
 {
+    sWifi_info wifi_info;
+    wifi_info.enableAp = false;
+    wifi_info.enableWmApFallback = true;
+    wifi_info.apSsid = F("empty");
+    wifi_info.apPwd = F("empty");
+    saveWifi(wifi_info);
+    delay(3000);
     periodicTimer.detach();
     updateMqttTimer.detach();
     updateWSTimer.detach();
@@ -1318,13 +1331,6 @@ void resetWiFi()
 #if defined(ESP8266)
     ESP.eraseConfig();
 #endif
-    delay(1000);
-    sWifi_info wifi_info;
-    wifi_info.enableAp = false;
-    wifi_info.enableWmApFallback = true;
-    wifi_info.apSsid = F("empty");
-    wifi_info.apPwd = F("empty");
-    saveWifi(wifi_info);
     delay(1000);
     ESP_WiFiManager wm;
     wm.resetSettings();
