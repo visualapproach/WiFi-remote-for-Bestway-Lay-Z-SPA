@@ -265,6 +265,30 @@
     doc.clear();
     doc.garbageCollect();
 
+                                        /* error sensor */
+    doc[_dev] = devicedoc[_dev];
+    payload = "";
+    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_error/config");
+    // Serial.println(topic);
+    doc[_name] = mqttBaseTopic + F(" error");
+    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_error")+mychipid;
+    doc[_stat_t] = mqttBaseTopic+F("/message");
+    doc[_val_tpl] = F("{{ value_json.ERR }}");
+    doc["expire_after"] = 700;
+    doc[_avty_t] = mqttBaseTopic+F("/Status");
+    doc[_pl_avail] = F("Alive");
+    doc[_pl_not_avail] = F("Dead");
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize HA message!"));
+        return;
+    }
+    mqttClient.publish(topic.c_str(), payload.c_str(), true);
+    mqttClient.loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
 
 
 
