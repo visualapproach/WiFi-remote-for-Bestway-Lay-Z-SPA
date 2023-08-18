@@ -93,8 +93,8 @@ void setup()
         HeapSelectIram ephemeral;
         Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
         startOTA();
-        startHttpServer();
     }
+    startHttpServer();
     startWebSocket();
     startMqtt();
     if(bwc->hasTempSensor)
