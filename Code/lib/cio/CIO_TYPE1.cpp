@@ -116,7 +116,18 @@ void CIO_6_TYPE1::updateStates()
     //Unreadable characters - exit
     if(cio_states.char1 == '*' || cio_states.char2 == '*' || cio_states.char3 == '*') return;
     //Error or user plays with timer button - exit (error notification can be dealt with in main.cpp or elsewhere)
-    if(cio_states.char1 == 'E' || cio_states.char3 == 'H' || cio_states.char3 == ' ') return;
+    if(cio_states.char1 == 'e')
+    {
+        String errornumber;
+        errornumber = (char)cio_states.char2;
+        errornumber += (char)cio_states.char3;
+        cio_states.error = (uint8_t)(errornumber.toInt());
+        return;
+    } 
+    if(cio_states.char3 == 'H' || cio_states.char3 == ' ') return;
+
+    /* Reset error state */
+    cio_states.error = 0;
 
     //capture TARGET after UP/DOWN has been pressed...
     if ((_button_code == getButtonCode(UP)) || (_button_code == getButtonCode(DOWN)))
