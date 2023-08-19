@@ -56,7 +56,6 @@ void BWC::setup(void){
     Models ciomodel;
     Models dspmodel;
     
-    LittleFS.begin();
     if(!_loadHardware(ciomodel, dspmodel, pins)){
         pins[0] = D1;
         pins[1] = D2;

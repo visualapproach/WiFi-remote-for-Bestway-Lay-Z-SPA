@@ -70,9 +70,10 @@ void setup()
 
     Serial.begin(115200);
     Serial.println(F("\nStart"));
+    LittleFS.begin();
     {
-        HeapSelectIram ephemeral;
-        Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
+        // HeapSelectIram ephemeral;
+        // Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
         bwc = new BWC;
         bwc->setup();
         bwc->loadCommandQueue();
@@ -231,7 +232,7 @@ void loop()
  */
 void sendWS()
 {
-    
+    if(webSocket->connectedClients() == 0) return;
     // HeapSelectIram ephemeral;
     // Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
     // send states

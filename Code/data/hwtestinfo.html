@@ -44,14 +44,5 @@
 		</section>
 	</div>
 
-	<script>
-		var connection = new WebSocket('ws://'+location.hostname+':81/', ['arduino']);
-		connection.onerror = function (error) {
-			console.log('WebSocket Error ', error);
-		};
-		connection.onmessage = function (e) {
-			console.log(e.data);
-		}
-	</script>
 </body>
 </html>
