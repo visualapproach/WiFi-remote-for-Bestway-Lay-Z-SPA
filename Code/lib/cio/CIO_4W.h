@@ -3,6 +3,8 @@
 #include <SoftwareSerial.h>
 #include "enums.h"
 #include "CIO_BASE.h"
+#include <umm_malloc/umm_heap_select.h>
+
 
 class BWC;
 
@@ -41,7 +43,7 @@ class CIO_4W : public CIO
     private:
         Power _power = {1900, 40, 800, 2, 400};
         uint8_t _heat_bitmask = 0;
-        SoftwareSerial _cio_serial;
+        SoftwareSerial *_cio_serial;
         uint8_t _from_CIO_buf[7] = {};
         uint8_t _to_CIO_buf[7] = {};
         uint8_t _currentStateIndex = 0;

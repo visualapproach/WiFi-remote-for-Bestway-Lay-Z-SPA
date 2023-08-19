@@ -3,6 +3,8 @@
 #include <SoftwareSerial.h>
 #include "enums.h"
 #include "DSP_BASE.h"
+#include <umm_malloc/umm_heap_select.h>
+
 
 class DSP_4W : public DSP
 {
@@ -29,7 +31,7 @@ class DSP_4W : public DSP
         void generatePayload();
 
     private:
-        SoftwareSerial _dsp_serial;
+        SoftwareSerial *_dsp_serial;
         /*ESP to DSP*/
         uint8_t _to_DSP_buf[7] = {};
         /*DSP to ESP. We can ignore this message and send our own when ESP is in charge.*/

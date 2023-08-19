@@ -66,9 +66,9 @@ Ticker updateWSTimer;
 bool sendWSFlag = false;
 
 /** a WiFi client beeing used by the MQTT client */
-WiFiClient aWifiClient;
+WiFiClient *aWifiClient;
 /** a MQTT client */
-PubSubClient mqttClient(aWifiClient);
+PubSubClient *mqttClient;
 /**  */
 bool checkMqttConnection = false;
 /** Count of how may times we've connected to the MQTT server since booting (should always be 1 or more) */
@@ -132,7 +132,7 @@ void handleDir();
 void handleFileUpload();
 void handleFileRemove();
 void handleRestart();
-String checkFirmwareUpdate(bool betaversion);
+void checkFirmwareUpdate(bool betaversion, String &rtn);
 void handleUpdateMaster();
 void handleUpdateBeta();
 void handleUpdate(bool betaversion);
