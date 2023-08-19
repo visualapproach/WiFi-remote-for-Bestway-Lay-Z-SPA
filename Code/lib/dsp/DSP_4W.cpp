@@ -3,8 +3,10 @@
 
 void DSP_4W::setup(int dsp_tx, int dsp_rx, int dummy, int dummy2)
 {
-    _dsp_serial.begin(9600, SWSERIAL_8N1, dsp_tx, dsp_rx, false, 63);
-    _dsp_serial.setTimeout(20);
+    HeapSelectIram ephemeral;
+    _dsp_serial = new SoftwareSerial;
+    _dsp_serial->begin(9600, SWSERIAL_8N1, dsp_tx, dsp_rx, false, 63);
+    _dsp_serial->setTimeout(20);
     dsp_toggles.locked_pressed = 0;
     dsp_toggles.power_change = 0;
     dsp_toggles.unit_change = 0;
@@ -16,17 +18,17 @@ void DSP_4W::setup(int dsp_tx, int dsp_rx, int dummy, int dummy2)
 
 void DSP_4W::stop()
 {
-    _dsp_serial.stopListening();
+    _dsp_serial->stopListening();
 }
 
 void DSP_4W::pause_all(bool action)
 {
     if(action)
     {
-        _dsp_serial.stopListening();
+        _dsp_serial->stopListening();
     } else
     {
-        _dsp_serial.listen();
+        _dsp_serial->listen();
     }
 }
 
@@ -40,9 +42,9 @@ void DSP_4W::updateToggles()
     int msglen = 0;
     //check if display sent a message
     msglen = 0;
-    if(!_dsp_serial.available()) return;
+    if(!_dsp_serial->available()) return;
     uint8_t tempbuffer[PAYLOADSIZE];
-    msglen = _dsp_serial.readBytes(tempbuffer, PAYLOADSIZE);
+    msglen = _dsp_serial->readBytes(tempbuffer, PAYLOADSIZE);
     if(msglen != PAYLOADSIZE) return;
 
     //discard message if checksum is wrong
@@ -91,7 +93,7 @@ void DSP_4W::updateToggles()
     // dsp_toggles.no_of_heater_elements_on = (_from_DSP_buf[COMMANDINDEX] & getHeatBitmask2()) > 0;
 
     /*This is placed here to send messages at the same rate as the dsp.*/
-    _dsp_serial.write(_to_DSP_buf, PAYLOADSIZE);
+    _dsp_serial->write(_to_DSP_buf, PAYLOADSIZE);
     return;
 }
 

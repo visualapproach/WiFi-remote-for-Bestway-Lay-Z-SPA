@@ -175,6 +175,7 @@ class BWC {
         bool _dsp_tgt_used = true;
         uint8_t _web_target = 20; 
         sStates _prev_cio_states, _prev_dsp_states;
+        Buttons _prevbutton = NOBTN;
         unsigned long _temp_change_timestamp_ms, _heatred_change_timestamp_ms;
         unsigned long _pump_change_timestamp_ms, _bubbles_change_timestamp_ms;
         int _deltatemp;

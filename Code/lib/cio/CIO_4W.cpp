@@ -8,8 +8,11 @@ void CIO_4W::setup(int cio_rx, int cio_tx, int dummy)
         Devices are sending on their TX lines, so we read that with RX pins on the ESP
         Hence the "backwards" parameters (cio_tx goes to ESP serial RX)
     */
-    _cio_serial.begin(9600, SWSERIAL_8N1, cio_tx, cio_rx, false, 63);
-    _cio_serial.setTimeout(20);
+    HeapSelectIram ephemeral;
+    _cio_serial = new SoftwareSerial;
+
+    _cio_serial->begin(9600, SWSERIAL_8N1, cio_tx, cio_rx, false, 63);
+    _cio_serial->setTimeout(20);
 
     cio_states.target = 20;
     cio_states.locked = false;
@@ -24,17 +27,17 @@ void CIO_4W::setup(int cio_rx, int cio_tx, int dummy)
 
 void CIO_4W::stop()
 {
-    _cio_serial.stopListening();
+    _cio_serial->stopListening();
 }
 
 void CIO_4W::pause_all(bool action)
 {
     if(action)
     {
-        _cio_serial.stopListening();
+        _cio_serial->stopListening();
     } else
     {
-        _cio_serial.listen();
+        _cio_serial->listen();
     }
 }
 
@@ -60,7 +63,7 @@ void CIO_4W::handleToggles()
         /*Copy raw payload to CIO*/
         for(unsigned int i = 0; i < sizeof(_to_CIO_buf); i++)
             _to_CIO_buf[i] = _raw_payload_to_cio[i];
-        // _cio_serial.write(_to_CIO_buf, PAYLOADSIZE); //this is done in updateStates()
+        // _cio_serial->write(_to_CIO_buf, PAYLOADSIZE); //this is done in updateStates()
         cio_states.godmode = false;
         _power.HEATERPOWER = ((_to_CIO_buf[COMMANDINDEX] & getHeatBitmask1()) == getHeatBitmask1()) * 950 + 
                              ((_to_CIO_buf[COMMANDINDEX] & getHeatBitmask2()) == getHeatBitmask2()) * 950;
@@ -157,9 +160,9 @@ void CIO_4W::updateStates()
 {
     int msglen = 0;
     //check if CIO has sent a message
-    if(!_cio_serial.available()) return;
+    if(!_cio_serial->available()) return;
     uint8_t tempbuffer[PAYLOADSIZE];
-    msglen = _cio_serial.readBytes(tempbuffer, PAYLOADSIZE);
+    msglen = _cio_serial->readBytes(tempbuffer, PAYLOADSIZE);
     if(msglen != PAYLOADSIZE) return;
     uint8_t calculatedChecksum;
     calculatedChecksum = tempbuffer[1]+tempbuffer[2]+tempbuffer[3]+tempbuffer[4];
@@ -197,7 +200,7 @@ void CIO_4W::updateStates()
         cio_states.char3 = (char)(48+(_from_CIO_buf[ERRORINDEX]%10));
     }
     /*This is placed here so we send messages at the same rate as the cio.*/
-    _cio_serial.write(_to_CIO_buf, PAYLOADSIZE);
+    _cio_serial->write(_to_CIO_buf, PAYLOADSIZE);
     return;
 }
 

@@ -70,14 +70,15 @@ void setup()
 
     Serial.begin(115200);
     Serial.println(F("\nStart"));
+    LittleFS.begin();
     {
         HeapSelectIram ephemeral;
-        Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
+        Serial.printf_P(PSTR("IRamheap %d\n"), ESP.getFreeHeap());
         bwc = new BWC;
-        bwc->setup();
-        bwc->loadCommandQueue();
-        bwc->loop();
     }
+    bwc->setup();
+    bwc->loadCommandQueue();
+    bwc->loop();
     periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
     startComplete.attach(61, []{ if(useMqtt) enableMqtt = true; startComplete.detach(); });
@@ -89,12 +90,8 @@ void setup()
     loadWebConfig();
     startWiFi();
     startNTP();
-    {
-        HeapSelectIram ephemeral;
-        Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
-        startOTA();
-        startHttpServer();
-    }
+    startOTA();
+    startHttpServer();
     startWebSocket();
     startMqtt();
     if(bwc->hasTempSensor)
@@ -132,7 +129,7 @@ void loop()
         ArduinoOTA.handle();
 
         // MQTT
-        if (enableMqtt && mqttClient.loop())
+        if (enableMqtt && mqttClient->loop())
         {
             String msg;
             msg.reserve(32);
@@ -140,7 +137,7 @@ void loop()
             // publish pretty button name if display button is pressed (or NOBTN if released)
             if (!msg.equals(prevButtonName))
             {
-                mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
+                mqttClient->publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
                 prevButtonName = msg;
             }
 
@@ -204,7 +201,7 @@ void loop()
                 startNTP();
             }
 
-            if (enableMqtt && !mqttClient.loop())
+            if (enableMqtt && !mqttClient->loop())
             {
                 // Serial.println(F("MQTT > Not connected"));
                 mqttConnect();
@@ -215,11 +212,14 @@ void loop()
     }
 
     //Only do this if locked out! (by pressing POWER - LOCK - TIMER - POWER)
-    //   if(bwc->getBtnSeqMatch())
-    //   {
-    //     resetWiFi();
-    //     ESP.reset();
-    //   }
+      if(bwc->getBtnSeqMatch())
+      {
+        
+        resetWiFi();
+        delay(3000);
+        ESP.reset();
+        delay(3000);
+      }
     //handleAUX();
 }
 
@@ -228,7 +228,7 @@ void loop()
  */
 void sendWS()
 {
-    
+    if(webSocket->connectedClients() == 0) return;
     // HeapSelectIram ephemeral;
     // Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
     // send states
@@ -260,7 +260,7 @@ void getOtherInfo(String &rtn)
     StaticJsonDocument<512> doc;
     // Set the values in the document
     doc[F("CONTENT")] = F("OTHER");
-    doc[F("MQTT")] = mqttClient.state();
+    doc[F("MQTT")] = mqttClient->state();
     /*TODO: add these:*/
     //   doc[F("PressedButton")] = bwc->getPressedButton();
     doc[F("HASJETS")] = bwc->hasjets;
@@ -290,14 +290,14 @@ void getOtherInfo(String &rtn)
  */
 void sendMQTT()
 {
-    HeapSelectIram ephemeral;
-    Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
+    // HeapSelectIram ephemeral;
+    // Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
     String json;
     json.reserve(320);
 
     // send states
     bwc->getJSONStates(json);
-    if (mqttClient.publish((String(mqttBaseTopic) + "/message").c_str(), String(json).c_str(), true))
+    if (mqttClient->publish((String(mqttBaseTopic) + "/message").c_str(), String(json).c_str(), true))
     {
         //Serial.println(F("MQTT > message published"));
     }
@@ -310,7 +310,7 @@ void sendMQTT()
     // send times
     json.clear();
     bwc->getJSONTimes(json);
-    if (mqttClient.publish((String(mqttBaseTopic) + "/times").c_str(), String(json).c_str(), true))
+    if (mqttClient->publish((String(mqttBaseTopic) + "/times").c_str(), String(json).c_str(), true))
     {
         //Serial.println(F("MQTT > times published"));
     }
@@ -323,7 +323,7 @@ void sendMQTT()
     //send other info
     json.clear();
     getOtherInfo(json);
-    if (mqttClient.publish((String(mqttBaseTopic) + "/other").c_str(), String(json).c_str(), true))
+    if (mqttClient->publish((String(mqttBaseTopic) + "/other").c_str(), String(json).c_str(), true))
     {
         //Serial.println(F("MQTT > other published"));
     }
@@ -349,6 +349,7 @@ void startWiFi()
 
     if (wifi_info.enableStaticIp4)
     {
+        Serial.println(F("Setting static IP"));
         IPAddress ip4Address;
         IPAddress ip4Gateway;
         IPAddress ip4Subnet;
@@ -365,11 +366,12 @@ void startWiFi()
 
     if (wifi_info.enableAp)
     {
-        // Serial.println("WiFi > using WiFi configuration with SSID \"" + apSsid + "\"");
+        Serial.print(F("WiFi > using WiFi configuration with SSID \""));
+        Serial.println(wifi_info.apSsid + "\"");
 
         WiFi.begin(wifi_info.apSsid.c_str(), wifi_info.apPwd.c_str());
 
-        // Serial.print(F("WiFi > Trying to connect ..."));
+        Serial.print(F("WiFi > Trying to connect ..."));
         int maxTries = 10;
         int tryCount = 0;
 
@@ -444,14 +446,16 @@ void startNTP()
 {
     sWifi_info wifi_info;
     wifi_info = loadWifi();
-
+    Serial.println(F("start NTP"));
     // configTime(0,0,"pool.ntp.org", "time.nist.gov");
     configTime(0,0,wifi_info.ip4NTP_str, F("pool.ntp.org"), F("time.nist.gov"));
     time_t now = time(nullptr);
+    int count = 0;
     while (now < 8 * 3600 * 2) {
         delay(500);
         Serial.print(".");
         now = time(nullptr);
+        if(count++ > 10) return;
     }
     Serial.println();
     struct tm timeinfo;
@@ -509,7 +513,7 @@ void stopall()
     Serial.println("stopping ws");
     webSocket->close();
     Serial.println("stopping mqtt");
-    if(enableMqtt) mqttClient.disconnect();
+    if(enableMqtt) mqttClient->disconnect();
     Serial.println("end stopall");
 }
 
@@ -534,6 +538,9 @@ void pause_all(bool action)
 
 void startWebSocket()
 {
+    HeapSelectIram ephemeral;
+    Serial.printf_P(PSTR("WS IRamheap %d\n"), ESP.getFreeHeap());
+
     webSocket = new WebSocketsServer(81);
     // In case we are already running
     webSocket->close();
@@ -1309,6 +1316,13 @@ void handleResetWifi()
 
 void resetWiFi()
 {
+    sWifi_info wifi_info;
+    wifi_info.enableAp = false;
+    wifi_info.enableWmApFallback = true;
+    wifi_info.apSsid = F("empty");
+    wifi_info.apPwd = F("empty");
+    saveWifi(wifi_info);
+    delay(3000);
     periodicTimer.detach();
     updateMqttTimer.detach();
     updateWSTimer.detach();
@@ -1318,13 +1332,6 @@ void resetWiFi()
 #if defined(ESP8266)
     ESP.eraseConfig();
 #endif
-    delay(1000);
-    sWifi_info wifi_info;
-    wifi_info.enableAp = false;
-    wifi_info.enableWmApFallback = true;
-    wifi_info.apSsid = F("empty");
-    wifi_info.apPwd = F("empty");
-    saveWifi(wifi_info);
     delay(1000);
     ESP_WiFiManager wm;
     wm.resetSettings();
@@ -1478,7 +1485,9 @@ void handleSetMqtt()
  */
 void handleDir()
 {
-    #ifdef ESP8266
+    HeapSelectIram ephemeral;
+    Serial.printf_P(PSTR("dir IRamheap %d\n"), ESP.getFreeHeap());
+
     String mydir;
     Dir root = LittleFS.openDir("/");
     while (root.next())
@@ -1491,7 +1500,6 @@ void handleDir()
         mydir += F("   <a href=\"/remove/?FileToRemove=") + root.fileName() + F("\">remove</a><br>");
     }
     server->send(200, F("text/html"), mydir);
-    #endif
 }
 
 /**
@@ -1625,10 +1633,15 @@ void handleRestart()
 
 void handleGetVersions()
 {
-    String master = checkFirmwareUpdate(false);
-    String beta = checkFirmwareUpdate(true);
-    // DynamicJsonDocument doc(128);
-    StaticJsonDocument<256> doc;
+    HeapSelectIram ephemeral;
+    Serial.printf_P(PSTR("getversions IRamheap %d\n"), ESP.getFreeHeap());
+
+    String master;
+    String beta;
+    checkFirmwareUpdate(false, master);
+    checkFirmwareUpdate(true, beta);
+    DynamicJsonDocument doc(256);
+    // StaticJsonDocument<256> doc;
     String json = "";
     // Set the values in the document
     doc[F("current")] = FW_VERSION;
@@ -1642,32 +1655,35 @@ void handleGetVersions()
     server->send(200, F("text/plain"), json);
 }
 
-String checkFirmwareUpdate(bool betaversion)
+void checkFirmwareUpdate(bool betaversion, String &rtn)
 {
+    HeapSelectDram ephemeral;
     pause_all(true);
-    Serial.printf("Heap %d, block %d\n", ESP.getFreeHeap(), ESP.getMaxFreeBlockSize());
+    Serial.printf_P(PSTR("Heap %d, block %d\n"), ESP.getFreeHeap(), ESP.getMaxFreeBlockSize());
 
     X509List cert(trustRoot);
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     int count = 0;
-    while(!client.probeMaxFragmentLength(FPSTR(host), httpsPort, 1024))
+    while(!client.probeMaxFragmentLength(FPSTR(host), httpsPort, 512))
     {
         if(++count > 5)
         {
-            return "reload page";
+            rtn = F("reload page");
+            return;
         }
         delay(1000);
     }
-    Serial.println(F("receive buf 1024"));
-    client.setBufferSizes(1024, 256);
+    Serial.println(F("receive buf 512"));
+    client.setBufferSizes(512, 128);
     int clientresult = client.connect(FPSTR(host), httpsPort);
     // Serial.printf("connection returns %d\n", clientresult); 
     if(!clientresult)
     {
         Serial.println(F("Connection to github failed (chk)"));
         pause_all(false);
-        return "check failed";
+        rtn = F("check failed");
+        return;
     }
     String URL = FPSTR(URL_part1);
     if(betaversion)
@@ -1704,7 +1720,8 @@ String checkFirmwareUpdate(bool betaversion)
     pause_all(false);
     // setup();
     if(payload.length() == 0) payload = F("Not working");
-    return payload;
+    rtn = payload;
+    return;
 }
 
 void handleUpdateMaster()
@@ -1737,7 +1754,7 @@ void handleUpdate(bool betaversion)
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     int count = 0;
-    while(!client.probeMaxFragmentLength(FPSTR(host), httpsPort, 1024))
+    while(!client.probeMaxFragmentLength(FPSTR(host), httpsPort, 512))
     {
         if(++count > 5)
         {
@@ -1745,8 +1762,8 @@ void handleUpdate(bool betaversion)
         }
         delay(1000);
     }
-    Serial.println(F("receive buf 1024"));
-    client.setBufferSizes(1024, 256);
+    Serial.println(F("receive buf 512"));
+    client.setBufferSizes(512, 128);
     int clientresult = client.connect(FPSTR(host), httpsPort);
     // Serial.printf("connection returns %d\n", clientresult); 
     if(!clientresult)
@@ -1833,7 +1850,7 @@ bool updateFiles(bool betaversion)
     WiFiClientSecure client;
     client.setTrustAnchors(&cert);
     int count = 0;
-    while(!client.probeMaxFragmentLength(FPSTR(host), httpsPort, 1024))
+    while(!client.probeMaxFragmentLength(FPSTR(host), httpsPort, 512))
     {
         if(++count > 5)
         {
@@ -1841,8 +1858,8 @@ bool updateFiles(bool betaversion)
         }
         delay(1000);
     }
-    Serial.println(F("receive buf 1024"));
-    client.setBufferSizes(1024, 256);
+    Serial.println(F("receive buf 512"));
+    client.setBufferSizes(512, 128);
     int clientresult = client.connect(FPSTR(host), httpsPort);
     // Serial.printf("connection returns %d\n", clientresult); 
     if(!clientresult)
@@ -1902,7 +1919,7 @@ bool updateFiles(bool betaversion)
     }
 
     count = 0;
-    while(!client.probeMaxFragmentLength(FPSTR(host), httpsPort, 1024))
+    while(!client.probeMaxFragmentLength(FPSTR(host), httpsPort, 512))
     {
         if(++count > 5)
         {
@@ -1910,8 +1927,8 @@ bool updateFiles(bool betaversion)
         }
         delay(1000);
     }
-    Serial.println(F("receive buf 1024"));
-    client.setBufferSizes(1024, 256);
+    Serial.println(F("receive buf 512"));
+    client.setBufferSizes(512, 128);
     clientresult = client.connect(FPSTR(host), httpsPort);
     // Serial.printf("connection returns %d\n", clientresult); 
     if(!clientresult)
@@ -1988,31 +2005,32 @@ void updateError(int err){
  */
 void startMqtt()
 {
-    // HeapSelectIram ephemeral;
-    // Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
-
-    Serial.println("startmqtt");
-    // if(!aWifiClient) aWifiClient = new WiFiClient;
-    // if(!mqttClient) mqttClient = new PubSubClient(*aWifiClient);
+    {
+        HeapSelectIram ephemeral;
+        Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
+        Serial.println(F("startmqtt"));
+        if(!aWifiClient) aWifiClient = new WiFiClient;
+        if(!mqttClient) mqttClient = new PubSubClient(*aWifiClient);
+    }
 
     // load mqtt credential file if it exists, and update default strings
     loadMqtt();
 
     // disconnect in case we are already connected
-    mqttClient.disconnect();
+    mqttClient->disconnect();
 
     // setup MQTT broker information as defined earlier
-    mqttClient.setServer(mqttIpAddress, mqttPort);
+    mqttClient->setServer(mqttIpAddress, mqttPort);
     // set buffer for larger messages, new to library 2.8.0
-    if (mqttClient.setBufferSize(1536))
+    if (mqttClient->setBufferSize(1536))
     {
         // Serial.println(F("MQTT > Buffer size successfully increased"));
     }
-    mqttClient.setKeepAlive(60);
-    mqttClient.setSocketTimeout(30);
+    mqttClient->setKeepAlive(60);
+    mqttClient->setSocketTimeout(30);
     // set callback details
     // this function is called automatically whenever a message arrives on a subscribed topic.
-    mqttClient.setCallback(mqttCallback);
+    mqttClient->setCallback(mqttCallback);
     // Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
     mqttConnect();
 }
@@ -2100,7 +2118,7 @@ void mqttConnect()
 
     // Serial.print(F("MQTT > Connecting ... "));
     // We'll connect with a Retained Last Will that updates the 'Status' topic with "Dead" when the device goes offline...
-    if (mqttClient.connect(
+    if (mqttClient->connect(
         mqttClientId.c_str(), // client_id : the client ID to use when connecting to the server->
         mqttUsername.c_str(), // username : the username to use. If NULL, no username or password is used (const char[])
         mqttPassword.c_str(), // password : the password to use. If NULL, no password is used (const char[])setupHA
@@ -2117,25 +2135,25 @@ void mqttConnect()
 
         // These all have the Retained flag set to true, so that the value is stored on the server and can be retrieved at any point
         // Check the 'Status' topic to see that the device is still online before relying on the data from these retained topics
-        mqttClient.publish((String(mqttBaseTopic) + "/Status").c_str(), "Alive", true);
-        mqttClient.publish((String(mqttBaseTopic) + "/MAC_Address").c_str(), WiFi.macAddress().c_str(), true);                 // Device MAC Address
-        mqttClient.publish((String(mqttBaseTopic) + "/MQTT_Connect_Count").c_str(), String(mqtt_connect_count).c_str(), true); // MQTT Connect Count
-        mqttClient.loop();
+        mqttClient->publish((String(mqttBaseTopic) + "/Status").c_str(), "Alive", true);
+        mqttClient->publish((String(mqttBaseTopic) + "/MAC_Address").c_str(), WiFi.macAddress().c_str(), true);                 // Device MAC Address
+        mqttClient->publish((String(mqttBaseTopic) + "/MQTT_Connect_Count").c_str(), String(mqtt_connect_count).c_str(), true); // MQTT Connect Count
+        mqttClient->loop();
 
         // Watch the 'command' topic for incoming MQTT messages
-        mqttClient.subscribe((String(mqttBaseTopic) + "/command").c_str());
-        mqttClient.subscribe((String(mqttBaseTopic) + "/command_batch").c_str());
-        mqttClient.loop();
+        mqttClient->subscribe((String(mqttBaseTopic) + "/command").c_str());
+        mqttClient->subscribe((String(mqttBaseTopic) + "/command_batch").c_str());
+        mqttClient->loop();
 
         #ifdef ESP8266
-        // mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), DateTime.format(DateFormatter::SIMPLE).c_str(), true);
-        mqttClient.publish((String(mqttBaseTopic) + "/reboot_time").c_str(), (bwc->reboot_time_str+'Z').c_str(), true);
-        mqttClient.publish((String(mqttBaseTopic) + "/reboot_reason").c_str(), ESP.getResetReason().c_str(), true);
+        // mqttClient->publish((String(mqttBaseTopic) + "/reboot_time").c_str(), DateTime.format(DateFormatter::SIMPLE).c_str(), true);
+        mqttClient->publish((String(mqttBaseTopic) + "/reboot_time").c_str(), (bwc->reboot_time_str+'Z').c_str(), true);
+        mqttClient->publish((String(mqttBaseTopic) + "/reboot_reason").c_str(), ESP.getResetReason().c_str(), true);
         String buttonname;
         buttonname.reserve(32);
         bwc->getButtonName(buttonname);
-        mqttClient.publish((String(mqttBaseTopic) + "/button").c_str(), buttonname.c_str(), true);
-        mqttClient.loop();
+        mqttClient->publish((String(mqttBaseTopic) + "/button").c_str(), buttonname.c_str(), true);
+        mqttClient->loop();
         sendMQTT();
         Serial.println("HA");
         setupHA();
@@ -2145,7 +2163,7 @@ void mqttConnect()
     else
     {
         // Serial.print(F("failed, Return Code = "));
-        // Serial.println(mqttClient.state()); // states explained in webSocket->js
+        // Serial.println(mqttClient->state()); // states explained in webSocket->js
     }
     Serial.println("end mqttcon");
 }

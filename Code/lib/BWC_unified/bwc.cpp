@@ -56,7 +56,6 @@ void BWC::setup(void){
     Models ciomodel;
     Models dspmodel;
     
-    LittleFS.begin();
     if(!_loadHardware(ciomodel, dspmodel, pins)){
         pins[0] = D1;
         pins[1] = D2;
@@ -571,8 +570,18 @@ void BWC::_handleStateChanges()
       )
         _save_states_needed = true;
 
+    Buttons _currbutton = dsp->dsp_toggles.pressed_button;
+    if(_currbutton != _prevbutton && _currbutton != NOBTN)
+    {
+        _btn_sequence[0] = _btn_sequence[1];
+        _btn_sequence[1] = _btn_sequence[2];
+        _btn_sequence[2] = _btn_sequence[3];
+        _btn_sequence[3] = _currbutton;
+    }
+
     _prev_cio_states = cio->cio_states;
     _prev_dsp_states = dsp->dsp_states;
+    _prevbutton = _currbutton;
     /* check changes from DSP 4W - go to antigodmode if someone presses a button*/
 }
 

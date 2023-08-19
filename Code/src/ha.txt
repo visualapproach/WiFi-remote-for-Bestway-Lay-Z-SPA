@@ -25,7 +25,7 @@
 
         /* DEVICE */
     /*
-        if(!mqttClient.connected()){
+        if(!mqttClient->connected()){
             String s = F("HA setup failed. MQTT not connected");
             bwc->saveDebugInfo(s);
             return;
@@ -78,8 +78,8 @@
             // Serial.println(F("Failed to serialize HA message!"));
             return;
         }
-        mqttClient.publish(topic.c_str(), payload.c_str(), true);
-        mqttClient.loop();
+        mqttClient->publish(topic.c_str(), payload.c_str(), true);
+        mqttClient->loop();
         // Serial.println(payload);
         doc.clear();
         doc.garbageCollect();
@@ -108,8 +108,8 @@
         return;
     }
 
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -134,8 +134,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -158,8 +158,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -184,8 +184,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -210,8 +210,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -236,8 +236,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -259,8 +259,32 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* error sensor */
+    doc[_dev] = devicedoc[_dev];
+    payload = "";
+    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_error/config");
+    // Serial.println(topic);
+    doc[_name] = mqttBaseTopic + F(" error");
+    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_error")+mychipid;
+    doc[_stat_t] = mqttBaseTopic+F("/message");
+    doc[_val_tpl] = F("{{ value_json.ERR }}");
+    doc["expire_after"] = 700;
+    doc[_avty_t] = mqttBaseTopic+F("/Status");
+    doc[_pl_avail] = F("Alive");
+    doc[_pl_not_avail] = F("Dead");
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize HA message!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -288,8 +312,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -314,8 +338,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -345,8 +369,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -374,8 +398,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -404,8 +428,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -432,8 +456,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -460,8 +484,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -487,8 +511,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -515,8 +539,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -543,8 +567,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -571,8 +595,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -599,8 +623,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -627,8 +651,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -655,8 +679,8 @@
         // Serial.println(F("Failed to serialize vtf"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -683,8 +707,8 @@
         // Serial.println(F("Failed to serialize vtc"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -711,8 +735,8 @@
         // Serial.println(F("Failed to serialize tgtf!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -740,8 +764,8 @@
         // Serial.println(F("Failed to serialize tgt!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -768,8 +792,8 @@
         // Serial.println(F("Failed to serialize amb!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -800,8 +824,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -827,8 +851,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -854,8 +878,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -881,8 +905,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -919,8 +943,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -951,8 +975,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -983,8 +1007,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -1015,8 +1039,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -1047,8 +1071,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -1080,8 +1104,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -1112,8 +1136,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -1138,8 +1162,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -1165,8 +1189,8 @@
         // Serial.println(F("Failed to serialize HA message!"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
@@ -1214,8 +1238,8 @@
         // Serial.println(F("Failed to serialize climate"));
         return;
     }
-    mqttClient.publish(topic.c_str(), payload.c_str(), true);
-    mqttClient.loop();
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
     doc.clear();
     doc.garbageCollect();
     //   Serial.println(payload);
