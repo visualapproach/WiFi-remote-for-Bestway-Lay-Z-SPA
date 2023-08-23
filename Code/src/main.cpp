@@ -85,7 +85,7 @@ void setup()
     // update webpage every 2 seconds. (will also be updated on state changes)
     updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
     // when NTP time is valid we save bootlog.txt and this timer stops
-    bootlogTimer.attach(5, []{ if(time(nullptr)>57600) {bwc->saveRebootInfo(); bootlogTimer.detach();} });
+    // bootlogTimer.attach(5, []{ if(time(nullptr)>57600) {bwc->saveRebootInfo(); bootlogTimer.detach();} });
     // loadWifi();
     loadWebConfig();
     startWiFi();
@@ -469,6 +469,7 @@ void startNTP()
     strftime(boot_time_str, 64, "%F %T", boot_time_tm);
     bwc->reboot_time_str = String(boot_time_str);
     bwc->reboot_time_t = boot_timestamp;
+    bwc->saveRebootInfo();
 }
 
 void startOTA()
@@ -1489,6 +1490,8 @@ void handleDir()
     Serial.printf_P(PSTR("dir IRamheap %d\n"), ESP.getFreeHeap());
 
     String mydir;
+    server->setContentLength(CONTENT_LENGTH_UNKNOWN);
+    server->send(200, F("text/html"), "");
     Dir root = LittleFS.openDir("/");
     while (root.next())
     {
@@ -1496,10 +1499,12 @@ void handleDir()
         String href = root.fileName();
         if (href.endsWith(".gz")) href.remove(href.length()-3);
         mydir += F("<a href=\"/") + href + "\">" + root.fileName() + "</a>";
-        mydir += F("   Size: ") + String(root.fileSize()) + F(" Bytes ");
-        mydir += F("   <a href=\"/remove/?FileToRemove=") + root.fileName() + F("\">remove</a><br>");
+        mydir += F(" Size: ") + String(root.fileSize()) + F(" Bytes ");
+        mydir += F(" <a href=\"/remove/?FileToRemove=") + root.fileName() + F("\">remove</a><br>");
+        server->sendContent(mydir);
+        mydir.clear();
     }
-    server->send(200, F("text/html"), mydir);
+    server->sendContent("");
 }
 
 /**
