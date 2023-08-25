@@ -2163,6 +2163,7 @@ void mqttConnect()
         Serial.println("HA");
         setupHA();
         Serial.println("done");
+        mqttClient->setBufferSize(512);
         #endif
     }
     else
