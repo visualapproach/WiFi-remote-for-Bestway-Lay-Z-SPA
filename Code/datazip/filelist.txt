@@ -21,4 +21,5 @@ success.html.gz
 upload.html.gz
 visualapproach.png
 webconfig.html.gz
+weekender
 wifi.html.gz

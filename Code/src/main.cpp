@@ -77,7 +77,6 @@ void setup()
         bwc = new BWC;
     }
     bwc->setup();
-    bwc->loadCommandQueue();
     bwc->loop();
     periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
@@ -959,9 +958,9 @@ void handle_cmdq_file()
         return;
     }
 
-    String action = doc[F("ACT")].as<String>();;
+    String action = doc[F("ACT")].as<String>();
     String filename = "/";
-    filename += doc[F("NAME")].as<String>();;
+    filename += doc[F("NAME")].as<String>();
 
     if(action.equals("load"))
     {

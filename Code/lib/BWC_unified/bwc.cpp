@@ -155,6 +155,9 @@ void BWC::begin(){
     _scroll_text_ticker.attach(0.25f, scroll_text_cb, this);
 
     _next_notification_time = _notification_time;
+    loadCommandQueue();
+    _loadSettings();
+    _restoreStates();
 }
 
 
@@ -883,7 +886,7 @@ void BWC::getJSONStates(String &rtn) {
         doc[F("TMPC")] = cio->cio_states.temperature;
         doc[F("TGTF")] = round(C2F((float)cio->cio_states.target));
         doc[F("TMPF")] = round(C2F((float)cio->cio_states.temperature));
-        doc[F("VTMF")] = C2F(_virtual_temp);
+        // doc[F("VTMF")] = C2F(_virtual_temp);
     }
     else
     {
@@ -894,7 +897,7 @@ void BWC::getJSONStates(String &rtn) {
         doc[F("TMPF")] = cio->cio_states.temperature;
         doc[F("TGTC")] = round(F2C((float)cio->cio_states.target));
         doc[F("TMPC")] = round(F2C((float)cio->cio_states.temperature));
-        doc[F("VTMC")] = _virtual_temp;
+        // doc[F("VTMC")] = _virtual_temp;
     }
 
     // Serialize JSON to string
@@ -1335,9 +1338,6 @@ void BWC::loadCommandQueue(){
     }
     file.close();
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
-    _loadSettings();
-    _restoreStates();
-
 }
 
 /*          */
