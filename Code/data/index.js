@@ -52,7 +52,7 @@ updateAmbState = false;
 updateBrtState = false;
 
 // initial connect to the web socket
-connect();
+// connect();
 
 function connect()
 {

@@ -73,7 +73,7 @@ void setup()
     LittleFS.begin();
     {
         HeapSelectIram ephemeral;
-        Serial.printf_P(PSTR("IRamheap %d\n"), ESP.getFreeHeap());
+        // Serial.printf_P(PSTR("IRamheap %d\n"), ESP.getFreeHeap());
         bwc = new BWC;
     }
     bwc->setup();
@@ -767,6 +767,7 @@ String getContentType(const String& filename)
  */
 bool handleFileRead(String path)
 {
+    pause_all(true);
     // Serial.println("HTTP > request: " + path);
     // If a folder is requested, send the index file
     if (path.endsWith("/"))
@@ -778,6 +779,7 @@ bool handleFileRead(String path)
     {
         server->send(403, F("text/plain"), F("Permission denied."));
         // Serial.println(F("HTTP > file reading denied (credentials)."));
+        pause_all(false);
         return false;
     }
     String contentType = getContentType(path);             // Get the MIME type
@@ -792,9 +794,14 @@ bool handleFileRead(String path)
         file.close();                                          // Close the file again
         Serial.println(F("File size: ") + String(fsize));
         Serial.println(F("HTTP > file sent: ") + path + F(" (") + sent + F(" bytes)"));
+        if(fsize != sent){
+            Serial.println(F("********* File not completed *******"));
+        }
+        pause_all(false);
         return true;
     }
     // Serial.println("HTTP > file not found: " + path);   // If the file doesn't exist, return false
+    pause_all(false);
     return false;
 }
 

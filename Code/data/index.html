@@ -235,12 +235,24 @@
 <script>
 // loading functions from a .js (in the <head> section)
 // and calling the function here can cause problems on laggy connections
-
-if (localStorage.getItem('showSectionTemperature'))
+// hence this code
+document.onreadystatechange = function ()
 {
-	setWebConfig();
+    if (document.readyState == "complete")
+    {
+        initApplication();
+    }
 }
-loadWebConfig();
+
+function initApplication()
+{
+    if (localStorage.getItem('showSectionTemperature'))
+    {
+        setWebConfig();
+    }
+    loadWebConfig();
+    connect();
+}
 
 function setWebConfig()
 {
