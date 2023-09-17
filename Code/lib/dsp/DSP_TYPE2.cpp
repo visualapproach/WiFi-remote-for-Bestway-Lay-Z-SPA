@@ -83,6 +83,7 @@ Buttons DSP_6_TYPE2::getPressedButton()
     delayMicroseconds(CLKPW);
     digitalWrite(_DSP_CLK_PIN, HIGH);
 
+    if(newButtonCode != 0xFFFF) good_packets_count++;
     newButton = buttonCodeToIndex(newButtonCode);
     _raw_payload_from_dsp[0] = newButtonCode >> 8;
     _raw_payload_from_dsp[1] = newButtonCode & 0xFF;

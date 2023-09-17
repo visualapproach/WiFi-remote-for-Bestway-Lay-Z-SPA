@@ -938,7 +938,11 @@ void BWC::getJSONTimes(String &rtn) {
     if(t2r == -1) t2r_string = F("Never");
     doc[F("T2R")] = t2r;
     doc[F("RS")] = t2r_string;
-    String s = cio->debug();
+    String s;
+    s.reserve(256);
+    s = cio->debug();
+    s += F(" || ");
+    s += dsp->debug();
     doc[F("DBG")] = s;
     //cio->clk_per = 1000;  //reset minimum clock period
 

@@ -28,6 +28,8 @@ void CIO_4W::setup(int cio_rx, int cio_tx, int dummy)
 void CIO_4W::stop()
 {
     _cio_serial->stopListening();
+    delete _cio_serial;
+    _cio_serial = nullptr;
 }
 
 void CIO_4W::pause_all(bool action)

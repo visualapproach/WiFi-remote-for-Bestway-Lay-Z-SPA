@@ -90,7 +90,7 @@ Buttons DSP_6_TYPE1::getPressedButton()
     /*End of packet*/
     digitalWrite(_CS_PIN, HIGH);
     delayMicroseconds(30);
-
+    if(newButtonCode != 0xFFFF) good_packets_count++;
     newButton = buttonCodeToIndex(newButtonCode);
     _old_button = newButton;
     _raw_payload_from_dsp[0] = newButtonCode >> 8;
