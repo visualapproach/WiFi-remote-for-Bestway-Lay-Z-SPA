@@ -1,3 +1,4 @@
+#pragma once
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 #include <DNSServer.h>
@@ -10,8 +11,6 @@
 #include <ESP8266httpUpdate.h>
 #include <WiFiClientSecure.h>
 #include <time.h>
-// #include "certs.h"
-#include <CertStoreBearSSL.h>
 
 #else
 
@@ -33,6 +32,8 @@
 
 #include "bwc.h"
 #include "config.h"
+
+BWC *bwc;
 
 /**  */
 Ticker bootlogTimer;
@@ -132,11 +133,6 @@ void handleDir();
 void handleFileUpload();
 void handleFileRemove();
 void handleRestart();
-void checkFirmwareUpdate(bool betaversion, String &rtn);
-void handleUpdateMaster();
-void handleUpdateBeta();
-void handleUpdate(bool betaversion);
-bool updateFiles(bool betaversion);
 void updateStart();
 void updateEnd();
 void udpateProgress(int cur, int total);
@@ -150,3 +146,6 @@ void setTemperatureFromSensor();
 
 void setupHA();
 void handlePrometheusMetrics();
+
+/* Debug */
+void write_mem_stats_to_file();

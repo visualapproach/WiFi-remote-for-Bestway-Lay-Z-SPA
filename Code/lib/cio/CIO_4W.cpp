@@ -273,7 +273,7 @@ void CIO_4W::antifreeze()
             togglestates();
         } 
         targetC = 10;
-        Serial.printf("antifrz active\n");
+        Serial.println(F("antifrz active"));
         if(cio_states.unit) cio_states.target = targetC;
         else cio_states.target = C2F(targetC);
     }
@@ -300,7 +300,7 @@ void CIO_4W::antiboil()
             _currentStateIndex = getJumptable(_currentStateIndex, HEATTOGGLE);
             togglestates();
         } 
-        Serial.printf("antiboil active\n");
+        Serial.println(F("antiboil active"));
     }
 
     /*

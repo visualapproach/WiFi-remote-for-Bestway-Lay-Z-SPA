@@ -19,7 +19,7 @@ String DSP::debug()
     String s;
     s.reserve(128);
     for(int i = 0; i<7; i++) s += ' ' + String(_raw_payload_from_dsp[i]);
-    s += "dsp msgs:";
+    s += F("dsp msgs:");
     s += String(good_packets_count);
     return s;
 }
