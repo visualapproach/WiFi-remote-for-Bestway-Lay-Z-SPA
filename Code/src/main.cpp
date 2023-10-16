@@ -162,13 +162,13 @@ void loop()
         setTemperatureFromSensor();
 
         /* Debug */
-        static uint8_t minutes = 0;
-        minutes++;
-        if(minutes >= 5)
-        {
-            minutes = 0;
-            write_mem_stats_to_file();
-        }
+        // static uint8_t minutes = 0;
+        // minutes++;
+        // if(minutes >= 5)
+        // {
+            // minutes = 0;
+            // write_mem_stats_to_file();
+        // }
     }
 
 
