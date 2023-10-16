@@ -72,71 +72,74 @@ void BWC::setup(void){
     {
         // Serial.printf("pin%d: %d\n", i, pins[i]);
     }
-    switch(ciomodel)
     {
-        case PRE2021:
-            cio = new CIO_PRE2021;
-            break;
-        case MIAMI2021:
-            cio = new CIO_2021;
-            break;
-        case MALDIVES2021:
-            cio = new CIO_2021_HJT;
-            break;
-        case M54149E:
-            cio = new CIO_54149E;
-            break;
-        case M54173:
-            cio = new CIO_54173;
-            break;
-        case M54154:
-            cio = new CIO_54154;
-            break;
-        case M54144:
-            cio = new CIO_54144;
-            break;
-        case M54138:
-            cio = new CIO_54138;
-            break;
-        case M54123:
-            cio = new CIO_54123;
-            break;
-        default:
-            cio = new CIO_PRE2021;
-            break;
-    }
-    switch(dspmodel)
-    {
-        case PRE2021:
-            dsp = new DSP_PRE2021;
-            break;
-        case MIAMI2021:
-            dsp = new DSP_2021;
-            break;
-        case MALDIVES2021:
-            dsp = new DSP_2021_HJT;
-            break;
-        case M54149E:
-            dsp = new DSP_54149E;
-            break;
-        case M54173:
-            dsp = new DSP_54173;
-            break;
-        case M54154:
-            dsp = new DSP_54154;
-            break;
-        case M54144:
-            dsp = new DSP_54144;
-            break;
-        case M54138:
-            dsp = new DSP_54138;
-            break;
-        case M54123:
-            dsp = new DSP_54123;
-            break;
-        default:
-            dsp = new DSP_PRE2021;
-            break;
+        HeapSelectIram ephemeral;
+        switch(ciomodel)
+        {
+            case PRE2021:
+                cio = new CIO_PRE2021;
+                break;
+            case MIAMI2021:
+                cio = new CIO_2021;
+                break;
+            case MALDIVES2021:
+                cio = new CIO_2021_HJT;
+                break;
+            case M54149E:
+                cio = new CIO_54149E;
+                break;
+            case M54173:
+                cio = new CIO_54173;
+                break;
+            case M54154:
+                cio = new CIO_54154;
+                break;
+            case M54144:
+                cio = new CIO_54144;
+                break;
+            case M54138:
+                cio = new CIO_54138;
+                break;
+            case M54123:
+                cio = new CIO_54123;
+                break;
+            default:
+                cio = new CIO_PRE2021;
+                break;
+        }
+        switch(dspmodel)
+        {
+            case PRE2021:
+                dsp = new DSP_PRE2021;
+                break;
+            case MIAMI2021:
+                dsp = new DSP_2021;
+                break;
+            case MALDIVES2021:
+                dsp = new DSP_2021_HJT;
+                break;
+            case M54149E:
+                dsp = new DSP_54149E;
+                break;
+            case M54173:
+                dsp = new DSP_54173;
+                break;
+            case M54154:
+                dsp = new DSP_54154;
+                break;
+            case M54144:
+                dsp = new DSP_54144;
+                break;
+            case M54138:
+                dsp = new DSP_54138;
+                break;
+            case M54123:
+                dsp = new DSP_54123;
+                break;
+            default:
+                dsp = new DSP_PRE2021;
+                break;
+        }
     }
     cio->setup(pins[0], pins[1], pins[2]);
     dsp->setup(pins[3], pins[4], pins[5], pins[6]);
@@ -155,6 +158,9 @@ void BWC::begin(){
     _scroll_text_ticker.attach(0.25f, scroll_text_cb, this);
 
     _next_notification_time = _notification_time;
+    loadCommandQueue();
+    _loadSettings();
+    _restoreStates();
 }
 
 
@@ -221,7 +227,7 @@ void BWC::_log()
     prev_fromcio = fromcio;
     prev_fromdsp = fromdsp;
     
-    File file = LittleFS.open("log.txt", "a");
+    File file = LittleFS.open(F("log.txt"), "a");
     if (!file) {
         // Serial.println(F("Failed to save states.txt"));
         return;
@@ -295,17 +301,17 @@ void BWC::stop(){
     _save_settings_ticker.detach();
     _scroll_text_ticker.detach();
     if(cio != nullptr){
-Serial.println("stopping cio");
+Serial.println(F("stopping cio"));
     cio->stop();
-Serial.println("del cio");
+Serial.println(F("del cio"));
     delete cio;
     cio = nullptr;
     }
     if(dsp != nullptr)
     {
-Serial.println("stopping dsp");
+Serial.println(F("stopping dsp"));
     dsp->stop();
-Serial.println("del dsp");
+Serial.println(F("del dsp"));
     delete dsp;
     dsp = nullptr;
     }
@@ -315,8 +321,8 @@ void BWC::pause_all(bool action)
 {
     if(action)
     {
-        _save_settings_ticker.detach();
-        _scroll_text_ticker.detach();
+        if(_save_settings_ticker.active()) _save_settings_ticker.detach();
+        if(_scroll_text_ticker.active()) _scroll_text_ticker.detach();
     } else
     {
         _save_settings_ticker.attach(3600.0f, save_settings_cb, this);
@@ -883,7 +889,7 @@ void BWC::getJSONStates(String &rtn) {
         doc[F("TMPC")] = cio->cio_states.temperature;
         doc[F("TGTF")] = round(C2F((float)cio->cio_states.target));
         doc[F("TMPF")] = round(C2F((float)cio->cio_states.temperature));
-        doc[F("VTMF")] = C2F(_virtual_temp);
+        // doc[F("VTMF")] = C2F(_virtual_temp);
     }
     else
     {
@@ -894,7 +900,7 @@ void BWC::getJSONStates(String &rtn) {
         doc[F("TMPF")] = cio->cio_states.temperature;
         doc[F("TGTC")] = round(F2C((float)cio->cio_states.target));
         doc[F("TMPC")] = round(F2C((float)cio->cio_states.temperature));
-        doc[F("VTMC")] = _virtual_temp;
+        // doc[F("VTMC")] = _virtual_temp;
     }
 
     // Serialize JSON to string
@@ -935,7 +941,11 @@ void BWC::getJSONTimes(String &rtn) {
     if(t2r == -1) t2r_string = F("Never");
     doc[F("T2R")] = t2r;
     doc[F("RS")] = t2r_string;
-    String s = cio->debug();
+    String s;
+    s.reserve(256);
+    s = cio->debug();
+    s += F(" || ");
+    s += dsp->debug();
     doc[F("DBG")] = s;
     //cio->clk_per = 1000;  //reset minimum clock period
 
@@ -1148,7 +1158,7 @@ void BWC::_updateTimes(){
 
 bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
 {
-    File file = LittleFS.open("/hwcfg.json", "r");
+    File file = LittleFS.open(F("/hwcfg.json"), "r");
     if (!file)
     {
         // Serial.println(F("Failed to open hwcfg.json"));
@@ -1192,7 +1202,7 @@ void BWC::reloadSettings(){
 }
 
 void BWC::_loadSettings(){
-    File file = LittleFS.open("/settings.json", "r");
+    File file = LittleFS.open(F("/settings.json"), "r");
     if (!file) {
         // Serial.println(F("Failed to load settings.json"));
         return;
@@ -1245,7 +1255,7 @@ void BWC::_loadSettings(){
 
 void BWC::_restoreStates() {
     if(!_restore_states_on_start) return;
-    File file = LittleFS.open("states.txt", "r");
+    File file = LittleFS.open(F("states.txt"), "r");
     if (!file) {
         // Serial.println(F("Failed to read states.txt"));
         return;
@@ -1306,7 +1316,7 @@ void BWC::reloadCommandQueue(){
 }
 
 void BWC::loadCommandQueue(){
-    File file = LittleFS.open("/cmdq.json", "r");
+    File file = LittleFS.open(F("/cmdq.json"), "r");
     if (!file) {
         // Serial.println(F("Failed to read cmdq.json"));
         return;
@@ -1335,9 +1345,6 @@ void BWC::loadCommandQueue(){
     }
     file.close();
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
-    _loadSettings();
-    _restoreStates();
-
 }
 
 /*          */
@@ -1345,7 +1352,7 @@ void BWC::loadCommandQueue(){
 /*          */
 
 void BWC::saveRebootInfo(){
-    File file = LittleFS.open("bootlog.txt", "a");
+    File file = LittleFS.open(F("bootlog.txt"), "a");
     if (!file) {
         // Serial.println(F("Failed to save bootlog.txt"));
         return;
@@ -1374,7 +1381,7 @@ void BWC::_saveStates() {
     ESP.wdtFeed();
     #endif
     _save_states_needed = false;
-    File file = LittleFS.open("states.txt", "w");
+    File file = LittleFS.open(F("states.txt"), "w");
     if (!file) {
         // Serial.println(F("Failed to save states.txt"));
         return;
@@ -1406,7 +1413,7 @@ void BWC::_saveCommandQueue(){
     #ifdef ESP8266
     ESP.wdtFeed();
     #endif
-    File file = LittleFS.open("cmdq.json", "w");
+    File file = LittleFS.open(F("cmdq.json"), "w");
     if (!file) {
         // Serial.println(F("Failed to save cmdq.json"));
         return;
@@ -1448,7 +1455,7 @@ void BWC::saveSettings(){
     ESP.wdtFeed();
     #endif
     _save_settings_needed = false;
-    File file = LittleFS.open("settings.json", "w");
+    File file = LittleFS.open(F("settings.json"), "w");
     if (!file) {
         // Serial.println(F("Failed to save settings.json"));
         return;
@@ -1509,7 +1516,7 @@ void BWC::saveSettings(){
 
 //save out debug text to file "debug.txt" on littleFS
 void BWC::saveDebugInfo(const String& s){
-    File file = LittleFS.open("debug.txt", "a");
+    File file = LittleFS.open(F("debug.txt"), "a");
     if (!file) {
         // Serial.println(F("Failed to save debug.txt"));
         return;
@@ -1563,6 +1570,7 @@ bool BWC::_load_melody_json(const String& filename)
     duration
     ...eof
     */
+   _notes.reserve(128);
     String s = file.readStringUntil('\n');
     beat_period = s.toInt();
     s = file.readStringUntil('\n');
@@ -1607,6 +1615,7 @@ bool BWC::_load_melody_json(const String& filename)
 void BWC::_sweepdown()
 {
     if(_notes.size() || !_audio_enabled) return;
+    _notes.reserve(128);
     for(int i = 0; i < 128; i++)
     {
         sNote n;
@@ -1619,6 +1628,7 @@ void BWC::_sweepdown()
 void BWC::_sweepup()
 {
     if(_notes.size() || !_audio_enabled) return;
+    _notes.reserve(128);
     for(int i = 0; i < 128; i++)
     {
         sNote n;

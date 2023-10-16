@@ -19,6 +19,8 @@ void DSP_4W::setup(int dsp_tx, int dsp_rx, int dummy, int dummy2)
 void DSP_4W::stop()
 {
     _dsp_serial->stopListening();
+    delete _dsp_serial;
+    _dsp_serial = nullptr;
 }
 
 void DSP_4W::pause_all(bool action)

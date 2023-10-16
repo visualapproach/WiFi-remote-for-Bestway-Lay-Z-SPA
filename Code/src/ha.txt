@@ -11,20 +11,91 @@
         //HeapSelectIram ephemeral;
         //HeapSelectDram ephemeral;
 
-        const char* _dev = "dev";
-        const char* _name = "name";
-        const char* _uniq_id = "uniq_id";
-        const char* _stat_t = "stat_t";
-        const char* _avty_t = "avty_t";
-        const char* _pl_avail = "pl_avail";
-        const char* _pl_not_avail = "pl_not_avail";
-        const char* _val_tpl = "val_tpl";
-        const char* _cmd_t = "cmd_t";
-        const char* _cmd_tpl = "cmd_tpl";
+
+        /* Save RAM by storing strings in FLASH */
+
+        const char* fs_dev = PSTR("dev");
+        const char* fs_name = PSTR("name");
+        const char* fs_uniq_id = PSTR("uniq_id");
+        const char* fs_stat_t = PSTR("stat_t");
+        const char* fs_avty_t = PSTR("avty_t");
+        const char* fs_pl_avail = PSTR("pl_avail");
+        const char* fs_pl_not_avail = PSTR("pl_not_avail");
+        const char* fs_val_tpl = PSTR("val_tpl");
+        const char* fs_cmd_t = PSTR("cmd_t");
+        const char* fs_cmd_tpl = PSTR("cmd_tpl");
+        const char* fs_conf_url = PSTR("configuration_url");
+        const char* fs_connections = PSTR("connections");
+        const char* fs_identifiers = PSTR("identifiers");
+        const char* fs_manufacturer = PSTR("manufacturer");
+        const char* fs_model = PSTR("model");
+        const char* fs_sw_v = PSTR("sw_version");
+        const char* fs_alive = PSTR("Alive");
+        const char* fs_dead = PSTR("Dead");
+
+        const char* fs_max_temp = PSTR("max_temp");
+        const char* fs_min_temp = PSTR("min_temp");
+        const char* fs_precision = PSTR("precision");
+        const char* fs_temp_unit = PSTR("temp_unit");
+        const char* fs_modes = PSTR("modes");
+        const char* fs_mode_cmd_t = PSTR("mode_cmd_t");
+        const char* fs_mode_cmd_tpl = PSTR("mode_cmd_tpl");
+        const char* fs_mode_stat_t = PSTR("mode_stat_t");
+        const char* fs_mode_stat_tpl = PSTR("mode_stat_tpl");
+        const char* fs_act_t = PSTR("act_t");
+        const char* fs_act_tpl = PSTR("act_tpl");
+        const char* fs_temp_stat_t = PSTR("temp_stat_t");
+        const char* fs_temp_stat_tpl = PSTR("temp_stat_tpl");
+        const char* fs_curr_temp_t = PSTR("curr_temp_t");
+        const char* fs_curr_temp_tpl = PSTR("curr_temp_tpl");
+        const char* fs_temp_cmd_t = PSTR("temp_cmd_t");
+        const char* fs_temp_cmd_tpl = PSTR("temp_cmd_tpl");
+        
+
+        /* ArduinoJson crashes when using flash strings on both sides
+           so here we pull them back to a String in RAM temporarily.
+           ArduinoJson wants a C-style string so we convert with c_str() */
+
+        const char* _dev = String(FPSTR(fs_dev)).c_str();
+        const char* _name = String(FPSTR(fs_name)).c_str();
+        const char* _uniq_id = String(FPSTR(fs_uniq_id)).c_str();
+        const char* _stat_t = String(FPSTR(fs_stat_t)).c_str();
+        const char* _avty_t = String(FPSTR(fs_avty_t)).c_str();
+        const char* _pl_avail = String(FPSTR(fs_pl_avail)).c_str();
+        const char* _pl_not_avail = String(FPSTR(fs_pl_not_avail)).c_str();
+        const char* _val_tpl = String(FPSTR(fs_val_tpl)).c_str();
+        const char* _cmd_t = String(FPSTR(fs_cmd_t)).c_str();
+        const char* _cmd_tpl = String(FPSTR(fs_cmd_tpl)).c_str();
+        const char* _conf_url = String(FPSTR(fs_conf_url)).c_str();
+        const char* _connections = String(FPSTR(fs_connections)).c_str();
+        const char* _identifiers = String(FPSTR(fs_identifiers)).c_str();
+        const char* _manufacturer = String(FPSTR(fs_manufacturer)).c_str();
+        const char* _model = String(FPSTR(fs_model)).c_str();
+        const char* _sw_v = String(FPSTR(fs_sw_v)).c_str();
+        const char* _alive = String(FPSTR(fs_alive)).c_str();
+        const char* _dead = String(FPSTR(fs_dead)).c_str();
+
+        const char* _max_temp = String(FPSTR(fs_max_temp)).c_str();
+        const char* _min_temp = String(FPSTR(fs_min_temp)).c_str();
+        const char* _precision = String(FPSTR(fs_precision)).c_str();
+        const char* _temp_unit = String(FPSTR(fs_temp_unit)).c_str();
+        const char* _modes = String(FPSTR(fs_modes)).c_str();
+        const char* _mode_cmd_t = String(FPSTR(fs_mode_cmd_t)).c_str();
+        const char* _mode_cmd_tpl = String(FPSTR(fs_mode_cmd_tpl)).c_str();
+        const char* _mode_stat_t = String(FPSTR(fs_mode_stat_t)).c_str();
+        const char* _mode_stat_tpl = String(FPSTR(fs_mode_stat_tpl)).c_str();
+        const char* _act_t = String(FPSTR(fs_act_t)).c_str();
+        const char* _act_tpl = String(FPSTR(fs_act_tpl)).c_str();
+        const char* _temp_stat_t = String(FPSTR(fs_temp_stat_t)).c_str();
+        const char* _temp_stat_tpl = String(FPSTR(fs_temp_stat_tpl)).c_str();
+        const char* _curr_temp_t = String(FPSTR(fs_curr_temp_t)).c_str();
+        const char* _curr_temp_tpl = String(FPSTR(fs_curr_temp_tpl)).c_str();
+        const char* _temp_cmd_t = String(FPSTR(fs_temp_cmd_t)).c_str();
+        const char* _temp_cmd_tpl = String(FPSTR(fs_temp_cmd_tpl)).c_str();
 
 
         /* DEVICE */
-    /*
+        /*
         if(!mqttClient->connected()){
             String s = F("HA setup failed. MQTT not connected");
             bwc->saveDebugInfo(s);
@@ -43,13 +114,15 @@
         maxtemp = 104;
         mintemp = 68;
         DynamicJsonDocument devicedoc(512);
-        devicedoc[_dev]["configuration_url"] = "http://" + WiFi.localIP().toString();
-        devicedoc[_dev]["connections"].add(serialized("[\"mac\",\"" + WiFi.macAddress()+"\"]" ));
-        devicedoc[_dev]["identifiers"] = mychipid;
-        devicedoc[_dev]["manufacturer"] = F("Visualapproach");
-        devicedoc[_dev]["model"] = bwc->getModel();
-        devicedoc[_dev][_name] = mqttBaseTopic + F(" WiFi controller");
-        devicedoc[_dev]["sw_version"] = FW_VERSION;
+        devicedoc[(_dev)][(_conf_url)] = F("http://") + WiFi.localIP().toString();
+        devicedoc[(_dev)][(_connections)].add(serialized("[\"mac\",\"" + WiFi.macAddress()+"\"]" ));
+        devicedoc[(_dev)][(_identifiers)] = mychipid;
+        devicedoc[(_dev)][(_manufacturer)] = F("Visualapproach");
+        devicedoc[(_dev)][(_model)] = bwc->getModel();
+        devicedoc[(_dev)][(_name)] = mqttBaseTopic + F(" WiFi controller");
+        devicedoc[(_dev)][(_sw_v)] = FW_VERSION;
+
+
         DynamicJsonDocument doc(1536);
 
         /************/
@@ -57,22 +130,25 @@
         /************/
 
                                         /* brightness slider */
-        doc[_dev] = devicedoc[_dev];
-        payload = "";
-        topic = String(HA_PREFIX) + F("/number/") + mqttBaseTopic + F("_brightness/config");
+        doc[(_dev)] = devicedoc[(_dev)];
+        payload.clear();
+        topic = F(HA_PREFIX);
+        topic += F("/number/");
+        topic += mqttBaseTopic;
+        topic += F("_brightness/config");
         // Serial.println(topic);
-        doc[_name] = mqttBaseTopic + F(" brightness");
-        doc[_uniq_id] = F("input_number.") + mqttBaseTopic + F("_brightness")+mychipid;
-        doc[_stat_t] = mqttBaseTopic+F("/message");
-        doc[_avty_t] = mqttBaseTopic+F("/Status");
-        doc[_pl_avail] = F("Alive");
-        doc[_pl_not_avail] = F("Dead");
-        doc[_val_tpl] = F("{{ value_json.BRT }}");
-        doc[_cmd_t] = mqttBaseTopic+F("/command");
-        doc[_cmd_tpl] = F("{CMD:12,VALUE:{{ value | int }},XTIME:0,INTERVAL:0}");
+        doc[(_name)] = mqttBaseTopic + F(" brightness");
+        doc[(_uniq_id)] = F("input_number.") + mqttBaseTopic + F("_brightness")+mychipid;
+        doc[(_stat_t)] = mqttBaseTopic+F("/message");
+        doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+        doc[(_pl_avail)] = _alive;
+        doc[(_pl_not_avail)] = _dead;
+        doc[(_val_tpl)] = F("{{ value_json.BRT }}");
+        doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+        doc[(_cmd_tpl)] = F("{CMD:12,VALUE:{{ value | int }},XTIME:0,INTERVAL:0}");
         doc["min"] = 0;
         doc["max"] = 8;
-        doc["mode"] = "slider";
+        doc["mode"] = F("slider");
         if (serializeJson(doc, payload) == 0)
         {
             // Serial.println(F("Failed to serialize HA message!"));
@@ -89,18 +165,20 @@
         /* SENSORS  */
         /************/
 
-    Serial.println("sensors");
+    Serial.println(F("sensors"));
                                         /* pressed button sensor */
-    doc[_dev] = devicedoc[_dev];
+    doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_pressed_button/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" pressed button");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_pressed_button")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/button");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_pressed_button/config");
+    doc[(_name)] = mqttBaseTopic + F(" pressed button");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_pressed_button")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/button");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
 
     if (serializeJson(doc, payload) == 0)
     {
@@ -118,17 +196,19 @@
 
 
                                         /* reboot time sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_reboot_time/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" reboot time");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_reboot_time")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/reboot_time");
-    doc[_val_tpl] = F("{{as_timestamp(as_datetime(value).isoformat()) | timestamp_custom('%F %T')}}");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_reboot_time/config");
+    doc[(_name)] = mqttBaseTopic + F(" reboot time");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_reboot_time")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/reboot_time");
+    doc[(_val_tpl)] = F("{{as_timestamp(as_datetime(value).isoformat()) | timestamp_custom('%F %T')}}");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -143,16 +223,18 @@
 
 
                                         /* reboot reason sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_reboot_reason/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" reboot reason");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_reboot_reason")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/reboot_reason");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = "Alive";
-    doc[_pl_not_avail] = "Dead";
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_reboot_reason/config");
+    doc[(_name)] = mqttBaseTopic + F(" reboot reason");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_reboot_reason")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/reboot_reason");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -167,18 +249,20 @@
 
 
                                         /* WiFi SSID sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_ssid/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" ssid");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_ssid")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/other");
-    doc[_val_tpl] = F("{{ value_json.SSID }}");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_ssid/config");
+    doc[(_name)] = mqttBaseTopic + F(" ssid");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_ssid")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/other");
+    doc[(_val_tpl)] = F("{{ value_json.SSID }}");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -192,19 +276,21 @@
 
 
                                         /* WiFi RSSI sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_rssi/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" rssi");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_rssi")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/other");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_rssi/config");
+    doc[(_name)] = mqttBaseTopic + F(" rssi");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_rssi")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/other");
     doc["unit_of_meas"] = F("dBm");
-    doc[_val_tpl] = F("{{ value_json.RSSI }}");
+    doc[(_val_tpl)] = F("{{ value_json.RSSI }}");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -219,18 +305,20 @@
 
 
                                         /* WiFi local ip sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_ip/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" ip");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_ip")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/other");
-    doc[_val_tpl] = F("{{ value_json.IP }}");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_ip/config");
+    doc[(_name)] = mqttBaseTopic + F(" ip");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_ip")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/other");
+    doc[(_val_tpl)] = F("{{ value_json.IP }}");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -244,16 +332,18 @@
 
 
                                         /* connect count sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_connect_count/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" connect count");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_connect_count")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/MQTT_Connect_Count");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_connect_count/config");
+    doc[(_name)] = mqttBaseTopic + F(" connect count");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_connect_count")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/MQTT_Connect_Count");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -266,18 +356,20 @@
     doc.garbageCollect();
 
                                         /* error sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_error/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" error");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_error")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
-    doc[_val_tpl] = F("{{ value_json.ERR }}");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_error/config");
+    doc[(_name)] = mqttBaseTopic + F(" error");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_error")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_val_tpl)] = F("{{ value_json.ERR }}");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -293,20 +385,22 @@
 
 
                                         /* spa time to ready sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_time_to_ready/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" time to ready");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_time_to_ready")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/times");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_time_to_ready/config");
+    doc[(_name)] = mqttBaseTopic + F(" time to ready");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_time_to_ready")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/times");
     doc["unit_of_meas"] = F("hours");
-    doc[_val_tpl] = F("{{ value_json.T2R }}");
+    doc[(_val_tpl)] = F("{{ value_json.T2R }}");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:clock");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -321,18 +415,20 @@
 
 
                                         /* Ready State sensor (Never, Ready, Not Ready) */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_rs/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" ready state");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_rs")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/times");
-    doc[_val_tpl] = F("{{ value_json.RS }}");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_rs/config");
+    doc[(_name)] = mqttBaseTopic + F(" ready state");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_rs")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_val_tpl)] = F("{{ value_json.RS }}");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -348,22 +444,24 @@
 
 
                                         /* spa energy sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_energy/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" energy");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_energy")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/times");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_energy/config");
+    doc[(_name)] = mqttBaseTopic + F(" energy");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_energy")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/times");
     doc["unit_of_meas"] = F("kWh");
-    doc[_val_tpl] = F("{{ value_json.KWH | round(3) }}");
+    doc[(_val_tpl)] = F("{{ value_json.KWH | round(3) }}");
     doc["dev_cla"] = F("energy");
     doc["state_class"] = F("total_increasing");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:flash");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -377,22 +475,24 @@
 
 
                                         /* spa daily energy sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_today/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" today");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_today")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/times");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_today/config");
+    doc[(_name)] = mqttBaseTopic + F(" today");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_today")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/times");
     doc["unit_of_meas"] = F("kWh");
-    doc[_val_tpl] = F("{{ value_json.KWHD | round(3) }}");
+    doc[(_val_tpl)] = F("{{ value_json.KWHD | round(3) }}");
     doc["dev_cla"] = F("energy");
     doc["state_class"] = F("total_increasing");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:flash");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -407,22 +507,24 @@
 
 
                                         /* spa power sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_power/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" power");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_power")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/times");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_power/config");
+    doc[(_name)] = mqttBaseTopic + F(" power");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_power")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/times");
     doc["unit_of_meas"] = F("W");
-    doc[_val_tpl] = F("{{ value_json.WATT | int }}");
+    doc[(_val_tpl)] = F("{{ value_json.WATT | int }}");
     doc["dev_cla"] = F("power");
     doc["state_class"] = F("measurement");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:flash");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -437,20 +539,22 @@
 
 
                                         /* spa chlorine age sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_chlorine_age/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" chlorine age");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_chlorine_age")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/times");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_chlorine_age/config");
+    doc[(_name)] = mqttBaseTopic + F(" chlorine age");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_chlorine_age")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/times");
     doc["unit_of_meas"] = F("days");
-    doc[_val_tpl] = F("{{ ( ( (now().timestamp()|int) - value_json.CLTIME|int)/3600/24) | round(2) }}");
+    doc[(_val_tpl)] = F("{{ ( ( (now().timestamp()|int) - value_json.CLTIME|int)/3600/24) | round(2) }}");
     doc["expire_after"] = 700;
     doc["icon"] = F("hass:hand-coin-outline");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -465,20 +569,22 @@
 
 
                                         /* spa filter age sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_filter_age/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" filter age");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_filter_age")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/times");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_filter_age/config");
+    doc[(_name)] = mqttBaseTopic + F(" filter age");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_filter_age")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/times");
     doc["unit_of_meas"] = F("days");
-    doc[_val_tpl] = F("{{ ( ( (now().timestamp()|int) - value_json.FTIME|int)/3600/24) | round(2) }}");
+    doc[(_val_tpl)] = F("{{ ( ( (now().timestamp()|int) - value_json.FTIME|int)/3600/24) | round(2) }}");
     doc["expire_after"] = 700;
     doc["icon"] = F("hass:air-filter");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -492,20 +598,22 @@
 
 
                                         /* spa uptime sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_uptime/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" uptime");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_uptime")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/times");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_uptime/config");
+    doc[(_name)] = mqttBaseTopic + F(" uptime");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_uptime")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/times");
     doc["unit_of_meas"] = F("days");
-    doc[_val_tpl] = F("{{ ( (value_json.UPTIME|int)/3600/24) | round(2) }}");
+    doc[(_val_tpl)] = F("{{ ( (value_json.UPTIME|int)/3600/24) | round(2) }}");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:clock-outline");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -520,20 +628,22 @@
 
 
                                         /* spa pump time sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_pumptime/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" pump time");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_pumptime")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/times");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_pumptime/config");
+    doc[(_name)] = mqttBaseTopic + F(" pump time");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_pumptime")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/times");
     doc["unit_of_meas"] = F("hours");
-    doc[_val_tpl] = F("{{ ( (value_json.PUMPTIME|int)/3600) | round(2) }}");
+    doc[(_val_tpl)] = F("{{ ( (value_json.PUMPTIME|int)/3600) | round(2) }}");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:clock-outline");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -548,20 +658,22 @@
 
 
                                         /* spa heater time sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_heatertime/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" heater time");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_heatertime")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/times");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_heatertime/config");
+    doc[(_name)] = mqttBaseTopic + F(" heater time");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_heatertime")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/times");
     doc["unit_of_meas"] = F("hours");
-    doc[_val_tpl] = F("{{ ( (value_json.HEATINGTIME|int)/3600) | round(2) }}");
+    doc[(_val_tpl)] = F("{{ ( (value_json.HEATINGTIME|int)/3600) | round(2) }}");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:clock-outline");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -576,20 +688,22 @@
 
 
                                         /* spa air time sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_airtime/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" air time");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_airtime")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/times");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_airtime/config");
+    doc[(_name)] = mqttBaseTopic + F(" air time");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_airtime")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/times");
     doc["unit_of_meas"] = F("hours");
-    doc[_val_tpl] = F("{{ ( (value_json.AIRTIME|int)/3600) | round(2) }}");
+    doc[(_val_tpl)] = F("{{ ( (value_json.AIRTIME|int)/3600) | round(2) }}");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:clock-outline");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -604,19 +718,21 @@
 
 
                                         /* spa temperature sensor f */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_temperature_f/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" temp (F)");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_temp_f")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_temperature_f/config");
+    doc[(_name)] = mqttBaseTopic + F(" temp (F)");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_temp_f")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
     doc["unit_of_meas"] = "°F";
-    doc[_val_tpl] = F("{{ value_json.TMPF }}");
+    doc[(_val_tpl)] = F("{{ value_json.TMPF }}");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     doc["dev_cla"] = F("temperature");
     if (serializeJson(doc, payload) == 0)
     {
@@ -632,19 +748,21 @@
 
 
                                         /* spa temperature sensor c */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_temp_c/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" temp (C)");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_temp_c")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_temp_c/config");
+    doc[(_name)] = mqttBaseTopic + F(" temp (C)");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_temp_c")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
     doc["unit_of_meas"] = "°C";
-    doc[_val_tpl] = F("{{ value_json.TMPC }}");
+    doc[(_val_tpl)] = F("{{ value_json.TMPC }}");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     doc["dev_cla"] = F("temperature");
     if (serializeJson(doc, payload) == 0)
     {
@@ -660,19 +778,21 @@
 
 
                                         /* spa virtual temperature sensor f */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_virtualtemp_f/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" virtual temp (F)");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_virtual_temp_f")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_virtualtemp_f/config");
+    doc[(_name)] = mqttBaseTopic + F(" virtual temp (F)");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_virtual_temp_f")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
     doc["unit_of_meas"] = "°F";
-    doc[_val_tpl] = F("{{ value_json.VTMF | round(2) }}");
+    doc[(_val_tpl)] = F("{{ value_json.VTMF | round(2) }}");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     doc["dev_cla"] = F("temperature");
     if (serializeJson(doc, payload) == 0)
     {
@@ -688,19 +808,21 @@
 
 
                                         /* spa virtual temperature sensor c */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_virtualtemp_c/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" virtual temp (C)");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_virtual_temp_c")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_virtualtemp_c/config");
+    doc[(_name)] = mqttBaseTopic + F(" virtual temp (C)");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_virtual_temp_c")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
     doc["unit_of_meas"] = "°C";
-    doc[_val_tpl] = F("{{ value_json.VTMC | round(2) }}");
+    doc[(_val_tpl)] = F("{{ value_json.VTMC | round(2) }}");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     doc["dev_cla"] = F("temperature");
     if (serializeJson(doc, payload) == 0)
     {
@@ -716,19 +838,21 @@
 
 
                                         /* spa target temperature sensor f */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_target_temp_f/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" target temp (F)");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_target_temp_f")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_target_temp_f/config");
+    doc[(_name)] = mqttBaseTopic + F(" target temp (F)");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_target_temp_f")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
     doc["unit_of_meas"] = "°F";
-    doc[_val_tpl] = F("{{ value_json.TGTF }}");
+    doc[(_val_tpl)] = F("{{ value_json.TGTF }}");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     doc["dev_cla"] = F("temperature");
     if (serializeJson(doc, payload) == 0)
     {
@@ -745,19 +869,21 @@
 
 
                                         /* spa target temperature sensor c */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_target_temp_c/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" target temp (C)");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_target_temp_c")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_target_temp_c/config");
+    doc[(_name)] = mqttBaseTopic + F(" target temp (C)");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_target_temp_c")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
     doc["unit_of_meas"] = "°C";
-    doc[_val_tpl] = F("{{ value_json.TGTC }}");
+    doc[(_val_tpl)] = F("{{ value_json.TGTC }}");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     doc["dev_cla"] = F("temperature");
     if (serializeJson(doc, payload) == 0)
     {
@@ -773,19 +899,21 @@
 
 
                                         /* spa ambient temperature sensor c */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/sensor/") + mqttBaseTopic + F("_amb_temp_c/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" ambient temp (C)");
-    doc[_uniq_id] = F("sensor.") + mqttBaseTopic + F("_amb_temp_c")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_amb_temp_c/config");
+    doc[(_name)] = mqttBaseTopic + F(" ambient temp (C)");
+    doc[(_uniq_id)] = F("sensor.") + mqttBaseTopic + F("_amb_temp_c")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
     doc["unit_of_meas"] = "°C";
-    doc[_val_tpl] = F("{{ value_json.AMBC }}");
+    doc[(_val_tpl)] = F("{{ value_json.AMBC }}");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     doc["dev_cla"] = F("temperature");
     if (serializeJson(doc, payload) == 0)
     {
@@ -806,19 +934,21 @@
 
 
                                         /* spa lock binary_sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/binary_sensor/") + mqttBaseTopic + F("_lock/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" lock");
-    doc[_uniq_id] = F("binary_sensor.") + mqttBaseTopic + F("_lock")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
-    doc[_val_tpl] = F("{% if value_json.LCK == 1 %}OFF{% else %}ON{% endif %}");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_lock/config");
+    doc[(_name)] = mqttBaseTopic + F(" lock");
+    doc[(_uniq_id)] = F("binary_sensor.") + mqttBaseTopic + F("_lock")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_val_tpl)] = F("{% if value_json.LCK == 1 %}OFF{% else %}ON{% endif %}");
     doc["dev_cla"] = F("lock");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -833,19 +963,21 @@
 
 
                                         /* spa heater binary_sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/binary_sensor/") + mqttBaseTopic + F("_heater/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" heater");
-    doc[_uniq_id] = F("binary_sensor.") + mqttBaseTopic + F("_heater")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
-    doc[_val_tpl] = F("{% if value_json.RED == 1 %}ON{% else %}OFF{% endif %}");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/binary_sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_heater/config");
+    doc[(_name)] = mqttBaseTopic + F(" heater");
+    doc[(_uniq_id)] = F("binary_sensor.") + mqttBaseTopic + F("_heater")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_val_tpl)] = F("{% if value_json.RED == 1 %}ON{% else %}OFF{% endif %}");
     doc["dev_cla"] = F("heat");
     doc["expire_after"] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -860,19 +992,21 @@
 
 
                                         /* spa ready binary_sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/binary_sensor/") + mqttBaseTopic + F("_ready/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" ready");
-    doc[_uniq_id] = F("binary_sensor.") + mqttBaseTopic + F("_ready")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
-    doc[_val_tpl] = F("{% if value_json.TMP > 30 %}{% if value_json.TMP >= value_json.TGT-1 %}ON{% else %}OFF{% endif %}{% else %}OFF{% endif %}");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/binary_sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_ready/config");
+    doc[(_name)] = mqttBaseTopic + F(" ready");
+    doc[(_uniq_id)] = F("binary_sensor.") + mqttBaseTopic + F("_ready")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_val_tpl)] = F("{% if value_json.TMP > 30 %}{% if value_json.TMP >= value_json.TGT-1 %}ON{% else %}OFF{% endif %}{% else %}OFF{% endif %}");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:hot-tub");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -887,19 +1021,21 @@
 
 
                                         /* spa connection status binary_sensor */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/binary_sensor/") + mqttBaseTopic + F("_connection/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" connection");
-    doc[_uniq_id] = F("binary_sensor.") + mqttBaseTopic + F("_connection")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/Status");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/binary_sensor/");
+    topic += mqttBaseTopic;
+    topic += F("_connection/config");
+    doc[(_name)] = mqttBaseTopic + F(" connection");
+    doc[(_uniq_id)] = F("binary_sensor.") + mqttBaseTopic + F("_connection")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/Status");
     doc["dev_cla"] = F("connectivity");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
-    doc["pl_on"] = "Alive";
-    doc["pl_off"] = "Dead";
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc["pl_on"] = _alive;
+    doc["pl_off"] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -920,20 +1056,22 @@
 
 
                                         /* spa heat regulation switch */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/switch/") + mqttBaseTopic + F("_heat_regulation/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" heat regulation");
-    doc[_uniq_id] = F("switch.") + mqttBaseTopic + F("_heat_regulation")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
-    doc[_cmd_t] = mqttBaseTopic+F("/command");
-    doc[_val_tpl] = F("{% if value_json.RED == 1 %}1{% elif value_json.GRN == 1 %}1{% else %}0{% endif %}");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += mqttBaseTopic;
+    topic += F("_heat_regulation/config");
+    doc[(_name)] = mqttBaseTopic + F(" heat regulation");
+    doc[(_uniq_id)] = F("switch.") + mqttBaseTopic + F("_heat_regulation")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_val_tpl)] = F("{% if value_json.RED == 1 %}1{% elif value_json.GRN == 1 %}1{% else %}0{% endif %}");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:radiator");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     doc["pl_on"] = F("{CMD:3,VALUE:true,XTIME:0,INTERVAL:0}");
     doc["pl_off"] = F("{CMD:3,VALUE:false,XTIME:0,INTERVAL:0}");
     doc["state_on"] = 1;
@@ -952,20 +1090,22 @@
 
 
                                     /* spa waterjets switch */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/switch/") + mqttBaseTopic + F("_jets/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" jets");
-    doc[_uniq_id] = F("switch.") + mqttBaseTopic + F("_jets")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
-    doc[_cmd_t] = mqttBaseTopic+F("/command");
-    doc[_val_tpl] = F("{{ value_json.HJT }}");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += mqttBaseTopic;
+    topic += F("_jets/config");
+    doc[(_name)] = mqttBaseTopic + F(" jets");
+    doc[(_uniq_id)] = F("switch.") + mqttBaseTopic + F("_jets")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_val_tpl)] = F("{{ value_json.HJT }}");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:hydro-power");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     doc["pl_on"] = F("{CMD:11,VALUE:true,XTIME:0,INTERVAL:0}");
     doc["pl_off"] = F("{CMD:11,VALUE:false,XTIME:0,INTERVAL:0}");
     doc["state_on"] = 1;
@@ -984,20 +1124,22 @@
 
 
                                         /* spa airbubbles switch */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/switch/") + mqttBaseTopic + F("_airbubbles/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" airbubbles");
-    doc[_uniq_id] = F("switch.") + mqttBaseTopic + F("_airbubbles")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
-    doc[_cmd_t] = mqttBaseTopic+F("/command");
-    doc[_val_tpl] = F("{{ value_json.AIR }}");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += mqttBaseTopic;
+    topic += F("_airbubbles/config");
+    doc[(_name)] = mqttBaseTopic + F(" airbubbles");
+    doc[(_uniq_id)] = F("switch.") + mqttBaseTopic + F("_airbubbles")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_val_tpl)] = F("{{ value_json.AIR }}");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:chart-bubble");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     doc["pl_on"] = F("{CMD:2,VALUE:true,XTIME:0,INTERVAL:0}");
     doc["pl_off"] = F("{CMD:2,VALUE:false,XTIME:0,INTERVAL:0}");
     doc["state_on"] = 1;
@@ -1016,20 +1158,22 @@
 
 
                                         /* spa pump switch */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/switch/") + mqttBaseTopic + F("_pump/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" pump");
-    doc[_uniq_id] = F("switch.") + mqttBaseTopic + F("_pump")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
-    doc[_cmd_t] = mqttBaseTopic+F("/command");
-    doc[_val_tpl] = F("{{ value_json.FLT }}");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += mqttBaseTopic;
+    topic += F("_pump/config");
+    doc[(_name)] = mqttBaseTopic + F(" pump");
+    doc[(_uniq_id)] = F("switch.") + mqttBaseTopic + F("_pump")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_val_tpl)] = F("{{ value_json.FLT }}");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:pump");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     doc["pl_on"] = F("{CMD:4,VALUE:true,XTIME:0,INTERVAL:0}");
     doc["pl_off"] = F("{CMD:4,VALUE:false,XTIME:0,INTERVAL:0}");
     doc["state_on"] = 1;
@@ -1048,20 +1192,22 @@
 
 
                                         /* spa temperature unit switch */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/switch/") + mqttBaseTopic + F("_temperature_unit/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" temperature unit F-C");
-    doc[_uniq_id] = F("switch.") + mqttBaseTopic + F("_unit")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
-    doc[_cmd_t] = mqttBaseTopic+F("/command");
-    doc[_val_tpl] = F("{{ value_json.UNT }}");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += mqttBaseTopic;
+    topic += F("_temperature_unit/config");
+    doc[(_name)] = mqttBaseTopic + F(" temperature unit F-C");
+    doc[(_uniq_id)] = F("switch.") + mqttBaseTopic + F("_unit")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_val_tpl)] = F("{{ value_json.UNT }}");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:circle-outline");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     doc["pl_on"] = F("{CMD:1,VALUE:true,XTIME:0,INTERVAL:0}");
     doc["pl_off"] = F("{CMD:1,VALUE:false,XTIME:0,INTERVAL:0}");
     doc["state_on"] = 1;
@@ -1080,20 +1226,22 @@
 
 
                                         /* spa take control switch */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/switch/") + mqttBaseTopic + F("_take_ctrl/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" take control");
-    doc[_uniq_id] = F("switch.") + mqttBaseTopic + F("_ctrl")+mychipid;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
-    doc[_cmd_t] = mqttBaseTopic+F("/command");
-    doc[_val_tpl] = F("{{ value_json.GOD }}");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += mqttBaseTopic;
+    topic += F("_take_ctrl/config");
+    doc[(_name)] = mqttBaseTopic + F(" take control");
+    doc[(_uniq_id)] = F("switch.") + mqttBaseTopic + F("_ctrl")+mychipid;
+    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_val_tpl)] = F("{{ value_json.GOD }}");
     doc["expire_after"] = 700;
     doc["icon"] = F("mdi:steering");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     doc["pl_on"] = F("{CMD:17,VALUE:true,XTIME:0,INTERVAL:0}");
     doc["pl_off"] = F("{CMD:17,VALUE:false,XTIME:0,INTERVAL:0}");
     doc["state_on"] = 1;
@@ -1119,18 +1267,20 @@
 
 
                                         /* spa reset chlorine timer button */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/button/") + mqttBaseTopic + F("_reset_chlorine/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" reset chlorine timer");
-    doc[_uniq_id] = F("button.") + mqttBaseTopic + F("_reset_chlorine")+mychipid;
-    doc[_cmd_t] = mqttBaseTopic+F("/command");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/button/");
+    topic += mqttBaseTopic;
+    topic += F("_reset_chlorine/config");
+    doc[(_name)] = mqttBaseTopic + F(" reset chlorine timer");
+    doc[(_uniq_id)] = F("button.") + mqttBaseTopic + F("_reset_chlorine")+mychipid;
+    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc["payload_press"] = F("{CMD:9,VALUE:true,XTIME:0,INTERVAL:0}");
     doc["icon"] = F("mdi:restart");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -1145,18 +1295,20 @@
 
 
                                         /* spa reset filter timer button */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/button/") + mqttBaseTopic + F("_reset_filter/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" reset filter timer");
-    doc[_uniq_id] = F("button.") + mqttBaseTopic + F("_reset_filter")+mychipid;
-    doc[_cmd_t] = mqttBaseTopic+F("/command");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/button/");
+    topic += mqttBaseTopic;
+    topic += F("_reset_filter/config");
+    doc[(_name)] = mqttBaseTopic + F(" reset filter timer");
+    doc[(_uniq_id)] = F("button.") + mqttBaseTopic + F("_reset_filter")+mychipid;
+    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc["payload_press"] = F("{CMD:10,VALUE:true,XTIME:0,INTERVAL:0}");
     doc["icon"] = F("mdi:restart");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -1171,19 +1323,21 @@
 
 
                                         /* spa restart esp button */
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/button/") + mqttBaseTopic + F("_restart_esp/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" restart esp");
-    doc[_uniq_id] = F("button.") + mqttBaseTopic + F("_restart_esp")+mychipid;
-    doc[_cmd_t] = mqttBaseTopic+F("/command");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/button/");
+    topic += mqttBaseTopic;
+    topic += F("_restart_esp/config");
+    doc[(_name)] = mqttBaseTopic + F(" restart esp");
+    doc[(_uniq_id)] = F("button.") + mqttBaseTopic + F("_restart_esp")+mychipid;
+    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc["payload_press"] = F("{CMD:6,VALUE:true,XTIME:0,INTERVAL:0}");
     doc["icon"] = F("mdi:restart");
     doc["dev_cla"] = F("restart");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize HA message!"));
@@ -1207,32 +1361,34 @@
 
                                         /* spa climate control */
 
-    doc[_dev] = devicedoc[_dev];
-    payload = "";
-    topic = String(HA_PREFIX) + F("/climate/") + mqttBaseTopic + F("_climate/config");
-    // Serial.println(topic);
-    doc[_name] = mqttBaseTopic + F(" temperature control");
-    doc[_uniq_id] = F("climate.") + mqttBaseTopic + F("_climate")+mychipid;
-    doc["max_temp"] = maxtemp;
-    doc["min_temp"] = mintemp;
-    doc["precision"] = 1.0;
-    doc["temp_unit"] = "F";
-    doc["modes"].add(serialized("\"fan_only\", \"off\", \"heat\""));
-    doc["mode_cmd_t"] = mqttBaseTopic+F("/command_batch");
-    doc["mode_cmd_tpl"] = F("[{CMD:3,VALUE:{%if value == \"heat\" %}1{% else %}0{% endif %},XTIME:0,INTERVAL:0},{CMD:4,VALUE:{%if value == \"fan_only\" %}1{% elif value == \"heat\" %}1{% else %}0{% endif %},XTIME:0,INTERVAL:0}]");
-    doc["mode_stat_t"] = mqttBaseTopic+F("/message");
-    doc["mode_stat_tpl"] = F("{% if value_json.RED == 1 %}heat{% elif value_json.GRN == 1 %}heat{% else %}off{% endif %}");
-    doc["act_t"] = mqttBaseTopic+F("/message");
-    doc["act_tpl"] = F("{% if value_json.RED == 1 %}heating{% elif value_json.GRN == 1 %}idle{% elif value_json.FLT == 1 %}fan{% else %}off{% endif %}");
-    doc["temp_stat_t"] = mqttBaseTopic+F("/message");
-    doc["temp_stat_tpl"] = F("{{ value_json.TGTF }}");
-    doc["curr_temp_t"] = mqttBaseTopic+F("/message");
-    doc["curr_temp_tpl"] = F("{{ value_json.TMPF }}");
-    doc["temp_cmd_t"] = mqttBaseTopic+F("/command");
-    doc["temp_cmd_tpl"] = F("{CMD:0,VALUE:{{ value|int }},XTIME:0,INTERVAL:0}");
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
-    doc[_pl_avail] = F("Alive");
-    doc[_pl_not_avail] = F("Dead");
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    topic = F(HA_PREFIX);
+    topic += F("/climate/");
+    topic += mqttBaseTopic;
+    topic += F("_climate/config");
+    doc[(_name)] = mqttBaseTopic + F(" temperature control");
+    doc[(_uniq_id)] = F("climate.") + mqttBaseTopic + F("_climate")+mychipid;
+    doc[_max_temp] = maxtemp;
+    doc[_min_temp] = mintemp;
+    doc[_precision] = 1.0;
+    doc[_temp_unit] = "F";
+    doc[_modes].add(serialized("\"fan_only\", \"off\", \"heat\""));
+    doc[_mode_cmd_t] = mqttBaseTopic+F("/command_batch");
+    doc[_mode_cmd_tpl] = F("[{CMD:3,VALUE:{%if value == \"heat\" %}1{% else %}0{% endif %},XTIME:0,INTERVAL:0},{CMD:4,VALUE:{%if value == \"fan_only\" %}1{% elif value == \"heat\" %}1{% else %}0{% endif %},XTIME:0,INTERVAL:0}]");
+    doc[_mode_stat_t] = mqttBaseTopic+F("/message");
+    doc[_mode_stat_tpl] = F("{% if value_json.RED == 1 %}heat{% elif value_json.GRN == 1 %}heat{% else %}off{% endif %}");
+    doc[_act_t] = mqttBaseTopic+F("/message");
+    doc[_act_tpl] = F("{% if value_json.RED == 1 %}heating{% elif value_json.GRN == 1 %}idle{% elif value_json.FLT == 1 %}fan{% else %}off{% endif %}");
+    doc[_temp_stat_t] = mqttBaseTopic+F("/message");
+    doc[_temp_stat_tpl] = F("{{ value_json.TGTF }}");
+    doc[_curr_temp_t] = mqttBaseTopic+F("/message");
+    doc[_curr_temp_tpl] = F("{{ value_json.TMPF }}");
+    doc[_temp_cmd_t] = mqttBaseTopic+F("/command");
+    doc[_temp_cmd_tpl] = F("{CMD:0,VALUE:{{ value|int }},XTIME:0,INTERVAL:0}");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
     {
         // Serial.println(F("Failed to serialize climate"));

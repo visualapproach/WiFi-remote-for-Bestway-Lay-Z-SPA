@@ -87,6 +87,7 @@ void CIO_6_TYPE2::updateStates()
         _raw_payload_from_cio[i] = _payload[i];
     }
 
+    good_packets_count++;
     brightness = _brightness & 7; //extract only the brightness bits (0-7)
     cio_states.locked = (_raw_payload_from_cio[LCK_IDX] & (1 << LCK_BIT)) > 0;
     cio_states.power = 1; //(_raw_payload_from_cio[PWR_IDX] & (1 << PWR_BIT)) > 0;

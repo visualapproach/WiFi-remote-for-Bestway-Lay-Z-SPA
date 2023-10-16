@@ -1,6 +1,3 @@
-FIXED: BROKEN UPDATE FUNCTIONS
-If version fields come up empty you need to update the old fashioned way through platformio. After that the UI will likely work again. Updating should also be more stable from now and not leaving zero sized files if failed.
-
 WiFi-remote-for-Bestway-Lay-Z-SPA
 =================================
 ESP8266 hack to use as WiFi remote control for Bestway Lay-Z-Spa Whirlpools (including 2021 year models) <br>
