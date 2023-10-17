@@ -1,5 +1,3 @@
-Home assistant autodiscovery broke in this version. Update is coming soon.
-
 WiFi-remote-for-Bestway-Lay-Z-SPA
 =================================
 ESP8266 hack to use as WiFi remote control for Bestway Lay-Z-Spa Whirlpools (including 2021 year models) <br>
