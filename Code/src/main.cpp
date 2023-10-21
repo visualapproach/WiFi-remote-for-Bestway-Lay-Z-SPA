@@ -18,7 +18,7 @@ void setup()
     char stack;
     stack_start = &stack;
 
-    Serial.begin(115200);
+    Serial.begin(76800);
     Serial.println(F("\nStart"));
     LittleFS.begin();
     {
@@ -694,59 +694,139 @@ void handleSetHardware()
     // Serial.println("sethardware done");
 }
 
+void preparefortest()
+{
+    bwc->stop();
+    for(int i = 0; i < 7; i++)
+    {
+        pinMode(bwc->pins[i], INPUT);
+    }
+}
+
 void handleHWtest()
 {
+    server->setContentLength(CONTENT_LENGTH_UNKNOWN);
+    server->send(200, F("text/plain"), "");
+
     int errors = 0;
     bool state = false;
-    String result = "";
+    char result[128];
 
-    bwc->stop();
-    delay(1000);
+    preparefortest();
 
+    for(int i = 0; i < 10; i++)
+    {
+        sprintf_P(result, PSTR("\nConnect the cables now!\nStarting test in %d seconds...\n"), 10-i);
+        server->sendContent(result);
+        for(int t = 0; t < 512; t++)
+            server->sendContent(" ");
+        delay(1000);
+    }
+
+    /* First test CIO out/ DSP in ports */
+    sprintf_P(result, PSTR("Start test. Seq begins with HIGH, then alters.\n\n"));
+    server->sendContent(result);
     for(int pin = 0; pin < 3; pin++)
     {
+        sprintf_P(result, PSTR("Sending on D%d, receiving on D%d\n"), gpio2dp(bwc->pins[pin]), gpio2dp(bwc->pins[pin+3]));
+        server->sendContent(result);
         pinMode(bwc->pins[pin], OUTPUT);
         pinMode(bwc->pins[pin+3], INPUT);
-        for(int t = 0; t < 1000; t++)
+        for(int t = 0; t < 100; t++)
         {
-        state = !state;
-        digitalWrite(bwc->pins[pin], state);
-        delayMicroseconds(10);
-        errors += digitalRead(bwc->pins[pin+3]) != state;
+            state = !state;
+            digitalWrite(bwc->pins[pin], state);
+            delayMicroseconds(100);
+            bool error = digitalRead(bwc->pins[pin+3]) != state;
+            errors += error;
+            if(error)
+                if(state)
+                    server->sendContent("1");
+                else
+                    server->sendContent("0");
+            else
+                server->sendContent("-");
         }
-        if(errors > 499)
-        result += F("CIO to DSP pin ") + String(pin+3) + F(" fail!\n");
-        else if(errors == 0)
-        result += F("CIO to DSP pin ") + String(pin+3) + F(" success!\n");
-        else
-        result += F("CIO to DSP pin ") + String(pin+3) + " " + String(errors/500) + F("\% bad\n");
-        errors = 0;
-        delay(0);
-    }
-    result += F("\n");
-    for(int pin = 0; pin < 3; pin++)
-    {
-        pinMode(bwc->pins[pin+3], OUTPUT);
-        pinMode(bwc->pins[pin], INPUT);
-        for(int t = 0; t < 1000; t++)
-        {
-        state = !state;
-        digitalWrite(bwc->pins[pin+3], state);
-        delayMicroseconds(10);
-        errors += digitalRead(bwc->pins[pin]) != state;
-        }
-        if(errors > 499)
-        result += F("DSP to CIO pin ") + String(pin+3) + F(" fail!\n");
-        else if(errors == 0)
-        result += F("DSP to CIO pin ") + String(pin+3) + F(" success!\n");
-        else
-        result += F("DSP to CIO pin ") + String(pin+3) + " " + String(errors/500) + F("\% bad\n");
+        sprintf_P(result, PSTR(" // %d errors out of 100\n"), errors);
+        server->sendContent_P(result);
         errors = 0;
         delay(0);
     }
 
-    server->send(200, F("text/plain"), result);
-    delay(10000);
+    /* Test the other way around */
+
+    for(int pin = 0; pin < 3; pin++)
+    {
+        sprintf_P(result, PSTR("Sending on D%d, receiving on D%d\n"), gpio2dp(bwc->pins[pin+3]), gpio2dp(bwc->pins[pin]));
+        server->sendContent(result);
+        pinMode(bwc->pins[pin+3], OUTPUT);
+        pinMode(bwc->pins[pin], INPUT);
+        for(int t = 0; t < 100; t++)
+        {
+            state = !state;
+            digitalWrite(bwc->pins[pin+3], state);
+            delayMicroseconds(100);
+            bool error = digitalRead(bwc->pins[pin]) != state;
+            errors += error;
+            if(error)
+                if(state)
+                    server->sendContent("1");
+                else
+                    server->sendContent("0");
+            else
+                server->sendContent("-");
+        }
+        sprintf_P(result, PSTR(" // %d errors out of 100\n"), errors);
+        server->sendContent_P(result);
+        errors = 0;
+        delay(0);
+    }
+
+    sprintf_P(result, PSTR("End of test!\nErrors indicated by 1 or 0 depending on test state. - is good.\n"));
+    server->sendContent(result);
+    sprintf_P(result, PSTR("Switching cio pins 5s HIGH -> 5s LOW -> input\n"));
+    server->sendContent(result);
+    sprintf_P(result, PSTR("then DSP pins 5s HIGH -> 5s LOW -> input, repeating\n"));
+    server->sendContent(result);
+    sprintf_P(result, PSTR("Disconnect cables then reset chip when done!\n"));
+    server->sendContent(result);
+
+    server->sendContent("");
+    while(true)
+    {
+        /*CIO pins HIGH*/
+        for(int pin = 0; pin < 3; pin++)
+        {
+            pinMode(bwc->pins[pin+3], INPUT);
+            pinMode(bwc->pins[pin+0], OUTPUT);
+            digitalWrite(bwc->pins[pin], HIGH);
+        }
+        delay(5000);
+        /*CIO pins LOW*/
+        for(int pin = 0; pin < 3; pin++)
+        {
+            pinMode(bwc->pins[pin+3], INPUT);
+            pinMode(bwc->pins[pin+0], OUTPUT);
+            digitalWrite(bwc->pins[pin], LOW);
+        }
+        delay(5000);
+        /*DSP pins HIGH*/
+        for(int pin = 0; pin < 3; pin++)
+        {
+            pinMode(bwc->pins[pin+0], INPUT);
+            pinMode(bwc->pins[pin+3], OUTPUT);
+            digitalWrite(bwc->pins[pin+3], HIGH);
+        }
+        delay(5000);
+        /*DSP pins LOW*/
+        for(int pin = 0; pin < 3; pin++)
+        {
+            pinMode(bwc->pins[pin+0], INPUT);
+            pinMode(bwc->pins[pin+3], OUTPUT);
+            digitalWrite(bwc->pins[pin+3], LOW);
+        }
+        delay(5000);
+    }
     bwc->setup();
 }
 
@@ -790,6 +870,7 @@ bool handleFileRead(String path)
         pause_all(false);
         return false;
     }
+
     String contentType = getContentType(path);             // Get the MIME type
     String pathWithGz = path + ".gz";
     if (LittleFS.exists(pathWithGz) || LittleFS.exists(path)) { // If the file exists, either as a compressed archive, or normal

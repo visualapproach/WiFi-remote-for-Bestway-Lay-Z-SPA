@@ -301,19 +301,19 @@ void BWC::stop(){
     _save_settings_ticker.detach();
     _scroll_text_ticker.detach();
     if(cio != nullptr){
-Serial.println(F("stopping cio"));
-    cio->stop();
-Serial.println(F("del cio"));
-    delete cio;
-    cio = nullptr;
+        Serial.println(F("stopping cio"));
+        cio->stop();
+        Serial.println(F("del cio"));
+        delete cio;
+        cio = nullptr;
     }
     if(dsp != nullptr)
     {
-Serial.println(F("stopping dsp"));
-    dsp->stop();
-Serial.println(F("del dsp"));
-    delete dsp;
-    dsp = nullptr;
+        Serial.println(F("stopping dsp"));
+        dsp->stop();
+        Serial.println(F("del dsp"));
+        delete dsp;
+        dsp = nullptr;
     }
 }
 
@@ -328,8 +328,10 @@ void BWC::pause_all(bool action)
         _save_settings_ticker.attach(3600.0f, save_settings_cb, this);
         _scroll_text_ticker.attach(0.25f, scroll_text_cb, this);
     }
-    cio->pause_all(action);
-    dsp->pause_all(action);
+    if(cio != nullptr)
+        cio->pause_all(action);
+    if(dsp != nullptr)
+        dsp->pause_all(action);
 }
 
 /*Sort by xtime, ascending*/

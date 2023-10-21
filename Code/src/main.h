@@ -32,6 +32,7 @@
 
 #include "bwc.h"
 #include "config.h"
+#include "util.h"
 
 BWC *bwc;
 
@@ -149,3 +150,4 @@ void handlePrometheusMetrics();
 
 /* Debug */
 void write_mem_stats_to_file();
+void preparefortest();
