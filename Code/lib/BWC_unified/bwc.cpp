@@ -53,6 +53,8 @@ void BWC::on_scroll_text()
 }
 
 void BWC::setup(void){
+    if(cio != nullptr) delete cio;
+    if(dsp != nullptr) delete dsp;
     Models ciomodel;
     Models dspmodel;
     

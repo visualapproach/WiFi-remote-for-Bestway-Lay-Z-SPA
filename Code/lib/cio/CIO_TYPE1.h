@@ -12,7 +12,7 @@ class CIO_6_TYPE1: public CIO_6W
         void stop() override;
         void pause_all(bool action) override;
         void IRAM_ATTR isr_packetHandler();
-        void isr_clkHandler();
+        void IRAM_ATTR isr_clkHandler();
         void updateStates();
 
     protected:
@@ -23,7 +23,7 @@ class CIO_6_TYPE1: public CIO_6W
 
     private:
         char _getChar(uint8_t value);
-        void eopHandler();
+        void IRAM_ATTR eopHandler();
 
     private:
         /*Needs to be static to work in switch/case.*/

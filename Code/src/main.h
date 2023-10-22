@@ -151,3 +151,4 @@ void handlePrometheusMetrics();
 /* Debug */
 void write_mem_stats_to_file();
 void preparefortest();
+void handleInputs();

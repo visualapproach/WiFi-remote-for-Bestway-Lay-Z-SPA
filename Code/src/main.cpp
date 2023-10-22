@@ -639,6 +639,7 @@ void startHttpServer()
         server->on(F("/setmqtt/"), handleSetMqtt);
         server->on(F("/dir/"), handleDir);
         server->on(F("/hwtest/"), handleHWtest);
+        server->on(F("/inputs/"), handleInputs);
         server->on(F("/upload.html"), HTTP_POST, [](){
             server->send(200, F("text/plain"), "");
         }, handleFileUpload);
@@ -696,11 +697,46 @@ void handleSetHardware()
 
 void preparefortest()
 {
-    bwc->stop();
     for(int i = 0; i < 7; i++)
     {
         pinMode(bwc->pins[i], INPUT);
     }
+}
+
+void handleInputs()
+{
+    server->setContentLength(CONTENT_LENGTH_UNKNOWN);
+    server->send(200, F("text/plain"), "");
+
+    bwc->stop();
+    preparefortest();
+
+    bool old_pin_state[7] = {0}, new_pin_state[7] = {0};
+    int counter[7] = {0};
+    unsigned long t = millis(); //start timestamp
+
+    while(millis() < t+5000)
+    {
+        for(uint8_t i = 0; i < 7; i++)
+        {
+            new_pin_state[i] = digitalRead(bwc->pins[i]);
+            if(new_pin_state[i] != old_pin_state[i]) counter[i]++;
+            old_pin_state[i] = new_pin_state[i];
+        }
+        yield();
+    }
+
+    /* send statistics to client */
+    char s[128];
+    for(int i = 0; i < 7; i++)
+    {
+        sprintf_P(s, PSTR("Edges received on pin D%d: %d\n"), gpio2dp(bwc->pins[i]), counter[i]);
+        server->sendContent(s);
+    }
+    sprintf_P(s, PSTR("On 6-w pump the highest number is CLK, next is DATA and third is CS. On 4-wires the highest is CIO or DSP TX to ESP."));
+    server->sendContent(s);
+    server->sendContent("");
+    bwc->setup();
 }
 
 void handleHWtest()
@@ -712,6 +748,7 @@ void handleHWtest()
     bool state = false;
     char result[128];
 
+    bwc->stop();
     preparefortest();
 
     for(int i = 0; i < 10; i++)
@@ -748,7 +785,7 @@ void handleHWtest()
                 server->sendContent("-");
         }
         sprintf_P(result, PSTR(" // %d errors out of 100\n"), errors);
-        server->sendContent_P(result);
+        server->sendContent(result);
         errors = 0;
         delay(0);
     }
@@ -777,7 +814,7 @@ void handleHWtest()
                 server->sendContent("-");
         }
         sprintf_P(result, PSTR(" // %d errors out of 100\n"), errors);
-        server->sendContent_P(result);
+        server->sendContent(result);
         errors = 0;
         delay(0);
     }

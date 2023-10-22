@@ -11,8 +11,8 @@ class CIO_6_TYPE2: public CIO_6W
         void setup(int cio_data_pin, int cio_clk_pin, int cio_cs_pin) override;
         void stop() override;
         void pause_all(bool action) override;
-        void LED_Handler();
-        void clkHandler();
+        void IRAM_ATTR LED_Handler();
+        void IRAM_ATTR clkHandler();
         void updateStates();
 
     protected:
