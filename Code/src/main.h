@@ -1,15 +1,15 @@
 #pragma once
 #include <Arduino.h>
 #include <ArduinoOTA.h>
-#include <DNSServer.h>
+// #include <DNSServer.h>
 
 #ifdef ESP8266
 
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
-#include <ESP8266httpUpdate.h>
-#include <WiFiClientSecure.h>
+// #include <ESP8266HTTPClient.h>
+// #include <ESP8266httpUpdate.h>
+// #include <WiFiClientSecure.h>
 #include <time.h>
 
 #else

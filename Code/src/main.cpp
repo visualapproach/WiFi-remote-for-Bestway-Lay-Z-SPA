@@ -11,6 +11,41 @@ OneWire *oneWire;
 // Pass our oneWire reference to Dallas Temperature sensor 
 DallasTemperature *tempSensors;
 
+WiFiEventHandler gotIpEventHandler, disconnectedEventHandler;
+void cb_gotIP(const WiFiEventStationModeGotIP& event)
+{
+    Serial.print("got IP: ");
+    Serial.println(WiFi.localIP());
+
+    if(webSocket != nullptr)
+    {
+        Serial.println(F("deleting ws"));
+        webSocket->disconnect();
+        webSocket->close();
+        delete webSocket;
+        webSocket = nullptr;
+        Serial.println(F("deleted ws"));
+        Serial.println(F("restarting ws"));
+        startWebSocket();
+    }
+    if(server != nullptr)
+    {
+        Serial.println(F("deleting server"));
+        server->stop();
+        server->close();
+        delete server;
+        server = nullptr;
+        Serial.println(F("deleted server"));
+        Serial.println(F("restarting server"));
+        startHttpServer();
+    }
+}
+
+void cb_disconnected(const WiFiEventStationModeDisconnected& event)
+{
+    Serial.println(F("disconnected"));
+}
+
 void setup()
 {
     
@@ -20,6 +55,11 @@ void setup()
 
     Serial.begin(76800);
     Serial.println(F("\nStart"));
+
+    /*register wifi events */
+    gotIpEventHandler = WiFi.onStationModeGotIP(cb_gotIP);
+    disconnectedEventHandler = WiFi.onStationModeDisconnected(cb_disconnected);
+
     LittleFS.begin();
     {
         HeapSelectIram ephemeral;
@@ -35,9 +75,6 @@ void setup()
     startComplete.attach(61, []{ if(useMqtt) enableMqtt = true; startComplete.detach(); });
     // update webpage every 2 seconds. (will also be updated on state changes)
     updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
-    // when NTP time is valid we save bootlog.txt and this timer stops
-    // bootlogTimer.attach(5, []{ if(time(nullptr)>57600) {bwc->saveRebootInfo(); bootlogTimer.detach();} });
-    // loadWifi();
     loadWebConfig();
     startWiFi();
     startNTP();
@@ -51,20 +88,21 @@ void setup()
         tempSensors->begin();
     }
     Serial.println(WiFi.localIP().toString());
-    bwc->print("   ");
+    bwc->print("   ");  //No overloaded function exists for the F() macro
     bwc->print(WiFi.localIP().toString());
     bwc->print("   ");
     bwc->print(FW_VERSION);
     Serial.println(F("End of setup()"));
     heap_water_mark = ESP.getFreeHeap();
-    Serial.println(ESP.getFreeHeap()); //26216
+    Serial.println(ESP.getFreeHeap());
 }
 
 void loop()
 {
     uint32_t freeheap = ESP.getFreeHeap();
     if(freeheap < heap_water_mark) heap_water_mark = freeheap;
-    // We need this self-destructing info several times, so save it locally
+
+    // We need this self-destructing info several times, so save it on the stack
     bool newData = bwc->newData();
     // Fiddle with the pump computer
     bwc->loop();
@@ -72,10 +110,9 @@ void loop()
     // run only when a wifi connection is established
     if (WiFi.status() == WL_CONNECTED)
     {
-        // listen for websocket events
-        // webSocket->loop();
         // listen for webserver events
         server->handleClient();
+
         // listen for OTA events
         ArduinoOTA.handle();
 
@@ -105,31 +142,6 @@ void loop()
             sendWSFlag = false;
             sendWS();
         }
-
-        // run once after connection was established
-        if (!wifiConnected)
-        {
-            // Serial.println(F("WiFi > Connected"));
-            // Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
-            // Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
-            startOTA();
-            startHttpServer();
-            startWebSocket();
-        }
-        // reset marker
-        wifiConnected = true;
-    }
-
-    // run only when the wifi connection got lost
-    if (WiFi.status() != WL_CONNECTED)
-    {
-        // run once after connection was lost
-        if (wifiConnected)
-        {
-            // Serial.println(F("WiFi > Lost connection. Trying to reconnect ..."));
-        }
-        // set marker
-        wifiConnected = false;
     }
 
     // run every X seconds
@@ -173,17 +185,18 @@ void loop()
 
 
     //Only do this if locked out! (by pressing POWER - LOCK - TIMER - POWER)
-      if(bwc->getBtnSeqMatch())
-      {
-        
-        resetWiFi();
-        delay(3000);
-        ESP.reset();
-        delay(3000);
-      }
+    if(bwc->getBtnSeqMatch())
+    {
+    
+    resetWiFi();
+    delay(3000);
+    ESP.reset();
+    delay(3000);
+    }
     //handleAUX();
 }
 
+/* Debugging to file, normally not used */
 void write_mem_stats_to_file()
 {
     File file = LittleFS.open(F("memstats.txt"), "a");
@@ -402,16 +415,6 @@ void startWiFi()
         wifi_info.apSsid = WiFi.SSID();
         wifi_info.apPwd = WiFi.psk();
         saveWifi(wifi_info);
-
-        wifiConnected = true;
-
-        // Serial.println(F("WiFi > Connected."));
-        // Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
-        // Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
-    }
-    else
-    {
-        // Serial.println(F("WiFi > Connection failed. Retrying in a while ..."));
     }
 }
 
