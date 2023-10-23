@@ -977,9 +977,6 @@
         /* BINARY SENSORS */
         /******************/
 
-        Serial.println("binary");
-
-
                                         /* spa lock binary_sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
@@ -991,7 +988,7 @@
     doc[_uniq_id] = F("binary_sensor.") + mqttBaseTopic + F("_lock")+mychipid;
     doc[_stat_t] = mqttBaseTopic+F("/message");
     doc[_val_tpl] = F("{% if value_json.LCK == 1 %}OFF{% else %}ON{% endif %}");
-    doc[_dev_cla] = F("lock");
+    // doc[_dev_cla] = F("lock");
     doc[_expire_after] = 700;
     doc[_avty_t] = mqttBaseTopic+F("/Status");
     doc[_pl_avail] = _alive;
