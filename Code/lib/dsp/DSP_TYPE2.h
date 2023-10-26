@@ -55,6 +55,14 @@ class DSP_6_TYPE2 : public DSP_6W
         Buttons getPressedButton() override;
 
     protected:
+        unsigned long _dsp_last_refreshtime = 0;
+        unsigned long _dsp_getbutton_last_time = 0;
+        //Pins
+        int _DSP_TD_PIN;
+        int _DSP_CLK_PIN;
+        int _DSP_LD_PIN;
+        int _DSP_AUDIO_PIN;
+        const uint16_t CLKPW = 50; //clock pulse period in us. clockfreq = 1/2*CLKPW
         const uint8_t DSP_DIM_BASE = 0x80;
         const uint8_t DSP_DIM_ON = 0x8;
 
@@ -62,7 +70,6 @@ class DSP_6_TYPE2 : public DSP_6W
         const uint8_t CMD1 = B01000000;  //normal mode, auto+1 address
         const uint8_t CMD2 = B11000000; //start address 00H
         const uint8_t CMD3 = DSP_DIM_BASE | DSP_DIM_ON | 7;  //full brightness
-        const uint16_t CLKPW = 50; //clock pulse period in us. clockfreq = 1/2*CLKPW
 
         //Payload byte index and bit numbers  (see documentation in excel file on github)
         //LSB first
@@ -102,18 +109,10 @@ class DSP_6_TYPE2 : public DSP_6W
         //     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '-', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
         //     'h', 'H', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z'
         // };
-        unsigned long _dsp_last_refreshtime = 0;
-        unsigned long _dsp_getbutton_last_time = 0;
-        //Pins
-        int _DSP_TD_PIN;
-        int _DSP_CLK_PIN;
-        int _DSP_LD_PIN;
-        int _DSP_AUDIO_PIN;
 
     private:
-        uint8_t _payload[5];
         const String MYDSPMODEL = "MODEL54149E";
         Buttons _old_button = NOBTN;
         Buttons _prev_button = NOBTN;
-
+        uint8_t _payload[5];
 };

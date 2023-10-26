@@ -27,9 +27,9 @@ class CIO
         String debug();
 
     public:
-        int _button_que_len = 0;  //length of buttonQ
         sStates cio_states;
         sToggles cio_toggles;
+        int _button_que_len = 0;  //length of buttonQ
     
     protected:
         std::vector<uint8_t> _raw_payload_to_cio = {0,0,0,0,0,0,0,0,0,0,0};

@@ -23,6 +23,7 @@ void CIO_4W::setup(int cio_rx, int cio_tx, int dummy)
     cio_states.char3 = ' ';
     
     _currentStateIndex = 0;
+    _cio_serial->write(_to_CIO_buf, PAYLOADSIZE);  //test
 }
 
 void CIO_4W::stop()

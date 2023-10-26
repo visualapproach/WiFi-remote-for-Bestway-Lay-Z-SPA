@@ -14,6 +14,8 @@ void DSP_4W::setup(int dsp_tx, int dsp_rx, int dummy, int dummy2)
     dsp_toggles.pressed_button = NOBTN;
     dsp_toggles.no_of_heater_elements_on = 2;
     dsp_toggles.godmode = 0;
+
+    _dsp_serial->write(_to_DSP_buf, PAYLOADSIZE); //test
 }
 
 void DSP_4W::stop()

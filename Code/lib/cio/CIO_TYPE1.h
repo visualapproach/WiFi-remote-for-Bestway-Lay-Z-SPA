@@ -26,6 +26,13 @@ class CIO_6_TYPE1: public CIO_6W
         void IRAM_ATTR eopHandler();
 
     private:
+        volatile int _byte_count;
+        volatile int _bit_count;
+        volatile int _CIO_cmd_matches;
+        volatile int _send_bit;
+        int _CS_PIN;
+        int _CLK_PIN;
+        int _DATA_PIN;
         /*Needs to be static to work in switch/case.*/
         static const uint8_t DSP_CMD2_DATAREAD = 0x42;
         /*Real CIO is sending 0x01 which is illegal according to datasheet.
@@ -68,19 +75,11 @@ class CIO_6_TYPE1: public CIO_6W
             0xE9, 0xED, 0x61, 0x1D, 0xE1, 0x71, 0x01, 0xA9, 0xB9, 0xE7, 0xCF, 0xA1, 0xDB, 0xF1, 0x39, 0x7D, 0x01, 0xDD, 0xB7
         };
 
-        volatile int _byte_count;
-        volatile int _bit_count;
-        volatile bool _data_is_output;
         volatile byte _received_byte;
-        volatile int _CIO_cmd_matches;
-        volatile int _send_bit;
         volatile uint8_t _brightness;
         volatile uint8_t _payload[11];
-
         uint8_t _prev_payload[11];
-        int _CS_PIN;
-        int _CLK_PIN;
-        int _DATA_PIN;
+        volatile bool _data_is_output;
         volatile bool _packet_error;
 
 };

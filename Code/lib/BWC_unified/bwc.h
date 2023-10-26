@@ -39,9 +39,9 @@ constexpr int MAXCOMMANDS = 20;
 
 struct command_que_item
 {
-    Commands cmd;
     int64_t val;
     uint64_t xtime;
+    Commands cmd;
     uint32_t interval;
     String text = "";
 };
@@ -92,16 +92,16 @@ class BWC {
         // String getDebugData();
 
     public:
-        String reboot_time_str;
         time_t reboot_time_t;
+        String reboot_time_str;
         int pins[8];
+        int tempSensorPin;
         unsigned int loop_count = 0;
+        CIO* cio = nullptr;
+        DSP* dsp = nullptr;
         bool hasjets, hasgod;
-        CIO* cio;
-        DSP* dsp;
         bool BWC_DEBUG = false;
         bool hasTempSensor = false;
-        int tempSensorPin;
 
     private:
         bool _loadHardware(Models& cioNo, Models& dspNo, int pins[]);
@@ -129,17 +129,15 @@ class BWC {
         void _log();
 
     private:
-        bool _notify;
-        int _notification_time, _next_notification_time;
+        uint64_t _timestamp_secs; // seconds
+        double _energy_daily_Ws; //Wattseconds internally
+        unsigned long _temp_change_timestamp_ms, _heatred_change_timestamp_ms;
+        unsigned long _pump_change_timestamp_ms, _bubbles_change_timestamp_ms;
         Ticker _save_settings_ticker;
         Ticker _scroll_text_ticker;
-        bool _scroll = false;
-        uint64_t _timestamp_secs; // seconds
-        uint8_t _dsp_brightness;
-        int16_t _override_dsp_brt_timer;
         std::vector<command_que_item> _command_que;
         std::vector<sNote> _notes;
-        int _note_duration;
+        sStates _prev_cio_states, _prev_dsp_states;
         uint32_t _cl_timestamp_s;
         uint32_t _filter_timestamp_s;
         uint32_t _uptime;
@@ -152,33 +150,35 @@ class BWC {
         uint32_t _heatingtime_ms;
         uint32_t _airtime_ms;
         uint32_t _jettime_ms;
-        float _price;
         uint32_t _filter_interval;
         uint32_t _cl_interval;
-        bool _audio_enabled;
-        float _energy_total_kWh;
-        double _energy_daily_Ws; //Wattseconds internally
+        uint32_t _virtual_temp_fix_age;
+        int _note_duration;
+        int _notification_time, _next_notification_time;
         int _energy_power_W;
+        int _ticker_count;
+        int _btn_sequence[4] = {NOBTN,NOBTN,NOBTN,NOBTN}; //keep track of the four latest button presses
+        int _ambient_temp; //always in C internally
+        int _deltatemp;
+        float _price;
+        float _energy_total_kWh;
+        float _R_COOLING = 40;
+        float _heating_degperhour = 1.5; //always in C internally
+        float _virtual_temp; //=virtualtempfix+calculated diff, always in C internally
+        float _virtual_temp_fix; //last fixed data point to add or subtract temp from, always in C internally
+        Buttons _prevbutton = NOBTN;
+        int16_t _override_dsp_brt_timer;
+        uint8_t _dsp_brightness;
+        uint8_t _web_target = 20; 
+        bool _scroll = false;
+        bool _audio_enabled;
         bool _restore_states_on_start = false;
         bool _save_settings_needed = false;
         bool _save_cmdq_needed = false;
         bool _save_states_needed = false;
-        int _ticker_count;
-        int _btn_sequence[4] = {NOBTN,NOBTN,NOBTN,NOBTN}; //keep track of the four latest button presses
-        float _R_COOLING = 40;
-        int _ambient_temp; //always in C internally
-        float _heating_degperhour = 1.5; //always in C internally
-        float _virtual_temp; //=virtualtempfix+calculated diff, always in C internally
-        float _virtual_temp_fix; //last fixed data point to add or subtract temp from, always in C internally
-        uint32_t _virtual_temp_fix_age;
         bool _new_data_available = false;
         bool _dsp_tgt_used = true;
-        uint8_t _web_target = 20; 
-        sStates _prev_cio_states, _prev_dsp_states;
-        Buttons _prevbutton = NOBTN;
-        unsigned long _temp_change_timestamp_ms, _heatred_change_timestamp_ms;
-        unsigned long _pump_change_timestamp_ms, _bubbles_change_timestamp_ms;
-        int _deltatemp;
+        bool _notify;
         bool _vt_calibrated = false;
 };
 

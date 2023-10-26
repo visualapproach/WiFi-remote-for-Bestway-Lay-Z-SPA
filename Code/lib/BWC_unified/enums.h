@@ -137,9 +137,9 @@ struct sStates
     uint8_t timerled2 = 0;
     uint8_t timerbuttonled = 0;
     uint8_t brightness = 8;
-    bool gettarget = false;
     // bool fullpower = false;
     uint8_t no_of_heater_elements_on = 2;
+    bool gettarget = false;
     bool godmode = false;
 
     // String toString()
@@ -185,6 +185,9 @@ struct sStates
 
 struct sToggles
 {
+    Buttons pressed_button = NOBTN;
+    uint8_t target = 20;
+    uint8_t no_of_heater_elements_on = 2;
     bool locked_pressed = 0;
     bool power_change = 0;
     bool unit_change = 0;
@@ -195,13 +198,10 @@ struct sToggles
     bool timer_pressed = 0;
     bool up_pressed = 0;
     bool down_pressed = 0;
-    Buttons pressed_button = NOBTN;
     /*Requested state, not toggled*/
     bool godmode = false;
     /*Requested state, not toggled*/
-    uint8_t target = 20;
     /*Requested state, not toggled*/
-    uint8_t no_of_heater_elements_on = 2;
 
     // String toString()
     // {
@@ -238,15 +238,15 @@ struct sNote
 
 struct sWifi_info
 {
-    bool enableAp;
-    bool enableWmApFallback = true;
     String apSsid;
     String apPwd;
-    bool enableStaticIp4 = false;
     String ip4Address_str;
     String ip4Gateway_str;
     String ip4Subnet_str;
     String ip4DnsPrimary_str;
     String ip4DnsSecondary_str;
     String ip4NTP_str;
+    bool enableAp;
+    bool enableWmApFallback = true;
+    bool enableStaticIp4 = false;
 };

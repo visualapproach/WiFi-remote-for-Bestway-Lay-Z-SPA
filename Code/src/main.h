@@ -34,7 +34,7 @@
 #include "config.h"
 #include "util.h"
 
-BWC *bwc;
+BWC *bwc = nullptr;
 
 /**  */
 Ticker bootlogTimer;
@@ -53,7 +53,7 @@ bool wifiConnected = false;
 
 /** a webserver object that listens on port 80 */
 #if defined(ESP8266)
-ESP8266WebServer *server;
+ESP8266WebServer *server = nullptr;
 #elif defined(ESP32)
 WebServer server(80);
 #endif
@@ -61,16 +61,16 @@ WebServer server(80);
 File fsUploadFile;
 
 /** a websocket object that listens on port 81 */
-WebSocketsServer *webSocket;
+WebSocketsServer *webSocket = nullptr;
 /**  */
 Ticker updateWSTimer;
 /**  */
 bool sendWSFlag = false;
 
 /** a WiFi client beeing used by the MQTT client */
-WiFiClient *aWifiClient;
+WiFiClient *aWifiClient = nullptr;
 /** a MQTT client */
-PubSubClient *mqttClient;
+PubSubClient *mqttClient = nullptr;
 /**  */
 bool checkMqttConnection = false;
 /** Count of how may times we've connected to the MQTT server since booting (should always be 1 or more) */
