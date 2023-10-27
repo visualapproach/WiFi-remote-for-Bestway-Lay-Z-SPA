@@ -24,6 +24,8 @@ class CIO
         virtual bool getHasgod() = 0;
         virtual bool getHasjets() = 0;
         virtual bool getHasair() = 0;
+        bool getSerialReceived() {return false;} //"overridden" in CIO 4W
+        void setSerialReceived(bool txok) {}     //"overridden" in CIO 4W  
         String debug();
 
     public:

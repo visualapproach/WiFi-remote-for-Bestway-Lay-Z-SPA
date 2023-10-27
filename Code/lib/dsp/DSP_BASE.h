@@ -14,6 +14,8 @@ class DSP
         virtual void handleStates() = 0;
         void setRawPayload(const std::vector<uint8_t>& pl);
         std::vector<uint8_t> getRawPayload();
+        bool getSerialReceived() {return false;} //"overridden" in DSP 4W
+        void setSerialReceived(bool txok) {}     //"overridden" in DSP 4W  
         String debug();
 
     public:

@@ -183,9 +183,10 @@ void BWC::loop(){
     
     /*Modify and use dsp->dsp_states here if we want to show text or something*/
     dsp->setRawPayload(cio->getRawPayload());
+    dsp->setSerialReceived(cio->getSerialReceived());
     /*Increase screen brightness when pressing buttons*/
     adjust_brightness();
-    dsp->handleStates();
+    dsp->handleStates(); //transmits to dsp if serial received from cio
 
     dsp->updateToggles();
     cio->cio_toggles = dsp->dsp_toggles;
@@ -206,7 +207,8 @@ void BWC::loop(){
     _handleCommandQ();
     /*If new target was not set above, use whatever the cio says*/
     cio->setRawPayload(dsp->getRawPayload());
-    cio->handleToggles();
+    cio->setSerialReceived(dsp->getSerialReceived());
+    cio->handleToggles(); //transmits to cio if serial received from dsp
 
     if(_save_settings_needed) saveSettings();
     if(_save_cmdq_needed) _saveCommandQueue();

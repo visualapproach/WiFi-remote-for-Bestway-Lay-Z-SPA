@@ -17,6 +17,8 @@ class DSP_4W : public DSP
         void updateToggles();
         void handleStates();
         SoftwareSerial *_dsp_serial;
+        bool getSerialReceived();
+        void setSerialReceived(bool txok);
   
     protected:
         virtual uint8_t getPumpBitmask() = 0;
@@ -40,4 +42,6 @@ class DSP_4W : public DSP
         const uint8_t DSP_CHECKSUMINDEX = 5;
         const uint8_t PAYLOADSIZE = 7;
         uint8_t _bubbles, _pump, _jets;
+        bool _serialreceived = false;
+        bool _readyToTransmit = false;
 };

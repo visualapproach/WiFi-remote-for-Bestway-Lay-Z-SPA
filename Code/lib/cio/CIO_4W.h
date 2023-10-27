@@ -23,6 +23,8 @@ class CIO_4W : public CIO
         bool getHasgod() {return true;}
         virtual bool getHasjets() = 0;
         virtual bool getHasair() = 0;
+        bool getSerialReceived();
+        void setSerialReceived(bool txok);
 
     /*internal use*/
     protected:
@@ -63,5 +65,7 @@ class CIO_4W : public CIO
         int32_t _heater2_countdown_ms = 0;
         int32_t _cool_heater_countdown_ms = 0;
         bool _turn_off_pump_flag = false;
+        bool _serialreceived = false;
+        bool _readyToTransmit = false;
 };
 

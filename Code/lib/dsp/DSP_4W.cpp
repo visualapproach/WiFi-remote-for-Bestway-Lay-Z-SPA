@@ -97,7 +97,8 @@ void DSP_4W::updateToggles()
     // dsp_toggles.no_of_heater_elements_on = (_from_DSP_buf[COMMANDINDEX] & getHeatBitmask2()) > 0;
 
     /*This is placed here to send messages at the same rate as the dsp.*/
-    _dsp_serial->write(_to_DSP_buf, PAYLOADSIZE);
+    // _dsp_serial->write(_to_DSP_buf, PAYLOADSIZE);
+    _serialreceived = true;
     return;
 }
 
@@ -119,6 +120,26 @@ void DSP_4W::handleStates()
             _to_DSP_buf[i] = _raw_payload_to_dsp[i];
         }
     }
+    if(_readyToTransmit)
+    {
+        _readyToTransmit = false;
+        _dsp_serial->write(_to_DSP_buf, PAYLOADSIZE);
+    }
+}
+
+/* bwc can tell dsp to send data */
+bool DSP_4W::getSerialReceived()
+{
+    bool result = _serialreceived;
+    _serialreceived = false;
+    return result;
+}
+
+/* bwc is telling us that it's okay by dsp to transmit */
+void DSP_4W::setSerialReceived(bool txok)
+{
+    /* Don't forget to reset after transmitting */
+    _readyToTransmit = txok;
 }
 
 void DSP_4W::generatePayload()
