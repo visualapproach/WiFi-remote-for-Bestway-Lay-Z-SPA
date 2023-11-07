@@ -35,6 +35,8 @@
 #include "DSP_54138.h"
 #include "DSP_54123.h"
 
+#include "FW_VERSION.h"
+
 constexpr int MAXCOMMANDS = 20;
 
 struct command_que_item

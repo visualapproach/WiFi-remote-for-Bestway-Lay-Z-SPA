@@ -225,11 +225,18 @@ void BWC::_log()
     static uint32_t writes = 0;
     static std::vector<uint8_t> prev_fromcio;
     static std::vector<uint8_t> prev_fromdsp;
+    static std::vector<uint8_t> prev_tocio;
+    static std::vector<uint8_t> prev_todsp;
     std::vector<uint8_t> fromcio = cio->getRawPayload();
     std::vector<uint8_t> fromdsp = dsp->getRawPayload();
-    if((fromcio == prev_fromcio) && (fromdsp == prev_fromdsp)) return;
+    std::vector<uint8_t> tocio = cio->_raw_payload_to_cio;
+    std::vector<uint8_t> todsp = dsp->_raw_payload_to_dsp;
+
+    if((fromcio == prev_fromcio) && (fromdsp == prev_fromdsp) && (tocio == prev_tocio) && (todsp == prev_todsp)) return;
     prev_fromcio = fromcio;
     prev_fromdsp = fromdsp;
+    prev_tocio = tocio;
+    prev_todsp = todsp;
     
     File file = LittleFS.open(F("log.txt"), "a");
     if (!file) {
@@ -238,18 +245,31 @@ void BWC::_log()
     }
     if(++writes > 1000) return;
     file.print(_timestamp_secs);
-    file.print(':');
+    file.printf_P(PSTR("SW:%s CIO-ESP:"), FW_VERSION);
     for(unsigned int i = 0; i< fromcio.size(); i++)
     {
-        if(i>0)file.print(",");
+        if(i>0)file.print(',');
         file.print(fromcio[i], HEX);
     }
-    file.print('\t');
+    file.print(F("\t DSP-ESP:"));
     for(unsigned int i = 0; i< fromdsp.size(); i++)
     {
         file.print(",");
         file.print(fromdsp[i], HEX);
     }
+    file.print(F(" ESP-CIO:"));
+    for(unsigned int i = 0; i< tocio.size(); i++)
+    {
+        if(i>0)file.print(',');
+        file.print(tocio[i], HEX);
+    }
+    file.print(F("\t ESP-DSP:"));
+    for(unsigned int i = 0; i< todsp.size(); i++)
+    {
+        file.print(",");
+        file.print(todsp[i], HEX);
+    }
+
     file.print('\n');
     file.close();
 }
@@ -1318,7 +1338,6 @@ void BWC::_restoreStates() {
 
 void BWC::reloadCommandQueue(){
     loadCommandQueue();
-    return;
 }
 
 void BWC::loadCommandQueue(){
@@ -1421,10 +1440,10 @@ void BWC::_saveCommandQueue(){
     #endif
     File file = LittleFS.open(F("cmdq.json"), "w");
     if (!file) {
-        // Serial.println(F("Failed to save cmdq.json"));
+        Serial.println(F("Failed to save cmdq.json"));
         return;
     } else {
-        // Serial.println(F("Wrote cmdq.json"));
+        Serial.println(F("Wrote cmdq.json"));
     }
     /*Do not save instant reboot command. Don't ask me how I know.*/
     if(_command_que.size())

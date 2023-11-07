@@ -22,6 +22,7 @@ class DSP
         sToggles dsp_toggles;
         sStates dsp_states;
         String text = "";
+        std::vector<uint8_t> _raw_payload_to_dsp = {0,0,0,0,0,0,0,0,0,0,0};
         int audiofrequency = 0;
         /*
         Set to zero to disable chosen buttons.
@@ -32,7 +33,6 @@ class DSP
         bool EnabledButtons[11] = {1,1,1,1,1,1,1,1,1,1,1};
 
     protected:
-        std::vector<uint8_t> _raw_payload_to_dsp = {0,0,0,0,0,0,0,0,0,0,0};
         std::vector<uint8_t> _raw_payload_from_dsp = {0,0,0,0,0,0,0,0,0,0,0};
         uint32_t good_packets_count = 0;
 
