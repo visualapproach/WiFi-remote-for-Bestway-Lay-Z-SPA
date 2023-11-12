@@ -124,10 +124,11 @@ void DSP_4W::handleStates()
     {
         _readyToTransmit = false;
         _dsp_serial->write(_to_DSP_buf, PAYLOADSIZE);
+        write_msg_count++;
     }
 }
 
-/* bwc can tell dsp to send data */
+/* bwc can send data to cio */
 bool DSP_4W::getSerialReceived()
 {
     bool result = _serialreceived;
@@ -135,7 +136,7 @@ bool DSP_4W::getSerialReceived()
     return result;
 }
 
-/* bwc is telling us that it's okay by dsp to transmit */
+/* bwc is telling us that it's okay by cio to transmit */
 void DSP_4W::setSerialReceived(bool txok)
 {
     /* Don't forget to reset after transmitting */

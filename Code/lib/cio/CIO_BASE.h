@@ -32,9 +32,10 @@ class CIO
         sStates cio_states;
         sToggles cio_toggles;
         int _button_que_len = 0;  //length of buttonQ
+        uint32_t good_packets_count = 0;
         std::vector<uint8_t> _raw_payload_to_cio = {0,0,0,0,0,0,0,0,0,0,0};
+        int write_msg_count = 0;
     
     protected:
         std::vector<uint8_t> _raw_payload_from_cio = {0,0,0,0,0,0,0,0,0,0,0};
-        uint32_t good_packets_count = 0;
 };

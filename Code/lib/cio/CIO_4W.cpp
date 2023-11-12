@@ -145,6 +145,7 @@ void CIO_4W::handleToggles()
     {
         _readyToTransmit = false;
         _cio_serial->write(_to_CIO_buf, PAYLOADSIZE);
+        write_msg_count++;
     }
 }
 
@@ -219,7 +220,7 @@ void CIO_4W::updateStates()
 }
 
 
-/* bwc can tell dsp to send data */
+/* bwc can send data to dsp */
 bool CIO_4W::getSerialReceived()
 {
     bool result = _serialreceived;

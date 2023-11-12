@@ -178,17 +178,17 @@ void BWC::loop(){
         dsp->text.remove(0,1);
         _scroll = false;
     }
-    cio->updateStates();
-    dsp->dsp_states = cio->cio_states;
+    cio->updateStates();                //checking serial line
+    dsp->dsp_states = cio->cio_states;  //
     
     /*Modify and use dsp->dsp_states here if we want to show text or something*/
     dsp->setRawPayload(cio->getRawPayload());
     dsp->setSerialReceived(cio->getSerialReceived());
     /*Increase screen brightness when pressing buttons*/
     adjust_brightness();
-    dsp->handleStates(); //transmits to dsp if serial received from cio
 
-    dsp->updateToggles();
+    dsp->handleStates();                //transmits to dsp if serial received from cio
+    dsp->updateToggles();               //checking serial line
     cio->cio_toggles = dsp->dsp_toggles;
 
     play_sound();
@@ -205,10 +205,11 @@ void BWC::loop(){
     
     /*following method will change target temp and set _dsp_tgt_used to false if target temp is changed*/
     _handleCommandQ();
+
     /*If new target was not set above, use whatever the cio says*/
     cio->setRawPayload(dsp->getRawPayload());
     cio->setSerialReceived(dsp->getSerialReceived());
-    cio->handleToggles(); //transmits to cio if serial received from dsp
+    cio->handleToggles();               //transmits to cio if serial received from dsp
 
     if(_save_settings_needed) saveSettings();
     if(_save_cmdq_needed) _saveCommandQueue();
@@ -254,7 +255,7 @@ void BWC::_log()
     file.print(F("\t DSP-ESP:"));
     for(unsigned int i = 0; i< fromdsp.size(); i++)
     {
-        file.print(",");
+        if(i>0)file.print(',');
         file.print(fromdsp[i], HEX);
     }
     file.print(F(" ESP-CIO:"));
@@ -266,11 +267,10 @@ void BWC::_log()
     file.print(F("\t ESP-DSP:"));
     for(unsigned int i = 0; i< todsp.size(); i++)
     {
-        file.print(",");
+        if(i>0)file.print(',');
         file.print(todsp[i], HEX);
     }
-
-    file.print('\n');
+    file.printf_P(PSTR("\ncio msg count: %d dsp msg count: %d\n"), cio->good_packets_count, dsp->good_packets_count);
     file.close();
 }
 

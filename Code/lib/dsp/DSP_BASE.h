@@ -24,6 +24,9 @@ class DSP
         String text = "";
         std::vector<uint8_t> _raw_payload_to_dsp = {0,0,0,0,0,0,0,0,0,0,0};
         int audiofrequency = 0;
+        uint32_t good_packets_count = 0;
+        int write_msg_count = 0;
+
         /*
         Set to zero to disable chosen buttons.
         Order: NOBTN,LOCK,TIMER,BUBBLES,UNIT,HEAT,PUMP,DOWN,UP,POWER,HYDROJETS
@@ -34,6 +37,5 @@ class DSP
 
     protected:
         std::vector<uint8_t> _raw_payload_from_dsp = {0,0,0,0,0,0,0,0,0,0,0};
-        uint32_t good_packets_count = 0;
 
 };
