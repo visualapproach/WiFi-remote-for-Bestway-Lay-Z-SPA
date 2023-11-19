@@ -23,8 +23,8 @@ class CIO_4W : public CIO
         bool getHasgod() {return true;}
         virtual bool getHasjets() = 0;
         virtual bool getHasair() = 0;
-        bool getSerialReceived();
-        void setSerialReceived(bool txok);
+        bool getSerialReceived() override;
+        void setSerialReceived(bool txok) override;
 
     /*internal use*/
     protected:

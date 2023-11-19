@@ -120,6 +120,7 @@ void DSP_4W::handleStates()
             _to_DSP_buf[i] = _raw_payload_to_dsp[i];
         }
     }
+
     if(_readyToTransmit)
     {
         _readyToTransmit = false;

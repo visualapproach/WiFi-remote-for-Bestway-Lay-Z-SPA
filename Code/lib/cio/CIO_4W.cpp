@@ -13,7 +13,6 @@ void CIO_4W::setup(int cio_rx, int cio_tx, int dummy)
 
     _cio_serial->begin(9600, SWSERIAL_8N1, cio_tx, cio_rx, false, 63);
     _cio_serial->setTimeout(20);
-
     cio_states.target = 20;
     cio_states.locked = false;
     cio_states.power = true;

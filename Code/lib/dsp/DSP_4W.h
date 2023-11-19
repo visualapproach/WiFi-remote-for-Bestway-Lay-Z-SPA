@@ -17,8 +17,8 @@ class DSP_4W : public DSP
         void updateToggles();
         void handleStates();
         SoftwareSerial *_dsp_serial;
-        bool getSerialReceived();
-        void setSerialReceived(bool txok);
+        bool getSerialReceived() override;
+        void setSerialReceived(bool txok) override;
   
     protected:
         virtual uint8_t getPumpBitmask() = 0;
