@@ -11,6 +11,41 @@ OneWire *oneWire;
 // Pass our oneWire reference to Dallas Temperature sensor 
 DallasTemperature *tempSensors;
 
+WiFiEventHandler gotIpEventHandler, disconnectedEventHandler;
+void cb_gotIP(const WiFiEventStationModeGotIP& event)
+{
+    Serial.print("got IP: ");
+    Serial.println(WiFi.localIP());
+
+    if(webSocket != nullptr)
+    {
+        Serial.println(F("deleting ws"));
+        webSocket->disconnect();
+        webSocket->close();
+        delete webSocket;
+        webSocket = nullptr;
+        Serial.println(F("deleted ws"));
+        Serial.println(F("restarting ws"));
+        startWebSocket();
+    }
+    if(server != nullptr)
+    {
+        Serial.println(F("deleting server"));
+        server->stop();
+        server->close();
+        delete server;
+        server = nullptr;
+        Serial.println(F("deleted server"));
+        Serial.println(F("restarting server"));
+        startHttpServer();
+    }
+}
+
+void cb_disconnected(const WiFiEventStationModeDisconnected& event)
+{
+    Serial.println(F("disconnected"));
+}
+
 void setup()
 {
     
@@ -18,8 +53,13 @@ void setup()
     char stack;
     stack_start = &stack;
 
-    Serial.begin(115200);
+    Serial.begin(76800);
     Serial.println(F("\nStart"));
+
+    /*register wifi events */
+    gotIpEventHandler = WiFi.onStationModeGotIP(cb_gotIP);
+    disconnectedEventHandler = WiFi.onStationModeDisconnected(cb_disconnected);
+
     LittleFS.begin();
     {
         HeapSelectIram ephemeral;
@@ -35,9 +75,6 @@ void setup()
     startComplete.attach(61, []{ if(useMqtt) enableMqtt = true; startComplete.detach(); });
     // update webpage every 2 seconds. (will also be updated on state changes)
     updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
-    // when NTP time is valid we save bootlog.txt and this timer stops
-    // bootlogTimer.attach(5, []{ if(time(nullptr)>57600) {bwc->saveRebootInfo(); bootlogTimer.detach();} });
-    // loadWifi();
     loadWebConfig();
     startWiFi();
     startNTP();
@@ -51,20 +88,21 @@ void setup()
         tempSensors->begin();
     }
     Serial.println(WiFi.localIP().toString());
-    bwc->print("   ");
+    bwc->print("   ");  //No overloaded function exists for the F() macro
     bwc->print(WiFi.localIP().toString());
     bwc->print("   ");
     bwc->print(FW_VERSION);
     Serial.println(F("End of setup()"));
     heap_water_mark = ESP.getFreeHeap();
-    Serial.println(ESP.getFreeHeap()); //26216
+    Serial.println(ESP.getFreeHeap());
 }
 
 void loop()
 {
     uint32_t freeheap = ESP.getFreeHeap();
     if(freeheap < heap_water_mark) heap_water_mark = freeheap;
-    // We need this self-destructing info several times, so save it locally
+
+    // We need this self-destructing info several times, so save it on the stack
     bool newData = bwc->newData();
     // Fiddle with the pump computer
     bwc->loop();
@@ -72,10 +110,9 @@ void loop()
     // run only when a wifi connection is established
     if (WiFi.status() == WL_CONNECTED)
     {
-        // listen for websocket events
-        // webSocket->loop();
         // listen for webserver events
         server->handleClient();
+
         // listen for OTA events
         ArduinoOTA.handle();
 
@@ -105,31 +142,6 @@ void loop()
             sendWSFlag = false;
             sendWS();
         }
-
-        // run once after connection was established
-        if (!wifiConnected)
-        {
-            // Serial.println(F("WiFi > Connected"));
-            // Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
-            // Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
-            startOTA();
-            startHttpServer();
-            startWebSocket();
-        }
-        // reset marker
-        wifiConnected = true;
-    }
-
-    // run only when the wifi connection got lost
-    if (WiFi.status() != WL_CONNECTED)
-    {
-        // run once after connection was lost
-        if (wifiConnected)
-        {
-            // Serial.println(F("WiFi > Lost connection. Trying to reconnect ..."));
-        }
-        // set marker
-        wifiConnected = false;
     }
 
     // run every X seconds
@@ -173,17 +185,18 @@ void loop()
 
 
     //Only do this if locked out! (by pressing POWER - LOCK - TIMER - POWER)
-      if(bwc->getBtnSeqMatch())
-      {
-        
-        resetWiFi();
-        delay(3000);
-        ESP.reset();
-        delay(3000);
-      }
+    if(bwc->getBtnSeqMatch())
+    {
+    
+    resetWiFi();
+    delay(3000);
+    ESP.reset();
+    delay(3000);
+    }
     //handleAUX();
 }
 
+/* Debugging to file, normally not used */
 void write_mem_stats_to_file()
 {
     File file = LittleFS.open(F("memstats.txt"), "a");
@@ -402,16 +415,6 @@ void startWiFi()
         wifi_info.apSsid = WiFi.SSID();
         wifi_info.apPwd = WiFi.psk();
         saveWifi(wifi_info);
-
-        wifiConnected = true;
-
-        // Serial.println(F("WiFi > Connected."));
-        // Serial.println(" SSID: \"" + WiFi.SSID() + "\"");
-        // Serial.println(" IP: \"" + WiFi.localIP().toString() + "\"");
-    }
-    else
-    {
-        // Serial.println(F("WiFi > Connection failed. Retrying in a while ..."));
     }
 }
 
@@ -639,6 +642,7 @@ void startHttpServer()
         server->on(F("/setmqtt/"), handleSetMqtt);
         server->on(F("/dir/"), handleDir);
         server->on(F("/hwtest/"), handleHWtest);
+        server->on(F("/inputs/"), handleInputs);
         server->on(F("/upload.html"), HTTP_POST, [](){
             server->send(200, F("text/plain"), "");
         }, handleFileUpload);
@@ -694,59 +698,175 @@ void handleSetHardware()
     // Serial.println("sethardware done");
 }
 
-void handleHWtest()
+void preparefortest()
 {
-    int errors = 0;
-    bool state = false;
-    String result = "";
+    for(int i = 0; i < 7; i++)
+    {
+        pinMode(bwc->pins[i], INPUT);
+    }
+}
+
+void handleInputs()
+{
+    server->setContentLength(CONTENT_LENGTH_UNKNOWN);
+    server->send(200, F("text/plain"), "");
 
     bwc->stop();
-    delay(1000);
+    preparefortest();
 
+    bool old_pin_state[7] = {0}, new_pin_state[7] = {0};
+    int counter[7] = {0};
+    unsigned long t = millis(); //start timestamp
+
+    while(millis() < t+5000)
+    {
+        for(uint8_t i = 0; i < 7; i++)
+        {
+            new_pin_state[i] = digitalRead(bwc->pins[i]);
+            if(new_pin_state[i] != old_pin_state[i]) counter[i]++;
+            old_pin_state[i] = new_pin_state[i];
+        }
+        yield();
+    }
+
+    /* send statistics to client */
+    char s[128];
+    for(int i = 0; i < 7; i++)
+    {
+        sprintf_P(s, PSTR("Edges received on pin D%d: %d\n"), gpio2dp(bwc->pins[i]), counter[i]);
+        server->sendContent(s);
+    }
+    sprintf_P(s, PSTR("On 6-w pump the highest number is CLK, next is DATA and third is CS. On 4-wires the highest is CIO or DSP TX to ESP."));
+    server->sendContent(s);
+    server->sendContent("");
+    bwc->setup();
+}
+
+void handleHWtest()
+{
+    server->setContentLength(CONTENT_LENGTH_UNKNOWN);
+    server->send(200, F("text/plain"), "");
+
+    int errors = 0;
+    bool state = false;
+    char result[128];
+
+    bwc->stop();
+    preparefortest();
+
+    for(int i = 0; i < 10; i++)
+    {
+        sprintf_P(result, PSTR("\nConnect the cables now!\nStarting test in %d seconds...\n"), 10-i);
+        server->sendContent(result);
+        for(int t = 0; t < 512; t++)
+            server->sendContent(" ");
+        delay(1000);
+    }
+
+    /* First test CIO out/ DSP in ports */
+    sprintf_P(result, PSTR("Start test. Seq begins with HIGH, then alters.\n\n"));
+    server->sendContent(result);
     for(int pin = 0; pin < 3; pin++)
     {
+        sprintf_P(result, PSTR("Sending on D%d, receiving on D%d\n"), gpio2dp(bwc->pins[pin]), gpio2dp(bwc->pins[pin+3]));
+        server->sendContent(result);
         pinMode(bwc->pins[pin], OUTPUT);
         pinMode(bwc->pins[pin+3], INPUT);
-        for(int t = 0; t < 1000; t++)
+        for(int t = 0; t < 100; t++)
         {
-        state = !state;
-        digitalWrite(bwc->pins[pin], state);
-        delayMicroseconds(10);
-        errors += digitalRead(bwc->pins[pin+3]) != state;
+            state = !state;
+            digitalWrite(bwc->pins[pin], state);
+            delayMicroseconds(100);
+            bool error = digitalRead(bwc->pins[pin+3]) != state;
+            errors += error;
+            if(error)
+                if(state)
+                    server->sendContent("1");
+                else
+                    server->sendContent("0");
+            else
+                server->sendContent("-");
         }
-        if(errors > 499)
-        result += F("CIO to DSP pin ") + String(pin+3) + F(" fail!\n");
-        else if(errors == 0)
-        result += F("CIO to DSP pin ") + String(pin+3) + F(" success!\n");
-        else
-        result += F("CIO to DSP pin ") + String(pin+3) + " " + String(errors/500) + F("\% bad\n");
-        errors = 0;
-        delay(0);
-    }
-    result += F("\n");
-    for(int pin = 0; pin < 3; pin++)
-    {
-        pinMode(bwc->pins[pin+3], OUTPUT);
-        pinMode(bwc->pins[pin], INPUT);
-        for(int t = 0; t < 1000; t++)
-        {
-        state = !state;
-        digitalWrite(bwc->pins[pin+3], state);
-        delayMicroseconds(10);
-        errors += digitalRead(bwc->pins[pin]) != state;
-        }
-        if(errors > 499)
-        result += F("DSP to CIO pin ") + String(pin+3) + F(" fail!\n");
-        else if(errors == 0)
-        result += F("DSP to CIO pin ") + String(pin+3) + F(" success!\n");
-        else
-        result += F("DSP to CIO pin ") + String(pin+3) + " " + String(errors/500) + F("\% bad\n");
+        sprintf_P(result, PSTR(" // %d errors out of 100\n"), errors);
+        server->sendContent(result);
         errors = 0;
         delay(0);
     }
 
-    server->send(200, F("text/plain"), result);
-    delay(10000);
+    /* Test the other way around */
+
+    for(int pin = 0; pin < 3; pin++)
+    {
+        sprintf_P(result, PSTR("Sending on D%d, receiving on D%d\n"), gpio2dp(bwc->pins[pin+3]), gpio2dp(bwc->pins[pin]));
+        server->sendContent(result);
+        pinMode(bwc->pins[pin+3], OUTPUT);
+        pinMode(bwc->pins[pin], INPUT);
+        for(int t = 0; t < 100; t++)
+        {
+            state = !state;
+            digitalWrite(bwc->pins[pin+3], state);
+            delayMicroseconds(100);
+            bool error = digitalRead(bwc->pins[pin]) != state;
+            errors += error;
+            if(error)
+                if(state)
+                    server->sendContent("1");
+                else
+                    server->sendContent("0");
+            else
+                server->sendContent("-");
+        }
+        sprintf_P(result, PSTR(" // %d errors out of 100\n"), errors);
+        server->sendContent(result);
+        errors = 0;
+        delay(0);
+    }
+
+    sprintf_P(result, PSTR("End of test!\nErrors indicated by 1 or 0 depending on test state. - is good.\n"));
+    server->sendContent(result);
+    sprintf_P(result, PSTR("Switching cio pins 5s HIGH -> 5s LOW -> input\n"));
+    server->sendContent(result);
+    sprintf_P(result, PSTR("then DSP pins 5s HIGH -> 5s LOW -> input, repeating\n"));
+    server->sendContent(result);
+    sprintf_P(result, PSTR("Disconnect cables then reset chip when done!\n"));
+    server->sendContent(result);
+
+    server->sendContent("");
+    while(true)
+    {
+        /*CIO pins HIGH*/
+        for(int pin = 0; pin < 3; pin++)
+        {
+            pinMode(bwc->pins[pin+3], INPUT);
+            pinMode(bwc->pins[pin+0], OUTPUT);
+            digitalWrite(bwc->pins[pin], HIGH);
+        }
+        delay(5000);
+        /*CIO pins LOW*/
+        for(int pin = 0; pin < 3; pin++)
+        {
+            pinMode(bwc->pins[pin+3], INPUT);
+            pinMode(bwc->pins[pin+0], OUTPUT);
+            digitalWrite(bwc->pins[pin], LOW);
+        }
+        delay(5000);
+        /*DSP pins HIGH*/
+        for(int pin = 0; pin < 3; pin++)
+        {
+            pinMode(bwc->pins[pin+0], INPUT);
+            pinMode(bwc->pins[pin+3], OUTPUT);
+            digitalWrite(bwc->pins[pin+3], HIGH);
+        }
+        delay(5000);
+        /*DSP pins LOW*/
+        for(int pin = 0; pin < 3; pin++)
+        {
+            pinMode(bwc->pins[pin+0], INPUT);
+            pinMode(bwc->pins[pin+3], OUTPUT);
+            digitalWrite(bwc->pins[pin+3], LOW);
+        }
+        delay(5000);
+    }
     bwc->setup();
 }
 
@@ -790,6 +910,7 @@ bool handleFileRead(String path)
         pause_all(false);
         return false;
     }
+
     String contentType = getContentType(path);             // Get the MIME type
     String pathWithGz = path + ".gz";
     if (LittleFS.exists(pathWithGz) || LittleFS.exists(path)) { // If the file exists, either as a compressed archive, or normal

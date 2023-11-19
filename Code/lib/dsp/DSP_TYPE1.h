@@ -55,6 +55,12 @@ class DSP_6_TYPE1 : public DSP_6W
         Buttons getPressedButton() override;
 
     protected:
+        unsigned long _dsp_last_refreshtime = 0;
+        unsigned long _dsp_getbutton_last_time = 0;
+        int _CS_PIN;
+        int _CLK_PIN;
+        int _DATA_PIN;
+        int _AUDIO_PIN;
         const uint8_t DSP_DIM_BASE = 0x80;
         const uint8_t DSP_DIM_ON = 0x8;
         /*Needs to be static to work in switch/case.*/
@@ -98,20 +104,8 @@ class DSP_6_TYPE1 : public DSP_6W
             0x7F, 0x0D, 0xB7, 0x9F, 0xCD, 0xDB, 0xFB, 0x0F, 0xFF, 0xDF, 0x01, 0x81, 0xEF, 0xF9, 0x73, 0xBD, 0xF3, 0xE3, 0xFB,
             0xE9, 0xED, 0x61, 0x1D, 0xE1, 0x71, 0x01, 0xA9, 0xB9, 0xE7, 0xCF, 0xA1, 0xDB, 0xF1, 0x39, 0x7D, 0x01, 0xDD, 0xB7
         };
-        // const uint8_t CHARS[38] = {
-        //     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', '-', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-        //     'h', 'H', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z'
-        // };
-        unsigned long _dsp_last_refreshtime = 0;
-        unsigned long _dsp_getbutton_last_time = 0;
-        //Pins
-        int _CS_PIN;
-        int _CLK_PIN;
-        int _DATA_PIN;
-        int _AUDIO_PIN;
 
     private:
-        uint8_t _payload[11] = {0xC0, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x0};
         Buttons _old_button = NOBTN;
-
+        uint8_t _payload[11] = {0xC0, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x0};
 };

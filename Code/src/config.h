@@ -4,8 +4,8 @@
 #else
 #include <WiFi.h>
 #endif
+#include "FW_VERSION.h"
 #define DEVICE_NAME "layzspa"
-#define FW_VERSION "2023-10-17-2132"
 
 #define HA_PREFIX "homeassistant"
 #define PROM_NAMESPACE "layzspa"

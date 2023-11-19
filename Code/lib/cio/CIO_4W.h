@@ -23,6 +23,8 @@ class CIO_4W : public CIO
         bool getHasgod() {return true;}
         virtual bool getHasjets() = 0;
         virtual bool getHasair() = 0;
+        bool getSerialReceived() override;
+        void setSerialReceived(bool txok) override;
 
     /*internal use*/
     protected:
@@ -41,13 +43,13 @@ class CIO_4W : public CIO
         void generatePayload();
 
     private:
+        uint64_t _prev_ms;
         Power _power = {1900, 40, 800, 2, 400};
-        uint8_t _heat_bitmask = 0;
         SoftwareSerial *_cio_serial;
+        uint8_t _heat_bitmask = 0;
         uint8_t _from_CIO_buf[7] = {};
         uint8_t _to_CIO_buf[7] = {};
         uint8_t _currentStateIndex = 0;
-        uint64_t _prev_ms;
 
         //cio
         const uint8_t TEMPINDEX = 2;
@@ -58,11 +60,12 @@ class CIO_4W : public CIO
         const uint8_t DSP_CHECKSUMINDEX = 5;
         const uint8_t PAYLOADSIZE = 7;
         // sStates cio_states;
-
         const uint32_t _HEATER2_DELAY_MS = 10000;
         const uint32_t _HEATERCOOLING_DELAY_MS = 5000;
         int32_t _heater2_countdown_ms = 0;
         int32_t _cool_heater_countdown_ms = 0;
         bool _turn_off_pump_flag = false;
+        bool _serialreceived = false;
+        bool _readyToTransmit = false;
 };
 

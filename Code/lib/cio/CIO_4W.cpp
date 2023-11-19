@@ -13,7 +13,6 @@ void CIO_4W::setup(int cio_rx, int cio_tx, int dummy)
 
     _cio_serial->begin(9600, SWSERIAL_8N1, cio_tx, cio_rx, false, 63);
     _cio_serial->setTimeout(20);
-
     cio_states.target = 20;
     cio_states.locked = false;
     cio_states.power = true;
@@ -23,6 +22,7 @@ void CIO_4W::setup(int cio_rx, int cio_tx, int dummy)
     cio_states.char3 = ' ';
     
     _currentStateIndex = 0;
+    _cio_serial->write(_to_CIO_buf, PAYLOADSIZE);  //test
 }
 
 void CIO_4W::stop()
@@ -69,6 +69,11 @@ void CIO_4W::handleToggles()
         cio_states.godmode = false;
         _power.HEATERPOWER = ((_to_CIO_buf[COMMANDINDEX] & getHeatBitmask1()) == getHeatBitmask1()) * 950 + 
                              ((_to_CIO_buf[COMMANDINDEX] & getHeatBitmask2()) == getHeatBitmask2()) * 950;
+        if(_readyToTransmit)
+        {
+            _readyToTransmit = false;
+            _cio_serial->write(_to_CIO_buf, PAYLOADSIZE);
+        }
         return;
     } else {
         cio_states.godmode = true;
@@ -135,6 +140,12 @@ void CIO_4W::handleToggles()
     antifreeze();
     antiboil();
     generatePayload();
+    if(_readyToTransmit)
+    {
+        _readyToTransmit = false;
+        _cio_serial->write(_to_CIO_buf, PAYLOADSIZE);
+        write_msg_count++;
+    }
 }
 
 void CIO_4W::generatePayload()
@@ -202,8 +213,25 @@ void CIO_4W::updateStates()
         cio_states.char3 = (char)(48+(_from_CIO_buf[ERRORINDEX]%10));
     }
     /*This is placed here so we send messages at the same rate as the cio.*/
-    _cio_serial->write(_to_CIO_buf, PAYLOADSIZE);
+    // _cio_serial->write(_to_CIO_buf, PAYLOADSIZE);
+    _serialreceived = true;
     return;
+}
+
+
+/* bwc can send data to dsp */
+bool CIO_4W::getSerialReceived()
+{
+    bool result = _serialreceived;
+    _serialreceived = false;
+    return result;
+}
+
+/* bwc is telling us that it's okay by dsp to transmit */
+void CIO_4W::setSerialReceived(bool txok)
+{
+    /* Don't forget to reset after transmitting */
+    _readyToTransmit = txok;
 }
 
 void CIO_4W::togglestates()

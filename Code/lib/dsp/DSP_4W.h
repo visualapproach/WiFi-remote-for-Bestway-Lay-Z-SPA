@@ -16,6 +16,9 @@ class DSP_4W : public DSP
         void pause_all(bool action) override;
         void updateToggles();
         void handleStates();
+        SoftwareSerial *_dsp_serial;
+        bool getSerialReceived() override;
+        void setSerialReceived(bool txok) override;
   
     protected:
         virtual uint8_t getPumpBitmask() = 0;
@@ -31,7 +34,6 @@ class DSP_4W : public DSP
         void generatePayload();
 
     private:
-        SoftwareSerial *_dsp_serial;
         /*ESP to DSP*/
         uint8_t _to_DSP_buf[7] = {};
         /*DSP to ESP. We can ignore this message and send our own when ESP is in charge.*/
@@ -40,4 +42,6 @@ class DSP_4W : public DSP
         const uint8_t DSP_CHECKSUMINDEX = 5;
         const uint8_t PAYLOADSIZE = 7;
         uint8_t _bubbles, _pump, _jets;
+        bool _serialreceived = false;
+        bool _readyToTransmit = false;
 };

@@ -24,15 +24,18 @@ class CIO
         virtual bool getHasgod() = 0;
         virtual bool getHasjets() = 0;
         virtual bool getHasair() = 0;
+        virtual bool getSerialReceived() {return false;} //"overridden" in CIO 4W
+        virtual void setSerialReceived(bool txok) {}     //"overridden" in CIO 4W  
         String debug();
 
     public:
-        int _button_que_len = 0;  //length of buttonQ
         sStates cio_states;
         sToggles cio_toggles;
+        int _button_que_len = 0;  //length of buttonQ
+        uint32_t good_packets_count = 0;
+        std::vector<uint8_t> _raw_payload_to_cio = {0,0,0,0,0,0,0,0,0,0,0};
+        int write_msg_count = 0;
     
     protected:
-        std::vector<uint8_t> _raw_payload_to_cio = {0,0,0,0,0,0,0,0,0,0,0};
         std::vector<uint8_t> _raw_payload_from_cio = {0,0,0,0,0,0,0,0,0,0,0};
-        uint32_t good_packets_count = 0;
 };

@@ -21,8 +21,6 @@ class DSP_54138 : public DSP_4W
 
     private:
         const String _MYMODEL = "NO54138";
-        const bool _HASJETS = true;
-        const bool _HASAIR = true;
         //WARNING: THIS DEVICE HAS DIFFERENT PINOUTS!!! CHECK BEFORE USING
         //Requested by @chunkysteveo
         const uint8_t JUMPTABLE[5][4] = {
@@ -52,4 +50,6 @@ class DSP_54138 : public DSP_4W
         //const uint8_t HEATBITMASK1 =   B00000000;  //00  heater stage 1 = off
         //const uint8_t HEATBITMASK2 =   B00110000;  //48  heater stage 2 = on
         const uint8_t POWERBITMASK =   B10000000;  //128
+        const bool _HASJETS = true;
+        const bool _HASAIR = true;
 };

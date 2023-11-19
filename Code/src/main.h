@@ -1,15 +1,15 @@
 #pragma once
 #include <Arduino.h>
 #include <ArduinoOTA.h>
-#include <DNSServer.h>
+// #include <DNSServer.h>
 
 #ifdef ESP8266
 
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
-#include <ESP8266httpUpdate.h>
-#include <WiFiClientSecure.h>
+// #include <ESP8266HTTPClient.h>
+// #include <ESP8266httpUpdate.h>
+// #include <WiFiClientSecure.h>
 #include <time.h>
 
 #else
@@ -32,8 +32,9 @@
 
 #include "bwc.h"
 #include "config.h"
+#include "util.h"
 
-BWC *bwc;
+BWC *bwc = nullptr;
 
 /**  */
 Ticker bootlogTimer;
@@ -52,7 +53,7 @@ bool wifiConnected = false;
 
 /** a webserver object that listens on port 80 */
 #if defined(ESP8266)
-ESP8266WebServer *server;
+ESP8266WebServer *server = nullptr;
 #elif defined(ESP32)
 WebServer server(80);
 #endif
@@ -60,16 +61,16 @@ WebServer server(80);
 File fsUploadFile;
 
 /** a websocket object that listens on port 81 */
-WebSocketsServer *webSocket;
+WebSocketsServer *webSocket = nullptr;
 /**  */
 Ticker updateWSTimer;
 /**  */
 bool sendWSFlag = false;
 
 /** a WiFi client beeing used by the MQTT client */
-WiFiClient *aWifiClient;
+WiFiClient *aWifiClient = nullptr;
 /** a MQTT client */
-PubSubClient *mqttClient;
+PubSubClient *mqttClient = nullptr;
 /**  */
 bool checkMqttConnection = false;
 /** Count of how may times we've connected to the MQTT server since booting (should always be 1 or more) */
@@ -149,3 +150,5 @@ void handlePrometheusMetrics();
 
 /* Debug */
 void write_mem_stats_to_file();
+void preparefortest();
+void handleInputs();

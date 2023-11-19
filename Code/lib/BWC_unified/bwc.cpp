@@ -53,6 +53,8 @@ void BWC::on_scroll_text()
 }
 
 void BWC::setup(void){
+    if(cio != nullptr) delete cio;
+    if(dsp != nullptr) delete dsp;
     Models ciomodel;
     Models dspmodel;
     
@@ -176,16 +178,17 @@ void BWC::loop(){
         dsp->text.remove(0,1);
         _scroll = false;
     }
-    cio->updateStates();
-    dsp->dsp_states = cio->cio_states;
+    cio->updateStates();                //checking serial line
+    dsp->dsp_states = cio->cio_states;  //
     
     /*Modify and use dsp->dsp_states here if we want to show text or something*/
     dsp->setRawPayload(cio->getRawPayload());
+    dsp->setSerialReceived(cio->getSerialReceived());
     /*Increase screen brightness when pressing buttons*/
     adjust_brightness();
-    dsp->handleStates();
 
-    dsp->updateToggles();
+    dsp->handleStates();                //transmits to dsp if serial received from cio
+    dsp->updateToggles();               //checking serial line
     cio->cio_toggles = dsp->dsp_toggles;
 
     play_sound();
@@ -202,9 +205,11 @@ void BWC::loop(){
     
     /*following method will change target temp and set _dsp_tgt_used to false if target temp is changed*/
     _handleCommandQ();
+
     /*If new target was not set above, use whatever the cio says*/
     cio->setRawPayload(dsp->getRawPayload());
-    cio->handleToggles();
+    cio->setSerialReceived(dsp->getSerialReceived());
+    cio->handleToggles();               //transmits to cio if serial received from dsp
 
     if(_save_settings_needed) saveSettings();
     if(_save_cmdq_needed) _saveCommandQueue();
@@ -221,11 +226,18 @@ void BWC::_log()
     static uint32_t writes = 0;
     static std::vector<uint8_t> prev_fromcio;
     static std::vector<uint8_t> prev_fromdsp;
+    static std::vector<uint8_t> prev_tocio;
+    static std::vector<uint8_t> prev_todsp;
     std::vector<uint8_t> fromcio = cio->getRawPayload();
     std::vector<uint8_t> fromdsp = dsp->getRawPayload();
-    if((fromcio == prev_fromcio) && (fromdsp == prev_fromdsp)) return;
+    std::vector<uint8_t> tocio = cio->_raw_payload_to_cio;
+    std::vector<uint8_t> todsp = dsp->_raw_payload_to_dsp;
+
+    if((fromcio == prev_fromcio) && (fromdsp == prev_fromdsp) && (tocio == prev_tocio) && (todsp == prev_todsp)) return;
     prev_fromcio = fromcio;
     prev_fromdsp = fromdsp;
+    prev_tocio = tocio;
+    prev_todsp = todsp;
     
     File file = LittleFS.open(F("log.txt"), "a");
     if (!file) {
@@ -234,19 +246,31 @@ void BWC::_log()
     }
     if(++writes > 1000) return;
     file.print(_timestamp_secs);
-    file.print(':');
+    file.printf_P(PSTR("SW:%s CIO-ESP:"), FW_VERSION);
     for(unsigned int i = 0; i< fromcio.size(); i++)
     {
-        if(i>0)file.print(",");
+        if(i>0)file.print(',');
         file.print(fromcio[i], HEX);
     }
-    file.print('\t');
+    file.print(F("\t DSP-ESP:"));
     for(unsigned int i = 0; i< fromdsp.size(); i++)
     {
-        file.print(",");
+        if(i>0)file.print(',');
         file.print(fromdsp[i], HEX);
     }
-    file.print('\n');
+    file.print(F(" ESP-CIO:"));
+    for(unsigned int i = 0; i< tocio.size(); i++)
+    {
+        if(i>0)file.print(',');
+        file.print(tocio[i], HEX);
+    }
+    file.print(F("\t ESP-DSP:"));
+    for(unsigned int i = 0; i< todsp.size(); i++)
+    {
+        if(i>0)file.print(',');
+        file.print(todsp[i], HEX);
+    }
+    file.printf_P(PSTR("\ncio msg count: %d dsp msg count: %d\n"), cio->good_packets_count, dsp->good_packets_count);
     file.close();
 }
 
@@ -301,19 +325,19 @@ void BWC::stop(){
     _save_settings_ticker.detach();
     _scroll_text_ticker.detach();
     if(cio != nullptr){
-Serial.println(F("stopping cio"));
-    cio->stop();
-Serial.println(F("del cio"));
-    delete cio;
-    cio = nullptr;
+        Serial.println(F("stopping cio"));
+        cio->stop();
+        Serial.println(F("del cio"));
+        delete cio;
+        cio = nullptr;
     }
     if(dsp != nullptr)
     {
-Serial.println(F("stopping dsp"));
-    dsp->stop();
-Serial.println(F("del dsp"));
-    delete dsp;
-    dsp = nullptr;
+        Serial.println(F("stopping dsp"));
+        dsp->stop();
+        Serial.println(F("del dsp"));
+        delete dsp;
+        dsp = nullptr;
     }
 }
 
@@ -328,8 +352,10 @@ void BWC::pause_all(bool action)
         _save_settings_ticker.attach(3600.0f, save_settings_cb, this);
         _scroll_text_ticker.attach(0.25f, scroll_text_cb, this);
     }
-    cio->pause_all(action);
-    dsp->pause_all(action);
+    if(cio != nullptr)
+        cio->pause_all(action);
+    if(dsp != nullptr)
+        dsp->pause_all(action);
 }
 
 /*Sort by xtime, ascending*/
@@ -1312,7 +1338,6 @@ void BWC::_restoreStates() {
 
 void BWC::reloadCommandQueue(){
     loadCommandQueue();
-    return;
 }
 
 void BWC::loadCommandQueue(){
@@ -1415,10 +1440,10 @@ void BWC::_saveCommandQueue(){
     #endif
     File file = LittleFS.open(F("cmdq.json"), "w");
     if (!file) {
-        // Serial.println(F("Failed to save cmdq.json"));
+        Serial.println(F("Failed to save cmdq.json"));
         return;
     } else {
-        // Serial.println(F("Wrote cmdq.json"));
+        Serial.println(F("Wrote cmdq.json"));
     }
     /*Do not save instant reboot command. Don't ask me how I know.*/
     if(_command_que.size())

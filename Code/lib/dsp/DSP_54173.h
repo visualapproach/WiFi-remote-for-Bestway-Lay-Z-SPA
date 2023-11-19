@@ -21,8 +21,6 @@ class DSP_54173 : public DSP_4W
 
     private:
         const String _MYMODEL = "NO54173";
-        const bool _HASJETS = true;
-        const bool _HASAIR = true;
         //what row in allowedstates to go to when pressing Bubbles, Jets, Pump, Heat (columns in that order)
         //Example: We are in state zero (first row). If we press Bubbles (first column) then there is a 6
         //meaning current state (row) is now 6. According to ALLOWEDSTATES table, we turn on Bubbles and keep
@@ -55,4 +53,6 @@ class DSP_54173 : public DSP_4W
         const uint8_t HEATBITMASK1 =   B00110000;  //48  heater stage 1 = 50%
         const uint8_t HEATBITMASK2 =   B01000000;  //64  heater stage 2 = 100%
         const uint8_t POWERBITMASK =   B10000000;  //128
+        const bool _HASJETS = true;
+        const bool _HASAIR = true;
 };

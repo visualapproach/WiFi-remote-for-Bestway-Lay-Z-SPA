@@ -6,6 +6,7 @@
 class CIO_54144: public CIO_4W
 {
     public:
+        String getModel(){return _MYMODEL;};
         uint8_t getPumpBitmask() override {return PUMPBITMASK;} ;
         uint8_t getBubblesBitmask() override {return BUBBLESBITMASK;} ;
         uint8_t getJetsBitmask() override {return JETSBITMASK;} ;
@@ -14,14 +15,11 @@ class CIO_54144: public CIO_4W
         uint8_t getPowerBitmask() override {return POWERBITMASK;} ;
         uint8_t getJumptable(int row, int col) override {return JUMPTABLE[row][col];};
         uint8_t getAllowedstates(int row, int col) override {return ALLOWEDSTATES[row][col];};
-        String getModel(){return _MYMODEL;};
         bool getHasjets() override {return _HASJETS;};
         bool getHasair() override {return _HASAIR;};
 
     private:
         const String _MYMODEL = "NO54144";
-        const bool _HASJETS = true;
-        const bool _HASAIR = false;
         //what row in allowedstates to go to when pressing Bubbles, Jets, Pump, Heat (columns in that order)
         //Example: We are in state zero (first row). If we press Bubbles (first column) then there is a 6
         //meaning current state (row) is now 6. According to ALLOWEDSTATES table, we turn on Bubbles and keep
@@ -53,4 +51,6 @@ class CIO_54144: public CIO_4W
         const uint8_t HEATBITMASK1 =   B00110000;  //48  heater stage 1 = 50%
         const uint8_t HEATBITMASK2 =   B01000000;  //64  heater stage 2 = 100%
         const uint8_t POWERBITMASK =   B10000000;  //128
+        const bool _HASJETS = true;
+        const bool _HASAIR = false;
 };

@@ -11,8 +11,8 @@ class CIO_6_TYPE2: public CIO_6W
         void setup(int cio_data_pin, int cio_clk_pin, int cio_cs_pin) override;
         void stop() override;
         void pause_all(bool action) override;
-        void LED_Handler();
-        void clkHandler();
+        void IRAM_ATTR LED_Handler();
+        void IRAM_ATTR clkHandler();
         void updateStates();
 
     protected:
@@ -25,11 +25,17 @@ class CIO_6_TYPE2: public CIO_6W
         char _getChar(uint8_t value);
 
     private:
+        volatile int _byte_count = 0;
+        volatile int _bit_count = 0;
+        volatile int _send_bit = 8;
+        int _CIO_TD_PIN;
+        int _CIO_CLK_PIN;
+        int _CIO_LD_PIN;
         //LSB
+        const uint16_t CLKPW = 50; //clock pulse period in us. clockfreq = 1/2*CLKPW
         const uint8_t CMD1 = B01000000;  //normal mode, auto+1 address
         const uint8_t CMD2 = B11000000; //start address 00H
         const uint8_t CMD3 = DSP_DIM_BASE | DSP_DIM_ON | 7;  //full brightness
-        const uint16_t CLKPW = 50; //clock pulse period in us. clockfreq = 1/2*CLKPW
 
 
         //Payload byte index and bit numbers  (see documentation in excel file on github)
@@ -68,17 +74,11 @@ class CIO_6_TYPE2: public CIO_6W
         0x74, 0x76, 0x30, 0x0E, 0x70, 0x38, 0x00, 0x54, 0x5C, 0x73, 0x67, 0x50, 0x6D, 0x78, 0x1C, 0x3E, 0x00, 0x6E, 0x5B
         };
 
-        volatile int _byte_count = 0;
-        volatile int _bit_count = 0;
         volatile byte _received_byte;
-        volatile bool _packet = false;
-        volatile int _send_bit = 8;
         volatile uint8_t _brightness;
         volatile uint8_t _payload[5];
-
         uint8_t _prev_payload[5];
-        int _CIO_TD_PIN;
-        int _CIO_CLK_PIN;
-        int _CIO_LD_PIN;
         uint8_t _received_cmd;  //temporary storage of command message
+        volatile bool _packet = false;
+
 };
