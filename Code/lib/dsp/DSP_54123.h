@@ -38,12 +38,12 @@ class DSP_54123 : public DSP_4W
         {0,0,1,2}  //the "2" means both heater elements
         };
 
-        const uint8_t PUMPBITMASK =    B00010000;  //1 << 4;
+        const uint8_t PUMPBITMASK =     B00010000;  //1 << 4;
         const uint8_t BUBBLESBITMASK =  B00100000;  //1 << 5;
-        const uint8_t JETSBITMASK =   B00000000;  //0;  //no jets on this machine.
-        const uint8_t HEATBITMASK1 =   B00000010;  //(1 << 1) "stage 1"
-        const uint8_t HEATBITMASK2 =   B00001000;  //(1 << 3) "stage 2" (thanks @dietmar-1 for testing and reporting this)
-        const uint8_t POWERBITMASK =   B00000001;  //1;
+        const uint8_t JETSBITMASK =     B00000000;  //0;  //no jets on this machine.
+        const uint8_t HEATBITMASK1 =    B00000010;  //(1 << 1) "stage 1"
+        const uint8_t HEATBITMASK2 =    B00001000;  //(1 << 3) "stage 2" (thanks @dietmar-1 for testing and reporting this)
+        const uint8_t POWERBITMASK =    B00000001;  //1;
         const bool _HASJETS = false;
         const bool _HASAIR = true;
 };
