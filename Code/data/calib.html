@@ -14,7 +14,13 @@
 <body>
 	<div id="site">
 		<header>
-			<span>SPA Manual calibration</span>
+			<form id="darkModeForm">
+                <label class="switch">
+                    <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                    <span class="slider round"></span>
+                </label>
+            </form>
+			<a href="./"><div id="header"><span>SPA Manual calibration</span><span>Lay-Z-Spa Module</span></div></a>
 			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
 		</header>
 
@@ -81,5 +87,7 @@ function saveConfig()
 }
 
 </script>
+<script src="darkmode.js" type="text/javascript"></script>
+
 </body>
 </html>
