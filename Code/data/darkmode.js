@@ -12,13 +12,29 @@ if (localStorage.getItem("darkModeStatus")) {
 }
 
 function toggleDarkMode() {
+  var sliderElement = darkModeForm.querySelector(".slider");
   if (darkModeToggle.checked) {
     // Dark Mode is On
     document.documentElement.classList.add("darkmode");
     localStorage.setItem("darkModeStatus", "On");
+    sliderElement.classList.remove("moon");
+    sliderElement.classList.add("sun");
   } else {
     // Dark Mode is Off
     document.documentElement.classList.remove("darkmode");
     localStorage.setItem("darkModeStatus", "Off");
+    sliderElement.classList.remove("sun");
+    sliderElement.classList.add("moon");
   }
 }
+
+// move to admin or elsewhere afterward
+document.addEventListener("DOMContentLoaded", function () {
+  const topNavIcon = document.querySelector(".topnavicon");
+
+  topNavIcon.addEventListener("click", function () {
+    topNavIcon.classList.toggle("show-before");
+    const afterIcon = topNavIcon.nextElementSibling;
+    afterIcon.style.display = afterIcon.style.display === "none" ? "inline" : "none";
+  });
+});

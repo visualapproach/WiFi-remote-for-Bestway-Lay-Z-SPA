@@ -149,7 +149,6 @@ table.fixed {
 .larger {
   font-size: larger;
 }
-
 .button,
 .button_red {
   text-decoration: none;
@@ -329,18 +328,60 @@ input:focus + .slider {
 }
 
 input:checked + .slider:before {
-  -webkit-transform: translateX(26px);
-  -ms-transform: translateX(26px);
-  transform: translateX(26px);
+  -webkit-transform: translateX(16px);
+  -ms-transform: translateX(16px);
+  transform: translateX(16px);
   background-color: #ccc;
 }
-
-input:checked + .heateron:before {
-  background-color: red;
+.sun::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border: solid 1px #797b40;
+  border-radius: 50%;
+  box-shadow: 8px 0 0 -4px #797b40, -8px 0 0 -4px #797b40, 0 8px 0 -4px #797b40, 0 -8px 0 -4px #797b40, 6px -6px 0 -4px #797b40, -6px -6px 0 -4px #797b40, -6px 6px 0 -4px #797b40,
+    6px 6px 0 -4px #797b40;
+  position: absolute;
+  left: 28px;
+  top: 11px;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+.moon::after {
+  content: "";
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  box-shadow: 0.3rem 0.2rem 0 0 #909090;
+  position: absolute;
+  left: 2px;
+  top: 4px;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+input:checked + .slider.moon::after {
+  -webkit-transform: translateX(16px);
+  -ms-transform: translateX(16px);
+  transform: translateX(16px);
+}
+input:checked + .heateron::before {
+  border: 3px solid #bc3434;
+  box-sizing: border-box;
+  content: "On";
+  font-size: 0.6em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 input:checked + .heateroff:before {
-  background-color: green;
+  border: 3px solid green;
+  box-sizing: border-box;
+  content: "Off";
+  font-size: 0.6em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Rounded sliders */
@@ -367,10 +408,29 @@ a.topnavicon {
   color: #b9b9b9;
 }
 .topnavicon::before {
+  content: "\00D7";
+  line-height: 0.8;
+  top: 13px;
+  position: absolute;
+  opacity: 0;
+  -webkit-transition: 0.2s;
+  transition: 0.2s;
+}
+.show-before.topnavicon::before {
+  opacity: 1;
+}
+.topnavicon::after {
   content: "\2630";
   line-height: 0.8;
-  top: -4px;
-  position: relative;
+  top: 13px;
+  position: absolute;
+  -webkit-transition: 0.2s;
+  transition: 0.2s;
+  opacity: 1;
+  display: inline-block;
+}
+.show-before.topnavicon::after {
+  opacity: 0;
 }
 .topnav {
   overflow: hidden;
@@ -385,18 +445,27 @@ a.topnavicon {
   flex-direction: column;
   justify-content: flex-start;
   transition: 0.3s all;
+  gap: 0.7em;
+  padding-top: 1em;
 }
-
+.darkmode .topnav {
+  background: linear-gradient(180deg, rgb(65, 65, 65) 0%, rgb(44, 44, 44) 100%);
+}
 .topnav a {
   float: left;
   display: none;
-  color: #444;
+  color: inherit;
   text-align: center;
-  padding: 6px 16px;
+  padding: 12px 16px;
   text-decoration: none;
-  font-size: 1.1em;
+  font-size: 1em;
+  font-weight: 300;
+  letter-spacing: 0.04em;
 }
-
+.darkmode .topnav a {
+  background: #454545;
+  box-shadow: 0px 1px 2px #0000004d;
+}
 .topnav a.bgred {
   color: white;
   background-color: #bf0000;
@@ -408,7 +477,7 @@ a.topnavicon {
 }
 
 .topnav a.active {
-  background-color: #04aa6d;
+  background-color: #2a5e8b99;
   color: white;
 }
 
@@ -534,7 +603,36 @@ table#tableSelector {
 .selector .selectorbutton.selectorbottom {
   border-radius: 0 0 10px 10px;
 }
-
+.selector .wrapper {
+  background: #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.selector .numDisplay {
+  width: fit-content;
+  height: 50px;
+  border: none;
+  color: var(--accent-color);
+  font-size: 34px;
+  text-align: center;
+  padding: 0;
+  border-radius: 0;
+  appearance: textfield;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  left: -2px;
+}
+.selector .numDisplay::after {
+  content: "\00B0";
+  position: absolute;
+  right: -14px;
+  top: 0;
+  font-weight: 200;
+}
 .selector .selectorvalue {
   width: 100%;
   height: 50px;
@@ -544,6 +642,9 @@ table#tableSelector {
   text-align: center;
   background-color: #ccc;
   padding: 0;
+  border-radius: 0;
+  appearance: textfield;
+  pointer-events: none;
 }
 
 .selector .degree {
@@ -610,7 +711,7 @@ input:focus + .slider {
 }
 
 input:checked + .slider:before {
-  -webkit-transform: translateX(26px);
+  -webkit-transform: translateX(16px);
   -ms-transform: translateX(26px);
   transform: translateX(16px);
   background-color: #3c3c3c;
