@@ -200,8 +200,14 @@ function handlemsg(e) {
 
     // change values only if element is not active (selected for input)
     // also change only if an update is not in progress
-    if (document.activeElement !== elemSelectorTemp && !updateTempState) elemSelectorTemp.value = msgobj.TGT;
-    if (document.activeElement !== elemSelectorAmb && !updateAmbState) elemSelectorAmb.value = msgobj.AMB;
+    if (document.activeElement !== elemSelectorTemp && !updateTempState) {
+      elemSelectorTemp.value = msgobj.TGT;
+      elemSelectorTemp.parentElement.querySelector(".numDisplay").textContent = msgobj.TGT;
+    }
+    if (document.activeElement !== elemSelectorAmb && !updateAmbState) {
+      elemSelectorAmb.value = msgobj.AMB;
+      elemSelectorAmb.parentElement.querySelector(".numDisplay").textContent = msgobj.AMB;
+    }
     if (document.activeElement !== elemSelectorBrt && !updateBrtState) elemSelectorBrt.value = msgobj.BRT;
 
     // reset update states when the set target matches the input
@@ -271,6 +277,7 @@ function sendCommand(cmd) {
     value = getProperValue(value, unit ? 20 : 68, unit ? 40 : 104);
     document.getElementById("sliderTempVal").innerHTML = value.toString();
     document.getElementById("selectorTemp").value = value.toString();
+    document.getElementById("selectorTemp").setAttribute("value", value.toString());
     updateTempState = true;
   } else if (cmd == "setAmbient" || cmd == "setAmbientSelector") {
     value = parseInt(document.getElementById(cmd == "setAmbient" ? "amb" : "selectorAmb").value);
