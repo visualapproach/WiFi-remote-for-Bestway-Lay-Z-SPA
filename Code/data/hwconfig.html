@@ -3,18 +3,26 @@
 <head>
 	<title>Lay-Z-Spa Module | Hardware Config</title>
 	<meta charset="utf-8">
-	<link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
+	<link rel="icon" type="image/png" sizes="180x180" href="favicon.png">
+	<meta name="theme-color" content="#0f4677">
 	<link rel="manifest" href="manifest.json">
 	<link rel="stylesheet" href="main.css">
-	<meta name="theme-color" content="#0066BF">
-	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+	<meta  name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1">
 	<script src="function.js" type="text/javascript"></script>
+	<script src="index.js" type="text/javascript"></script>
 </head>
 
 <body>
 	<div id="site">
 		<header>
-			<span>Hardware Config</span>
+			
+			<form id="darkModeForm">
+                <label class="switch">
+                    <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                    <span class="slider round"></span>
+                </label>
+            </form>
+			<a href="./"><div id="header"><span>Hardware Config</span><span>Lay-Z-Spa Module</span></div></a>
 			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
 		</header>
 
@@ -68,7 +76,7 @@
 
 		<section onclick="setPins()">
 			<p>Select your DSP (display) model:
-			<span data-text="In theory we should be able to combine any CIO with any DSP. Not tested but really cool if it actually works :-)" class="tooltip">?</span></p>
+			<span data-text="In theory we should be able to combine any CIO with any DSP. Not tested but really cool if it actually works :-)" class="tooltip left">?</span></p>
 			<input type="radio" id="dsp_0" name="dsp_model" value="0" checked="checked">
 			<label for="dsp_pre2021">6 wire, pre 2021 (air)</label><br>
 			<input type="radio" id="dsp_1" name="dsp_model" value="1">
@@ -349,5 +357,8 @@ function saveHardwareConfig()
 }
 
 </script>	
+
+<script src="darkmode.js" type="text/javascript"></script>
+
 </body>
 </html>

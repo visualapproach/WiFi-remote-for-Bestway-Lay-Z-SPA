@@ -3,19 +3,27 @@
 <head>
 	<title>Lay-Z-Spa Module</title>
 	<meta charset="utf-8">
-	<link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
+	<link rel="icon" type="image/png" sizes="180x180" href="favicon.png">
+	<meta name="theme-color" content="#0f4677">
 	<link rel="manifest" href="manifest.json">
 	<link rel="stylesheet" href="main.css">
-	<meta name="theme-color" content="#0066BF">
-	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+	<meta  name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1">
 	<script src="function.js" type="text/javascript"></script>
 	<script src="index.js" type="text/javascript"></script>
 </head>
 
+
 <body>
 	<div id="site">
 		<header>
-			<span id="header">Lay-Z-Spa Module</span>
+
+			<form id="darkModeForm">
+                <label class="switch">
+                    <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                    <span class="slider round moon"></span>
+                </label>
+            </form>
+			<a href="./"><div id="header"><span>Lay-Z-Spa Module</span><span>by visualapproach</span></div></a>
 			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
 		</header>
 
@@ -34,9 +42,17 @@
 			<a href="javascript:void(0);" class="bgred" onclick="sendCommand('restartEsp')">Restart ESP</a>
 		</div>
 
+		<section id="sectionDisplay">
+			<table>
+				<tr>
+					<td class="center"><div id="display">[DSP]</div></td>
+				</tr>
+			</table>
+		</section>
+
 		<section id="sectionTemperature">
 			<div class="visualapproach"></div>
-			<h2>Temperature:</h2>
+			<h2>Temperature</h2>
 			<table class="fixed">
 				<tr>
 					<td>Actual:</td>
@@ -53,16 +69,8 @@
 			</table>
 		</section>
 
-		<section id="sectionDisplay">
-			<table>
-				<tr>
-					<td class="center"><div id="display">[DSP]</div></td>
-				</tr>
-			</table>
-		</section>
-
 		<section id="sectionControl">
-			<h2>Control:</h2>
+			<h2>Control</h2>
 			<table id="tableSlider">
 				<tr>
 					<td style="width:40%;">Temperature</td>
@@ -91,21 +99,27 @@
 					<td class="center">
 						<div class="selector">
 							<button onclick="increaseNumber('selectorTemp');sendCommand('setTargetSelector')" class="selectorbutton selectortop">ᐱ</button>
-							<input id="selectorTemp" min="20" max="40" step="1" value="20" type="text" class="selectorvalue" onchange="sendCommand('setTargetSelector')"><span class="degree">°</span>
+							<input style="display:none" type="number" id="selectorTemp" min="20" max="40" step="1" value="20" type="text" class="selectorvalue" onchange="sendCommand('setTargetSelector')">
+							<div class="wrapper">
+								<span class="numDisplay"></span>
+							</div>
 							<button onclick="decreaseNumber('selectorTemp');sendCommand('setTargetSelector')" class="selectorbutton selectorbottom">ᐯ</button>
 						</div>
 					</td>
 					<td class="center">
 						<div class="selector">
 							<button onclick="increaseNumber('selectorAmb');sendCommand('setAmbientSelector')" class="selectorbutton selectortop">ᐱ</button>
-							<input id="selectorAmb" min="-40" max="60" step="1" value="20" type="text" class="selectorvalue" onchange="sendCommand('setAmbientSelector')"><span class="degree">°</span>
+							<input style="display:none" type="number" id="selectorAmb" min="-40" max="60" step="1" value="20" type="text" class="selectorvalue" onchange="sendCommand('setAmbientSelector')">
+							<div class="wrapper">
+								<span class="numDisplay"></span>
+							</div>
 							<button onclick="decreaseNumber('selectorAmb');sendCommand('setAmbientSelector')" class="selectorbutton selectorbottom">ᐯ</button>
 						</div>
 					</td>
 					<td class="center">
 						<div class="selector">
 							<button onclick="increaseNumber('selectorBrt');sendCommand('setBrightnessSelector')" class="selectorbutton selectortop">ᐱ</button>
-							<input id="selectorBrt" min="0" max="8" step="1" value="7" type="text" class="selectorvalue" onchange="sendCommand('setBrightnessSelector')">
+							<input type="number" id="selectorBrt" min="0" max="8" step="1" value="7" type="text" class="selectorvalue" onchange="sendCommand('setBrightnessSelector')">
 							<button onclick="decreaseNumber('selectorBrt');sendCommand('setBrightnessSelector')" class="selectorbutton selectorbottom">ᐯ</button>
 						</div>
 					</td>
@@ -114,7 +128,7 @@
 		</section>
 
 		<section id="sectionButtons">
-			<h2>Buttons:</h2>
+			<h2>Buttons</h2>
 			<table class="fixed">
 				<tr>
 					<td class="right">Bubbles</td>
@@ -168,7 +182,7 @@
 		</section>
 
 		<section id="sectionTimer">
-			<h2>Timer:</h2>
+			<h2>Timer</h2>
 			<table>
 				<tr>
 					<td>Last chlorine add was <span id="cltimer">n/a</span> ago.</td>
@@ -182,7 +196,7 @@
 		</section>
 
 		<section id="sectionTotals">
-			<h2>Totals:</h2>
+			<h2>Totals</h2>
 			<table class="fixed">
 				<tr>
 					<td>Time: <span data-text="ESP sends UTC. Browser converts to Local." class="tooltip">?</span></td>
@@ -256,8 +270,8 @@ function initApplication()
 
 function setWebConfig()
 {
-	document.getElementById('sectionTemperature').style.display = (localStorage.getItem('showSectionTemperature') !== 'false' ? 'block' : 'none');
 	document.getElementById('sectionDisplay').style.display = (localStorage.getItem('showSectionDisplay') !== 'false' ? 'block' : 'none');
+	document.getElementById('sectionTemperature').style.display = (localStorage.getItem('showSectionTemperature') !== 'false' ? 'block' : 'none');
 	document.getElementById('sectionControl').style.display = (localStorage.getItem('showSectionControl') !== 'false' ? 'block' : 'none');
 	document.getElementById('sectionButtons').style.display = (localStorage.getItem('showSectionButtons') !== 'false' ? 'block' : 'none');
 	document.getElementById('sectionTimer').style.display = (localStorage.getItem('showSectionTimer') !== 'false' ? 'block' : 'none');
@@ -297,6 +311,12 @@ function resetTotals()
 		sendCommand('resetTotals');
 	}
 }
+
+
+
 </script>
+
+<script src="darkmode.js" type="text/javascript"></script>
+
 </body>
 </html>
