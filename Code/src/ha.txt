@@ -32,6 +32,10 @@ void setupHA()
     PGM_P fs_sw_v = PSTR("sw_version");
     PGM_P fs_alive = PSTR("Alive");
     PGM_P fs_dead = PSTR("Dead");
+    PGM_P fs_min = PSTR("min");
+    PGM_P fs_max = PSTR("max");
+    PGM_P fs_icon = PSTR("icon");
+    
 
     PGM_P fs_max_temp = PSTR("max_temp");
     PGM_P fs_min_temp = PSTR("min_temp");
@@ -59,46 +63,49 @@ void setupHA()
     /* ArduinoJson crashes when using flash strings on both sides
         so here we pull them back to a String in RAM temporarily. */
 
-    char _dev[32];
-    char _name[32];
-    char _uniq_id[32];
-    char _stat_t[32]; 
-    char _avty_t[32];
-    char _pl_avail[32]; 
-    char _pl_not_avail[32];
-    char _val_tpl[32]; 
-    char _cmd_t[32];
-    char _cmd_tpl[32]; 
-    char _conf_url[32];
-    char _connections[32];
-    char _identifiers[32];
-    char _manufacturer[32];
-    char _model[32];
-    char _sw_v[32];
-    char _alive[32];
-    char _dead[32]; 
+    char _dev[4];
+    char _name[5];
+    char _uniq_id[8];
+    char _stat_t[7]; 
+    char _avty_t[7];
+    char _pl_avail[9]; 
+    char _pl_not_avail[13];
+    char _val_tpl[8]; 
+    char _cmd_t[6];
+    char _cmd_tpl[8]; 
+    char _conf_url[18];
+    char _connections[12];
+    char _identifiers[12];
+    char _manufacturer[13];
+    char _model[6];
+    char _sw_v[11];
+    char _alive[6];
+    char _dead[5]; 
+    char _mymin[4]; 
+    char _mymax[4]; 
+    char _icon[5]; 
 
-    char _max_temp[32];
-    char _min_temp[32];
-    char _precision[32];
-    char _temp_unit[32];
-    char _modes[32];
-    char _mode_cmd_t[32];
-    char _mode_cmd_tpl[32];
-    char _mode_stat_t[32];
-    char _mode_stat_tpl[32];
-    char _act_t[32];
-    char _act_tpl[32];
-    char _temp_stat_t[32];
-    char _temp_stat_tpl[32];
-    char _curr_temp_t[32];
-    char _curr_temp_tpl[32];
-    char _temp_cmd_t[32];
-    char _temp_cmd_tpl[32];
+    char _max_temp[9];
+    char _min_temp[9];
+    char _precision[10];
+    char _temp_unit[10];
+    char _modes[6];
+    char _mode_cmd_t[11];
+    char _mode_cmd_tpl[13];
+    char _mode_stat_t[12];
+    char _mode_stat_tpl[14];
+    char _act_t[6];
+    char _act_tpl[8];
+    char _temp_stat_t[12];
+    char _temp_stat_tpl[14];
+    char _curr_temp_t[12];
+    char _curr_temp_tpl[14];
+    char _temp_cmd_t[11];
+    char _temp_cmd_tpl[13];
 
-    char _expire_after[32];
-    char _unit_of_meas[32];
-    char _dev_cla[32];
+    char _expire_after[13];
+    char _unit_of_meas[13];
+    char _dev_cla[8];
 
 
     strcpy_P(_dev, fs_dev);
@@ -119,6 +126,9 @@ void setupHA()
     strcpy_P(_sw_v, fs_sw_v);
     strcpy_P(_alive, fs_alive);
     strcpy_P(_dead, fs_dead);
+    strcpy_P(_mymin, fs_min);
+    strcpy_P(_mymax, fs_max);
+    strcpy_P(_icon, fs_icon);
 
     strcpy_P(_max_temp, fs_max_temp);
     strcpy_P(_min_temp, fs_min_temp);
@@ -161,7 +171,7 @@ void setupHA()
     int maxtemp, mintemp;
     maxtemp = 104;
     mintemp = 68;
-    DynamicJsonDocument devicedoc(1024);
+    DynamicJsonDocument devicedoc(512);
     devicedoc[_dev][_conf_url] = F("http://") + WiFi.localIP().toString();
     devicedoc[(_dev)][(_connections)].add(serialized("[\"mac\",\"" + WiFi.macAddress()+"\"]" ));
     devicedoc[(_dev)][(_identifiers)] = mychipid;
@@ -171,7 +181,7 @@ void setupHA()
     devicedoc[(_dev)][(_sw_v)] = FW_VERSION;
 
 
-    DynamicJsonDocument doc(2048);
+    DynamicJsonDocument doc(1536);
     /************/
     /* NUMBER   */
     /************/
@@ -193,8 +203,8 @@ void setupHA()
     doc[(_val_tpl)] = F("{{ value_json.BRT }}");
     doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc[(_cmd_tpl)] = F("{CMD:12,VALUE:{{ value | int }},XTIME:0,INTERVAL:0}");
-    doc["min"] = 0;
-    doc["max"] = 8;
+    doc[_mymin] = 0;
+    doc[_mymax] = 8;
     doc["mode"] = F("slider");
     if (serializeJson(doc, payload) == 0)
     {
@@ -225,8 +235,8 @@ void setupHA()
     doc[(_val_tpl)] = F("{{ value_json.AMBC }}");
     doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc[(_cmd_tpl)] = F("{CMD:15,VALUE:{{ value | int }},XTIME:0,INTERVAL:0}");
-    doc["min"] = -50;
-    doc["max"] = 60;
+    doc[_mymin] = -50;
+    doc[_mymax] = 60;
     doc["mode"] = F("slider");
     doc[_unit_of_meas] = "°C";
     doc[_expire_after] = 700;
@@ -259,8 +269,8 @@ void setupHA()
     doc[(_val_tpl)] = F("{{ value_json.AMBF }}");
     doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc[(_cmd_tpl)] = F("{CMD:14,VALUE:{{ value | int }},XTIME:0,INTERVAL:0}");
-    doc["min"] = -58;
-    doc["max"] = 140;
+    doc[_mymin] = -58;
+    doc[_mymax] = 140;
     doc["mode"] = F("slider");
     doc[_unit_of_meas] = "°C";
     doc[_expire_after] = 700;
@@ -275,6 +285,8 @@ void setupHA()
     // Serial.println(payload);
     doc.clear();
     doc.garbageCollect();
+
+
 
 
         /************/
@@ -522,7 +534,7 @@ void setupHA()
     doc[_unit_of_meas] = F("hours");
     doc[(_val_tpl)] = F("{{ value_json.T2R }}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:clock");
+    doc[_icon] = F("mdi:clock");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -585,7 +597,7 @@ void setupHA()
     doc[_dev_cla] = F("energy");
     doc["state_class"] = F("total_increasing");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:flash");
+    doc[_icon] = F("mdi:flash");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -617,7 +629,7 @@ void setupHA()
     doc[_dev_cla] = F("energy");
     doc["state_class"] = F("total_increasing");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:flash");
+    doc[_icon] = F("mdi:flash");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -650,7 +662,7 @@ void setupHA()
     doc[_dev_cla] = F("power");
     doc["state_class"] = F("measurement");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:flash");
+    doc[_icon] = F("mdi:flash");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -681,7 +693,7 @@ void setupHA()
     doc[_unit_of_meas] = F("days");
     doc[(_val_tpl)] = F("{{ ( ( (now().timestamp()|int) - value_json.CLTIME|int)/3600/24) | round(2) }}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("hass:hand-coin-outline");
+    doc[_icon] = F("hass:hand-coin-outline");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -712,7 +724,7 @@ void setupHA()
     doc[_unit_of_meas] = F("days");
     doc[(_val_tpl)] = F("{{ ( ( (now().timestamp()|int) - value_json.FTIME|int)/3600/24) | round(2) }}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("hass:air-filter");
+    doc[_icon] = F("hass:air-filter");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -742,7 +754,7 @@ void setupHA()
     doc[_unit_of_meas] = F("days");
     doc[(_val_tpl)] = F("{{ ( (value_json.UPTIME|int)/3600/24) | round(2) }}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:clock-outline");
+    doc[_icon] = F("mdi:clock-outline");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -773,7 +785,7 @@ void setupHA()
     doc[_unit_of_meas] = F("hours");
     doc[(_val_tpl)] = F("{{ ( (value_json.PUMPTIME|int)/3600) | round(2) }}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:clock-outline");
+    doc[_icon] = F("mdi:clock-outline");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -804,7 +816,7 @@ void setupHA()
     doc[_unit_of_meas] = F("hours");
     doc[(_val_tpl)] = F("{{ ( (value_json.HEATINGTIME|int)/3600) | round(2) }}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:clock-outline");
+    doc[_icon] = F("mdi:clock-outline");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -835,7 +847,7 @@ void setupHA()
     doc[_unit_of_meas] = F("hours");
     doc[(_val_tpl)] = F("{{ ( (value_json.AIRTIME|int)/3600) | round(2) }}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:clock-outline");
+    doc[_icon] = F("mdi:clock-outline");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -1042,6 +1054,7 @@ void setupHA()
         /******************/
         /* BINARY SENSORS */
         /******************/
+    Serial.println(F("binary_sensors"));
 
                                         /* spa lock binary_sensor */
     doc[(_dev)] = devicedoc[(_dev)];
@@ -1116,7 +1129,7 @@ void setupHA()
     doc[(_stat_t)] = mqttBaseTopic+F("/message");
     doc[(_val_tpl)] = F("{% if value_json.TMP > 30 %}{% if value_json.TMP >= value_json.TGT-1 %}ON{% else %}OFF{% endif %}{% else %}OFF{% endif %}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:hot-tub");
+    doc[_icon] = F("mdi:hot-tub");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -1166,7 +1179,7 @@ void setupHA()
         /* SWITCHES       */
         /******************/
 
-    Serial.println("switch");
+    Serial.println(F("switch"));
 
 
                                         /* spa heat regulation switch */
@@ -1183,7 +1196,7 @@ void setupHA()
     doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc[(_val_tpl)] = F("{% if value_json.RED == 1 %}1{% elif value_json.GRN == 1 %}1{% else %}0{% endif %}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:radiator");
+    doc[_icon] = F("mdi:radiator");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -1218,7 +1231,7 @@ void setupHA()
     doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc[(_val_tpl)] = F("{{ value_json.HJT }}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:hydro-power");
+    doc[_icon] = F("mdi:hydro-power");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -1253,7 +1266,7 @@ void setupHA()
     doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc[(_val_tpl)] = F("{{ value_json.AIR }}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:chart-bubble");
+    doc[_icon] = F("mdi:chart-bubble");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -1288,7 +1301,7 @@ void setupHA()
     doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc[(_val_tpl)] = F("{{ value_json.FLT }}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:pump");
+    doc[_icon] = F("mdi:pump");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -1323,7 +1336,7 @@ void setupHA()
     doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc[(_val_tpl)] = F("{{ value_json.UNT }}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:circle-outline");
+    doc[_icon] = F("mdi:circle-outline");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -1358,7 +1371,7 @@ void setupHA()
     doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc[(_val_tpl)] = F("{{ value_json.GOD }}");
     doc[_expire_after] = 700;
-    doc["icon"] = F("mdi:steering");
+    doc[_icon] = F("mdi:steering");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -1383,7 +1396,7 @@ void setupHA()
         /* BUTTONS        */
         /******************/
 
-    Serial.println("buttons");
+    Serial.println(F("buttons"));
 
 
                                         /* spa reset chlorine timer button */
@@ -1398,7 +1411,7 @@ void setupHA()
     doc[(_uniq_id)] = unique_id;
     doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc["payload_press"] = F("{CMD:9,VALUE:true,XTIME:0,INTERVAL:0}");
-    doc["icon"] = F("mdi:restart");
+    doc[_icon] = F("mdi:restart");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -1427,7 +1440,7 @@ void setupHA()
     doc[(_uniq_id)] = unique_id;
     doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc["payload_press"] = F("{CMD:10,VALUE:true,XTIME:0,INTERVAL:0}");
-    doc["icon"] = F("mdi:restart");
+    doc[_icon] = F("mdi:restart");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -1456,7 +1469,7 @@ void setupHA()
     doc[(_uniq_id)] = unique_id;
     doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc["payload_press"] = F("{CMD:6,VALUE:true,XTIME:0,INTERVAL:0}");
-    doc["icon"] = F("mdi:restart");
+    doc[_icon] = F("mdi:restart");
     doc[_dev_cla] = F("restart");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
@@ -1477,7 +1490,7 @@ void setupHA()
         /* CLIMATE      */
         /****************/
 
-    Serial.println("climate");
+    Serial.println(F("climate"));
 
                                         /* spa climate control */
 
@@ -1522,5 +1535,592 @@ void setupHA()
     //   Serial.println(payload);
 
 
+        /****************/
+        /* CONFIG       */
+        /****************/
+
+                                        /* Electricity price */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_price")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/number/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Electricity price");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.PRICE }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_tpl)] = F("{PRICE:{{ value | float }}}");
+    doc[_mymin] = -1000.0f;
+    doc[_mymax] = 65535.0f;
+    doc["step"] = 0.01f;
+    doc["mode"] = F("box");
+    // doc[_unit_of_meas] = "";
+    // doc[_expire_after] = 700;
+    doc[_dev_cla] = F("monetary");
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Filter renewal reminder interval */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_filter_interval")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/number/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Filter interval");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.FINT }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_tpl)] = F("{FINT:{{ value | int }}}");
+    doc[_mymin] = 1;
+    doc[_mymax] = 1000;
+    doc["step"] = 1;
+    doc["mode"] = F("box");
+    doc[_unit_of_meas] = "d";
+    // doc[_expire_after] = 700;
+    doc[_dev_cla] = F("duration");
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Chlorine renewal reminder interval */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_cl_interval")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/number/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Chlorine interval");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.CLINT }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_tpl)] = F("{CLINT:{{ value | int }}}");
+    doc[_mymin] = 1;
+    doc[_mymax] = 1000;
+    doc["step"] = 1;
+    doc["mode"] = F("box");
+    doc[_unit_of_meas] = "d";
+    // doc[_expire_after] = 700;
+    doc[_dev_cla] = F("duration");
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+
+                                        /* Audio enabled */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_audio")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Audio");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.AUDIO }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc["pl_on"] = F("{AUDIO:true}");
+    doc["pl_off"] = F("{AUDIO:false}");
+    doc["state_on"] = true;
+    doc["state_off"] = false;
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Restore states on start */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_restore")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Restore on start");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.RESTORE }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc["pl_on"] = F("{RESTORE:true}");
+    doc["pl_off"] = F("{RESTORE:false}");
+    doc["state_on"] = true;
+    doc["state_off"] = false;
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Notify */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_notify")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Notify");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.NOTIFY }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc["pl_on"] = F("{NOTIFY:true}");
+    doc["pl_off"] = F("{NOTIFY:false}");
+    doc["state_on"] = true;
+    doc["state_off"] = false;
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Notification time */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_notiftime")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/number/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Notification time");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.NOTIFTIME }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_tpl)] = F("{NOTIFTIME:{{ value | int }}}");
+    doc[_mymin] = 1;
+    doc[_mymax] = 1000;
+    doc["step"] = 1;
+    doc["mode"] = F("box");
+    doc[_unit_of_meas] = "s";
+    // doc[_expire_after] = 700;
+    doc[_dev_cla] = F("duration");
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Virtual temperature calibrated */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_vtcal")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/binary_sensor/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("VTCAL");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{% if value_json.VTCAL == 1 %}OFF{% else %}ON{% endif %}");
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Enable LOCK button */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_lck")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Lock btn enabled");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.LCK }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc["pl_on"] = F("{LCK:true}");
+    doc["pl_off"] = F("{LCK:false}");
+    doc["state_on"] = true;
+    doc["state_off"] = false;
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Enable TIMER button */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_tmr")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Timer btn enabled");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.TMR }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc["pl_on"] = F("{TMR:true}");
+    doc["pl_off"] = F("{TMR:false}");
+    doc["state_on"] = true;
+    doc["state_off"] = false;
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Enable AIR button */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_air")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Airbubbles btn enabled");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.AIR }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc["pl_on"] = F("{AIR:true}");
+    doc["pl_off"] = F("{AIR:false}");
+    doc["state_on"] = true;
+    doc["state_off"] = false;
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Enable UNIT button */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_unt")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Unit btn enabled");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.UNT }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc["pl_on"] = F("{UNT:true}");
+    doc["pl_off"] = F("{UNT:false}");
+    doc["state_on"] = true;
+    doc["state_off"] = false;
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Enable HEAT button */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_htr")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Heater btn enabled");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.HTR }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc["pl_on"] = F("{HTR:true}");
+    doc["pl_off"] = F("{HTR:false}");
+    doc["state_on"] = true;
+    doc["state_off"] = false;
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Enable FILTER button */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_flt")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Filter btn enabled");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.FLT }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc["pl_on"] = F("{FLT:true}");
+    doc["pl_off"] = F("{FLT:false}");
+    doc["state_on"] = true;
+    doc["state_off"] = false;
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Enable DOWN button */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_dn")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Down btn enabled");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.DN }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc["pl_on"] = F("{DN:true}");
+    doc["pl_off"] = F("{DN:false}");
+    doc["state_on"] = true;
+    doc["state_off"] = false;
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Enable UP button */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_up")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Up btn enabled");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.UP }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc["pl_on"] = F("{UP:true}");
+    doc["pl_off"] = F("{UP:false}");
+    doc["state_on"] = true;
+    doc["state_off"] = false;
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Enable POWER button */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_pwr")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Power btn enabled");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.PWR }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc["pl_on"] = F("{PWR:true}");
+    doc["pl_off"] = F("{PWR:false}");
+    doc["state_on"] = true;
+    doc["state_off"] = false;
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Enable HYDROJETS button */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_hjt")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Hydrojets btn enabled");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.HJT }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc["pl_on"] = F("{HJT:true}");
+    doc["pl_off"] = F("{HJT:false}");
+    doc["state_on"] = true;
+    doc["state_off"] = false;
+    // doc[_expire_after] = 700;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
 }
 

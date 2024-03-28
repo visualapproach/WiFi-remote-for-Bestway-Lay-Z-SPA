@@ -1075,25 +1075,25 @@ void BWC::setJSONSettings(const String& message){
         return;
     }
 
-    // Copy values from the JsonDocument to the variables
-    _price = doc[F("PRICE")];
-    _filter_interval = doc[F("FINT")];
-    _cl_interval = doc[F("CLINT")];
-    _audio_enabled = doc[F("AUDIO")];
-    _restore_states_on_start = doc[F("RESTORE")];
-    _notify = doc[F("NOTIFY")];
-    _notification_time = doc[F("NOTIFTIME")];
-    _vt_calibrated = doc[F("VTCAL")];
-    dsp->EnabledButtons[LOCK] = doc[F("LCK")];
-    dsp->EnabledButtons[TIMER] = doc[F("TMR")];
-    dsp->EnabledButtons[BUBBLES] = doc[F("AIR")];
-    dsp->EnabledButtons[UNIT] = doc[F("UNT")];
-    dsp->EnabledButtons[HEAT] = doc[F("HTR")];
-    dsp->EnabledButtons[PUMP] = doc[F("FLT")];
-    dsp->EnabledButtons[DOWN] = doc[F("DN")];
-    dsp->EnabledButtons[UP] = doc[F("UP")];
-    dsp->EnabledButtons[POWER] = doc[F("PWR")];
-    dsp->EnabledButtons[HYDROJETS] = doc[F("HJT")];
+    // Copy existing values from the JsonDocument to the variables
+    _price = doc[F("PRICE")] | _price;
+    _filter_interval = doc[F("FINT")] | _filter_interval;
+    _cl_interval = doc[F("CLINT")] | _cl_interval;
+    _audio_enabled = doc[F("AUDIO")] | _audio_enabled;
+    _restore_states_on_start = doc[F("RESTORE")] | _restore_states_on_start;
+    _notify = doc[F("NOTIFY")] | _notify;
+    _notification_time = doc[F("NOTIFTIME")] | _notification_time;
+    _vt_calibrated = doc[F("VTCAL")] | _vt_calibrated;
+    dsp->EnabledButtons[LOCK] = doc[F("LCK")] | dsp->EnabledButtons[LOCK];
+    dsp->EnabledButtons[TIMER] = doc[F("TMR")] | dsp->EnabledButtons[TIMER];
+    dsp->EnabledButtons[BUBBLES] = doc[F("AIR")] | dsp->EnabledButtons[BUBBLES];
+    dsp->EnabledButtons[UNIT] = doc[F("UNT")] | dsp->EnabledButtons[UNIT];
+    dsp->EnabledButtons[HEAT] = doc[F("HTR")] | dsp->EnabledButtons[HEAT];
+    dsp->EnabledButtons[PUMP] = doc[F("FLT")] | dsp->EnabledButtons[PUMP];
+    dsp->EnabledButtons[DOWN] = doc[F("DN")] | dsp->EnabledButtons[DOWN];
+    dsp->EnabledButtons[UP] = doc[F("UP")] | dsp->EnabledButtons[UP];
+    dsp->EnabledButtons[POWER] = doc[F("PWR")] | dsp->EnabledButtons[POWER];
+    dsp->EnabledButtons[HYDROJETS] = doc[F("HJT")] | dsp->EnabledButtons[HYDROJETS];
     saveSettings();
 }
 
