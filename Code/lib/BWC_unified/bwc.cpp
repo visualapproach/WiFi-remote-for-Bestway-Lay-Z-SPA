@@ -466,6 +466,7 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _heatingtime_ms = 0;
         _airtime_ms = 0;
         _energy_total_kWh = 0;
+        _energy_cost = 0;
         _save_settings_needed = true;
         _new_data_available = true;
         break;
@@ -955,7 +956,7 @@ void BWC::getJSONTimes(String &rtn) {
     doc[F("HEATINGTIME")] = _heatingtime + _heatingtime_ms/1000;
     doc[F("AIRTIME")] = _airtime + _airtime_ms/1000;
     doc[F("JETTIME")] = _jettime + _jettime_ms/1000;
-    doc[F("COST")] = _energy_total_kWh * _price;
+    doc[F("COST")] = _energy_cost;
     doc[F("FINT")] = _filter_interval;
     doc[F("CLINT")] = _cl_interval;
     doc[F("KWH")] = _energy_total_kWh;
@@ -1160,6 +1161,7 @@ void BWC::_updateTimes(){
     _energy_power_W += cio->cio_states.jets * cio->getPower().JETPOWER;
 
     _energy_daily_Ws += elapsedtime_ms * _energy_power_W / 1000.0;
+    _energy_cost += _price * _energy_power_W / (1000.0 * 1000.0 * 3600.0); // money/kWh
 
     if(_notes.size())
     {
@@ -1259,6 +1261,7 @@ void BWC::_loadSettings(){
     _notification_time = doc[F("NOTIFTIME")];
     _energy_total_kWh = doc[F("KWH")];
     _energy_daily_Ws = doc[F("KWHD")];
+    _energy_cost = doc[F("COST")];
     _restore_states_on_start = doc[F("RESTORE")];
     _R_COOLING = doc[F("R")] | 40.0f; //else use default
     _ambient_temp = doc[F("AMB")] | 20;
@@ -1511,6 +1514,7 @@ void BWC::saveSettings(){
     doc[F("AUDIO")] = _audio_enabled;
     doc[F("KWH")] = _energy_total_kWh;
     doc[F("KWHD")] = _energy_daily_Ws;
+    doc[F("COST")] = _energy_cost;
     // doc[F("SAVETIME")] = DateTime.format(DateFormatter::SIMPLE);
     doc[F("RESTORE")] = _restore_states_on_start;
     doc[F("R")] = _R_COOLING;

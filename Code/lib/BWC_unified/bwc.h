@@ -164,6 +164,7 @@ class BWC {
         int _deltatemp;
         float _price;
         float _energy_total_kWh;
+        double _energy_cost;
         float _R_COOLING = 40;
         float _heating_degperhour = 1.5; //always in C internally
         float _virtual_temp; //=virtualtempfix+calculated diff, always in C internally
