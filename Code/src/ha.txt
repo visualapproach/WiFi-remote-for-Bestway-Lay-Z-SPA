@@ -625,7 +625,6 @@ void setupHA()
     doc[(_stat_t)] = mqttBaseTopic+F("/times");
     doc[(_val_tpl)] = F("{{ value_json.COST | round(3) }}");
     doc[_dev_cla] = F("monetary");
-    doc["state_class"] = F("total_increasing");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:currency-usd");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
