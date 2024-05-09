@@ -14,7 +14,7 @@ const cmdMap = {
   //gettarget: 7,
   resetTotals: 8,
   resetTimerChlorine: 9,
-  resetTimerFilter: 10,
+  resetTimerReplaceFilter: 10,
   toggleHydroJets: 11,
   setBrightness: 12,
   setBrightnessSelector: 12,
@@ -28,6 +28,9 @@ const cmdMap = {
   setFullpower: 18,
   printText: 19,
   setReady: 20,
+  setR: 21,
+  resetTimerRinseFilter: 22,
+  resetTimerCleanFilter: 23
 };
 
 // button element ID mapping
@@ -37,7 +40,7 @@ const btnMap = {
   toggleHeater: "HTR",
   togglePump: "FLT",
   toggleHydroJets: "HJT",
-  toggleGodmode: "GOD",
+  toggleGodmode: "GOD"
 };
 
 // to be used for setting the control values once after loading original values from the web socket
@@ -227,10 +230,22 @@ function handlemsg(e) {
     document.getElementById("cltimerbtn").className = clDate > msgobj.CLINT ? "button_red" : "button";
 
     // filter change reset timer
-    var fDate = (Date.now() / 1000 - msgobj.FTIME) / (24 * 3600.0);
+    var fDate = (Date.now() / 1000 - msgobj.FREP) / (24 * 3600.0);
     var fDateRound = Math.round(fDate);
-    document.getElementById("ftimer").innerHTML = fDateRound + " day" + (fDateRound != 1 ? "s" : "");
-    document.getElementById("ftimerbtn").className = fDate > msgobj.FINT ? "button_red" : "button";
+    document.getElementById("freplacetimer").innerHTML = fDateRound + " day" + (fDateRound != 1 ? "s" : "");
+    document.getElementById("freplacetimerbtn").className = fDate > msgobj.FREPI ? "button_red" : "button";
+
+    // filter clean reset timer
+    var fDate = (Date.now() / 1000 - msgobj.FCLE) / (24 * 3600.0);
+    var fDateRound = Math.round(fDate);
+    document.getElementById("fcleantimer").innerHTML = fDateRound + " day" + (fDateRound != 1 ? "s" : "");
+    document.getElementById("fcleantimerbtn").className = fDate > msgobj.FCLEI ? "button_red" : "button";
+
+    // filter rinse reset timer
+    var fDate = (Date.now() / 1000 - msgobj.FRIN) / (24 * 3600.0);
+    var fDateRound = Math.round(fDate);
+    document.getElementById("frinsetimer").innerHTML = fDateRound + " day" + (fDateRound != 1 ? "s" : "");
+    document.getElementById("frinsetimerbtn").className = fDate > msgobj.FRINI ? "button_red" : "button";
 
     // statistics
     document.getElementById("heatingtime").innerHTML = s2dhms(msgobj.HEATINGTIME);

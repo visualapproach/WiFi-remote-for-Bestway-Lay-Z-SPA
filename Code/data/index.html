@@ -189,8 +189,16 @@
 					<td><button id="cltimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerChlorine')">reset</button></td>
 				</tr>
 				<tr>
-					<td>Last filter change was <span id="ftimer">n/a</span> ago.</td>
-					<td><button id="ftimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerFilter')">reset</button></td>
+					<td>Last filter change was <span id="freplacetimer">n/a</span> ago.</td>
+					<td><button id="freplacetimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerReplaceFilter')">reset</button></td>
+				</tr>
+				<tr>
+					<td>Last filter clean was <span id="fcleantimer">n/a</span> ago.</td>
+					<td><button id="fcleantimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerCleanFilter')">reset</button></td>
+				</tr>
+				<tr>
+					<td>Last filter rinse was <span id="frinsetimer">n/a</span> ago.</td>
+					<td><button id="frinsetimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerRinseFilter')">reset</button></td>
 				</tr>
 			</table>
 		</section>

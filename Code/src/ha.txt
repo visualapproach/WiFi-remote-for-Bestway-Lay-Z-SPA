@@ -751,9 +751,67 @@ void setupHA()
     doc[(_uniq_id)] = unique_id;
     doc[(_stat_t)] = mqttBaseTopic+F("/times");
     doc[_unit_of_meas] = F("days");
-    doc[(_val_tpl)] = F("{{ ( ( (now().timestamp()|int) - value_json.FTIME|int)/3600/24) | round(2) }}");
+    doc[(_val_tpl)] = F("{{ ( ( (now().timestamp()|int) - value_json.FREP|int)/3600/24) | round(2) }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("hass:air-filter");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize HA message!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* spa filter clean sensor */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_filter_clean")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Filter clean");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[_unit_of_meas] = F("days");
+    doc[(_val_tpl)] = F("{{ ( ( (now().timestamp()|int) - value_json.FCLE|int)/3600/24) | round(2) }}");
+    doc[_expire_after] = 700;
+    doc[_icon] = F("hass:spray-bottle");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize HA message!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* spa filter rinse sensor */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_filter_rinse")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/sensor/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Filter rinse");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[_unit_of_meas] = F("days");
+    doc[(_val_tpl)] = F("{{ ( ( (now().timestamp()|int) - value_json.FRIN|int)/3600/24) | round(2) }}");
+    doc[_expire_after] = 700;
+    doc[_icon] = F("hass:water-pump");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
@@ -1457,18 +1515,72 @@ void setupHA()
 
 
 
-                                        /* spa reset filter timer button */
+                                        /* spa reset filter change timer button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_reset_filter")+mychipid;
+    unique_id = mqttBaseTopic + F("_reset_filterchange")+mychipid;
     topic = F(HA_PREFIX);
     topic += F("/button/");
     topic += unique_id;
     topic += F("/config");
-    doc[(_name)] = F("Reset filter timer");
+    doc[(_name)] = F("Reset filter change timer");
     doc[(_uniq_id)] = unique_id;
     doc[(_cmd_t)] = mqttBaseTopic+F("/command");
     doc["payload_press"] = F("{CMD:10,VALUE:true,XTIME:0,INTERVAL:0}");
+    doc[_icon] = F("mdi:restart");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize HA message!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* spa reset filter clean timer button */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_reset_filterclean")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/button/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Reset filter clean timer");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc["payload_press"] = F("{CMD:23,VALUE:true,XTIME:0,INTERVAL:0}");
+    doc[_icon] = F("mdi:restart");
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize HA message!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* spa reset filter rinse timer button */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_reset_filterrinse")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/button/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Reset filter rinse timer");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc["payload_press"] = F("{CMD:22,VALUE:true,XTIME:0,INTERVAL:0}");
     doc[_icon] = F("mdi:restart");
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
@@ -1606,20 +1718,90 @@ void setupHA()
                                         /* Filter renewal reminder interval */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_filter_interval")+mychipid;
+    unique_id = mqttBaseTopic + F("_filter_replace_interval")+mychipid;
     topic = F(HA_PREFIX);
     topic += F("/number/");
     topic += unique_id;
     topic += F("/config");
-    doc[(_name)] = F("Filter interval");
+    doc[(_name)] = F("Filter change interval");
     doc[(_uniq_id)] = unique_id;
     doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
     doc[(_avty_t)] = mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
-    doc[(_val_tpl)] = F("{{ value_json.FINT }}");
+    doc[(_val_tpl)] = F("{{ value_json.FREPI }}");
     doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
-    doc[(_cmd_tpl)] = F("{FINT:{{ value | int }}}");
+    doc[(_cmd_tpl)] = F("{FREPI:{{ value | int }}}");
+    doc[_mymin] = 1;
+    doc[_mymax] = 1000;
+    doc["step"] = 1;
+    doc["mode"] = F("box");
+    doc[_unit_of_meas] = "d";
+    // doc[_expire_after] = 700;
+    doc[_dev_cla] = F("duration");
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Filter clean reminder interval */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_filter_clean_interval")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/number/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Filter clean interval");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.FCLEI }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_tpl)] = F("{FCLEI:{{ value | int }}}");
+    doc[_mymin] = 1;
+    doc[_mymax] = 1000;
+    doc["step"] = 1;
+    doc["mode"] = F("box");
+    doc[_unit_of_meas] = "d";
+    // doc[_expire_after] = 700;
+    doc[_dev_cla] = F("duration");
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize amb!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+                                        /* Filter rinse reminder interval */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqttBaseTopic + F("_filter_rinse_interval")+mychipid;
+    topic = F(HA_PREFIX);
+    topic += F("/number/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Filter rinse interval");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc[(_val_tpl)] = F("{{ value_json.FRINI }}");
+    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_tpl)] = F("{FRINI:{{ value | int }}}");
     doc[_mymin] = 1;
     doc[_mymax] = 1000;
     doc["step"] = 1;
