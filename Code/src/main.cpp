@@ -1009,7 +1009,7 @@ void handleGetCommandQueue()
  */
 void handleAddCommand()
 {
-    if (!checkHttpPost(server->method())) return;
+    // if (!checkHttpPost(server->method())) return;
 
     // DynamicJsonDocument doc(256);
     StaticJsonDocument<256> doc;
@@ -1017,7 +1017,7 @@ void handleAddCommand()
     DeserializationError error = deserializeJson(doc, message);
     if (error)
     {
-        server->send(400, F("text/plain"), F("Error deserializing message"));
+        server->send(400, F("text/plain"), F("Error deserializing message: ")+message);
         return;
     }
 
@@ -1034,7 +1034,7 @@ void handleAddCommand()
     item.text = txt;
     bwc->add_command(item);
 
-    server->send(200, F("text/plain"), "");
+    server->send(200, F("text/plain"), F("ok"));
 }
 
 /**
