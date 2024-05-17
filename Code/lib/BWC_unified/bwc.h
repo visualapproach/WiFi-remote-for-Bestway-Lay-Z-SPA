@@ -141,7 +141,9 @@ class BWC {
         std::vector<sNote> _notes;
         sStates _prev_cio_states, _prev_dsp_states;
         uint32_t _cl_timestamp_s;
-        uint32_t _filter_timestamp_s;
+        uint32_t _filter_rinse_timestamp_s;
+        uint32_t _filter_clean_timestamp_s;
+        uint32_t _filter_replace_timestamp_s;
         uint32_t _uptime;
         uint32_t _pumptime;
         uint32_t _heatingtime;
@@ -152,7 +154,9 @@ class BWC {
         uint32_t _heatingtime_ms;
         uint32_t _airtime_ms;
         uint32_t _jettime_ms;
-        uint32_t _filter_interval;
+        uint32_t _filter_rinse_interval;
+        uint32_t _filter_clean_interval;
+        uint32_t _filter_replace_interval;
         uint32_t _cl_interval;
         uint32_t _virtual_temp_fix_age;
         int _note_duration;
@@ -164,6 +168,7 @@ class BWC {
         int _deltatemp;
         float _price;
         float _energy_total_kWh;
+        double _energy_cost;
         float _R_COOLING = 40;
         float _heating_degperhour = 1.5; //always in C internally
         float _virtual_temp; //=virtualtempfix+calculated diff, always in C internally

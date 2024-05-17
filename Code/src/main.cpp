@@ -72,7 +72,7 @@ void setup()
     bwc->loop();
     periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
-    startComplete.attach(61, []{ if(useMqtt) enableMqtt = true; startComplete.detach(); });
+    startComplete.attach(30, []{ if(useMqtt) enableMqtt = true; startComplete.detach(); });
     // update webpage every 2 seconds. (will also be updated on state changes)
     updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
     loadWebConfig();
@@ -133,6 +133,12 @@ void loop()
             {
                 sendMQTT();
                 sendMQTTFlag = false;
+            }
+
+            if(send_mqtt_cfg_needed)
+            {
+                send_mqtt_cfg_needed = false;
+                sendMQTTConfig();
             }
         }
 
@@ -337,6 +343,15 @@ void sendMQTT()
     {
         //Serial.println(F("MQTT > other not published"));
     }
+}
+
+void sendMQTTConfig()
+{
+    String json;
+    json.reserve(320);
+    bwc->getJSONSettings(json);
+    mqttClient->publish((String(mqttBaseTopic) + F("/get_config")).c_str(), String(json).c_str(), true);
+    mqttClient->loop();
 }
 
 /**
@@ -973,6 +988,7 @@ void handleSetConfig()
     bwc->setJSONSettings(message);
 
     server->send(200, F("text/plain"), "");
+    send_mqtt_cfg_needed = true;
 }
 
 /**
@@ -993,7 +1009,7 @@ void handleGetCommandQueue()
  */
 void handleAddCommand()
 {
-    if (!checkHttpPost(server->method())) return;
+    // if (!checkHttpPost(server->method())) return;
 
     // DynamicJsonDocument doc(256);
     StaticJsonDocument<256> doc;
@@ -1001,7 +1017,7 @@ void handleAddCommand()
     DeserializationError error = deserializeJson(doc, message);
     if (error)
     {
-        server->send(400, F("text/plain"), F("Error deserializing message"));
+        server->send(400, F("text/plain"), F("Error deserializing message: ")+message);
         return;
     }
 
@@ -1018,7 +1034,7 @@ void handleAddCommand()
     item.text = txt;
     bwc->add_command(item);
 
-    server->send(200, F("text/plain"), "");
+    server->send(200, F("text/plain"), F("ok"));
 }
 
 /**
@@ -1852,7 +1868,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
         DeserializationError error = deserializeJson(doc, message);
         if (error)
         {
-        return;
+            return;
         }
 
         Commands command = doc[F("CMD")];
@@ -1867,6 +1883,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
         item.interval = interval;
         item.text = txt;
         bwc->add_command(item);
+        return;
     }
 
     /* author @malfurion, edited by @visualapproach for v4 */
@@ -1896,6 +1913,15 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
             item.text = txt;
             bwc->add_command(item);
         }
+
+        return;
+    }
+
+    if (String(topic).equals(String(mqttBaseTopic) + F("/set_config")))
+    {
+        String message = (const char *) &payload[0];    
+        bwc->setJSONSettings(message);
+        send_mqtt_cfg_needed = true;
     }
 }
 
@@ -1938,6 +1964,7 @@ void mqttConnect()
         // Watch the 'command' topic for incoming MQTT messages
         mqttClient->subscribe((String(mqttBaseTopic) + F("/command")).c_str());
         mqttClient->subscribe((String(mqttBaseTopic) + F("/command_batch")).c_str());
+        mqttClient->subscribe((String(mqttBaseTopic) + F("/set_config")).c_str());
         mqttClient->loop();
 
         #ifdef ESP8266
@@ -1950,10 +1977,14 @@ void mqttConnect()
         mqttClient->publish((String(mqttBaseTopic) + F("/button")).c_str(), buttonname.c_str(), true);
         mqttClient->loop();
         sendMQTT();
-        Serial.println(F("HA"));
+        Serial.println(F("MQTT Sending HA discovery"));
         setupHA();
-        Serial.println(F("done"));
         mqttClient->setBufferSize(512);
+        mqttClient->loop();
+        // Serial.println(F("MQTT Sending config"));
+        // sendMQTTConfig();    // Stack smashing if doing this here :-(
+        send_mqtt_cfg_needed = true;
+        Serial.println(F("done"));
         #endif
     }
     else

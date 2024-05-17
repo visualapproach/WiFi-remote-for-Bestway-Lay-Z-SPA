@@ -84,6 +84,7 @@ Ticker updateMqttTimer;
 /**  */
 bool sendMQTTFlag = false;
 bool enableMqtt = false;
+bool send_mqtt_cfg_needed = false;
 
 /** used for handleAUX() */
 bool runonce = true;
@@ -91,6 +92,7 @@ bool runonce = true;
 void sendWS();
 void getOtherInfo(String &rtn);
 void sendMQTT();
+void sendMQTTConfig();
 void startWiFi();
 void startWiFiConfigPortal();
 void startNTP();

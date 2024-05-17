@@ -69,7 +69,7 @@ enum Commands: byte
     GETTARGET,
     RESETTIMES,
     RESETCLTIMER,
-    RESETFTIMER,
+    RESETFREPLACETIMER,
     SETJETS,
     SETBRIGHTNESS,
     SETBEEP,
@@ -80,7 +80,9 @@ enum Commands: byte
     SETFULLPOWER,
     PRINTTEXT,
     SETREADY,
-    SETR
+    SETR,
+    RESETFRINSETIMER,
+    RESETFCLEANTIMER
 };
 
 enum ToggleButtons: byte

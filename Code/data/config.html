@@ -56,7 +56,15 @@
                     </tr>
                     <tr>
                         <td><label for="finterval">Filter change (Days):</label></td>
-                        <td><input type="text" id="finterval" value="30" maxlength="3" size="3"></td>
+                        <td><input type="text" id="freplaceinterval" value="60" maxlength="3" size="3"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="finterval">Filter clean (Days):</label></td>
+                        <td><input type="text" id="fcleaninterval" value="20" maxlength="3" size="3"></td>
+                    </tr>
+                    <tr>
+                        <td><label for="finterval">Filter rinse (Days):</label></td>
+                        <td><input type="text" id="frinseinterval" value="7" maxlength="3" size="3"></td>
                     </tr>
                     <tr>
                         <td><label for="audio">Audio:</label></td>
@@ -76,7 +84,7 @@
                     </tr>
                     <tr>
                         <td><label for="calibration">Calibrated:</label><span data-text="If checked, the virtual temperature is calibrated. Redo calibration by unchecking and hitting SAVE button." class="tooltip">?</span></td>
-                        <td><input type="checkbox" id="calibration" onclick="toggleCalibration()"><span data-text="Calibrate by keeping heat OFF and pump ON until temperature has dropped a couple of degrees. Do not toggle jets, bubbles etc meanwhile. Water temp must differ several degrees from ambient from start." class="tooltip">?</span></td>
+                        <td><input type="checkbox" id="calibration" onclick="toggleCalibration()"><span data-text="Calibrate by keeping heat OFF and pump ON until temperature has dropped a couple of degrees. Do not toggle jets, bubbles etc meanwhile. Water temp must differ several degrees from ambient from start." class="tooltip left">?</span></td>
                         <td><a href="calib.html">manual cal.</a></td>
                     </tr>
                 </table>
@@ -119,7 +127,7 @@
                             <option value="7">Internal command (get target) (-)</option>
                             <option value="8">Reset times (-)</option>
                             <option value="9">Reset Cl timer (-)</option>
-                            <option value="10">Reset filter timer (-)</option>
+                            <option value="10">Reset filter change timer (-)</option>
                             <option value="11">Set hydrojets (0/1)</option>
                             <option value="12">Set display brightness (0-8)</option>
                             <option value="13">Set beep (0/1 or 2+text=filename)</option>
@@ -130,6 +138,9 @@
                             <option value="18">Set full power (0/1)</option>
                             <option value="19">Print (text)</option>
                             <option value="20">Set ready time (-)</option>
+                            <option value="21">Set R (internal use)</option>
+                            <option value="22">Reset filter rinse timer (-)</option>
+                            <option value="23">Reset filter clean timer (-)</option>
                         </select>
                     </td>
                 </tr>
@@ -188,7 +199,7 @@ const rebootesp = 6;
 const gettarget = 7;
 const resettimes = 8;
 const resetcl = 9;
-const resetfilter = 10;
+const resetreplacefilter = 10;
 const setjets = 11;
 const setbrightness = 12;
 const setbeep = 13;
@@ -199,12 +210,15 @@ const godmode = 17;
 const fullpower = 18;
 const printtext = 19;
 const setready = 20;
+const setR = 21;
+const resetrinsefiltertimer = 22;
+const resetcleanfiltertimer = 23;
 
 const commandlist = [
 	'Set target', 'Set unit', 'Set bubbles', 'Set heat', 'Set pump', 'Reset queue', 'Reboot ESP',
-	'Internal cmd', 'Reset times', 'Reset Cl timer', 'Reset filter timer', 'Set jets', 'Set brightness',
+	'Internal cmd', 'Reset times', 'Reset Cl timer', 'Reset change filter timer', 'Set jets', 'Set brightness',
 	'Beep', 'Set ambient temp F.', 'Set ambient temp C.', 'Reset daily meter', 'Take control', 'Full power',
-    'Print text', 'Set ready'
+    'Print text', 'Set ready', 'Set R', 'Reset rinse filter timer', 'Reset clean filter timer'
 ];
 
 function totimestamp()
@@ -226,7 +240,9 @@ function loadConfig()
 			console.log(json);
 			//document.getElementById('timezone').value = json.TIMEZONE.toString();
 			document.getElementById('price').value = json.PRICE.toString();
-			document.getElementById('finterval').value = json.FINT.toString();
+			document.getElementById('freplaceinterval').value = json.FREPI.toString();
+			document.getElementById('frinseinterval').value = json.FRINI.toString();
+			document.getElementById('fcleaninterval').value = json.FCLEI.toString();
 			document.getElementById('clinterval').value = json.CLINT.toString();
 			document.getElementById('audio').checked = json.AUDIO;
 			document.getElementById('notification').checked = json.NOTIFY;
@@ -266,7 +282,9 @@ function saveConfig()
 		//'TIMEZONE':parseInt(document.getElementById('timezone').value),
 		'TIMEZONE':0,
 		'PRICE':parseFloat(document.getElementById('price').value),
-		'FINT':parseInt(document.getElementById('finterval').value),
+		'FREPI':parseInt(document.getElementById('freplaceinterval').value),
+		'FRINI':parseInt(document.getElementById('frinseinterval').value),
+		'FCLEI':parseInt(document.getElementById('fcleaninterval').value),
 		'CLINT':parseInt(document.getElementById('clinterval').value),
 		'AUDIO':document.getElementById('audio').checked,
 		'NOTIFY':document.getElementById('notification').checked,

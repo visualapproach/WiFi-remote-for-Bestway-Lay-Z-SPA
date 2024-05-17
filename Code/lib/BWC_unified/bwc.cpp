@@ -9,14 +9,18 @@ BWC::BWC()
 
     _dsp_brightness = 7;
     _cl_timestamp_s = time(nullptr);
-    _filter_timestamp_s = time(nullptr);
+    _filter_replace_timestamp_s = time(nullptr);
+    _filter_clean_timestamp_s = _filter_replace_timestamp_s;
+    _filter_rinse_timestamp_s = _filter_replace_timestamp_s;
     _uptime = 0;
     _pumptime = 0;
     _heatingtime = 0;
     _airtime = 0;
     _jettime = 0;
     _price = 1;
-    _filter_interval = 30;
+    _filter_rinse_interval = 7;
+    _filter_clean_interval = 20;
+    _filter_replace_interval = 60;
     _cl_interval = 14;
     _audio_enabled = true;
     _restore_states_on_start = false;
@@ -466,6 +470,7 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _heatingtime_ms = 0;
         _airtime_ms = 0;
         _energy_total_kWh = 0;
+        _energy_cost = 0;
         _save_settings_needed = true;
         _new_data_available = true;
         break;
@@ -474,8 +479,18 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _save_settings_needed = true;
         _new_data_available = true;
         break;
-    case RESETFTIMER:
-        _filter_timestamp_s = _timestamp_secs;
+    case RESETFREPLACETIMER:
+        _filter_replace_timestamp_s = _timestamp_secs;
+        _save_settings_needed = true;
+        _new_data_available = true;
+        break;
+    case RESETFCLEANTIMER:
+        _filter_clean_timestamp_s = _timestamp_secs;
+        _save_settings_needed = true;
+        _new_data_available = true;
+        break;
+    case RESETFRINSETIMER:
+        _filter_rinse_timestamp_s = _timestamp_secs;
         _save_settings_needed = true;
         _new_data_available = true;
         break;
@@ -949,14 +964,18 @@ void BWC::getJSONTimes(String &rtn) {
     doc[F("CONTENT")] = F("TIMES");
     doc[F("TIME")] = _timestamp_secs;
     doc[F("CLTIME")] = _cl_timestamp_s;
-    doc[F("FTIME")] = _filter_timestamp_s;
+    doc[F("FREP")] = _filter_replace_timestamp_s;
+    doc[F("FRIN")] = _filter_rinse_timestamp_s;
+    doc[F("FCLE")] = _filter_clean_timestamp_s;
     doc[F("UPTIME")] = _uptime + _uptime_ms/1000;
     doc[F("PUMPTIME")] = _pumptime + _pumptime_ms/1000;
     doc[F("HEATINGTIME")] = _heatingtime + _heatingtime_ms/1000;
     doc[F("AIRTIME")] = _airtime + _airtime_ms/1000;
     doc[F("JETTIME")] = _jettime + _jettime_ms/1000;
-    doc[F("COST")] = _energy_total_kWh * _price;
-    doc[F("FINT")] = _filter_interval;
+    doc[F("COST")] = _energy_cost;
+    doc[F("FREPI")] = _filter_replace_interval;
+    doc[F("FRINI")] = _filter_rinse_interval;
+    doc[F("FCLEI")] = _filter_clean_interval;
     doc[F("CLINT")] = _cl_interval;
     doc[F("KWH")] = _energy_total_kWh;
     doc[F("KWHD")] = _energy_daily_Ws / 3600000.0; //Ws -> kWh
@@ -994,7 +1013,9 @@ void BWC::getJSONSettings(String &rtn){
     // Set the values in the document
     doc[F("CONTENT")] = F("SETTINGS");
     doc[F("PRICE")] = _price;
-    doc[F("FINT")] = _filter_interval;
+    doc[F("FREPI")] = _filter_replace_interval;
+    doc[F("FRINI")] = _filter_rinse_interval;
+    doc[F("FCLEI")] = _filter_clean_interval;
     doc[F("CLINT")] = _cl_interval;
     doc[F("AUDIO")] = _audio_enabled;
     #ifdef ESP8266
@@ -1075,25 +1096,27 @@ void BWC::setJSONSettings(const String& message){
         return;
     }
 
-    // Copy values from the JsonDocument to the variables
-    _price = doc[F("PRICE")];
-    _filter_interval = doc[F("FINT")];
-    _cl_interval = doc[F("CLINT")];
-    _audio_enabled = doc[F("AUDIO")];
-    _restore_states_on_start = doc[F("RESTORE")];
-    _notify = doc[F("NOTIFY")];
-    _notification_time = doc[F("NOTIFTIME")];
-    _vt_calibrated = doc[F("VTCAL")];
-    dsp->EnabledButtons[LOCK] = doc[F("LCK")];
-    dsp->EnabledButtons[TIMER] = doc[F("TMR")];
-    dsp->EnabledButtons[BUBBLES] = doc[F("AIR")];
-    dsp->EnabledButtons[UNIT] = doc[F("UNT")];
-    dsp->EnabledButtons[HEAT] = doc[F("HTR")];
-    dsp->EnabledButtons[PUMP] = doc[F("FLT")];
-    dsp->EnabledButtons[DOWN] = doc[F("DN")];
-    dsp->EnabledButtons[UP] = doc[F("UP")];
-    dsp->EnabledButtons[POWER] = doc[F("PWR")];
-    dsp->EnabledButtons[HYDROJETS] = doc[F("HJT")];
+    // Copy existing values from the JsonDocument to the variables
+    _price = doc[F("PRICE")] | _price;
+    _filter_replace_interval = doc[F("FREPI")] | _filter_replace_interval;
+    _filter_rinse_interval = doc[F("FRINI")] | _filter_rinse_interval;
+    _filter_clean_interval = doc[F("FCLEI")] | _filter_clean_interval;
+    _cl_interval = doc[F("CLINT")] | _cl_interval;
+    _audio_enabled = doc[F("AUDIO")] | _audio_enabled;
+    _restore_states_on_start = doc[F("RESTORE")] | _restore_states_on_start;
+    _notify = doc[F("NOTIFY")] | _notify;
+    _notification_time = doc[F("NOTIFTIME")] | _notification_time;
+    _vt_calibrated = doc[F("VTCAL")] | _vt_calibrated;
+    dsp->EnabledButtons[LOCK] = doc[F("LCK")] | dsp->EnabledButtons[LOCK];
+    dsp->EnabledButtons[TIMER] = doc[F("TMR")] | dsp->EnabledButtons[TIMER];
+    dsp->EnabledButtons[BUBBLES] = doc[F("AIR")] | dsp->EnabledButtons[BUBBLES];
+    dsp->EnabledButtons[UNIT] = doc[F("UNT")] | dsp->EnabledButtons[UNIT];
+    dsp->EnabledButtons[HEAT] = doc[F("HTR")] | dsp->EnabledButtons[HEAT];
+    dsp->EnabledButtons[PUMP] = doc[F("FLT")] | dsp->EnabledButtons[PUMP];
+    dsp->EnabledButtons[DOWN] = doc[F("DN")] | dsp->EnabledButtons[DOWN];
+    dsp->EnabledButtons[UP] = doc[F("UP")] | dsp->EnabledButtons[UP];
+    dsp->EnabledButtons[POWER] = doc[F("PWR")] | dsp->EnabledButtons[POWER];
+    dsp->EnabledButtons[HYDROJETS] = doc[F("HJT")] | dsp->EnabledButtons[HYDROJETS];
     saveSettings();
 }
 
@@ -1160,6 +1183,7 @@ void BWC::_updateTimes(){
     _energy_power_W += cio->cio_states.jets * cio->getPower().JETPOWER;
 
     _energy_daily_Ws += elapsedtime_ms * _energy_power_W / 1000.0;
+    _energy_cost += _price * _energy_power_W / (1000.0 * 1000.0 * 3600.0); // money/kWh
 
     if(_notes.size())
     {
@@ -1245,20 +1269,25 @@ void BWC::_loadSettings(){
 
     // Copy values from the JsonDocument to the variables
     _cl_timestamp_s = doc[F("CLTIME")];
-    _filter_timestamp_s = doc[F("FTIME")];
+    _filter_replace_timestamp_s = doc[F("FREP")];
+    _filter_rinse_timestamp_s = doc[F("FRIN")];
+    _filter_clean_timestamp_s = doc[F("FCLE")];
     _uptime = doc[F("UPTIME")];
     _pumptime = doc[F("PUMPTIME")];
     _heatingtime = doc[F("HEATINGTIME")];
     _airtime = doc[F("AIRTIME")];
     _jettime = doc[F("JETTIME")];
     _price = doc[F("PRICE")];
-    _filter_interval = doc[F("FINT")];
+    _filter_replace_interval = doc[F("FREPI")] | _filter_replace_interval;
+    _filter_rinse_interval = doc[F("FRINI")] | _filter_rinse_interval;
+    _filter_clean_interval = doc[F("FCLEI")] | _filter_clean_interval;
     _cl_interval = doc[F("CLINT")];
     _audio_enabled = doc[F("AUDIO")];
     _notify = doc[F("NOTIFY")];
     _notification_time = doc[F("NOTIFTIME")];
     _energy_total_kWh = doc[F("KWH")];
     _energy_daily_Ws = doc[F("KWHD")];
+    _energy_cost = doc[F("COST")];
     _restore_states_on_start = doc[F("RESTORE")];
     _R_COOLING = doc[F("R")] | 40.0f; //else use default
     _ambient_temp = doc[F("AMB")] | 20;
@@ -1499,18 +1528,23 @@ void BWC::saveSettings(){
     _uptime_ms = 0;
     // Set the values in the document
     doc[F("CLTIME")] = _cl_timestamp_s;
-    doc[F("FTIME")] = _filter_timestamp_s;
+    doc[F("FREP")] = _filter_replace_timestamp_s;
+    doc[F("FRIN")] = _filter_rinse_timestamp_s;
+    doc[F("FCLE")] = _filter_clean_timestamp_s;
     doc[F("UPTIME")] = _uptime;
     doc[F("PUMPTIME")] = _pumptime;
     doc[F("HEATINGTIME")] = _heatingtime;
     doc[F("AIRTIME")] = _airtime;
     doc[F("JETTIME")] = _jettime;
     doc[F("PRICE")] = _price;
-    doc[F("FINT")] = _filter_interval;
+    doc[F("FREPI")] = _filter_replace_interval;
+    doc[F("FRINI")] = _filter_rinse_interval;
+    doc[F("FCLEI")] = _filter_clean_interval;
     doc[F("CLINT")] = _cl_interval;
     doc[F("AUDIO")] = _audio_enabled;
     doc[F("KWH")] = _energy_total_kWh;
     doc[F("KWHD")] = _energy_daily_Ws;
+    doc[F("COST")] = _energy_cost;
     // doc[F("SAVETIME")] = DateTime.format(DateFormatter::SIMPLE);
     doc[F("RESTORE")] = _restore_states_on_start;
     doc[F("R")] = _R_COOLING;
