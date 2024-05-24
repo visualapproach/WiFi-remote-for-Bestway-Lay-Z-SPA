@@ -25,6 +25,14 @@ void CIO_4W::setup(int cio_rx, int cio_tx, int dummy)
     _cio_serial->write(_to_CIO_buf, PAYLOADSIZE);  //test
 }
 
+void CIO_4W::setPowerLevels(const std::optional<const Power>& power_levels) {
+    if (power_levels.has_value()) {
+        CIO::setPowerLevels(power_levels);
+    } else {
+        CIO::setPowerLevels(_default_power_levels);
+    }
+}
+
 void CIO_4W::stop()
 {
     _cio_serial->stopListening();
@@ -67,8 +75,13 @@ void CIO_4W::handleToggles()
             _to_CIO_buf[i] = _raw_payload_to_cio[i];
         // _cio_serial->write(_to_CIO_buf, PAYLOADSIZE); //this is done in updateStates()
         cio_states.godmode = false;
-        _power.HEATERPOWER = ((_to_CIO_buf[COMMANDINDEX] & getHeatBitmask1()) == getHeatBitmask1()) * 950 + 
-                             ((_to_CIO_buf[COMMANDINDEX] & getHeatBitmask2()) == getHeatBitmask2()) * 950;
+
+        HeaterStages heater_stages {
+            .stage1_on = (_to_CIO_buf[COMMANDINDEX] & getHeatBitmask1()) == getHeatBitmask1(),
+            .stage2_on = (_to_CIO_buf[COMMANDINDEX] & getHeatBitmask2()) == getHeatBitmask2(),
+        };
+        setHeaterStages(heater_stages);
+
         if(_readyToTransmit)
         {
             _readyToTransmit = false;
@@ -259,7 +272,10 @@ void CIO_4W::regulateTemp()
             _heat_bitmask = getHeatBitmask1(); //half power at start
             cio_states.heatred = 1;   //on
             _heater2_countdown_ms = _HEATER2_DELAY_MS;
-            _power.HEATERPOWER = 950;
+            setHeaterStages({
+                .stage1_on = true,
+                .stage2_on = false,
+            });
         }
         hysteresis = 0;
     }
@@ -273,7 +289,10 @@ void CIO_4W::regulateTemp()
     if((_heater2_countdown_ms <= 0) && (cio_states.no_of_heater_elements_on == 2))
     {
         _heat_bitmask = getHeatBitmask1() | getHeatBitmask2();
-        _power.HEATERPOWER = 1900;
+        setHeaterStages({
+            .stage1_on = true,
+            .stage2_on = true,
+        });
     }
 }
 
