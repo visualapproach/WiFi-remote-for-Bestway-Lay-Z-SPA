@@ -1219,7 +1219,7 @@ bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[], std::optional<
         return false;
     }
     // DynamicJsonDocument doc(256);
-    StaticJsonDocument<272> doc;
+    StaticJsonDocument<512> doc;
     DeserializationError error = deserializeJson(doc, file);
     if (error) {
         // Serial.println(F("Failed to read settings.txt"));
