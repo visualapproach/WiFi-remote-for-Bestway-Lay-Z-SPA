@@ -61,8 +61,9 @@ void BWC::setup(void){
     if(dsp != nullptr) delete dsp;
     Models ciomodel;
     Models dspmodel;
+    std::optional<Power> power_levels = {};
     
-    if(!_loadHardware(ciomodel, dspmodel, pins)){
+    if(!_loadHardware(ciomodel, dspmodel, pins, power_levels)){
         pins[0] = D1;
         pins[1] = D2;
         pins[2] = D3;
@@ -148,6 +149,9 @@ void BWC::setup(void){
         }
     }
     cio->setup(pins[0], pins[1], pins[2]);
+
+    cio->setPowerLevels(power_levels);
+    
     dsp->setup(pins[3], pins[4], pins[5], pins[6]);
     tempSensorPin = pins[7];
     hasjets = cio->getHasjets();
@@ -1170,17 +1174,17 @@ void BWC::_updateTimes(){
     if(_override_dsp_brt_timer > 0) _override_dsp_brt_timer -= elapsedtime_ms; //counts down to or below zero
 
     // watts, kWh today, total kWh
-    float heatingEnergy = (_heatingtime+_heatingtime_ms/1000)/3600.0 * cio->getPower().HEATERPOWER;
-    float pumpEnergy = (_pumptime+_pumptime_ms/1000)/3600.0 * cio->getPower().PUMPPOWER;
-    float airEnergy = (_airtime+_airtime_ms/1000)/3600.0 * cio->getPower().AIRPOWER;
-    float idleEnergy = (_uptime+_uptime_ms/1000)/3600.0 * cio->getPower().IDLEPOWER;
-    float jetEnergy = (_jettime+_jettime_ms/1000)/3600.0 * cio->getPower().JETPOWER;
+    float heatingEnergy = (_heatingtime+_heatingtime_ms/1000)/3600.0 * cio->getHeaterPower();
+    float pumpEnergy = (_pumptime+_pumptime_ms/1000)/3600.0 * cio->getPowerLevels().PUMPPOWER;
+    float airEnergy = (_airtime+_airtime_ms/1000)/3600.0 * cio->getPowerLevels().AIRPOWER;
+    float idleEnergy = (_uptime+_uptime_ms/1000)/3600.0 * cio->getPowerLevels().IDLEPOWER;
+    float jetEnergy = (_jettime+_jettime_ms/1000)/3600.0 * cio->getPowerLevels().JETPOWER;
     _energy_total_kWh = (heatingEnergy + pumpEnergy + airEnergy + idleEnergy + jetEnergy)/1000; //Wh -> kWh
-    _energy_power_W = cio->cio_states.heatred * cio->getPower().HEATERPOWER;
-    _energy_power_W += cio->cio_states.pump * cio->getPower().PUMPPOWER;
-    _energy_power_W += cio->cio_states.bubbles * cio->getPower().AIRPOWER;
-    _energy_power_W += cio->getPower().IDLEPOWER;
-    _energy_power_W += cio->cio_states.jets * cio->getPower().JETPOWER;
+    _energy_power_W = cio->cio_states.heatred * cio->getHeaterPower();
+    _energy_power_W += cio->cio_states.pump * cio->getPowerLevels().PUMPPOWER;
+    _energy_power_W += cio->cio_states.bubbles * cio->getPowerLevels().AIRPOWER;
+    _energy_power_W += cio->getPowerLevels().IDLEPOWER;
+    _energy_power_W += cio->cio_states.jets * cio->getPowerLevels().JETPOWER;
 
     _energy_daily_Ws += elapsedtime_ms * _energy_power_W / 1000.0;
     _energy_cost += _price * _energy_power_W / (1000.0 * 1000.0 * 3600.0); // money/kWh
@@ -1206,7 +1210,7 @@ void BWC::_updateTimes(){
 /* LOADERS  */
 /*          */
 
-bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
+bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[], std::optional<Power>& power_levels)
 {
     File file = LittleFS.open(F("/hwcfg.json"), "r");
     if (!file)
@@ -1215,7 +1219,7 @@ bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
         return false;
     }
     // DynamicJsonDocument doc(256);
-    StaticJsonDocument<272> doc;
+    StaticJsonDocument<512> doc;
     DeserializationError error = deserializeJson(doc, file);
     if (error) {
         // Serial.println(F("Failed to read settings.txt"));
@@ -1243,6 +1247,21 @@ bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[])
         pins[i] = DtoGPIO[pins[i]];
     #endif
     }
+
+    const auto pwr_levels_json = doc[F("pwr_levels")];
+    if (pwr_levels_json[F("override")].as<bool>()) {
+        power_levels.emplace(
+            Power{
+                .HEATERPOWER_STAGE1 = pwr_levels_json[F("heater_stage1")].as<int>(),
+                .HEATERPOWER_STAGE2 = pwr_levels_json[F("heater_stage2")].as<int>(),
+                .PUMPPOWER = pwr_levels_json[F("pump")].as<int>(),
+                .AIRPOWER = pwr_levels_json[F("air")].as<int>(),
+                .IDLEPOWER = pwr_levels_json[F("idle")].as<int>(),
+                .JETPOWER = pwr_levels_json[F("jet")].as<int>(),
+            }
+        );
+    }
+
     return true;
 }
 

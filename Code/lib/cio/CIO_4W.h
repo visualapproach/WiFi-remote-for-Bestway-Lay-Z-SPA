@@ -14,7 +14,6 @@ class CIO_4W : public CIO
     public:
         CIO_4W(){};
         virtual ~CIO_4W(){};
-        Power getPower(){return _power;}
         void setup(int cio_rx, int cio_tx, int dummy);
         void stop();
         void pause_all(bool action);
@@ -25,6 +24,7 @@ class CIO_4W : public CIO
         virtual bool getHasair() = 0;
         bool getSerialReceived() override;
         void setSerialReceived(bool txok) override;
+        void setPowerLevels(const std::optional<const Power>& power_levels) override;
 
     /*internal use*/
     protected:
@@ -44,7 +44,6 @@ class CIO_4W : public CIO
 
     private:
         uint64_t _prev_ms;
-        Power _power = {1900, 40, 800, 2, 400};
         SoftwareSerial *_cio_serial;
         uint8_t _heat_bitmask = 0;
         uint8_t _from_CIO_buf[7] = {};
@@ -67,5 +66,14 @@ class CIO_4W : public CIO
         bool _turn_off_pump_flag = false;
         bool _serialreceived = false;
         bool _readyToTransmit = false;
+
+        const Power _default_power_levels = {
+            .HEATERPOWER_STAGE1 = 950,
+            .HEATERPOWER_STAGE2 = 950,
+            .PUMPPOWER = 950,
+            .AIRPOWER = 950,
+            .IDLEPOWER = 950,
+            .JETPOWER = 950,
+        };
 };
 

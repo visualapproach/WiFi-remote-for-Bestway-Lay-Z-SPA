@@ -17,7 +17,6 @@ class CIO_6W : public CIO
     public:
         CIO_6W();
         virtual ~CIO_6W(){};
-        Power getPower(){return power;}
         void handleToggles();
         bool getHasgod() {return false;}
         virtual bool getHasjets() = 0;
@@ -29,10 +28,6 @@ class CIO_6W : public CIO
         void _qButton(sButton_queue_item item);
         void _handleButtonQ(void);
         void unlock();
-
-    /*These must be declared for the API to work*/
-    public:
-        Power power = {1900, 40, 800, 2, 400};
 
     public:
         uint8_t brightness;

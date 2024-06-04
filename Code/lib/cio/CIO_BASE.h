@@ -20,13 +20,16 @@ class CIO
         void setRawPayload(const std::vector<uint8_t>& pl);
         std::vector<uint8_t> getRawPayload();
         virtual String getModel() = 0;
-        virtual Power getPower() = 0;
         virtual bool getHasgod() = 0;
         virtual bool getHasjets() = 0;
         virtual bool getHasair() = 0;
         virtual bool getSerialReceived() {return false;} //"overridden" in CIO 4W
         virtual void setSerialReceived(bool txok) {}     //"overridden" in CIO 4W  
         String debug();
+        const Power& getPowerLevels() {return _power_levels;}
+        virtual void setPowerLevels(const std::optional<const Power>& power_levels);
+        void setHeaterStages(const HeaterStages& heater_stages) {_heater_stages = heater_stages;}
+        int getHeaterPower();
 
     public:
         sStates cio_states;
@@ -38,4 +41,18 @@ class CIO
     
     protected:
         std::vector<uint8_t> _raw_payload_from_cio = {0,0,0,0,0,0,0,0,0,0,0};
+
+    private:
+        Power _power_levels = {
+            .HEATERPOWER_STAGE1 = 1900,
+            .HEATERPOWER_STAGE2 = 0,
+            .PUMPPOWER = 40,
+            .AIRPOWER = 800,
+            .IDLEPOWER = 2,
+            .JETPOWER = 400,
+        };
+        HeaterStages _heater_stages = {
+            .stage1_on = true,
+            .stage2_on = true,
+        };
 };

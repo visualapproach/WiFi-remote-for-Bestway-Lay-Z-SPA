@@ -14,6 +14,7 @@
 #include <LittleFS.h>
 #include <Ticker.h>
 #include <vector>
+#include <optional>
 #include "enums.h"
 #include "CIO_PRE2021.h"
 #include "CIO_2021.h"
@@ -106,7 +107,7 @@ class BWC {
         bool hasTempSensor = false;
 
     private:
-        bool _loadHardware(Models& cioNo, Models& dspNo, int pins[]);
+        bool _loadHardware(Models& cioNo, Models& dspNo, int pins[], std::optional<Power>& power_levels);
         bool _handlecommand(Commands cmd, int64_t val, const String& txt);
         void _handleCommandQ();
         void _loadSettings();
