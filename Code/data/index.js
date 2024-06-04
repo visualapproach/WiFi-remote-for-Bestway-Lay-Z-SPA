@@ -1,3 +1,12 @@
+/*
+    THIS FILE IS NOT USED ANYMORE. IT IS MERGED INTO INDEX.HTML FILE
+*/
+
+
+
+
+
+
 // the web socket connection
 var connection;
 
