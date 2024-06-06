@@ -254,31 +254,31 @@ void BWC::_log()
     }
     if(++writes > 1000) return;
     file.print(_timestamp_secs);
-    file.printf_P(PSTR("SW:%s CIO-ESP:"), FW_VERSION);
+    file.printf_P(PSTR("SW:%s \nCIO-ESP:"), FW_VERSION);
     for(unsigned int i = 0; i< fromcio.size(); i++)
     {
         if(i>0)file.print(',');
         file.print(fromcio[i], HEX);
     }
-    file.print(F("\t DSP-ESP:"));
+    file.print(F("\nDSP-ESP:"));
     for(unsigned int i = 0; i< fromdsp.size(); i++)
     {
         if(i>0)file.print(',');
         file.print(fromdsp[i], HEX);
     }
-    file.print(F(" ESP-CIO:"));
+    file.print(F("\nESP-CIO:"));
     for(unsigned int i = 0; i< tocio.size(); i++)
     {
         if(i>0)file.print(',');
         file.print(tocio[i], HEX);
     }
-    file.print(F("\t ESP-DSP:"));
+    file.print(F("\nESP-DSP:"));
     for(unsigned int i = 0; i< todsp.size(); i++)
     {
         if(i>0)file.print(',');
         file.print(todsp[i], HEX);
     }
-    file.printf_P(PSTR("\ncio msg count: %d dsp msg count: %d\n"), cio->good_packets_count, dsp->good_packets_count);
+    file.printf_P(PSTR("\nCIO msg count: %d DSP msg count: %d\n"), cio->good_packets_count, dsp->good_packets_count);
     file.close();
 }
 
