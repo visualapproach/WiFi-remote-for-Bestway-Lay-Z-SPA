@@ -194,7 +194,7 @@ void CIO_4W::updateStates()
     calculatedChecksum = tempbuffer[1]+tempbuffer[2]+tempbuffer[3]+tempbuffer[4];
     if(tempbuffer[CIO_CHECKSUMINDEX] != calculatedChecksum)
     {
-        //badCIO_checksum++;
+        bad_packets_count++;
         return;
     }
     /*message is good if we get here. Continue*/

@@ -252,9 +252,17 @@ void BWC::_log()
         // Serial.println(F("Failed to save states.txt"));
         return;
     }
-    if(++writes > 1000) return;
-    file.print(_timestamp_secs);
-    file.printf_P(PSTR("SW:%s \nCIO-ESP:"), FW_VERSION);
+    if(++writes > 1000) 
+    {
+        file.printf_P(PSTR("\n**** MAX LENGTH OF FILE REACHED. DELETE FILE TO LOG AGAIN"));
+        return;
+    }
+
+    tm * p_time_tm = gmtime((time_t*) &_timestamp_secs);
+    char tm_string[64];
+    strftime(tm_string, 64, "%F %T", p_time_tm);
+    file.print(tm_string);
+    file.printf_P(PSTR("UTC.  SW:%s \nCIO-ESP:"), FW_VERSION);
     for(unsigned int i = 0; i< fromcio.size(); i++)
     {
         if(i>0)file.print(',');
@@ -278,7 +286,17 @@ void BWC::_log()
         if(i>0)file.print(',');
         file.print(todsp[i], HEX);
     }
-    file.printf_P(PSTR("\nCIO msg count: %d DSP msg count: %d\n"), cio->good_packets_count, dsp->good_packets_count);
+    file.printf_P(PSTR("\nCIO msg count: %d DSP msg count: %d"), cio->good_packets_count, dsp->good_packets_count);
+    float CIO_quality, DSP_quality;
+    if(cio->good_packets_count == 0 && cio->bad_packets_count == 0)
+      CIO_quality = 0;
+    else
+      CIO_quality = 100 * cio->good_packets_count / (cio->good_packets_count + cio->bad_packets_count);
+    if(dsp->good_packets_count == 0 && dsp->bad_packets_count == 0)
+      DSP_quality = 0;
+    else
+      DSP_quality = 100 * dsp->good_packets_count / (dsp->good_packets_count + dsp->bad_packets_count);
+    file.printf_P(PSTR("\nCIO msg quality: %f%% DSP msg quality: %f%% (Only useful in 4 wire pumps)\n\n"), CIO_quality, DSP_quality);
     file.close();
 }
 
