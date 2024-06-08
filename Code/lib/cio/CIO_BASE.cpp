@@ -24,3 +24,17 @@ String CIO::debug()
     s += String(good_packets_count);
     return s;
 }
+
+int CIO::getHeaterPower()
+{
+    return
+        (_heater_stages.stage1_on ? 1:0) * _power_levels.HEATERPOWER_STAGE1 +
+        (_heater_stages.stage2_on ? 1:0) * _power_levels.HEATERPOWER_STAGE2;
+
+}
+
+void CIO::setPowerLevels(const std::optional<const Power>& power_levels) {
+    if(power_levels.has_value()) {
+        _power_levels = power_levels.value();
+    }
+}

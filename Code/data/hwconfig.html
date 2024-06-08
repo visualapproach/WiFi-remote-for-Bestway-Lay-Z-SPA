@@ -5,11 +5,10 @@
 	<meta charset="utf-8">
 	<link rel="icon" type="image/png" sizes="180x180" href="favicon.png">
 	<meta name="theme-color" content="#0f4677">
-	<link rel="manifest" href="manifest.json">
+	<!-- <link rel="manifest" href="manifest.json"> -->
 	<link rel="stylesheet" href="main.css">
 	<meta  name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1">
-	<script src="function.js" type="text/javascript"></script>
-	<script src="index.js" type="text/javascript"></script>
+	<!-- <script src="function.js" type="text/javascript"></script> -->
 </head>
 
 <body>
@@ -147,6 +146,35 @@
 		</section>
 
 		<section>
+			<p>Power levels (in Watts) <span data-text="Customize power levels for different running modes." class="tooltip">?</span></p>
+			<table>
+				<tr>
+					<td colspan="5">Override <input type="checkbox" id="pwr_override" onclick="onOverrideClick()"></td>
+				</tr>
+				<tr>
+					<td>Heat stage 1<input type="text" id="pwr_heater_stage1" maxlength="4" style="width:30px" 
+						inputmode="numeric" pattern="[0-9]{1,4}"
+						disabled="disabled"></td>
+					<td>Heat stage 2<input type="text" id="pwr_heater_stage2" maxlength="4" style="width:30px" 
+						inputmode="numeric" pattern="[0-9]{1,4}"
+						disabled="disabled"></td>
+					<td>Pump <input type="text" id="pwr_pump" maxlength="4" style="width:30px"
+						inputmode="numeric" pattern="[0-9]{1,4}"
+						disabled="disabled"></td>
+					<td>Idle <input type="text" id="pwr_idle" maxlength="4" style="width:30px"
+						inputmode="numeric" pattern="[0-9]{1,4}"
+						disabled="disabled"></td>
+					<td>Air <input type="text" id="pwr_air" maxlength="4" style="width:30px"
+						inputmode="numeric" pattern="[0-9]{1,4}"
+						disabled="disabled"></td>
+					<td>Jets <input type="text" id="pwr_jet" maxlength="4" style="width:30px"
+						inputmode="numeric" pattern="[0-9]{1,4}"
+						disabled="disabled"></td>
+				</tr>
+			</table>
+		</section>
+
+		<section>
 			<table>
 				<tr>
 					<td colspan="2" style="text-align:center">
@@ -159,8 +187,96 @@
 	</div>
 
 <script>
+  function topNav() {
+    var x = document.getElementById("topnav");
+    if (x.className === "topnav") {
+      x.className += " responsive";
+    } else {
+      x.className = "topnav";
+    }
+  }
+
+  function togglePlainText(id) {
+    var x = document.getElementById(id);
+    if (x.type === "password") {
+      x.type = "text";
+    } else {
+      x.type = "password";
+    }
+  }
+
+  function validatePassword(id) {
+    var x = document.getElementById(id);
+    if (x.value == "<enter password>") {
+      alert("Please enter a password to continue.");
+      return false;
+    }
+    return true;
+  }
+
+  // Function to update the displayed number
+  function updateNumber(opt, parent) {
+    var parentElement = parent.parentElement;
+    var numDisplay = parentElement.querySelector(".numDisplay");
+    var number = parseInt(numDisplay.textContent);
+    if (opt == "up") number += 1;
+    if (opt == "dn") number -= 1;
+    numDisplay.textContent = number;
+  }
+
+  function increaseNumber(id) {
+    var x = document.getElementById(id);
+    var val = Number(x.value);
+    var max = x.max;
+    if (max > val) {
+      val += 1;
+      x.value = val;
+    }
+    var opt = "up";
+    updateNumber(opt, x);
+  }
+
+  function decreaseNumber(id) {
+    var x = document.getElementById(id);
+    var val = Number(x.value);
+    var min = x.min;
+    if (min < val) {
+      val -= 1;
+      x.value = val;
+    }
+    var opt = "dn";
+    updateNumber(opt, x);
+  }
+
+  function buttonConfirm(elem, text = "", timeout = 3, reset = true) {
+    var originalText = elem.innerHTML;
+
+    elem.innerHTML = text == "" ? "&check;" : text;
+    elem.disabled = true;
+
+    if (reset) {
+      setTimeout(function () {
+        elem.innerHTML = originalText;
+        elem.disabled = false;
+      }, timeout * 1000);
+    }
+  }
+
+</script>
+<script>
 setPins();	
 loadHardwareConfig();
+
+function onOverrideClick()
+{
+	let checked = document.getElementById("pwr_override").checked;
+	[...document.querySelectorAll("input[id^='pwr_']")]
+		.forEach((e) => {
+			if (e.type !== "checkbox") {
+				e.disabled = !checked;
+			}
+		})
+}
 
 function setPins()
 {
@@ -320,6 +436,20 @@ function loadHardwareConfig()
 			{
 				setPins();
 			}
+
+			// Set power levels if override enabled
+			if (json.pwr_levels.override) {
+				[...document.querySelectorAll("input[id^='pwr_']")]
+				.forEach((e) => {
+					if (e.type !== "checkbox") {
+						e.value = json.pwr_levels[e.id.slice(4)];
+					}
+				})
+				document.getElementById("pwr_override").checked = true;
+				onOverrideClick();
+			} else {
+				document.getElementById("pwr_override").checked = false;
+			}
 		}
 	}
 }
@@ -350,7 +480,17 @@ function saveHardwareConfig()
 			document.getElementById('pin6').value,
 			document.getElementById('pin7').value,
 			document.getElementById('pin8').value
-		]
+		],
+		'pwr_levels': 
+			[...document.querySelectorAll("input[id^='pwr_']")]
+				.reduce((acc, e) => {
+					if (e.type === "checkbox") {
+						acc[e.id.slice(4)] = e.checked;
+					} else {
+						acc[e.id.slice(4)] = e.value;
+					}
+					return acc;
+				}, {})
 	};
 	req.send(JSON.stringify(json));
 	console.log(JSON.stringify(json));

@@ -837,7 +837,7 @@ void handleHWtest()
         delay(0);
     }
 
-    sprintf_P(result, PSTR("End of test!\nErrors indicated by 1 or 0 depending on test state. - is good.\n"));
+    sprintf_P(result, PSTR("End of test!\n\"1\" or \"0\" indicates ERROR, depending on test state. \"-\" is good.\n"));
     server->sendContent(result);
     sprintf_P(result, PSTR("Switching cio pins 5s HIGH -> 5s LOW -> input\n"));
     server->sendContent(result);

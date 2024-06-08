@@ -25,6 +25,7 @@ class DSP
         std::vector<uint8_t> _raw_payload_to_dsp = {0,0,0,0,0,0,0,0,0,0,0};
         int audiofrequency = 0;
         uint32_t good_packets_count = 0;
+        uint32_t bad_packets_count = 0;
         int write_msg_count = 0;
 
         /*

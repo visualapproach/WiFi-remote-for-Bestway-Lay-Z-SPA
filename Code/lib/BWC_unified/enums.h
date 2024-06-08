@@ -108,11 +108,18 @@ enum Models: uint8_t
 
 struct Power
 {
-    int HEATERPOWER;
+    int HEATERPOWER_STAGE1;
+    int HEATERPOWER_STAGE2;
     int PUMPPOWER;
     int AIRPOWER;
     int IDLEPOWER;
     int JETPOWER;
+};
+
+struct HeaterStages
+{
+    bool stage1_on = false;
+    bool stage2_on = false;
 };
 
 struct sStates
