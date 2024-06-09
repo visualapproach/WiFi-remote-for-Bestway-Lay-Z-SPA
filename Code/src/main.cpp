@@ -54,13 +54,14 @@ void setup()
     stack_start = &stack;
 
     Serial.begin(76800);
-    Serial.println(F("\nStart"));
-
+    BWC_LOG_P(PSTR("\nStart\n"),0);
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     /*register wifi events */
     gotIpEventHandler = WiFi.onStationModeGotIP(cb_gotIP);
     disconnectedEventHandler = WiFi.onStationModeDisconnected(cb_disconnected);
 
     LittleFS.begin();
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     {
         HeapSelectIram ephemeral;
         // Serial.printf_P(PSTR("IRamheap %d\n"), ESP.getFreeHeap());
@@ -68,31 +69,48 @@ void setup()
         oneWire = new OneWire(231);
         tempSensors = new DallasTemperature(oneWire);
     }
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     bwc->setup();
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     bwc->loop();
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
     startComplete.attach(30, []{ if(useMqtt) enableMqtt = true; startComplete.detach(); });
     // update webpage every 2 seconds. (will also be updated on state changes)
     updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     loadWebConfig();
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     startWiFi();
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     startNTP();
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     startOTA();
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     startHttpServer();
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     startWebSocket();
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     startMqtt();
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     if(bwc->hasTempSensor)
     { 
         oneWire->begin(bwc->tempSensorPin);
         tempSensors->begin();
     }
     Serial.println(WiFi.localIP().toString());
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     bwc->print("   ");  //No overloaded function exists for the F() macro
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     bwc->print(WiFi.localIP().toString());
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     bwc->print("   ");
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     bwc->print(FW_VERSION);
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     Serial.println(F("End of setup()"));
+    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     heap_water_mark = ESP.getFreeHeap();
     Serial.println(ESP.getFreeHeap());
 }
@@ -393,12 +411,14 @@ void startWiFi()
         WiFi.begin(wifi_info.apSsid.c_str(), wifi_info.apPwd.c_str());
 
         Serial.print(F("WiFi > Trying to connect ..."));
-        int maxTries = 10;
+        int maxTries = 1000;
         int tryCount = 0;
 
         while (WiFi.status() != WL_CONNECTED)
         {
-            delay(1000);
+            /* I suspect this old delay(1000) made the 4-wire DSPs to go nuts */
+            bwc->loop();
+            delay(10);
             // Serial.print(".");
             tryCount++;
 

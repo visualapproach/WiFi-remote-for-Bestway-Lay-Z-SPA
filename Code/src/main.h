@@ -34,6 +34,14 @@
 #include "config.h"
 #include "util.h"
 
+//
+#if BWC_DEBUGGING == 1
+    #define BWC_LOG_P(pstr_string, ...) Serial.printf_P(pstr_string, __VA_ARGS__)
+    #define BWC_LOG(s, ...) Serial.printf(s, __VA_ARGS__)
+#else
+    #define BWC_LOG_P(s, ...) 
+#endif
+
 BWC *bwc = nullptr;
 
 /**  */
@@ -102,7 +110,7 @@ void pause_all(bool action);
 void startWebSocket();
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len);
 void startHttpServer();
-void handleGetVersions();
+// void handleGetVersions();
 void handleGetHardware();
 void handleSetHardware();
 void handleHWtest();
