@@ -34,19 +34,32 @@
 #include "config.h"
 #include "util.h"
 
+//
+#if BWC_DEBUGGING == 1
+    #define BWC_LOG_P(pstr_string, ...) Serial.printf_P(pstr_string, __VA_ARGS__)
+    #define BWC_LOG(s, ...) Serial.printf(s, __VA_ARGS__)
+#else
+    #define BWC_LOG_P(s, ...) 
+#endif
+
 BWC *bwc = nullptr;
 
-/**  */
+/**  Tickers cb function runs in interrupt context and cannot be long... */
 Ticker bootlogTimer;
-/**  */
 Ticker periodicTimer;
-Ticker startComplete;
-/**  */
+Ticker startComplete_ticker;
+Ticker ntpCheck_ticker;
+Ticker checkWifi_ticker;
+
+/**  ...Hence these flags to do the work in normal context*/
 bool periodicTimerFlag = false;
+bool checkNTP_flag = false;
+bool CheckWiFi_flag = false;
 /**  */
 int periodicTimerInterval = 60;
 /** get or set the state of the network beeing connected */
 bool wifiConnected = false;
+sWifi_info wifi_info;
 
 /** a WiFi Manager for configurations via access point */
 // ESP_WiFiManager wm;
@@ -94,7 +107,11 @@ void getOtherInfo(String &rtn);
 void sendMQTT();
 void sendMQTTConfig();
 void startWiFi();
+void checkWiFi_ISR();
+void checkWiFi();
 void startWiFiConfigPortal();
+void checkNTP_ISR();
+void checkNTP();
 void startNTP();
 void startOTA();
 void stopall();
@@ -102,7 +119,7 @@ void pause_all(bool action);
 void startWebSocket();
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len);
 void startHttpServer();
-void handleGetVersions();
+// void handleGetVersions();
 void handleGetHardware();
 void handleSetHardware();
 void handleHWtest();
@@ -122,8 +139,8 @@ void loadWebConfig();
 void saveWebConfig();
 void handleGetWebConfig();
 void handleSetWebConfig();
-sWifi_info loadWifi();
-void saveWifi(const sWifi_info& wifi_info);
+void loadWifi();
+void saveWifi();
 void handleGetWifi();
 void handleSetWifi();
 void handleResetWifi();
