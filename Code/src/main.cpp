@@ -185,6 +185,8 @@ void loop()
     delay(3000);
     }
     //handleAUX();
+    // static int temp_counter = 0;
+    // if(++temp_counter % 100 == 0) BWC_LOG_P(PSTR("main loop %d\n"), millis());
 }
 
 /* Debugging to file, normally not used */
@@ -441,10 +443,12 @@ void checkNTP()
     if(now < 8 * 3600 * 2)
     {
         if (++ntpTryNumber == 10) {
+            ntpTryNumber = 0; //reset until next check
             ntpCheck_ticker.detach();
         }
-         return;
-    }    
+        return;
+    }
+    ntpCheck_ticker.detach(); //time is set, don't check again
     struct tm timeinfo;
     gmtime_r(&now, &timeinfo);
     time_t boot_timestamp = getBootTime();
@@ -1465,8 +1469,8 @@ void resetWiFi()
     updateMqttTimer.detach();
     updateWSTimer.detach();
     if(ntpCheck_ticker.active()) ntpCheck_ticker.detach();
-    bwc->stop();
     bwc->saveSettings();
+    bwc->stop();
     delay(1000);
 #if defined(ESP8266)
     ESP.eraseConfig();

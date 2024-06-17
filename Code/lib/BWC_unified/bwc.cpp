@@ -176,6 +176,7 @@ void BWC::begin(){
 
 void BWC::loop(){
     ++loop_count;
+    // if(loop_count % 100 == 0) Serial.printf_P(PSTR("bwc loop %d\n"), millis());
     #ifdef ESP8266
     ESP.wdtFeed();
     #endif
@@ -1509,7 +1510,7 @@ void BWC::_saveCommandQueue(){
         Serial.println(F("Failed to save cmdq.json"));
         return;
     } else {
-        Serial.println(F("Wrote cmdq.json"));
+        Serial.println(F("Writing cmdq.json"));
     }
     /*Do not save instant reboot command. Don't ask me how I know.*/
     if(_command_que.size())
@@ -1535,6 +1536,7 @@ void BWC::_saveCommandQueue(){
         // Serial.println(s);
     }
     file.close();
+    Serial.println(F("Done!"));
     //revive the dog
     // ESP.wdtEnable(0);
 }
