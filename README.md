@@ -1,8 +1,10 @@
 WiFi-remote-for-Bestway-Lay-Z-SPA
 =================================
 ESP8266 hack to use as WiFi remote control for Bestway Lay-Z-Spa Whirlpools (including 2021 year models) <br>
-Latest code found in [Development branch](https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/tree/development_v4)<br>
-Build instructions and more: [Read the manual](bwc-manual.pdf)
+Latest code found in [Development branch](https://github.com/visualapproach/WiFi-remote-for-Bestway-Lay-Z-SPA/tree/development_v4)
+Coming soon: Compatibility with S200102, P05504, late 2022 model.<br>
+Build instructions and more: [Read the manual](bwc-manual.pdf)<br>
+Check out releasenotes by clicking the release version to the right on this page.
 
 - [Features](#features)
 - [BOM](#bom)
