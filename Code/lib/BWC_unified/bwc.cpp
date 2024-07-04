@@ -297,7 +297,12 @@ void BWC::_log()
       DSP_quality = 0;
     else
       DSP_quality = 100 * dsp->good_packets_count / (dsp->good_packets_count + dsp->bad_packets_count);
-    file.printf_P(PSTR("\nCIO msg quality: %f%% DSP msg quality: %f%% (Only useful in 4 wire pumps)\n\n"), CIO_quality, DSP_quality);
+    file.printf_P(PSTR("\nCIO msg quality: %f%% DSP msg quality: %f%%\n\n"), CIO_quality, DSP_quality);
+    file.printf_P(PSTR("Packet errors:%d\nbit0-bit error, bit1-too many bytes, bit2: too few bytes.\n\n"), cio->packet_error);
+    for(int i = 0; i < 64; i++)
+    {
+        file.printf_P(PSTR("CIO CMD byte %2d: %X\n"), i, cio->CIO_CMD_LOG[i]);
+    }
     file.close();
 }
 
@@ -850,12 +855,6 @@ String BWC::getModel()
 bool BWC::add_command(command_que_item command_item)
 {
     _save_cmdq_needed = true;
-    /* TODO: handle resetq in handlecommandque() instead!!! */
-    // if(command_item.cmd == RESETQ)
-    // {
-    //     _command_que.clear();
-    //     return true;
-    // }
     if(command_item.cmd == SETREADY)
     {
         command_item.val = (int64_t)command_item.xtime; //Use val field to store the time to be ready
@@ -872,12 +871,6 @@ bool BWC::edit_command(uint8_t index, command_que_item command_item)
 {
     if(index > _command_que.size()) return false;
     _save_cmdq_needed = true;
-    /* TODO: handle resetq in handlecommandque() instead!!! */
-    // if(command_item.cmd == RESETQ)
-    // {
-    //     _command_que.clear();
-    //     return true;
-    // }
     if(command_item.cmd == SETREADY)
     {
         command_item.val = (int64_t)command_item.xtime; //Use val field to store the time to be ready

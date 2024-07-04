@@ -166,7 +166,6 @@ void IRAM_ATTR CIO_6_TYPE2::LED_Handler(void) {
         _bit_count = 0;
         _received_cmd = 0;
         _new_packet_available = (READ_PERI_REG(PIN_IN) & (1 << _CIO_LD_PIN)) > 0;
-        /*TODO: check if this is working*/
         _packet_transm_active = !_new_packet_available;
     }
 }

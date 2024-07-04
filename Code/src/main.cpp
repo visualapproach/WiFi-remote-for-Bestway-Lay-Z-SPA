@@ -1,4 +1,5 @@
 #include "main.h"
+#include "ports.h"
 
 // initial stack
 char *stack_start;
@@ -721,36 +722,51 @@ void preparefortest()
 void handleInputs()
 {
     server->setContentLength(CONTENT_LENGTH_UNKNOWN);
-    server->send(200, F("text/plain"), "");
+    server->send(200, F("text/plain"), "wait<br>");
 
     bwc->stop();
     preparefortest();
 
-    bool old_pin_state[7] = {0}, new_pin_state[7] = {0};
-    int counter[7] = {0};
-    unsigned long t = millis(); //start timestamp
+    /* 
+        Log all edges to a file in HEAP RAM. When that log is full send to web client
+    */
 
-    while(millis() < t+5000)
+    unsigned long pin_states = 0, old_pin_states = 0; //to store result from READ_PERI_REG (GPIOs)
+    unsigned long t; //timestamp - micros
+    uint32_t edge_count = 0;
+    const int array_len = 1024;
+    unsigned long* p_input_log = new unsigned long[array_len*2];
+
+    while(edge_count < array_len)
     {
-        for(uint8_t i = 0; i < 7; i++)
+        pin_states = READ_PERI_REG(PIN_IN); //mix unsigned long with uint32_t which is the same
+        if(pin_states != old_pin_states)
         {
-            new_pin_state[i] = digitalRead(bwc->pins[i]);
-            if(new_pin_state[i] != old_pin_state[i]) counter[i]++;
-            old_pin_state[i] = new_pin_state[i];
+            t = micros();
+            p_input_log[edge_count] = t; //log time
+            p_input_log[edge_count + array_len] = pin_states; //log states (all gpios)
+            edge_count++;
         }
-        yield();
+        old_pin_states = pin_states;
+        yield(); //keep the watchdog away and manage wifi etc. Unclear how much time we waste here...
     }
 
     /* send statistics to client */
     char s[128];
-    for(int i = 0; i < 7; i++)
+    sprintf_P(s, PSTR("micros, gpio registers\n"));
+    server->sendContent(s);
+    for(int i = 0; i < array_len; i++)
     {
-        sprintf_P(s, PSTR("Edges received on pin D%d: %d\n"), gpio2dp(bwc->pins[i]), counter[i]);
+        sprintf_P(s, PSTR("%u,%X\n"), p_input_log[i], p_input_log[i+array_len]);
         server->sendContent(s);
+        yield(); //keep the watchdog away and manage wifi etc. Unclear how much time we waste here...
     }
-    sprintf_P(s, PSTR("On 6-w pump the highest number is CLK, next is DATA and third is CS. On 4-wires the highest is CIO or DSP TX to ESP."));
+    sprintf_P(s, PSTR("Cut and paste all above. Zip and post on forum for help.\n"));
     server->sendContent(s);
     server->sendContent("");
+
+    delete [] p_input_log;
+
     bwc->setup();
 }
 
