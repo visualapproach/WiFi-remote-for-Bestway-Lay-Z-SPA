@@ -46,7 +46,7 @@ void setup()
 
     LittleFS.begin();
     {
-        HeapSelectIram ephemeral;
+        // HeapSelectIram ephemeral;
         // Serial.printf_P(PSTR("IRamheap %d\n"), ESP.getFreeHeap());
         bwc = new BWC;
         oneWire = new OneWire(231);
@@ -203,7 +203,7 @@ void write_mem_stats_to_file()
     struct tm timeinfo;
     gmtime_r(&now, &timeinfo);
     {
-        HeapSelectIram ephemeral;
+        // HeapSelectIram ephemeral;
         file.printf_P(PSTR("Time: %s, IRam: free %d, frag %d, max block %d "),
             asctime(&timeinfo),
             ESP.getFreeHeap(), 
@@ -228,7 +228,7 @@ void write_mem_stats_to_file()
 void sendWS()
 {
     if(webSocket->connectedClients() == 0) return;
-    HeapSelectIram ephemeral;
+    // HeapSelectIram ephemeral;
     // Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
     // send states
     String json;
@@ -552,7 +552,7 @@ void pause_all(bool action)
 
 void startWebSocket()
 {
-    HeapSelectIram ephemeral;
+    // HeapSelectIram ephemeral;
     Serial.printf_P(PSTR("WS IRamheap %d\n"), ESP.getFreeHeap());
     if(webSocket != nullptr)
     {
@@ -1409,6 +1409,7 @@ void handleGetWifi()
     doc[F("ip4DnsSecondary")] = wifi_info.ip4DnsSecondary_str;
     doc[F("ip4NTP")] = wifi_info.ip4NTP_str;
     String json;
+    json.reserve(200);
     if (serializeJson(doc, json) == 0)
     {
         json = F("{\"error\": \"Failed to serialize message\"}");
@@ -1644,7 +1645,7 @@ void handleSetMqtt()
  */
 void handleDir()
 {
-    HeapSelectIram ephemeral;
+    // HeapSelectIram ephemeral;
     Serial.printf_P(PSTR("dir IRamheap %d\n"), ESP.getFreeHeap());
 
     String mydir;
@@ -1823,7 +1824,7 @@ void updateError(int err){
 void startMqtt()
 {
     {
-        HeapSelectIram ephemeral;
+        // HeapSelectIram ephemeral;
         Serial.printf_P(PSTR("IRamheap %d\n"), ESP.getFreeHeap());
         Serial.println(F("startmqtt"));
         if(!aWifiClient) aWifiClient = new WiFiClient;
@@ -2048,7 +2049,7 @@ void handleESPInfo()
     uint32_t iram_heap; 
     uint32_t iram_maxblock;
     {
-        HeapSelectIram ephemeral;
+        // HeapSelectIram ephemeral;
         iram_heap = ESP.getFreeHeap();
         iram_maxblock = ESP.getMaxFreeBlockSize();
     }

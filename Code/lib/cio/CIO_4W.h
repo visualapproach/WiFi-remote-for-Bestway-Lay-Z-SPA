@@ -44,7 +44,7 @@ class CIO_4W : public CIO
 
     private:
         uint64_t _prev_ms;
-        SoftwareSerial *_cio_serial;
+        EspSoftwareSerial::UART *_cio_serial;
         uint8_t _heat_bitmask = 0;
         uint8_t _from_CIO_buf[7] = {};
         uint8_t _to_CIO_buf[7] = {};

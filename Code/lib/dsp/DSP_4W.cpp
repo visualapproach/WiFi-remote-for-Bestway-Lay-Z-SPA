@@ -3,9 +3,9 @@
 
 void DSP_4W::setup(int dsp_tx, int dsp_rx, int dummy, int dummy2)
 {
-    HeapSelectIram ephemeral;
-    _dsp_serial = new SoftwareSerial;
-    _dsp_serial->begin(9600, SWSERIAL_8N1, dsp_tx, dsp_rx, false, 63);
+    // HeapSelectIram ephemeral;
+    _dsp_serial = new EspSoftwareSerial::UART;
+    _dsp_serial->begin(9600, SWSERIAL_8N1, dsp_tx, dsp_rx, false, 24);
     _dsp_serial->setTimeout(20);
     dsp_toggles.locked_pressed = 0;
     dsp_toggles.power_change = 0;

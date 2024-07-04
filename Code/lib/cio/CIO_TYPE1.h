@@ -33,7 +33,7 @@ class CIO_6_TYPE1: public CIO_6W
         int _CS_PIN;
         int _CLK_PIN;
         int _DATA_PIN;
-        /*Real CIO is sending 0x01 which is illegal according to datasheet.
+        /*Real CIO is sending 0x01 which is illegal according to datasheet.*/
         /*Needs to be static to work in switch/case.*/
         static const uint8_t DSP_CMD1_MODE6_11_7 = 0x01; //new model send 0x05
         static const uint8_t DSP_CMD1_MODE6_11_7_P05504 = 0x05;

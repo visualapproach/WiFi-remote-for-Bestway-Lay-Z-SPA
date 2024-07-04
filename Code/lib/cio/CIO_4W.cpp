@@ -8,10 +8,10 @@ void CIO_4W::setup(int cio_rx, int cio_tx, int dummy)
         Devices are sending on their TX lines, so we read that with RX pins on the ESP
         Hence the "backwards" parameters (cio_tx goes to ESP serial RX)
     */
-    HeapSelectIram ephemeral;
-    _cio_serial = new SoftwareSerial;
+    // HeapSelectIram ephemeral;
+    _cio_serial = new EspSoftwareSerial::UART;
 
-    _cio_serial->begin(9600, SWSERIAL_8N1, cio_tx, cio_rx, false, 63);
+    _cio_serial->begin(9600, SWSERIAL_8N1, cio_tx, cio_rx, false, 24);
     _cio_serial->setTimeout(20);
     cio_states.target = 20;
     cio_states.locked = false;

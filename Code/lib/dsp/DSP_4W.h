@@ -16,7 +16,7 @@ class DSP_4W : public DSP
         void pause_all(bool action) override;
         void updateToggles();
         void handleStates();
-        SoftwareSerial *_dsp_serial;
+        EspSoftwareSerial::UART *_dsp_serial;
         bool getSerialReceived() override;
         void setSerialReceived(bool txok) override;
   
