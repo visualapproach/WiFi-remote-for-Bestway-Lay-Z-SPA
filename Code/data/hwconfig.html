@@ -136,11 +136,11 @@
 		</section>
 		
 		<section>
-			<p>Ambient Temperature Sensor <span data-text="Requires a DS18B20 sensor to be connected to the pin labeled 'Sensor Pin'. The sensor will update the 'Ambient Temperature' periodically." class="tooltip">?</span></p>
+			<p>Ambient "One Wire Temperature Sensor"<span data-text="Requires a DS18B20 sensor to be connected to the pin labeled 'Sensor Pin'. The sensor will update the 'Ambient Temperature' periodically." class="tooltip left">?</span></p>
 			<table>
 				<tr>
 					<td>Enable <input type="checkbox" id="hasTempSensor" name="hasTempSensor" value="checked"></td>
-					<td>Sensor Pin <span data-text="D0-D8 as labeled on the ESP, but without the 'D'. The ESP will convert to GPIO numbers." class="tooltip">?</span> <input type="text" id="pin8" maxlength="2" style="width:30px"></td>
+					<td>Sensor Pin (Dx)<span data-text="D0-D8 as labeled on the ESP, but without the 'D'. The ESP will convert to GPIO numbers." class="tooltip left">?</span> <input type="text" id="pin8" maxlength="2" style="width:30px"></td>
 				</tr>
 			</table>
 		</section>
