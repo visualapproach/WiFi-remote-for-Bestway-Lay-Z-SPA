@@ -45,11 +45,11 @@
 BWC *bwc = nullptr;
 
 /**  Tickers cb function runs in interrupt context and cannot be long... */
-Ticker bootlogTimer;
-Ticker periodicTimer;
-Ticker startComplete_ticker;
-Ticker ntpCheck_ticker;
-Ticker checkWifi_ticker;
+Ticker* bootlogTimer;
+Ticker* periodicTimer;
+Ticker* startComplete_ticker;
+Ticker* ntpCheck_ticker;
+Ticker* checkWifi_ticker;
 
 /**  ...Hence these flags to do the work in normal context*/
 bool periodicTimerFlag = false;
@@ -70,13 +70,11 @@ ESP8266WebServer *server = nullptr;
 #elif defined(ESP32)
 WebServer server(80);
 #endif
-/** a file variable to temporarily store the received file */
-File fsUploadFile;
 
 /** a websocket object that listens on port 81 */
 WebSocketsServer *webSocket = nullptr;
 /**  */
-Ticker updateWSTimer;
+Ticker* updateWSTimer;
 /**  */
 bool sendWSFlag = false;
 
@@ -93,7 +91,7 @@ String prevButtonName = "";
 /**  */
 bool prevunit = 1;
 /**  */
-Ticker updateMqttTimer;
+Ticker* updateMqttTimer;
 /**  */
 bool sendMQTTFlag = false;
 bool enableMqtt = false;
@@ -168,6 +166,6 @@ void setupHA();
 void handlePrometheusMetrics();
 
 /* Debug */
-void write_mem_stats_to_file();
+// void write_mem_stats_to_file();
 void preparefortest();
 void handleInputs();

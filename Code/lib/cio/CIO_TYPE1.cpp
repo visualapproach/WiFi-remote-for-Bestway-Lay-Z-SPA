@@ -299,7 +299,7 @@ void IRAM_ATTR CIO_6_TYPE1::isr_clkHandler(void) {
                 pinMode(_DATA_PIN, OUTPUT);
             #endif
             }
-            CIO_CMD_LOG[CIO_CMD_LOG_index++] = (int)_received_byte;
+            CIO_CMD_LOG[CIO_CMD_LOG_index++] = (uint8_t)_received_byte;
             CIO_CMD_LOG_index %= 64;
         }
     }

@@ -80,7 +80,7 @@ void BWC::setup(void){
         // Serial.printf("pin%d: %d\n", i, pins[i]);
     }
     {
-        // HeapSelectIram ephemeral;
+        HeapSelectIram ephemeral;
         switch(ciomodel)
         {
             case PRE2021:

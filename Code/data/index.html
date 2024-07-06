@@ -693,8 +693,8 @@ function initApplication()
     {
         setWebConfig();
     }
-    loadWebConfig();
-    connect();
+    setTimeout(loadWebConfig,500);
+    setTimeout(connect, 1000);
 }
 
 function setWebConfig()

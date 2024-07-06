@@ -177,7 +177,7 @@ void setupHA()
     devicedoc[(_dev)][(_identifiers)] = mychipid;
     devicedoc[(_dev)][(_manufacturer)] = F("Visualapproach");
     devicedoc[(_dev)][(_model)] = bwc->getModel();
-    devicedoc[(_dev)][(_name)] = mqttBaseTopic;
+    devicedoc[(_dev)][(_name)] = mqtt_info->mqttBaseTopic;
     devicedoc[(_dev)][(_sw_v)] = FW_VERSION;
 
 
@@ -189,19 +189,19 @@ void setupHA()
                                     /* brightness slider */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    String unique_id = mqttBaseTopic + F("_brightness")+mychipid;
-    topic = F(HA_PREFIX);               //HA discovery prefix
+    String unique_id = mqtt_info->mqttBaseTopic + F("_brightness")+mychipid;
+    topic = HA_PREFIX_F;               //HA discovery prefix
     topic += F("/number/");             //component
     topic += unique_id;                 //object id = unique id as recommended in HA docs
     topic += F("/config");
     doc[(_uniq_id)] = unique_id;
     doc[(_name)] = F("Brightness");     //Friendly name will be "devicename Brightness" ie "layzspa Brightness"
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.BRT }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc[(_cmd_tpl)] = F("{CMD:12,VALUE:{{ value | int }},XTIME:0,INTERVAL:0}");
     doc[_mymin] = 0;
     doc[_mymax] = 8;
@@ -221,19 +221,19 @@ void setupHA()
                                         /* spa ambient temperature number °C */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_amb_temp_c")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_amb_temp_c")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/number/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Amb temp C");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.AMBC }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc[(_cmd_tpl)] = F("{CMD:15,VALUE:{{ value | int }},XTIME:0,INTERVAL:0}");
     doc[_mymin] = -50;
     doc[_mymax] = 60;
@@ -255,19 +255,19 @@ void setupHA()
                                         /* spa ambient temperature number °F */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_amb_temp_f")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_amb_temp_f")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/number/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Amb temp F");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.AMBF }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc[(_cmd_tpl)] = F("{CMD:14,VALUE:{{ value | int }},XTIME:0,INTERVAL:0}");
     doc[_mymin] = -58;
     doc[_mymax] = 140;
@@ -297,15 +297,15 @@ void setupHA()
                                         /* pressed button sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_pressed_button")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_pressed_button")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Pressed button");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/button");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/button");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
 
@@ -327,16 +327,16 @@ void setupHA()
                                         /* reboot time sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_reboot_time")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_reboot_time")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Reboot time");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/reboot_time");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/reboot_time");
     doc[(_val_tpl)] = F("{{as_timestamp(as_datetime(value).isoformat()) | timestamp_custom('%F %T')}}");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -355,15 +355,15 @@ void setupHA()
                                         /* reboot reason sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_reboot_reason")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_reboot_reason")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Reboot reason");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/reboot_reason");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/reboot_reason");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -382,17 +382,17 @@ void setupHA()
                                         /* WiFi SSID sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_ssid")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_ssid")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("SSID");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/other");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/other");
     doc[(_val_tpl)] = F("{{ value_json.SSID }}");
     doc[_expire_after] = 700;
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -410,18 +410,18 @@ void setupHA()
                                         /* WiFi RSSI sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_rssi")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_rssi")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("RSSI");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/other");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/other");
     doc[_unit_of_meas] = F("dBm");
     doc[(_val_tpl)] = F("{{ value_json.RSSI }}");
     doc[_expire_after] = 700;
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -440,17 +440,17 @@ void setupHA()
                                         /* WiFi local ip sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_ip")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_ip")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("IP");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/other");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/other");
     doc[(_val_tpl)] = F("{{ value_json.IP }}");
     doc[_expire_after] = 700;
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -468,15 +468,15 @@ void setupHA()
                                         /* connect count sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_connect_count")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_connect_count")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Connect count");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/MQTT_Connect_Count");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/MQTT_Connect_Count");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -493,17 +493,17 @@ void setupHA()
                                         /* error sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_error")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_error")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Error");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
     doc[(_val_tpl)] = F("{{ value_json.ERR }}");
     doc[_expire_after] = 700;
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -523,19 +523,19 @@ void setupHA()
                                         /* spa time to ready sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_time_to_ready")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_time_to_ready")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Time to ready");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[_unit_of_meas] = F("hours");
     doc[(_val_tpl)] = F("{{ value_json.T2R }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:clock");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -554,17 +554,17 @@ void setupHA()
                                         /* Ready State sensor (Never, Ready, Not Ready) */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_time_to_ready")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_time_to_ready")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Ready state");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[(_val_tpl)] = F("{{ value_json.RS }}");
     doc[_expire_after] = 700;
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -584,21 +584,21 @@ void setupHA()
                                         /* spa energy sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_energy")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_energy")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Energy");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[_unit_of_meas] = F("kWh");
     doc[(_val_tpl)] = F("{{ value_json.KWH | round(3) }}");
     doc[_dev_cla] = F("energy");
     doc["state_class"] = F("total_increasing");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:flash");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -615,19 +615,19 @@ void setupHA()
                                         /* spa energy cost sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_cost")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_cost")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Energy cost");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[(_val_tpl)] = F("{{ value_json.COST | round(3) }}");
     doc[_dev_cla] = F("monetary");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:currency-usd");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -645,21 +645,21 @@ void setupHA()
                                         /* spa daily energy sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_today")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_today")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Today");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[_unit_of_meas] = F("kWh");
     doc[(_val_tpl)] = F("{{ value_json.KWHD | round(3) }}");
     doc[_dev_cla] = F("energy");
     doc["state_class"] = F("total_increasing");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:flash");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -678,21 +678,21 @@ void setupHA()
                                         /* spa power sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_power")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_power")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Power");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[_unit_of_meas] = F("W");
     doc[(_val_tpl)] = F("{{ value_json.WATT | int }}");
     doc[_dev_cla] = F("power");
     doc["state_class"] = F("measurement");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:flash");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -711,19 +711,19 @@ void setupHA()
                                         /* spa chlorine age sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_chlorine_age")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_chlorine_age")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Chlorine age");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[_unit_of_meas] = F("days");
     doc[(_val_tpl)] = F("{{ ( ( (now().timestamp()|int) - value_json.CLTIME|int)/3600/24) | round(2) }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("hass:hand-coin-outline");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -742,19 +742,19 @@ void setupHA()
                                         /* spa filter age sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_filter_age")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_filter_age")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Filter age");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[_unit_of_meas] = F("days");
     doc[(_val_tpl)] = F("{{ ( ( (now().timestamp()|int) - value_json.FREP|int)/3600/24) | round(2) }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("hass:air-filter");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -771,19 +771,19 @@ void setupHA()
                                         /* spa filter clean sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_filter_clean")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_filter_clean")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Filter clean");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[_unit_of_meas] = F("days");
     doc[(_val_tpl)] = F("{{ ( ( (now().timestamp()|int) - value_json.FCLE|int)/3600/24) | round(2) }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("hass:spray-bottle");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -800,19 +800,19 @@ void setupHA()
                                         /* spa filter rinse sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_filter_rinse")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_filter_rinse")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Filter rinse");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[_unit_of_meas] = F("days");
     doc[(_val_tpl)] = F("{{ ( ( (now().timestamp()|int) - value_json.FRIN|int)/3600/24) | round(2) }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("hass:water-pump");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -830,19 +830,19 @@ void setupHA()
                                         /* spa uptime sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_uptime")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_uptime")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Uptime");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[_unit_of_meas] = F("days");
     doc[(_val_tpl)] = F("{{ ( (value_json.UPTIME|int)/3600/24) | round(2) }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:clock-outline");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -861,19 +861,19 @@ void setupHA()
                                         /* spa pump time sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_pumptime")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_pumptime")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Pump time");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[_unit_of_meas] = F("hours");
     doc[(_val_tpl)] = F("{{ ( (value_json.PUMPTIME|int)/3600) | round(2) }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:clock-outline");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -892,19 +892,19 @@ void setupHA()
                                         /* spa heater time sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_heatertime")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_heatertime")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Heater time");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[_unit_of_meas] = F("hours");
     doc[(_val_tpl)] = F("{{ ( (value_json.HEATINGTIME|int)/3600) | round(2) }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:clock-outline");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -923,19 +923,19 @@ void setupHA()
                                         /* spa air time sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_airtime")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_airtime")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Air time");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/times");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
     doc[_unit_of_meas] = F("hours");
     doc[(_val_tpl)] = F("{{ ( (value_json.AIRTIME|int)/3600) | round(2) }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:clock-outline");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -954,18 +954,18 @@ void setupHA()
                                         /* spa temperature sensor f */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_temp_f")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_temp_f")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Temp (F)");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
     doc[_unit_of_meas] = "°F";
     doc[(_val_tpl)] = F("{{ value_json.TMPF }}");
     doc[_expire_after] = 700;
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[_dev_cla] = F("temperature");
@@ -985,18 +985,18 @@ void setupHA()
                                         /* spa temperature sensor c */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_temp_c")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_temp_c")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Temp (C)");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
     doc[_unit_of_meas] = "°C";
     doc[(_val_tpl)] = F("{{ value_json.TMPC }}");
     doc[_expire_after] = 700;
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[_dev_cla] = F("temperature");
@@ -1016,18 +1016,18 @@ void setupHA()
                                         /* spa virtual temperature sensor f */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_virtual_temp_f")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_virtual_temp_f")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Virtual temp (F)");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
     doc[_unit_of_meas] = "°F";
     doc[(_val_tpl)] = F("{{ value_json.VTMF | round(2) }}");
     doc[_expire_after] = 700;
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[_dev_cla] = F("temperature");
@@ -1047,18 +1047,18 @@ void setupHA()
                                         /* spa virtual temperature sensor c */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_virtual_temp_c")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_virtual_temp_c")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Virtual temp (C)");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
     doc[_unit_of_meas] = "°C";
     doc[(_val_tpl)] = F("{{ value_json.VTMC | round(2) }}");
     doc[_expire_after] = 700;
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[_dev_cla] = F("temperature");
@@ -1078,18 +1078,18 @@ void setupHA()
                                         /* spa target temperature sensor f */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_target_temp_f")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_target_temp_f")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Target temp (F)");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
     doc[_unit_of_meas] = "°F";
     doc[(_val_tpl)] = F("{{ value_json.TGTF }}");
     doc[_expire_after] = 700;
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[_dev_cla] = F("temperature");
@@ -1110,18 +1110,18 @@ void setupHA()
                                         /* spa target temperature sensor c */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_target_temp_c")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_target_temp_c")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Target temp (C)");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
     doc[_unit_of_meas] = "°C";
     doc[(_val_tpl)] = F("{{ value_json.TGTC }}");
     doc[_expire_after] = 700;
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[_dev_cla] = F("temperature");
@@ -1146,18 +1146,18 @@ void setupHA()
                                         /* spa lock binary_sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_lock")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_lock")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/binary_sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[_name] = F("Lock");
     doc[_uniq_id] = unique_id;
-    doc[_stat_t] = mqttBaseTopic+F("/message");
+    doc[_stat_t] = mqtt_info->mqttBaseTopic+F("/message");
     doc[_val_tpl] = F("{% if value_json.LCK == 1 %}OFF{% else %}ON{% endif %}");
     // doc[_dev_cla] = F("lock");
     doc[_expire_after] = 700;
-    doc[_avty_t] = mqttBaseTopic+F("/Status");
+    doc[_avty_t] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[_pl_avail] = _alive;
     doc[_pl_not_avail] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -1176,18 +1176,18 @@ void setupHA()
                                         /* spa heater binary_sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_heater")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_heater")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/binary_sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Heater");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
     doc[(_val_tpl)] = F("{% if value_json.RED == 1 %}ON{% else %}OFF{% endif %}");
     doc[_dev_cla] = F("heat");
     doc[_expire_after] = 700;
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -1206,18 +1206,18 @@ void setupHA()
                                         /* spa ready binary_sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_ready")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_ready")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/binary_sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Ready");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
     doc[(_val_tpl)] = F("{% if value_json.TMP > 30 %}{% if value_json.TMP >= value_json.TGT-1 %}ON{% else %}OFF{% endif %}{% else %}OFF{% endif %}");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:hot-tub");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -1236,16 +1236,16 @@ void setupHA()
                                         /* spa connection status binary_sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_connection")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_connection")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/binary_sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Connection");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[_dev_cla] = F("connectivity");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc["pl_on"] = _alive;
@@ -1272,19 +1272,19 @@ void setupHA()
                                         /* spa heat regulation switch */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_heat_regulation")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_heat_regulation")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Heat regulation");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc[(_val_tpl)] = F("{% if value_json.RED == 1 %}1{% elif value_json.GRN == 1 %}1{% else %}0{% endif %}");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:radiator");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc["pl_on"] = F("{CMD:3,VALUE:true,XTIME:0,INTERVAL:0}");
@@ -1307,19 +1307,19 @@ void setupHA()
                                     /* spa waterjets switch */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_jets")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_jets")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Jets");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc[(_val_tpl)] = F("{{ value_json.HJT }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:hydro-power");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc["pl_on"] = F("{CMD:11,VALUE:true,XTIME:0,INTERVAL:0}");
@@ -1342,19 +1342,19 @@ void setupHA()
                                         /* spa airbubbles switch */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_airbubbles")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_airbubbles")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Airbubbles");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc[(_val_tpl)] = F("{{ value_json.AIR }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:chart-bubble");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc["pl_on"] = F("{CMD:2,VALUE:true,XTIME:0,INTERVAL:0}");
@@ -1377,19 +1377,19 @@ void setupHA()
                                         /* spa pump switch */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_pump")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_pump")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Pump");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc[(_val_tpl)] = F("{{ value_json.FLT }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:pump");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc["pl_on"] = F("{CMD:4,VALUE:true,XTIME:0,INTERVAL:0}");
@@ -1412,19 +1412,19 @@ void setupHA()
                                         /* spa temperature unit switch */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_unit")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_unit")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Temperature unit F-C");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc[(_val_tpl)] = F("{{ value_json.UNT }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:circle-outline");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc["pl_on"] = F("{CMD:1,VALUE:true,XTIME:0,INTERVAL:0}");
@@ -1447,19 +1447,19 @@ void setupHA()
                                         /* spa take control switch */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_ctrl")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_ctrl")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Take control");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/message");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc[(_val_tpl)] = F("{{ value_json.GOD }}");
     doc[_expire_after] = 700;
     doc[_icon] = F("mdi:steering");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc["pl_on"] = F("{CMD:17,VALUE:true,XTIME:0,INTERVAL:0}");
@@ -1489,17 +1489,17 @@ void setupHA()
                                         /* spa reset chlorine timer button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_reset_chlorine")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_reset_chlorine")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/button/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Reset chlorine timer");
     doc[(_uniq_id)] = unique_id;
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc["payload_press"] = F("{CMD:9,VALUE:true,XTIME:0,INTERVAL:0}");
     doc[_icon] = F("mdi:restart");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -1518,17 +1518,17 @@ void setupHA()
                                         /* spa reset filter change timer button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_reset_filterchange")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_reset_filterchange")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/button/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Reset filter change timer");
     doc[(_uniq_id)] = unique_id;
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc["payload_press"] = F("{CMD:10,VALUE:true,XTIME:0,INTERVAL:0}");
     doc[_icon] = F("mdi:restart");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -1545,17 +1545,17 @@ void setupHA()
                                         /* spa reset filter clean timer button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_reset_filterclean")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_reset_filterclean")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/button/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Reset filter clean timer");
     doc[(_uniq_id)] = unique_id;
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc["payload_press"] = F("{CMD:23,VALUE:true,XTIME:0,INTERVAL:0}");
     doc[_icon] = F("mdi:restart");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -1572,17 +1572,17 @@ void setupHA()
                                         /* spa reset filter rinse timer button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_reset_filterrinse")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_reset_filterrinse")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/button/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Reset filter rinse timer");
     doc[(_uniq_id)] = unique_id;
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc["payload_press"] = F("{CMD:22,VALUE:true,XTIME:0,INTERVAL:0}");
     doc[_icon] = F("mdi:restart");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -1601,18 +1601,18 @@ void setupHA()
                                         /* spa restart esp button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_restart_esp")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_restart_esp")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/button/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Restart esp");
     doc[(_uniq_id)] = unique_id;
-    doc[(_cmd_t)] = mqttBaseTopic+F("/command");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
     doc["payload_press"] = F("{CMD:6,VALUE:true,XTIME:0,INTERVAL:0}");
     doc[_icon] = F("mdi:restart");
     doc[_dev_cla] = F("restart");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -1637,8 +1637,8 @@ void setupHA()
 
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_climate")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_climate")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/climate/");
     topic += unique_id;
     topic += F("/config");
@@ -1649,19 +1649,19 @@ void setupHA()
     doc[_precision] = 1.0;
     doc[_temp_unit] = "F";
     doc[_modes].add(serialized("\"fan_only\", \"off\", \"heat\""));
-    doc[_mode_cmd_t] = mqttBaseTopic+F("/command_batch");
+    doc[_mode_cmd_t] = mqtt_info->mqttBaseTopic+F("/command_batch");
     doc[_mode_cmd_tpl] = F("[{CMD:3,VALUE:{%if value == \"heat\" %}1{% else %}0{% endif %},XTIME:0,INTERVAL:0},{CMD:4,VALUE:{%if value == \"fan_only\" %}1{% elif value == \"heat\" %}1{% else %}0{% endif %},XTIME:0,INTERVAL:0}]");
-    doc[_mode_stat_t] = mqttBaseTopic+F("/message");
+    doc[_mode_stat_t] = mqtt_info->mqttBaseTopic+F("/message");
     doc[_mode_stat_tpl] = F("{% if value_json.RED == 1 %}heat{% elif value_json.GRN == 1 %}heat{% else %}off{% endif %}");
-    doc[_act_t] = mqttBaseTopic+F("/message");
+    doc[_act_t] = mqtt_info->mqttBaseTopic+F("/message");
     doc[_act_tpl] = F("{% if value_json.RED == 1 %}heating{% elif value_json.GRN == 1 %}idle{% elif value_json.FLT == 1 %}fan{% else %}off{% endif %}");
-    doc[_temp_stat_t] = mqttBaseTopic+F("/message");
+    doc[_temp_stat_t] = mqtt_info->mqttBaseTopic+F("/message");
     doc[_temp_stat_tpl] = F("{{ value_json.TGTF }}");
-    doc[_curr_temp_t] = mqttBaseTopic+F("/message");
+    doc[_curr_temp_t] = mqtt_info->mqttBaseTopic+F("/message");
     doc[_curr_temp_tpl] = F("{{ value_json.TMPF }}");
-    doc[_temp_cmd_t] = mqttBaseTopic+F("/command");
+    doc[_temp_cmd_t] = mqtt_info->mqttBaseTopic+F("/command");
     doc[_temp_cmd_tpl] = F("{CMD:0,VALUE:{{ value|int }},XTIME:0,INTERVAL:0}");
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     if (serializeJson(doc, payload) == 0)
@@ -1683,19 +1683,19 @@ void setupHA()
                                         /* Electricity price */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_price")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_price")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/number/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Electricity price");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.PRICE }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc[(_cmd_tpl)] = F("{PRICE:{{ value | float }}}");
     doc[_mymin] = -1000.0f;
     doc[_mymax] = 65535.0f;
@@ -1718,19 +1718,19 @@ void setupHA()
                                         /* Filter renewal reminder interval */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_filter_replace_interval")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_filter_replace_interval")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/number/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Filter change interval");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.FREPI }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc[(_cmd_tpl)] = F("{FREPI:{{ value | int }}}");
     doc[_mymin] = 1;
     doc[_mymax] = 1000;
@@ -1753,19 +1753,19 @@ void setupHA()
                                         /* Filter clean reminder interval */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_filter_clean_interval")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_filter_clean_interval")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/number/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Filter clean interval");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.FCLEI }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc[(_cmd_tpl)] = F("{FCLEI:{{ value | int }}}");
     doc[_mymin] = 1;
     doc[_mymax] = 1000;
@@ -1788,19 +1788,19 @@ void setupHA()
                                         /* Filter rinse reminder interval */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_filter_rinse_interval")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_filter_rinse_interval")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/number/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Filter rinse interval");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.FRINI }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc[(_cmd_tpl)] = F("{FRINI:{{ value | int }}}");
     doc[_mymin] = 1;
     doc[_mymax] = 1000;
@@ -1823,19 +1823,19 @@ void setupHA()
                                         /* Chlorine renewal reminder interval */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_cl_interval")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_cl_interval")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/number/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Chlorine interval");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.CLINT }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc[(_cmd_tpl)] = F("{CLINT:{{ value | int }}}");
     doc[_mymin] = 1;
     doc[_mymax] = 1000;
@@ -1859,19 +1859,19 @@ void setupHA()
                                         /* Audio enabled */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_audio")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_audio")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Audio");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.AUDIO }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc["pl_on"] = F("{AUDIO:true}");
     doc["pl_off"] = F("{AUDIO:false}");
     doc["state_on"] = true;
@@ -1891,19 +1891,19 @@ void setupHA()
                                         /* Restore states on start */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_restore")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_restore")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Restore on start");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.RESTORE }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc["pl_on"] = F("{RESTORE:true}");
     doc["pl_off"] = F("{RESTORE:false}");
     doc["state_on"] = true;
@@ -1923,19 +1923,19 @@ void setupHA()
                                         /* Notify */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_notify")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_notify")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Notify");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.NOTIFY }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc["pl_on"] = F("{NOTIFY:true}");
     doc["pl_off"] = F("{NOTIFY:false}");
     doc["state_on"] = true;
@@ -1955,19 +1955,19 @@ void setupHA()
                                         /* Notification time */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_notiftime")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_notiftime")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/number/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Notification time");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.NOTIFTIME }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc[(_cmd_tpl)] = F("{NOTIFTIME:{{ value | int }}}");
     doc[_mymin] = 1;
     doc[_mymax] = 1000;
@@ -1990,15 +1990,15 @@ void setupHA()
                                         /* Virtual temperature calibrated */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_vtcal")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_vtcal")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/binary_sensor/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("VTCAL");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{% if value_json.VTCAL == 1 %}OFF{% else %}ON{% endif %}");
@@ -2017,19 +2017,19 @@ void setupHA()
                                         /* Enable LOCK button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_lck")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_lck")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Lock btn enabled");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.LCK }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc["pl_on"] = F("{LCK:true}");
     doc["pl_off"] = F("{LCK:false}");
     doc["state_on"] = true;
@@ -2049,19 +2049,19 @@ void setupHA()
                                         /* Enable TIMER button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_tmr")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_tmr")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Timer btn enabled");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.TMR }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc["pl_on"] = F("{TMR:true}");
     doc["pl_off"] = F("{TMR:false}");
     doc["state_on"] = true;
@@ -2081,19 +2081,19 @@ void setupHA()
                                         /* Enable AIR button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_air")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_air")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Airbubbles btn enabled");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.AIR }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc["pl_on"] = F("{AIR:true}");
     doc["pl_off"] = F("{AIR:false}");
     doc["state_on"] = true;
@@ -2113,19 +2113,19 @@ void setupHA()
                                         /* Enable UNIT button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_unt")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_unt")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Unit btn enabled");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.UNT }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc["pl_on"] = F("{UNT:true}");
     doc["pl_off"] = F("{UNT:false}");
     doc["state_on"] = true;
@@ -2145,19 +2145,19 @@ void setupHA()
                                         /* Enable HEAT button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_htr")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_htr")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Heater btn enabled");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.HTR }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc["pl_on"] = F("{HTR:true}");
     doc["pl_off"] = F("{HTR:false}");
     doc["state_on"] = true;
@@ -2177,19 +2177,19 @@ void setupHA()
                                         /* Enable FILTER button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_flt")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_flt")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Filter btn enabled");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.FLT }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc["pl_on"] = F("{FLT:true}");
     doc["pl_off"] = F("{FLT:false}");
     doc["state_on"] = true;
@@ -2209,19 +2209,19 @@ void setupHA()
                                         /* Enable DOWN button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_dn")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_dn")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Down btn enabled");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.DN }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc["pl_on"] = F("{DN:true}");
     doc["pl_off"] = F("{DN:false}");
     doc["state_on"] = true;
@@ -2241,19 +2241,19 @@ void setupHA()
                                         /* Enable UP button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_up")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_up")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Up btn enabled");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.UP }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc["pl_on"] = F("{UP:true}");
     doc["pl_off"] = F("{UP:false}");
     doc["state_on"] = true;
@@ -2273,19 +2273,19 @@ void setupHA()
                                         /* Enable POWER button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_pwr")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_pwr")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Power btn enabled");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.PWR }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc["pl_on"] = F("{PWR:true}");
     doc["pl_off"] = F("{PWR:false}");
     doc["state_on"] = true;
@@ -2305,19 +2305,19 @@ void setupHA()
                                         /* Enable HYDROJETS button */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqttBaseTopic + F("_hjt")+mychipid;
-    topic = F(HA_PREFIX);
+    unique_id = mqtt_info->mqttBaseTopic + F("_hjt")+mychipid;
+    topic = HA_PREFIX_F;
     topic += F("/switch/");
     topic += unique_id;
     topic += F("/config");
     doc[(_name)] = F("Hydrojets btn enabled");
     doc[(_uniq_id)] = unique_id;
-    doc[(_stat_t)] = mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
-    doc[(_avty_t)] = mqttBaseTopic+F("/Status");
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/get_config");    // CONFIG TOPIC
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
     doc[(_pl_avail)] = _alive;
     doc[(_pl_not_avail)] = _dead;
     doc[(_val_tpl)] = F("{{ value_json.HJT }}");
-    doc[(_cmd_t)] = mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/set_config");     // CONFIG TOPIC
     doc["pl_on"] = F("{HJT:true}");
     doc["pl_off"] = F("{HJT:false}");
     doc["state_on"] = true;

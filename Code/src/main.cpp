@@ -1,6 +1,7 @@
 #include "main.h"
 #include "ports.h"
 
+#define WS_PERIOD 10.0
 // initial stack
 char *stack_start;
 uint32_t heap_water_mark;
@@ -46,23 +47,41 @@ void setup()
 
     LittleFS.begin();
     {
-        // HeapSelectIram ephemeral;
-        // Serial.printf_P(PSTR("IRamheap %d\n"), ESP.getFreeHeap());
+        HeapSelectIram ephemeral;
+        Serial.printf_P(PSTR("IRamheap %d\n"), ESP.getFreeHeap());
         bwc = new BWC;
         oneWire = new OneWire(231);
         tempSensors = new DallasTemperature(oneWire);
+        Serial.printf_P(PSTR("IRamheap %d\n"), ESP.getFreeHeap());
+        bootlogTimer = new Ticker;
+        periodicTimer = new Ticker;
+        startComplete_ticker = new Ticker;
+        ntpCheck_ticker = new Ticker;
+        checkWifi_ticker = new Ticker;
+        updateWSTimer = new Ticker;
+        updateMqttTimer = new Ticker;
+        mqtt_info = new sMQTT_info;
+        mqtt_info->mqttBaseTopic = MQTT_BASE_TOPIC_F;
+        mqtt_info->mqttClientId = MQTT_CLIENT_ID_F;
+        mqtt_info->mqttIpAddress = IPAddress(192,168,0,20);
+        mqtt_info->mqttPassword = MQTT_PASSWORD_F;
+        mqtt_info->mqttPort = 1883;
+        mqtt_info->mqttTelemetryInterval = 600;
+        mqtt_info->mqttUsername = MQTT_USER_F;
+        mqtt_info->useMqtt = true;
     }
     bwc->setup();
     bwc->loop();
-    periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
+    periodicTimer->attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
-    startComplete_ticker.attach(30, []{ if(useMqtt) enableMqtt = true; startComplete_ticker.detach(); });
+    startComplete_ticker->attach(30, []{ if(mqtt_info->useMqtt) enableMqtt = true; startComplete_ticker->detach(); });
     // update webpage every 2 seconds. (will also be updated on state changes)
-    updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
+    updateWSTimer->attach(WS_PERIOD, []{ sendWSFlag = true; });
     loadWebConfig();
     startWiFi();
     if(bwc->hasTempSensor)
     { 
+        HeapSelectIram ephemeral;
         oneWire->begin(bwc->tempSensorPin);
         tempSensors->begin();
     }
@@ -104,7 +123,7 @@ void loop()
             // publish pretty button name if display button is pressed (or NOBTN if released)
             if (!msg.equals(prevButtonName))
             {
-                mqttClient->publish((String(mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
+                mqttClient->publish((String(mqtt_info->mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
                 prevButtonName = msg;
             }
 
@@ -191,34 +210,34 @@ void loop()
 }
 
 /* Debugging to file, normally not used */
-void write_mem_stats_to_file()
-{
-    File file = LittleFS.open(F("memstats.txt"), "a");
-    if (!file)
-    {
-        file.close();
-        return;
-    }
-    time_t now = time(nullptr);
-    struct tm timeinfo;
-    gmtime_r(&now, &timeinfo);
-    {
-        // HeapSelectIram ephemeral;
-        file.printf_P(PSTR("Time: %s, IRam: free %d, frag %d, max block %d "),
-            asctime(&timeinfo),
-            ESP.getFreeHeap(), 
-            ESP.getHeapFragmentation(),
-            ESP.getMaxFreeBlockSize()
-            );
-    }
-    /*Dram*/
-    file.printf_P(PSTR("DRam: free %d, frag %d, max block %d\n"),
-        ESP.getFreeHeap(), 
-        ESP.getHeapFragmentation(),
-        ESP.getMaxFreeBlockSize()
-        );
-    file.close();
-}
+// void write_mem_stats_to_file()
+// {
+//     File file = LittleFS.open(F("memstats.txt"), "a");
+//     if (!file)
+//     {
+//         file.close();
+//         return;
+//     }
+//     time_t now = time(nullptr);
+//     struct tm timeinfo;
+//     gmtime_r(&now, &timeinfo);
+//     {
+//         // HeapSelectIram ephemeral;
+//         file.printf_P(PSTR("Time: %s, IRam: free %d, frag %d, max block %d "),
+//             asctime(&timeinfo),
+//             ESP.getFreeHeap(), 
+//             ESP.getHeapFragmentation(),
+//             ESP.getMaxFreeBlockSize()
+//             );
+//     }
+//     /*Dram*/
+//     file.printf_P(PSTR("DRam: free %d, frag %d, max block %d\n"),
+//         ESP.getFreeHeap(), 
+//         ESP.getHeapFragmentation(),
+//         ESP.getMaxFreeBlockSize()
+//         );
+//     file.close();
+// }
     
 
 
@@ -228,7 +247,7 @@ void write_mem_stats_to_file()
 void sendWS()
 {
     if(webSocket->connectedClients() == 0) return;
-    // HeapSelectIram ephemeral;
+    HeapSelectIram ephemeral;
     // Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
     // send states
     String json;
@@ -289,14 +308,14 @@ void getOtherInfo(String &rtn)
  */
 void sendMQTT()
 {
-    // HeapSelectIram ephemeral;
+    HeapSelectIram ephemeral;
     // Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
     String json;
     json.reserve(320);
 
     // send states
     bwc->getJSONStates(json);
-    if (mqttClient->publish((String(mqttBaseTopic) + F("/message")).c_str(), String(json).c_str(), true))
+    if (mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/message")).c_str(), String(json).c_str(), true))
     {
         BWC_LOG_P(PSTR("MQTT > message published\n"),0);
     }
@@ -308,7 +327,7 @@ void sendMQTT()
     // send times
     json.clear();
     bwc->getJSONTimes(json);
-    if (mqttClient->publish((String(mqttBaseTopic) + F("/times")).c_str(), String(json).c_str(), true))
+    if (mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/times")).c_str(), String(json).c_str(), true))
     {
         BWC_LOG_P(PSTR("MQTT > times published"),0);
     }
@@ -320,7 +339,7 @@ void sendMQTT()
     //send other info
     json.clear();
     getOtherInfo(json);
-    if (mqttClient->publish((String(mqttBaseTopic) + F("/other")).c_str(), String(json).c_str(), true))
+    if (mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/other")).c_str(), String(json).c_str(), true))
     {
         BWC_LOG_P(PSTR("MQTT > other published"),0);
     }
@@ -335,7 +354,7 @@ void sendMQTTConfig()
     String json;
     json.reserve(320);
     bwc->getJSONSettings(json);
-    mqttClient->publish((String(mqttBaseTopic) + F("/get_config")).c_str(), String(json).c_str(), true);
+    mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/get_config")).c_str(), String(json).c_str(), true);
     mqttClient->loop();
 }
 
@@ -349,7 +368,7 @@ void startWiFi()
     //WiFi.mode(WIFI_STA);
     WiFi.setAutoReconnect(true);
     WiFi.persistent(true);
-    WiFi.hostname(netHostname);
+    WiFi.hostname(DEVICE_NAME_F);
     loadWifi();
 
 
@@ -375,7 +394,7 @@ void startWiFi()
         BWC_LOG_P(PSTR("WiFi > using WiFi configuration with SSID %s\n"), wifi_info.apSsid);
 
         WiFi.begin(wifi_info.apSsid.c_str(), wifi_info.apPwd.c_str());
-        checkWifi_ticker.attach(2.0, checkWiFi_ISR);
+        checkWifi_ticker->attach(2.0, checkWiFi_ISR);
         Serial.println(F("WiFi > Trying to connect ..."));
     }
     else
@@ -397,7 +416,7 @@ void checkWiFi()
 
     if (WiFi.status() == WL_CONNECTED)
     {
-        checkWifi_ticker.detach();
+        checkWifi_ticker->detach();
         wifi_info.enableAp = true;
         wifi_info.apSsid = WiFi.SSID();
         wifi_info.apPwd = WiFi.psk();
@@ -425,7 +444,9 @@ void startWiFiConfigPortal()
 {
     Serial.println(F("WiFi > Using WiFiManager Config Portal"));
     ESP_WiFiManager wm;
-    wm.autoConnect(wmApName, wmApPassword);
+    String wmApName = WM_AP_NAME;
+    String wmApPassword = WM_AP_PASSWORD;
+    wm.autoConnect(wmApName.c_str(), wmApPassword.c_str());
     while (WiFi.status() != WL_CONNECTED)
     {
         delay(500);
@@ -445,11 +466,11 @@ void checkNTP()
     {
         if (++ntpTryNumber == 10) {
             ntpTryNumber = 0; //reset until next check
-            ntpCheck_ticker.detach();
+            ntpCheck_ticker->detach();
         }
         return;
     }
-    ntpCheck_ticker.detach(); //time is set, don't check again
+    ntpCheck_ticker->detach(); //time is set, don't check again
     struct tm timeinfo;
     gmtime_r(&now, &timeinfo);
     time_t boot_timestamp = getBootTime();
@@ -468,13 +489,15 @@ void startNTP()
 {
     Serial.println(F("start NTP"));
     configTime(0,0,wifi_info.ip4NTP_str, F("pool.ntp.org"), F("time.nist.gov"));
-    ntpCheck_ticker.attach(0.5, checkNTP_ISR);
+    ntpCheck_ticker->attach(0.5, checkNTP_ISR);
 }
 
 void startOTA()
 {
-    ArduinoOTA.setHostname(OTAName);
-    ArduinoOTA.setPassword(OTAPassword);
+    String dname = DEVICE_NAME_F;
+    String pw = OTA_PSWD_F;
+    ArduinoOTA.setHostname(dname.c_str());
+    ArduinoOTA.setPassword(pw.c_str());
 
     ArduinoOTA.onStart([]() {
         // Serial.println(F("OTA > Start"));
@@ -503,11 +526,11 @@ void stopall()
     Serial.printf_P(PSTR("Free mem before stop: %d\n"), ESP.getFreeHeap());
     bwc->stop();
     Serial.println(F("detaching"));
-    updateMqttTimer.detach();
-    periodicTimer.detach();
-    updateWSTimer.detach();
-    if(ntpCheck_ticker.active()) ntpCheck_ticker.detach();
-    if(checkWifi_ticker.active()) checkWifi_ticker.detach();
+    updateMqttTimer->detach();
+    periodicTimer->detach();
+    updateWSTimer->detach();
+    if(ntpCheck_ticker->active()) ntpCheck_ticker->detach();
+    if(checkWifi_ticker->active()) checkWifi_ticker->detach();
     //bwc->saveSettings();
     delete tempSensors;
     delete oneWire;
@@ -535,16 +558,16 @@ void pause_all(bool action)
 {
     if(action)
     {
-        if(periodicTimer.active()) periodicTimer.detach();
-        if(startComplete_ticker.active()) startComplete_ticker.detach();
-        if(updateWSTimer.active()) updateWSTimer.detach();
-        if(bootlogTimer.active()) bootlogTimer.detach();
-        if(ntpCheck_ticker.active()) ntpCheck_ticker.detach();
+        if(periodicTimer->active()) periodicTimer->detach();
+        if(startComplete_ticker->active()) startComplete_ticker->detach();
+        if(updateWSTimer->active()) updateWSTimer->detach();
+        if(bootlogTimer->active()) bootlogTimer->detach();
+        if(ntpCheck_ticker->active()) ntpCheck_ticker->detach();
     } else 
     {
-        periodicTimer.attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
-        startComplete_ticker.attach(60, []{ if(useMqtt) enableMqtt = true; startComplete_ticker.detach(); });
-        updateWSTimer.attach(2.0, []{ sendWSFlag = true; });
+        periodicTimer->attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
+        startComplete_ticker->attach(60, []{ if(mqtt_info->useMqtt) enableMqtt = true; startComplete_ticker->detach(); });
+        updateWSTimer->attach(WS_PERIOD, []{ sendWSFlag = true; });
         //bootlogTimer.attach(5, []{ if(DateTime.isTimeValid()) {bwc->saveRebootInfo(); bootlogTimer.detach();} });
     }
     bwc->pause_all(action);
@@ -552,7 +575,7 @@ void pause_all(bool action)
 
 void startWebSocket()
 {
-    // HeapSelectIram ephemeral;
+    HeapSelectIram ephemeral;
     Serial.printf_P(PSTR("WS IRamheap %d\n"), ESP.getFreeHeap());
     if(webSocket != nullptr)
     {
@@ -563,7 +586,7 @@ void startWebSocket()
     }
     webSocket = new WebSocketsServer(81);
     webSocket->begin();
-    webSocket->enableHeartbeat(3000, 3000, 1);
+    // webSocket->enableHeartbeat(11000, 5000, 2);
     webSocket->onEvent(webSocketEvent);
     // Serial.println(F("WebSocket > server started"));
 }
@@ -578,7 +601,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
     {
         // if the websocket is disconnected
         case WStype_DISCONNECTED:
-        // Serial.printf("WebSocket > [%u] Disconnected!\r\n", num);
+            Serial.printf("WebSocket > [%u] Disconnected!\r\n", num);
         break;
 
         // if a new websocket connection is established
@@ -620,6 +643,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
         break;
 
         default:
+            Serial.printf("WebSocket > [%u]\r\n", (unsigned int)type);
         break;
     }
 }
@@ -938,7 +962,6 @@ bool handleFileRead(String path)
         pause_all(false);
         return false;
     }
-
     String contentType = getContentType(path);                  // Get the MIME type
     String pathWithGz = path + ".gz";
     if (LittleFS.exists(pathWithGz) || LittleFS.exists(path)) { // If the file exists, either as a compressed archive, or normal
@@ -946,15 +969,15 @@ bool handleFileRead(String path)
             path += ".gz";                                      // Use the compressed version
         File file = LittleFS.open(path, "r");                   // Open the file
         size_t fsize = file.size();
+Serial.println(ESP.getFreeHeap());
         size_t sent = server->streamFile(file, contentType);    // Send it to the client
-        
-        file.close();                                           // Close the file again
         Serial.println(F("File size: ") + String(fsize));
         Serial.println(F("HTTP > file sent: ") + path + F(" (") + sent + F(" bytes)"));
         if(fsize != sent){
             Serial.println(F("********* File not completed *******"));
         }
         pause_all(false);
+        file.close();                                           // Close the file again
         return true;
     }
     // Serial.println("HTTP > file not found: " + path);   // If the file doesn't exist, return false
@@ -1482,10 +1505,10 @@ void resetWiFi()
     wifi_info.apPwd = F("empty");
     saveWifi();
     delay(3000);
-    periodicTimer.detach();
-    updateMqttTimer.detach();
-    updateWSTimer.detach();
-    if(ntpCheck_ticker.active()) ntpCheck_ticker.detach();
+    periodicTimer->detach();
+    updateMqttTimer->detach();
+    updateWSTimer->detach();
+    if(ntpCheck_ticker->active()) ntpCheck_ticker->detach();
     bwc->saveSettings();
     bwc->stop();
     delay(1000);
@@ -1521,18 +1544,18 @@ void loadMqtt()
         return;
     }
 
-    useMqtt = doc[F("enableMqtt")];
+    mqtt_info->useMqtt = doc[F("enableMqtt")];
     // enableMqtt = useMqtt; //will be set with start complete timer
-    mqttIpAddress[0] = doc[F("mqttIpAddress")][0];
-    mqttIpAddress[1] = doc[F("mqttIpAddress")][1];
-    mqttIpAddress[2] = doc[F("mqttIpAddress")][2];
-    mqttIpAddress[3] = doc[F("mqttIpAddress")][3];
-    mqttPort = doc[F("mqttPort")];
-    mqttUsername = doc[F("mqttUsername")].as<String>();
-    mqttPassword = doc[F("mqttPassword")].as<String>();
-    mqttClientId = doc[F("mqttClientId")].as<String>();
-    mqttBaseTopic = doc[F("mqttBaseTopic")].as<String>();
-    mqttTelemetryInterval = doc[F("mqttTelemetryInterval")];
+    mqtt_info->mqttIpAddress[0] = doc[F("mqttIpAddress")][0];
+    mqtt_info->mqttIpAddress[1] = doc[F("mqttIpAddress")][1];
+    mqtt_info->mqttIpAddress[2] = doc[F("mqttIpAddress")][2];
+    mqtt_info->mqttIpAddress[3] = doc[F("mqttIpAddress")][3];
+    mqtt_info->mqttPort = doc[F("mqttPort")];
+    mqtt_info->mqttUsername = doc[F("mqttUsername")].as<String>();
+    mqtt_info->mqttPassword = doc[F("mqttPassword")].as<String>();
+    mqtt_info->mqttClientId = doc[F("mqttClientId")].as<String>();
+    mqtt_info->mqttBaseTopic = doc[F("mqttBaseTopic")].as<String>();
+    mqtt_info->mqttTelemetryInterval = doc[F("mqttTelemetryInterval")];
 }
 
 /**
@@ -1549,17 +1572,17 @@ void saveMqtt()
 
     DynamicJsonDocument doc(1024);
 
-    doc[F("enableMqtt")] = useMqtt;
-    doc[F("mqttIpAddress")][0] = mqttIpAddress[0];
-    doc[F("mqttIpAddress")][1] = mqttIpAddress[1];
-    doc[F("mqttIpAddress")][2] = mqttIpAddress[2];
-    doc[F("mqttIpAddress")][3] = mqttIpAddress[3];
-    doc[F("mqttPort")] = mqttPort;
-    doc[F("mqttUsername")] = mqttUsername;
-    doc[F("mqttPassword")] = mqttPassword;
-    doc[F("mqttClientId")] = mqttClientId;
-    doc[F("mqttBaseTopic")] = mqttBaseTopic;
-    doc[F("mqttTelemetryInterval")] = mqttTelemetryInterval;
+    doc[F("enableMqtt")] = mqtt_info->useMqtt;
+    doc[F("mqttIpAddress")][0] = mqtt_info->mqttIpAddress[0];
+    doc[F("mqttIpAddress")][1] = mqtt_info->mqttIpAddress[1];
+    doc[F("mqttIpAddress")][2] = mqtt_info->mqttIpAddress[2];
+    doc[F("mqttIpAddress")][3] = mqtt_info->mqttIpAddress[3];
+    doc[F("mqttPort")] = mqtt_info->mqttPort;
+    doc[F("mqttUsername")] = mqtt_info->mqttUsername;
+    doc[F("mqttPassword")] = mqtt_info->mqttPassword;
+    doc[F("mqttClientId")] = mqtt_info->mqttClientId;
+    doc[F("mqttBaseTopic")] = mqtt_info->mqttBaseTopic;
+    doc[F("mqttTelemetryInterval")] = mqtt_info->mqttTelemetryInterval;
 
     if (serializeJson(doc, file) == 0)
     {
@@ -1578,21 +1601,21 @@ void handleGetMqtt()
 
     DynamicJsonDocument doc(1024);
 
-    doc[F("enableMqtt")] = useMqtt;
-    doc[F("mqttIpAddress")][0] = mqttIpAddress[0];
-    doc[F("mqttIpAddress")][1] = mqttIpAddress[1];
-    doc[F("mqttIpAddress")][2] = mqttIpAddress[2];
-    doc[F("mqttIpAddress")][3] = mqttIpAddress[3];
-    doc[F("mqttPort")] = mqttPort;
-    doc[F("mqttUsername")] = mqttUsername;
+    doc[F("enableMqtt")] = mqtt_info->useMqtt;
+    doc[F("mqttIpAddress")][0] = mqtt_info->mqttIpAddress[0];
+    doc[F("mqttIpAddress")][1] = mqtt_info->mqttIpAddress[1];
+    doc[F("mqttIpAddress")][2] = mqtt_info->mqttIpAddress[2];
+    doc[F("mqttIpAddress")][3] = mqtt_info->mqttIpAddress[3];
+    doc[F("mqttPort")] = mqtt_info->mqttPort;
+    doc[F("mqttUsername")] = mqtt_info->mqttUsername;
     doc[F("mqttPassword")] = "<enter password>";
     if (!hidePasswords)
     {
-        doc[F("mqttPassword")] = mqttPassword;
+        doc[F("mqttPassword")] = mqtt_info->mqttPassword;
     }
-    doc[F("mqttClientId")] = mqttClientId;
-    doc[F("mqttBaseTopic")] = mqttBaseTopic;
-    doc[F("mqttTelemetryInterval")] = mqttTelemetryInterval;
+    doc[F("mqttClientId")] = mqtt_info->mqttClientId;
+    doc[F("mqttBaseTopic")] = mqtt_info->mqttBaseTopic;
+    doc[F("mqttTelemetryInterval")] = mqtt_info->mqttTelemetryInterval;
 
     String json;
     if (serializeJson(doc, json) == 0)
@@ -1620,18 +1643,18 @@ void handleSetMqtt()
         return;
     }
 
-    useMqtt = doc[F("enableMqtt")];
-    enableMqtt = useMqtt;
-    mqttIpAddress[0] = doc[F("mqttIpAddress")][0];
-    mqttIpAddress[1] = doc[F("mqttIpAddress")][1];
-    mqttIpAddress[2] = doc[F("mqttIpAddress")][2];
-    mqttIpAddress[3] = doc[F("mqttIpAddress")][3];
-    mqttPort = doc[F("mqttPort")];
-    mqttUsername = doc[F("mqttUsername")].as<String>();
-    mqttPassword = doc[F("mqttPassword")].as<String>();
-    mqttClientId = doc[F("mqttClientId")].as<String>();
-    mqttBaseTopic = doc[F("mqttBaseTopic")].as<String>();
-    mqttTelemetryInterval = doc[F("mqttTelemetryInterval")];
+    mqtt_info->useMqtt = doc[F("enableMqtt")];
+    enableMqtt = mqtt_info->useMqtt;
+    mqtt_info->mqttIpAddress[0] = doc[F("mqttIpAddress")][0];
+    mqtt_info->mqttIpAddress[1] = doc[F("mqttIpAddress")][1];
+    mqtt_info->mqttIpAddress[2] = doc[F("mqttIpAddress")][2];
+    mqtt_info->mqttIpAddress[3] = doc[F("mqttIpAddress")][3];
+    mqtt_info->mqttPort = doc[F("mqttPort")];
+    mqtt_info->mqttUsername = doc[F("mqttUsername")].as<String>();
+    mqtt_info->mqttPassword = doc[F("mqttPassword")].as<String>();
+    mqtt_info->mqttClientId = doc[F("mqttClientId")].as<String>();
+    mqtt_info->mqttBaseTopic = doc[F("mqttBaseTopic")].as<String>();
+    mqtt_info->mqttTelemetryInterval = doc[F("mqttTelemetryInterval")];
 
     server->send(200, F("text/plain"), "");
 
@@ -1679,10 +1702,12 @@ void handleDir()
  * response for /upload.html
  * upload a new file to the LittleFS
  */
+    File fsUploadFile;
 void handleFileUpload()
 {
     HTTPUpload& upload = server->upload();
     String path;
+    /** a file variable to temporarily store the received file */
     if (upload.status == UPLOAD_FILE_START)
     {
         path = upload.filename;
@@ -1740,7 +1765,7 @@ void handleFileUpload()
         }
         else
         {
-            Serial.println(F("err: 500"));
+            Serial.printf("err: %d", upload.status);
             server->send(500, F("text/plain"), F("500: couldn't create file"));
         }
     }
@@ -1824,7 +1849,7 @@ void updateError(int err){
 void startMqtt()
 {
     {
-        // HeapSelectIram ephemeral;
+        HeapSelectIram ephemeral;
         Serial.printf_P(PSTR("IRamheap %d\n"), ESP.getFreeHeap());
         Serial.println(F("startmqtt"));
         if(!aWifiClient) aWifiClient = new WiFiClient;
@@ -1838,9 +1863,9 @@ void startMqtt()
         mqttClient->disconnect();
 
         // setup MQTT broker information as defined earlier
-        mqttClient->setServer(mqttIpAddress, mqttPort);
+        mqttClient->setServer(mqtt_info->mqttIpAddress, mqtt_info->mqttPort);
         // set buffer for larger messages, new to library 2.8.0
-        if (mqttClient->setBufferSize(1536))
+        // if (mqttClient->setBufferSize(1536))
         {
             // Serial.println(F("MQTT > Buffer size successfully increased"));
         }
@@ -1868,7 +1893,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
         // Serial.print((char)payload[i]);
     }
     // Serial.println();
-    if (String(topic).equals(String(mqttBaseTopic) + F("/command")))
+    if (String(topic).equals(String(mqtt_info->mqttBaseTopic) + F("/command")))
     {
         // DynamicJsonDocument doc(256);
         StaticJsonDocument<256> doc;
@@ -1895,7 +1920,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
     }
 
     /* author @malfurion, edited by @visualapproach for v4 */
-    if (String(topic).equals(String(mqttBaseTopic) + F("/command_batch")))
+    if (String(topic).equals(String(mqtt_info->mqttBaseTopic) + F("/command_batch")))
     {
         DynamicJsonDocument doc(1024);
         String message = (const char *) &payload[0];
@@ -1925,7 +1950,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
         return;
     }
 
-    if (String(topic).equals(String(mqttBaseTopic) + F("/set_config")))
+    if (String(topic).equals(String(mqtt_info->mqttBaseTopic) + F("/set_config")))
     {
         String message = (const char *) &payload[0];    
         bwc->setJSONSettings(message);
@@ -1948,10 +1973,10 @@ void mqttConnect()
     // Serial.print(F("MQTT > Connecting ... "));
     // We'll connect with a Retained Last Will that updates the 'Status' topic with "Dead" when the device goes offline...
     if (mqttClient->connect(
-        mqttClientId.c_str(), // client_id : the client ID to use when connecting to the server->
-        mqttUsername.c_str(), // username : the username to use. If NULL, no username or password is used (const char[])
-        mqttPassword.c_str(), // password : the password to use. If NULL, no password is used (const char[])setupHA
-        (String(mqttBaseTopic) + F("/Status")).c_str(), // willTopic : the topic to be used by the will message (const char[])
+        mqtt_info->mqttClientId.c_str(), // client_id : the client ID to use when connecting to the server->
+        mqtt_info->mqttUsername.c_str(), // username : the username to use. If NULL, no username or password is used (const char[])
+        mqtt_info->mqttPassword.c_str(), // password : the password to use. If NULL, no password is used (const char[])setupHA
+        (String(mqtt_info->mqttBaseTopic) + F("/Status")).c_str(), // willTopic : the topic to be used by the will message (const char[])
         0, // willQoS : the quality of service to be used by the will message (int : 0,1 or 2)
         1, // willRetain : whether the will should be published with the retain flag (int : 0 or 1)
         "Dead")) // willMessage : the payload of the will message (const char[])
@@ -1960,32 +1985,33 @@ void mqttConnect()
         mqtt_connect_count++;
 
         // update MQTT every X seconds. (will also be updated on state changes)
-        updateMqttTimer.attach(mqttTelemetryInterval, []{ sendMQTTFlag = true; });
+        updateMqttTimer->attach(mqtt_info->mqttTelemetryInterval, []{ sendMQTTFlag = true; });
 
         // These all have the Retained flag set to true, so that the value is stored on the server and can be retrieved at any point
         // Check the 'Status' topic to see that the device is still online before relying on the data from these retained topics
-        mqttClient->publish((String(mqttBaseTopic) + F("/Status")).c_str(), "Alive", true);
-        mqttClient->publish((String(mqttBaseTopic) + F("/MAC_Address")).c_str(), WiFi.macAddress().c_str(), true);                 // Device MAC Address
-        mqttClient->publish((String(mqttBaseTopic) + F("/MQTT_Connect_Count")).c_str(), String(mqtt_connect_count).c_str(), true); // MQTT Connect Count
+        mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/Status")).c_str(), "Alive", true);
+        mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/MAC_Address")).c_str(), WiFi.macAddress().c_str(), true);                 // Device MAC Address
+        mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/MQTT_Connect_Count")).c_str(), String(mqtt_connect_count).c_str(), true); // MQTT Connect Count
         mqttClient->loop();
 
         // Watch the 'command' topic for incoming MQTT messages
-        mqttClient->subscribe((String(mqttBaseTopic) + F("/command")).c_str());
-        mqttClient->subscribe((String(mqttBaseTopic) + F("/command_batch")).c_str());
-        mqttClient->subscribe((String(mqttBaseTopic) + F("/set_config")).c_str());
+        mqttClient->subscribe((String(mqtt_info->mqttBaseTopic) + F("/command")).c_str());
+        mqttClient->subscribe((String(mqtt_info->mqttBaseTopic) + F("/command_batch")).c_str());
+        mqttClient->subscribe((String(mqtt_info->mqttBaseTopic) + F("/set_config")).c_str());
         mqttClient->loop();
 
         #ifdef ESP8266
         // mqttClient->publish((String(mqttBaseTopic) + "/reboot_time").c_str(), DateTime.format(DateFormatter::SIMPLE).c_str(), true);
-        mqttClient->publish((String(mqttBaseTopic) + F("/reboot_time")).c_str(), (bwc->reboot_time_str+'Z').c_str(), true);
-        mqttClient->publish((String(mqttBaseTopic) + F("/reboot_reason")).c_str(), ESP.getResetReason().c_str(), true);
+        mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/reboot_time")).c_str(), (bwc->reboot_time_str+'Z').c_str(), true);
+        mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/reboot_reason")).c_str(), ESP.getResetReason().c_str(), true);
         String buttonname;
         buttonname.reserve(32);
         bwc->getButtonName(buttonname);
-        mqttClient->publish((String(mqttBaseTopic) + F("/button")).c_str(), buttonname.c_str(), true);
+        mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/button")).c_str(), buttonname.c_str(), true);
         mqttClient->loop();
         sendMQTT();
         Serial.println(F("MQTT Sending HA discovery"));
+        mqttClient->setBufferSize(1536);
         setupHA();
         mqttClient->setBufferSize(512);
         mqttClient->loop();
@@ -2049,7 +2075,7 @@ void handleESPInfo()
     uint32_t iram_heap; 
     uint32_t iram_maxblock;
     {
-        // HeapSelectIram ephemeral;
+        HeapSelectIram ephemeral;
         iram_heap = ESP.getFreeHeap();
         iram_maxblock = ESP.getMaxFreeBlockSize();
     }
