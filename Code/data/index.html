@@ -84,7 +84,7 @@
 					<td><input type="range" id="amb" min="-40" max="60" step="1" value="20" onmouseup="sendCommand('setAmbient')" ontouchend="sendCommand('setAmbient')"></td>
 					<td style="text-align:right" id="sliderAmbVal">n/a</td>
 				</tr>
-				<tr>
+				<tr id="rowBrightness">
 					<td>Brightness <span data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off), but will light up for 5s when pressing a button." class="tooltip">?</span></td>
 					<td><input type="range" id="brt" min="0" max="8" step="1" value="7" onmouseup="sendCommand('setBrightness')" ontouchend="sendCommand('setBrightness')"></td>
 					<td style="text-align:right" id="sliderBrtVal">n/a</td>
@@ -95,7 +95,7 @@
 				<tr>
 					<td class="center">Temperature</td>
 					<td class="center">Ambient Temperature</td>
-					<td class="center">Brightness <span data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off), but will light up for 5s when pressing a button." class="tooltip left">?</span></td>
+					<td id="brightnessHeader" class="center">Brightness <span data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off), but will light up for 5s when pressing a button." class="tooltip left">?</span></td>
 				</tr>
 				<tr>
 					<td class="center">
@@ -119,7 +119,7 @@
 						</div>
 					</td>
 					<td class="center">
-						<div class="selector">
+						<div class="selector" id="divBrightness">
 							<button onclick="increaseNumber('selectorBrt');sendCommand('setBrightnessSelector')" class="selectorbutton selectortop">ᐱ</button>
 							<input type="number" id="selectorBrt" min="0" max="8" step="1" value="7" type="text" class="selectorvalue" onchange="sendCommand('setBrightnessSelector')">
 							<button onclick="decreaseNumber('selectorBrt');sendCommand('setBrightnessSelector')" class="selectorbutton selectorbottom">ᐯ</button>
@@ -482,6 +482,18 @@ function handlemsg(e) {
     // godmode available
     document.getElementById("god").style.display = msgobj.HASGOD ? "table-cell" : "none";
     document.getElementById("godswitch").style.display = msgobj.HASGOD ? "table-cell" : "none";
+    if(msgobj.MODEL.startsWith("NO")){
+        document.getElementById("divBrightness").style.display = "none"
+        document.getElementById("brightnessHeader").style.display = "none"
+        document.getElementById("rowBrightness").style.display = "none"
+    }
+    else
+    {
+        document.getElementById("divBrightness").style.display = "table-cell"
+        document.getElementById("brightnessHeader").style.display = "table-cell"
+        document.getElementById("rowBrightness").style.display = "table-cell"
+    }
+    
   }
 
   if (msgobj.CONTENT == "STATES") {
@@ -693,8 +705,8 @@ function initApplication()
     {
         setWebConfig();
     }
-    loadWebConfig();
-    connect();
+    setTimeout(loadWebConfig,500);
+    setTimeout(connect, 1000);
 }
 
 function setWebConfig()

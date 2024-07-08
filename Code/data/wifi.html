@@ -43,7 +43,7 @@
 			<h2>Access Point:</h2>
 			<table>
 				<tr>
-					<td><label for="enableAp">Enable specific AP:</label></td>
+					<td><label for="enableAp">Enable specific AP:</label><span data-text="Enable Wi-Fi station to connect to your network. You'd want this on normally!" class="tooltip">?</span></td>
 					<td><input type="checkbox" id="enableAp"></td>
 				</tr>
 				<tr>
@@ -59,10 +59,10 @@
 		</section>
 
 		<section>
-			<h2>WiFi Manager Access Point:</h2>
+			<h2>Soft Access Point:</h2>
 			<table>
 				<tr>
-					<td><label for="enableWM">Enable WiFi Manager AP:</label></td>
+					<td><label for="enableWM">Enable Soft AP:</label><span data-text="Enable ESP access point to be able to open this page before your network credentials are set. You'd want this on normally! If your network is unavailable the ESP will fire up its own AP." class="tooltip">?</span></td>
 					<td><input type="checkbox" id="enableWM"></td>
 				</tr>
 			</table>
@@ -112,7 +112,7 @@
 			<h2>NTP server:</h2>
 			<table>
 				<tr>
-					<td>Domain name or IP address:</td>
+					<td>Domain name or IP address:<span data-text="Leave blank for default or set your favorite NTP." class="tooltip">?</span></td>
 					<td>
 						<input type="text" id="ip4NTP" maxlength="30" style="width:185px" value="pool.ntp.org">
 					</td>

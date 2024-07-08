@@ -1,3 +1,5 @@
+#ifndef CONFIG_H
+#define CONFIG_H
 #include <Arduino.h>
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
@@ -6,39 +8,47 @@
 #endif
 #include "FW_VERSION.h"
 #define DEVICE_NAME "layzspa"
-
-#define HA_PREFIX "homeassistant"
+#define DEVICE_NAME_F F(DEVICE_NAME)
+// #define HA_PREFIX "homeassistant"
+#define HA_PREFIX_F F("homeassistant")
 #define PROM_NAMESPACE "layzspa"
-
+// #define PROM_NAMESPACE_F F("layzspa")
+#define OTA_PSWD_F F("esp8266")
+#define WM_AP_NAME_F F("Lay-Z-Spa Module")
+#define WM_AP_PASSWORD_F F("layzspam0dule")
+#define MQTT_USER_F F("username")
+#define MQTT_PASSWORD_F F("password")
+#define MQTT_CLIENT_ID_F DEVICE_NAME_F
+#define MQTT_BASE_TOPIC_F DEVICE_NAME_F
 /*
  * Miscellaneous
  */
 /** get the state of password visibility */
 const bool hidePasswords = true;
 /** get the network hostname of the device (max. length 26) */
-const char *netHostname = DEVICE_NAME;
+// const char *netHostname = DEVICE_NAME;
 /** no comment :-) */
 bool notify = false;
 /** no comment :-) */
 int notification_time = 32;
 
 /*
- * Web Server Authentication
+ * Web Server Authentication (not used right now) TODO: implement authentication again
  */
 /** get or set the state of the web authentication */
-bool enableWebAuth = false;
+// bool enableWebAuth = false;
 /** get or set the username for web authentication */
-String authUsername = "username";
+// String authUsername = "username";
 /** get or set the password for web authentication */
-String authPassword = "password";
+// String authPassword = "password";
 
 /*
  * OTA Service Credentials
  */
 /** get the name for the OTA service */
-const char *OTAName = DEVICE_NAME;
+// const char *OTAName = DEVICE_NAME;
 /** get the password for the OTA service  */
-const char *OTAPassword = "esp8266";
+// const char *OTAPassword = "esp8266";
 
 /*
  * Web UI Configuration
@@ -81,9 +91,9 @@ bool useControlSelector = false;
 /** get the state of the WiFi configuration manager fallback on wifi failures */
 // bool enableWmApFallback = true;
 /** get the name for the WiFi configuration manager access point */
-const char *wmApName = "Lay-Z-Spa Module";
+// const char *wmApName = "Lay-Z-Spa Module";
 /** get the password for the WiFi configuration manager (min. 8, max. 63 chars; NULL to disable) */
-const char *wmApPassword = "layzspam0dule";
+// const char *wmApPassword = "layzspam0dule";
 //const char *wmApPassword = NULL;
 
         /*
@@ -125,18 +135,34 @@ const char *wmApPassword = "layzspam0dule";
  * You can modify this via Web UI.
  */
 /** get or set the state of the MQTT server connection */
-bool useMqtt = false;
-/** get or set the MQTT server IP address */
-IPAddress mqttIpAddress(192,168,0,20);
-/** get or set the MQTT server port */
-int mqttPort = 1883;
-/** get or set the MQTT server username */
-String mqttUsername = "username";
-/** get or set the MQTT server password */
-String mqttPassword = "password";
-/** get or set the unique MQTT client ID */
-String mqttClientId = DEVICE_NAME;
-/** get or set the MQTT topic name */
-String mqttBaseTopic = DEVICE_NAME;
-/** get or set the MQTT telemetry interval */
-int mqttTelemetryInterval = 600;
+// bool useMqtt = false;
+// /** get or set the MQTT server IP address */
+// IPAddress mqttIpAddress(192,168,0,20);
+// /** get or set the MQTT server port */
+// int mqttPort = 1883;
+// /** get or set the MQTT server username */
+// String mqttUsername = "username";
+// /** get or set the MQTT server password */
+// String mqttPassword = "password";
+// /** get or set the unique MQTT client ID */
+// String mqttClientId = DEVICE_NAME;
+// /** get or set the MQTT topic name */
+// String mqttBaseTopic = DEVICE_NAME;
+// /** get or set the MQTT telemetry interval */
+// int mqttTelemetryInterval = 600;
+
+struct sMQTT_info
+{
+    IPAddress mqttIpAddress;
+    int mqttTelemetryInterval;
+    int mqttPort;
+    String mqttUsername;
+    String mqttPassword;
+    String mqttClientId;
+    String mqttBaseTopic;
+    bool useMqtt = false;
+};
+
+sMQTT_info* mqtt_info;
+
+#endif

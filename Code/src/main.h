@@ -26,8 +26,8 @@
 #include <Ticker.h>
 #include <WebSocketsServer.h>
 // #include <ESP_WiFiManager.h>
-#include <WiFiManager.h>
-#define ESP_WiFiManager WiFiManager
+// #include <WiFiManager.h>
+// #define ESP_WiFiManager WiFiManager
 #include <umm_malloc/umm_heap_select.h>
 
 #include "bwc.h"
@@ -45,11 +45,11 @@
 BWC *bwc = nullptr;
 
 /**  Tickers cb function runs in interrupt context and cannot be long... */
-Ticker bootlogTimer;
-Ticker periodicTimer;
-Ticker startComplete_ticker;
-Ticker ntpCheck_ticker;
-Ticker checkWifi_ticker;
+Ticker* bootlogTimer;
+Ticker* periodicTimer;
+Ticker* startComplete_ticker;
+Ticker* ntpCheck_ticker;
+// Ticker* checkWifi_ticker;
 
 /**  ...Hence these flags to do the work in normal context*/
 bool periodicTimerFlag = false;
@@ -70,13 +70,11 @@ ESP8266WebServer *server = nullptr;
 #elif defined(ESP32)
 WebServer server(80);
 #endif
-/** a file variable to temporarily store the received file */
-File fsUploadFile;
 
 /** a websocket object that listens on port 81 */
 WebSocketsServer *webSocket = nullptr;
 /**  */
-Ticker updateWSTimer;
+Ticker* updateWSTimer;
 /**  */
 bool sendWSFlag = false;
 
@@ -93,7 +91,7 @@ String prevButtonName = "";
 /**  */
 bool prevunit = 1;
 /**  */
-Ticker updateMqttTimer;
+Ticker* updateMqttTimer;
 /**  */
 bool sendMQTTFlag = false;
 bool enableMqtt = false;
@@ -107,9 +105,9 @@ void getOtherInfo(String &rtn);
 void sendMQTT();
 void sendMQTTConfig();
 void startWiFi();
-void checkWiFi_ISR();
-void checkWiFi();
-void startWiFiConfigPortal();
+// void checkWiFi_ISR();
+// void checkWiFi();
+void startSoftAp();
 void checkNTP_ISR();
 void checkNTP();
 void startNTP();
@@ -168,6 +166,6 @@ void setupHA();
 void handlePrometheusMetrics();
 
 /* Debug */
-void write_mem_stats_to_file();
+// void write_mem_stats_to_file();
 void preparefortest();
 void handleInputs();

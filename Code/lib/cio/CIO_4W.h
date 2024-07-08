@@ -44,7 +44,9 @@ class CIO_4W : public CIO
 
     private:
         uint64_t _prev_ms;
-        SoftwareSerial *_cio_serial;
+        int _time_since_last_transmission_ms = 0;
+        const int _max_time_between_transmissions_ms = 2000;
+        EspSoftwareSerial::UART *_cio_serial;
         uint8_t _heat_bitmask = 0;
         uint8_t _from_CIO_buf[7] = {};
         uint8_t _to_CIO_buf[7] = {};

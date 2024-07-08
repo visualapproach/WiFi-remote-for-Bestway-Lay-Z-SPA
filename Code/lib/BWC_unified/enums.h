@@ -56,7 +56,6 @@ const uint8_t CHARS[] = {
     'h', 'H', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z'
 };
 
-/*TODO: report that this is breaking changes. GODMODE and FULLPOWER have new values.*/
 enum Commands: byte
 {
     SETTARGET,
