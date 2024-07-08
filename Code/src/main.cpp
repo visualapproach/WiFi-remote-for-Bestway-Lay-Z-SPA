@@ -2125,5 +2125,5 @@ void setTemperatureFromSensor()
     }
 }
 
-#include "ha.txt"
-#include "prometheus.txt"
+#include "ha.hpp"
+#include "prometheus.hpp"

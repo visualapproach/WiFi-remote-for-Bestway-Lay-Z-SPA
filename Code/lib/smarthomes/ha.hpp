@@ -1,3 +1,7 @@
+#include <Arduino.h>
+#include "ArduinoJson.h"
+#include "config.h"
+#include "main.h"
 /*
     Note, following does not work!
     doc[F("key")] = F("Value")

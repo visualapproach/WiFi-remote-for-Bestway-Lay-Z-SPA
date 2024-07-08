@@ -1,3 +1,5 @@
+#ifndef CONFIG_H
+#define CONFIG_H
 #include <Arduino.h>
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
@@ -162,3 +164,5 @@ struct sMQTT_info
 };
 
 sMQTT_info* mqtt_info;
+
+#endif

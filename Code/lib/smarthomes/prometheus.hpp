@@ -1,3 +1,8 @@
+#include <Arduino.h>
+#include "ArduinoJson.h"
+#include "config.h"
+#include "main.h"
+
 /**
  * prometheus related functions and char buffers
  * @author svanscho
