@@ -105,6 +105,10 @@ void DSP_4W::updateToggles()
 
 void DSP_4W::handleStates()
 {
+    static unsigned long lastmillis = millis();
+    int elapsedtime = millis() - lastmillis;
+    lastmillis += elapsedtime;
+    _time_since_last_transmission_ms += elapsedtime;
     /* If godmode - generate payload, else send rawpayload*/
     if(dsp_states.godmode)
     {
@@ -122,12 +126,14 @@ void DSP_4W::handleStates()
         }
     }
 
-    if(_readyToTransmit)
+    if(_readyToTransmit || (_time_since_last_transmission_ms > _max_time_between_transmissions_ms))
     {
         _readyToTransmit = false;
+        _time_since_last_transmission_ms = 0;
         _dsp_serial->write(_to_DSP_buf, PAYLOADSIZE);
         write_msg_count++;
     }
+
 }
 
 /* bwc can send data to cio */

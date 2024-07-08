@@ -56,6 +56,8 @@ void CIO_4W::handleToggles()
     uint32_t elapsed_time_ms = 0;
     elapsed_time_ms = millis() - _prev_ms;
     _prev_ms = millis();
+    _time_since_last_transmission_ms += elapsed_time_ms;
+
     cio_states.target = cio_toggles.target;
 
     if(_heater2_countdown_ms > 0) _heater2_countdown_ms -= elapsed_time_ms;
@@ -153,9 +155,10 @@ void CIO_4W::handleToggles()
     antifreeze();
     antiboil();
     generatePayload();
-    if(_readyToTransmit)
+    if(_readyToTransmit || (_time_since_last_transmission_ms > _max_time_between_transmissions_ms))
     {
         _readyToTransmit = false;
+        _time_since_last_transmission_ms = 0;
         _cio_serial->write(_to_CIO_buf, PAYLOADSIZE);
         write_msg_count++;
     }
