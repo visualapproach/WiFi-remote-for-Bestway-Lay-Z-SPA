@@ -1199,7 +1199,7 @@ void BWC::_updateTimes(){
     _energy_power_W += cio->cio_states.jets * cio->getPowerLevels().JETPOWER;
 
     _energy_daily_Ws += elapsedtime_ms * _energy_power_W / 1000.0;
-    _energy_cost += _price * _energy_power_W / (1000.0 * 1000.0 * 3600.0); // money/kWh
+    _energy_cost += elapsedtime_ms *_price * _energy_power_W / (1000.0 * 1000.0 * 3600.0); // money/kWh
 
     if(_notes.size())
     {
