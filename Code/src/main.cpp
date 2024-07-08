@@ -1,7 +1,7 @@
 #include "main.h"
 #include "ports.h"
 
-#define WS_PERIOD 10.0
+#define WS_PERIOD 4.0
 // initial stack
 char *stack_start;
 uint32_t heap_water_mark;
@@ -16,19 +16,19 @@ DallasTemperature *tempSensors;
 WiFiEventHandler gotIpEventHandler, disconnectedEventHandler;
 void cb_gotIP(const WiFiEventStationModeGotIP& event)
 {
-    Serial.print("got IP: ");
-    Serial.println(WiFi.localIP());
-
+    WiFi.softAPdisconnect();
+    WiFi.mode(WIFI_STA);
+    BWC_LOG_P(PSTR("Soft AP closed"),0);
+    BWC_LOG_P(PSTR("Connected as station with IP: %s"),WiFi.localIP());
     startNTP();
     startOTA();
-    startHttpServer();
-    startWebSocket();
     startMqtt();
 }
 
 void cb_disconnected(const WiFiEventStationModeDisconnected& event)
 {
-    Serial.println(F("disconnected"));
+    BWC_LOG_P(PSTR("Station disconnected. Starting soft AP"),0);
+    startSoftAp();
 }
 
 void setup()
@@ -57,7 +57,7 @@ void setup()
         periodicTimer = new Ticker;
         startComplete_ticker = new Ticker;
         ntpCheck_ticker = new Ticker;
-        checkWifi_ticker = new Ticker;
+        // checkWifi_ticker = new Ticker;
         updateWSTimer = new Ticker;
         updateMqttTimer = new Ticker;
         mqtt_info = new sMQTT_info;
@@ -75,10 +75,13 @@ void setup()
     periodicTimer->attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
     startComplete_ticker->attach(30, []{ if(mqtt_info->useMqtt) enableMqtt = true; startComplete_ticker->detach(); });
-    // update webpage every 2 seconds. (will also be updated on state changes)
+    // update webpage every WS_PERIOD seconds. (will also be updated on state changes)
     updateWSTimer->attach(WS_PERIOD, []{ sendWSFlag = true; });
     loadWebConfig();
     startWiFi();
+    if(wifi_info.enableWmApFallback) startSoftAp(); // not blocking anymore so no use case should exist for this to be turned off.
+    startHttpServer();
+    startWebSocket();
     if(bwc->hasTempSensor)
     { 
         HeapSelectIram ephemeral;
@@ -89,7 +92,7 @@ void setup()
     bwc->print(WiFi.localIP().toString());
     bwc->print("   ");
     bwc->print(FW_VERSION);
-    Serial.println(F("End of setup()"));
+    BWC_LOG_P(PSTR("End of setup()"),0);
     BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
     heap_water_mark = ESP.getFreeHeap();
     Serial.println(ESP.getFreeHeap());
@@ -106,11 +109,21 @@ void loop()
     bwc->loop();
 
     // run only when a wifi connection is established
+        // listen for webserver events
+    if(server){
+        server->handleClient();
+        // Serial.print(".");
+    }
+    // web socket
+    if (newData || sendWSFlag)
+    {
+        sendWSFlag = false;
+        sendWS();
+    }
+    /* MQTT, OTA & NTP is not relevant in softAP mode */
     if (WiFi.status() == WL_CONNECTED)
     {
-        // listen for webserver events
-        server->handleClient();
-
+        // Serial.print("-");
         // listen for OTA events
         ArduinoOTA.handle();
 
@@ -139,12 +152,10 @@ void loop()
                 sendMQTTConfig();
             }
         }
-
-        // web socket
-        if (newData || sendWSFlag)
+        if(checkNTP_flag)
         {
-            sendWSFlag = false;
-            sendWS();
+            checkNTP_flag = false;
+            checkNTP();
         }
     }
 
@@ -157,7 +168,7 @@ void loop()
             bwc->print(F("check network"));
             // Serial.println(F("WiFi > Trying to reconnect ..."));
         }
-        if (WiFi.status() == WL_CONNECTED)
+        else
         {
             // if (time(nullptr)<57600)
             // {
@@ -184,17 +195,11 @@ void loop()
         // }
     }
 
-    if(checkNTP_flag)
-    {
-        checkNTP_flag = false;
-        checkNTP();
-    }
-
-    if(CheckWiFi_flag)
-    {
-        CheckWiFi_flag = false;
-        checkWiFi();
-    }
+    // if(CheckWiFi_flag)
+    // {
+    //     CheckWiFi_flag = false;
+    //     checkWiFi();
+    // }
     //Only do this if locked out! (by pressing POWER - LOCK - TIMER - POWER)
     if(bwc->getBtnSeqMatch())
     {
@@ -246,6 +251,7 @@ void loop()
  */
 void sendWS()
 {
+    if(!webSocket) return;
     if(webSocket->connectedClients() == 0) return;
     HeapSelectIram ephemeral;
     // Serial.printf("IRamheap %d\n", ESP.getFreeHeap());
@@ -369,8 +375,8 @@ void startWiFi()
     WiFi.setAutoReconnect(true);
     WiFi.persistent(true);
     WiFi.hostname(DEVICE_NAME_F);
+    WiFi.mode(WIFI_AP_STA);
     loadWifi();
-
 
     if (wifi_info.enableStaticIp4)
     {
@@ -389,68 +395,69 @@ void startWiFi()
         WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
     }
 
+    /* Connect in station mode to the AP given (your router/ap) */
     if (wifi_info.enableAp)
     {
         BWC_LOG_P(PSTR("WiFi > using WiFi configuration with SSID %s\n"), wifi_info.apSsid);
 
         WiFi.begin(wifi_info.apSsid.c_str(), wifi_info.apPwd.c_str());
-        checkWifi_ticker->attach(2.0, checkWiFi_ISR);
+        // checkWifi_ticker->attach(2.0, checkWiFi_ISR);
         Serial.println(F("WiFi > Trying to connect ..."));
     }
-    else
-    {
-        startWiFiConfigPortal();
-    }
+    // else
+    // {
+    //     startSoftAp();
+    // }
 
 }
 
-void checkWiFi_ISR()
-{
-    CheckWiFi_flag = true;
-}
+// void checkWiFi_ISR()
+// {
+//     CheckWiFi_flag = true;
+// }
 
-void checkWiFi()
-{
-    const int maxTries = 30;
-    static uint8_t tryCount = 0;
+// void checkWiFi()
+// {
+//     const int maxTries = 30;
+//     static uint8_t tryCount = 0;
 
-    if (WiFi.status() == WL_CONNECTED)
-    {
-        checkWifi_ticker->detach();
-        wifi_info.enableAp = true;
-        wifi_info.apSsid = WiFi.SSID();
-        wifi_info.apPwd = WiFi.psk();
-        saveWifi();
-        return;
-    }
+//     if (WiFi.status() == WL_CONNECTED)
+//     {
+//         checkWifi_ticker->detach();
+//         wifi_info.enableAp = true;
+//         wifi_info.apSsid = WiFi.SSID();
+//         wifi_info.apPwd = WiFi.psk();
+//         saveWifi();
+//         return;
+//     }
 
-    if (++tryCount >= maxTries)
-    {
-        if (wifi_info.enableWmApFallback)
-        {
-            // disable specific WiFi config
-            wifi_info.enableAp = false;
-            wifi_info.enableStaticIp4 = false;
-            // fallback to WiFi config portal
-            startWiFiConfigPortal();
-        }
-    }
-}
+//     if (++tryCount >= maxTries)
+//     {
+//         if (wifi_info.enableWmApFallback)
+//         {
+//             // disable specific WiFi config
+//             wifi_info.enableAp = false;
+//             wifi_info.enableStaticIp4 = false;
+//             // fallback to WiFi config portal
+//             startSoftAp();
+//         }
+//     }
+// }
 
 /**
  * start WiFiManager configuration portal
  */
-void startWiFiConfigPortal()
+void startSoftAp()
 {
-    Serial.println(F("WiFi > Using WiFiManager Config Portal"));
-    ESP_WiFiManager wm;
-    String wmApName = WM_AP_NAME;
-    String wmApPassword = WM_AP_PASSWORD;
-    wm.autoConnect(wmApName.c_str(), wmApPassword.c_str());
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(500);
-    }
+    WiFi.mode(WIFI_AP_STA);
+    IPAddress local_IP(192,168,4,2);
+    IPAddress gateway(192,168,4,1);
+    IPAddress subnet(255,255,255,0);
+    Serial.print("Setting soft-AP configuration ... ");
+    Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "OK" : "Failed!");
+    Serial.print(F("WiFi > Using soft AP mode ... "));
+    Serial.println(WiFi.softAP(WM_AP_NAME_F, WM_AP_PASSWORD_F)?"OK": "SoftAP fail");
+    Serial.println(WiFi.softAPIP());
 }
 
 void checkNTP_ISR()
@@ -530,13 +537,14 @@ void stopall()
     periodicTimer->detach();
     updateWSTimer->detach();
     if(ntpCheck_ticker->active()) ntpCheck_ticker->detach();
-    if(checkWifi_ticker->active()) checkWifi_ticker->detach();
+    // if(checkWifi_ticker->active()) checkWifi_ticker->detach();
     //bwc->saveSettings();
     delete tempSensors;
     delete oneWire;
     Serial.println(F("stopping mqtt"));
     if(enableMqtt) mqttClient->disconnect();
-    delete aWifiClient;
+    if(aWifiClient) delete aWifiClient;
+    aWifiClient = nullptr;
     // delete mqttClient; //Compiler nagging about not deleting virtual classes.
     mqttClient = nullptr;
     Serial.println(F("stopping server"));
@@ -1516,8 +1524,8 @@ void resetWiFi()
     ESP.eraseConfig();
 #endif
     delay(1000);
-    ESP_WiFiManager wm;
-    wm.resetSettings();
+    // ESP_WiFiManager wm;
+    // wm.resetSettings();
     //WiFi.disconnect();
     delay(1000);
 }
