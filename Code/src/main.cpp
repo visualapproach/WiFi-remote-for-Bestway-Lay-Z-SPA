@@ -16,18 +16,28 @@ DallasTemperature *tempSensors;
 WiFiEventHandler gotIpEventHandler, disconnectedEventHandler;
 void cb_gotIP(const WiFiEventStationModeGotIP& event)
 {
+    gotIP_flag = true;
+}
+
+void gotIP()
+{
+    ESP.wdtFeed();
+    BWC_LOG_P(PSTR("start of gotip millis = %d\n"), millis());
+    gotIP_flag = false;
     WiFi.softAPdisconnect();
     WiFi.mode(WIFI_STA);
-    BWC_LOG_P(PSTR("Soft AP closed"),0);
-    BWC_LOG_P(PSTR("Connected as station with IP: %s"),WiFi.localIP());
+    BWC_LOG_P(PSTR("Soft AP > closed\n"), 0);
+    BWC_LOG_P(PSTR("Connected as station with localIP: %s\n"), WiFi.localIP().toString().c_str());
     startNTP();
     startOTA();
     startMqtt();
+    BWC_LOG_P(PSTR("end of gotip millis = %d\n"), millis());
+    bwc->print(WiFi.localIP().toString());
+    if(mqtt_info->useMqtt) enableMqtt = true;
 }
 
 void cb_disconnected(const WiFiEventStationModeDisconnected& event)
 {
-    BWC_LOG_P(PSTR("Station disconnected. Starting soft AP"),0);
     startSoftAp();
 }
 
@@ -39,8 +49,7 @@ void setup()
     stack_start = &stack;
 
     Serial.begin(76800);
-    BWC_LOG_P(PSTR("\nStart\n"),0);
-    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
+    BWC_LOG_P(PSTR("\nSetup > Start @ millis: %d\n"),millis());
     /*register wifi events */
     gotIpEventHandler = WiFi.onStationModeGotIP(cb_gotIP);
     disconnectedEventHandler = WiFi.onStationModeDisconnected(cb_disconnected);
@@ -48,14 +57,12 @@ void setup()
     LittleFS.begin();
     {
         HeapSelectIram ephemeral;
-        Serial.printf_P(PSTR("IRamheap %d\n"), ESP.getFreeHeap());
         bwc = new BWC;
         oneWire = new OneWire(231);
         tempSensors = new DallasTemperature(oneWire);
-        Serial.printf_P(PSTR("IRamheap %d\n"), ESP.getFreeHeap());
         bootlogTimer = new Ticker;
         periodicTimer = new Ticker;
-        startComplete_ticker = new Ticker;
+        // startComplete_ticker = new Ticker;
         ntpCheck_ticker = new Ticker;
         // checkWifi_ticker = new Ticker;
         updateWSTimer = new Ticker;
@@ -74,7 +81,7 @@ void setup()
     bwc->loop();
     periodicTimer->attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
-    startComplete_ticker->attach(30, []{ if(mqtt_info->useMqtt) enableMqtt = true; startComplete_ticker->detach(); });
+    // startComplete_ticker->attach(30, []{ if(mqtt_info->useMqtt) enableMqtt = true; startComplete_ticker->detach(); });
     // update webpage every WS_PERIOD seconds. (will also be updated on state changes)
     updateWSTimer->attach(WS_PERIOD, []{ sendWSFlag = true; });
     loadWebConfig();
@@ -88,14 +95,10 @@ void setup()
         oneWire->begin(bwc->tempSensorPin);
         tempSensors->begin();
     }
-    bwc->print("   ");  //No overloaded function exists for the F() macro
-    bwc->print(WiFi.localIP().toString());
-    bwc->print("   ");
+    bwc->print("---");  //No overloaded function exists for the F() macro
     bwc->print(FW_VERSION);
-    BWC_LOG_P(PSTR("End of setup()"),0);
-    BWC_LOG_P(PSTR("Millis: %d @ line: %d\n"), millis(), __LINE__);
+    BWC_LOG_P(PSTR("End of setup() @ Millis: %d @ line: %d. Heap: %d\n"), millis(), __LINE__, ESP.getFreeHeap());
     heap_water_mark = ESP.getFreeHeap();
-    Serial.println(ESP.getFreeHeap());
 }
 
 void loop()
@@ -103,6 +106,7 @@ void loop()
     uint32_t freeheap = ESP.getFreeHeap();
     if(freeheap < heap_water_mark) heap_water_mark = freeheap;
 
+    if(gotIP_flag) gotIP();
     // We need this self-destructing info several times, so save it on the stack
     bool newData = bwc->newData();
     // Fiddle with the pump computer
@@ -375,7 +379,7 @@ void startWiFi()
     WiFi.setAutoReconnect(true);
     WiFi.persistent(true);
     WiFi.hostname(DEVICE_NAME_F);
-    WiFi.mode(WIFI_AP_STA);
+    WiFi.mode(WIFI_STA);
     loadWifi();
 
     if (wifi_info.enableStaticIp4)
@@ -449,6 +453,11 @@ void startWiFi()
  */
 void startSoftAp()
 {
+    if(WiFi.getMode() == WIFI_AP_STA) {
+        BWC_LOG_P(PSTR("Soft AP IP: %s\n"),WiFi.softAPIP().toString().c_str());
+        return;
+    }
+    BWC_LOG_P(PSTR("Station > disconnected. Starting soft AP\n"),0);
     WiFi.mode(WIFI_AP_STA);
     IPAddress local_IP(192,168,4,2);
     IPAddress gateway(192,168,4,1);
@@ -457,7 +466,7 @@ void startSoftAp()
     Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "OK" : "Failed!");
     Serial.print(F("WiFi > Using soft AP mode ... "));
     Serial.println(WiFi.softAP(WM_AP_NAME_F, WM_AP_PASSWORD_F)?"OK": "SoftAP fail");
-    Serial.println(WiFi.softAPIP());
+    BWC_LOG_P(PSTR("Soft AP IP: %s\n"),WiFi.softAPIP().toString().c_str());
 }
 
 void checkNTP_ISR()
@@ -486,7 +495,12 @@ void checkNTP()
     strftime(boot_time_str, 64, "%F %T", boot_time_tm);
     bwc->reboot_time_str = String(boot_time_str);
     bwc->reboot_time_t = boot_timestamp;
-    bwc->saveRebootInfo();
+    if(firstNtpSyncAfterBoot)
+    {
+        BWC_LOG_P(PSTR("NTP > synced: %s. Saving boot info.\n"),bwc->reboot_time_str.c_str());
+        bwc->saveRebootInfo();
+        firstNtpSyncAfterBoot = false;
+    }
 }
 
 /**
@@ -494,13 +508,14 @@ void checkNTP()
  */
 void startNTP()
 {
-    Serial.println(F("start NTP"));
+    BWC_LOG_P(PSTR("NTP > start\n"),0);
     configTime(0,0,wifi_info.ip4NTP_str, F("pool.ntp.org"), F("time.nist.gov"));
-    ntpCheck_ticker->attach(0.5, checkNTP_ISR);
+    ntpCheck_ticker->attach(3.0, checkNTP_ISR);
 }
 
 void startOTA()
 {
+    BWC_LOG_P(PSTR("OTA > start\n"),0);
     String dname = DEVICE_NAME_F;
     String pw = OTA_PSWD_F;
     ArduinoOTA.setHostname(dname.c_str());
@@ -567,14 +582,14 @@ void pause_all(bool action)
     if(action)
     {
         if(periodicTimer->active()) periodicTimer->detach();
-        if(startComplete_ticker->active()) startComplete_ticker->detach();
+        // if(startComplete_ticker->active()) startComplete_ticker->detach();
         if(updateWSTimer->active()) updateWSTimer->detach();
         if(bootlogTimer->active()) bootlogTimer->detach();
         if(ntpCheck_ticker->active()) ntpCheck_ticker->detach();
     } else 
     {
         periodicTimer->attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
-        startComplete_ticker->attach(60, []{ if(mqtt_info->useMqtt) enableMqtt = true; startComplete_ticker->detach(); });
+        // startComplete_ticker->attach(60, []{ if(mqtt_info->useMqtt) enableMqtt = true; startComplete_ticker->detach(); });
         updateWSTimer->attach(WS_PERIOD, []{ sendWSFlag = true; });
         //bootlogTimer.attach(5, []{ if(DateTime.isTimeValid()) {bwc->saveRebootInfo(); bootlogTimer.detach();} });
     }
@@ -584,7 +599,7 @@ void pause_all(bool action)
 void startWebSocket()
 {
     HeapSelectIram ephemeral;
-    Serial.printf_P(PSTR("WS IRamheap %d\n"), ESP.getFreeHeap());
+    BWC_LOG_P(PSTR("WS > start. IRam heap: %d\n"), ESP.getFreeHeap());
     if(webSocket != nullptr)
     {
         webSocket->disconnect();
@@ -661,6 +676,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
  */
 void startHttpServer()
 {
+    BWC_LOG_P(PSTR("HTTP Server > start/restart.\n"),0);
     if(server != nullptr)
     {
         server->stop();
@@ -1858,8 +1874,7 @@ void startMqtt()
 {
     {
         HeapSelectIram ephemeral;
-        Serial.printf_P(PSTR("IRamheap %d\n"), ESP.getFreeHeap());
-        Serial.println(F("startmqtt"));
+        BWC_LOG_P(PSTR("MQTT > start. Iram heap: %d\n"), ESP.getFreeHeap());
         if(!aWifiClient) aWifiClient = new WiFiClient;
         if(!mqttClient) mqttClient = new PubSubClient(*aWifiClient);
     

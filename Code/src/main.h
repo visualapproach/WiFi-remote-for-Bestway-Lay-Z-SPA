@@ -47,18 +47,15 @@ BWC *bwc = nullptr;
 /**  Tickers cb function runs in interrupt context and cannot be long... */
 Ticker* bootlogTimer;
 Ticker* periodicTimer;
-Ticker* startComplete_ticker;
+// Ticker* startComplete_ticker;
 Ticker* ntpCheck_ticker;
 // Ticker* checkWifi_ticker;
 
 /**  ...Hence these flags to do the work in normal context*/
 bool periodicTimerFlag = false;
 bool checkNTP_flag = false;
-bool CheckWiFi_flag = false;
 /**  */
 int periodicTimerInterval = 60;
-/** get or set the state of the network beeing connected */
-bool wifiConnected = false;
 sWifi_info wifi_info;
 
 /** a WiFi Manager for configurations via access point */
@@ -99,7 +96,12 @@ bool send_mqtt_cfg_needed = false;
 
 /** used for handleAUX() */
 bool runonce = true;
+bool gotIP_flag = false;
+bool firstNtpSyncAfterBoot = true;
 
+void cb_gotIP(const WiFiEventStationModeGotIP &event);
+void gotIP();
+void cb_disconnected(const WiFiEventStationModeDisconnected &event);
 void sendWS();
 void getOtherInfo(String &rtn);
 void sendMQTT();
