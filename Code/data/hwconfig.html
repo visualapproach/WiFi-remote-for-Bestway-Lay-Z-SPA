@@ -136,40 +136,38 @@
 		</section>
 		
 		<section>
-			<p>Ambient "One Wire Temperature Sensor"<span data-text="Requires a DS18B20 sensor to be connected to the pin labeled 'Sensor Pin'. The sensor will update the 'Ambient Temperature' periodically." class="tooltip left">?</span></p>
+			<p>Ambient Temperature Sensor <span data-text="Requires a DS18B20 sensor to be connected to the pin labeled 'Sensor Pin'. The sensor will update the 'Ambient Temperature' periodically." class="tooltip above">?</span></p>
 			<table>
 				<tr>
 					<td>Enable <input type="checkbox" id="hasTempSensor" name="hasTempSensor" value="checked"></td>
-					<td>Sensor Pin (Dx)<span data-text="D0-D8 as labeled on the ESP, but without the 'D'. The ESP will convert to GPIO numbers." class="tooltip left">?</span> <input type="text" id="pin8" maxlength="2" style="width:30px"></td>
+					<td>Sensor Pin <span data-text="D0-D8 as labeled on the ESP, but without the 'D'. The ESP will convert to GPIO numbers." class="tooltip above">?</span> <input type="text" id="pin8" maxlength="2" style="width:30px"></td>
 				</tr>
 			</table>
 		</section>
 
 		<section>
-			<p>Power levels (in Watts) <span data-text="Customize power levels for different running modes." class="tooltip">?</span></p>
+			<p>Power levels (in Watts) <span data-text="Customize power levels for different running modes." class="tooltip above">?</span></p>
 			<table>
 				<tr>
 					<td colspan="5">Override <input type="checkbox" id="pwr_override" onclick="onOverrideClick()"></td>
 				</tr>
 				<tr>
-					<td style="text-align:right">Heat stage 1<input type="text" id="pwr_heater_stage1" maxlength="4" style="width:30px" 
+					<td>Heat stage 1<input type="text" id="pwr_heater_stage1" maxlength="4" style="width:30px" 
 						inputmode="numeric" pattern="[0-9]{1,4}"
 						disabled="disabled"></td>
-					<td style="text-align:right">Heat stage 2<input type="text" id="pwr_heater_stage2" maxlength="4" style="width:30px" 
+					<td>Heat stage 2<input type="text" id="pwr_heater_stage2" maxlength="4" style="width:30px" 
 						inputmode="numeric" pattern="[0-9]{1,4}"
 						disabled="disabled"></td>
-					<td style="text-align:right">Pump <input type="text" id="pwr_pump" maxlength="4" style="width:30px"
+					<td>Pump <input type="text" id="pwr_pump" maxlength="4" style="width:30px"
 						inputmode="numeric" pattern="[0-9]{1,4}"
 						disabled="disabled"></td>
-                </tr>
-                <tr>
-                    <td style="text-align:right">Idle <input type="text" id="pwr_idle" maxlength="4" style="width:30px"
+					<td>Idle <input type="text" id="pwr_idle" maxlength="4" style="width:30px"
 						inputmode="numeric" pattern="[0-9]{1,4}"
 						disabled="disabled"></td>
-					<td style="text-align:right">Air <input type="text" id="pwr_air" maxlength="4" style="width:30px"
+					<td>Air <input type="text" id="pwr_air" maxlength="4" style="width:30px"
 						inputmode="numeric" pattern="[0-9]{1,4}"
 						disabled="disabled"></td>
-					<td style="text-align:right">Jets <input type="text" id="pwr_jet" maxlength="4" style="width:30px"
+					<td>Jets <input type="text" id="pwr_jet" maxlength="4" style="width:30px"
 						inputmode="numeric" pattern="[0-9]{1,4}"
 						disabled="disabled"></td>
 				</tr>
