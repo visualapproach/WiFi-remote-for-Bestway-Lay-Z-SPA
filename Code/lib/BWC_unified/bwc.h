@@ -37,6 +37,7 @@
 #include "DSP_54123.h"
 
 #include "FW_VERSION.h"
+#include "bwc_debug.h"
 
 constexpr int MAXCOMMANDS = 20;
 
@@ -48,6 +49,7 @@ struct command_que_item
     uint32_t interval;
     String text = "";
 };
+        
 
 class BWC {
 

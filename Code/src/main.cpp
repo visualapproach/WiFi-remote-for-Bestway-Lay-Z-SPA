@@ -331,7 +331,7 @@ void sendMQTT()
     }
     else
     {
-        BWC_LOG_P(PSTR("MQTT > message not published"),0);
+        BWC_LOG_P(PSTR("MQTT > message not published\n"),0);
     }
 
     // send times
@@ -339,11 +339,11 @@ void sendMQTT()
     bwc->getJSONTimes(json);
     if (mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/times")).c_str(), String(json).c_str(), true))
     {
-        BWC_LOG_P(PSTR("MQTT > times published"),0);
+        BWC_LOG_P(PSTR("MQTT > times published\n"),0);
     }
     else
     {
-        BWC_LOG_P(PSTR("MQTT > times not published"),0);
+        BWC_LOG_P(PSTR("MQTT > times not published\n"),0);
     }
 
     //send other info
@@ -351,16 +351,17 @@ void sendMQTT()
     getOtherInfo(json);
     if (mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/other")).c_str(), String(json).c_str(), true))
     {
-        BWC_LOG_P(PSTR("MQTT > other published"),0);
+        BWC_LOG_P(PSTR("MQTT > other published\n"),0);
     }
     else
     {
-        BWC_LOG_P(PSTR("MQTT > other not published"),0);
+        BWC_LOG_P(PSTR("MQTT > other not published\n"),0);
     }
 }
 
 void sendMQTTConfig()
 {
+    BWC_LOG_P(PSTR("MQTT > sending config\n"),0);
     String json;
     json.reserve(320);
     bwc->getJSONSettings(json);
@@ -395,18 +396,18 @@ void startWiFi()
         ip4Subnet.fromString(wifi_info.ip4Subnet_str);
         ip4DnsPrimary.fromString(wifi_info.ip4DnsPrimary_str);
         ip4DnsSecondary.fromString(wifi_info.ip4DnsSecondary_str);
-        BWC_LOG_P(PSTR("WiFi > using static IP %s on gateway %s\n"),ip4Address.toString(), ip4Gateway.toString());
+        BWC_LOG_P(PSTR("WiFi > using static IP %s on gateway %s\n"),ip4Address.toString().c_str(), ip4Gateway.toString().c_str());
         WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
     }
 
     /* Connect in station mode to the AP given (your router/ap) */
     if (wifi_info.enableAp)
     {
-        BWC_LOG_P(PSTR("WiFi > using WiFi configuration with SSID %s\n"), wifi_info.apSsid);
+        BWC_LOG_P(PSTR("WiFi > using WiFi configuration with SSID %s\n"), wifi_info.apSsid.c_str());
 
         WiFi.begin(wifi_info.apSsid.c_str(), wifi_info.apPwd.c_str());
         // checkWifi_ticker->attach(2.0, checkWiFi_ISR);
-        Serial.println(F("WiFi > Trying to connect ..."));
+        BWC_LOG_P(PSTR("WiFi > Trying to connect ..."),0);
     }
     // else
     // {
@@ -462,11 +463,9 @@ void startSoftAp()
     IPAddress local_IP(192,168,4,2);
     IPAddress gateway(192,168,4,1);
     IPAddress subnet(255,255,255,0);
-    Serial.print("Setting soft-AP configuration ... ");
-    Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "OK" : "Failed!");
-    Serial.print(F("WiFi > Using soft AP mode ... "));
-    Serial.println(WiFi.softAP(WM_AP_NAME_F, WM_AP_PASSWORD_F)?"OK": "SoftAP fail");
-    BWC_LOG_P(PSTR("Soft AP IP: %s\n"),WiFi.softAPIP().toString().c_str());
+    BWC_LOG_P(PSTR("WiFi > soft-AP configuration: %s\n"),WiFi.softAPConfig(local_IP, gateway, subnet) ? "OK" : "Failed!");
+    BWC_LOG_P(PSTR("WiFi > soft AP mode: %s\n"),WiFi.softAP(WM_AP_NAME_F, WM_AP_PASSWORD_F)?"OK": "SoftAP fail");
+    BWC_LOG_P(PSTR("WiFi > Soft AP IP: %s\n"),WiFi.softAPIP().toString().c_str());
 }
 
 void checkNTP_ISR()
@@ -545,35 +544,36 @@ void startOTA()
 
 void stopall()
 {
-    Serial.printf_P(PSTR("Free mem before stop: %d\n"), ESP.getFreeHeap());
+    BWC_LOG_P(PSTR("Stop all > Free mem before stop: %d\n"), ESP.getFreeHeap());
     bwc->stop();
-    Serial.println(F("detaching"));
+    BWC_LOG_P(PSTR("MQTT > detaching\n"),0);
     updateMqttTimer->detach();
+    BWC_LOG_P(PSTR("Periodic timer > detaching\n"),0);
     periodicTimer->detach();
+    BWC_LOG_P(PSTR("WS > detaching\n"),0);
     updateWSTimer->detach();
     if(ntpCheck_ticker->active()) ntpCheck_ticker->detach();
     // if(checkWifi_ticker->active()) checkWifi_ticker->detach();
     //bwc->saveSettings();
     delete tempSensors;
     delete oneWire;
-    Serial.println(F("stopping mqtt"));
+    BWC_LOG_P(PSTR("MQTT > stopping\n"),0);
     if(enableMqtt) mqttClient->disconnect();
     if(aWifiClient) delete aWifiClient;
     aWifiClient = nullptr;
     // delete mqttClient; //Compiler nagging about not deleting virtual classes.
     mqttClient = nullptr;
-    Serial.println(F("stopping server"));
+    BWC_LOG_P(PSTR("HTTPServer > stopping\n"),0);
     server->stop();
     delete server;
     server = nullptr;
-    Serial.println(F("stopping ws"));
+    BWC_LOG_P(PSTR("WS > stopping\n"),0);
     webSocket->close();
     delete webSocket;
     webSocket = nullptr;
-    Serial.println(F("stopping FS"));
+    BWC_LOG_P(PSTR("FS > stopping\n"),0);
     LittleFS.end();
-    Serial.println(F("end stopall"));
-    Serial.printf_P(PSTR("Free mem after stop: %d\n"), ESP.getFreeHeap());
+    BWC_LOG_P(PSTR("Stop all > done. Free mem: %d\n"), ESP.getFreeHeap());
 }
 
 /*pause: action=true cont: action=false*/
@@ -624,7 +624,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
     {
         // if the websocket is disconnected
         case WStype_DISCONNECTED:
-            Serial.printf("WebSocket > [%u] Disconnected!\r\n", num);
+            BWC_LOG_P(PSTR("WS > [%u] Disconnected!\n"), num);
         break;
 
         // if a new websocket connection is established
@@ -645,8 +645,8 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
             DeserializationError error = deserializeJson(doc, payload);
             if (error)
             {
-            Serial.println(F("WebSocket > JSON command failed"));
-            return;
+                BWC_LOG_P(PSTR("WS > JSON command failed"),0);
+                return;
             }
 
             // Copy values from the JsonDocument to the Config
@@ -688,6 +688,13 @@ void startHttpServer()
     {
         // HeapSelectIram ephemeral;
         server = new ESP8266WebServer(80);
+        /* if you want a simple auth you can do something like this for every page you want to "protect" */
+        // server->on(F("/"), []() {
+        //     if (!server->authenticate("user", "pswd")) {
+        //         return server->requestAuthentication();
+        //     }
+        //     handleNotFound();
+        // });
         server->on(F("/getconfig/"), handleGetConfig);
         server->on(F("/setconfig/"), handleSetConfig);
         server->on(F("/getcommands/"), handleGetCommandQueue);
@@ -993,19 +1000,18 @@ bool handleFileRead(String path)
             path += ".gz";                                      // Use the compressed version
         File file = LittleFS.open(path, "r");                   // Open the file
         size_t fsize = file.size();
-Serial.println(ESP.getFreeHeap());
         size_t sent = server->streamFile(file, contentType);    // Send it to the client
-        Serial.println(F("File size: ") + String(fsize));
-        Serial.println(F("HTTP > file sent: ") + path + F(" (") + sent + F(" bytes)"));
+        BWC_LOG_P(PSTR("File size: %d\n"),fsize);
+        BWC_LOG_P(PSTR("HTTPServer > Filename: %s. Bytes sent: %d\n"),path.c_str(),sent);
         if(fsize != sent){
-            Serial.println(F("********* File not completed *******"));
+            BWC_LOG_P(PSTR("********* File not completed *******"),0);
         }
         pause_all(false);
         file.close();                                           // Close the file again
         return true;
     }
-    // Serial.println("HTTP > file not found: " + path);   // If the file doesn't exist, return false
     pause_all(false);
+    // If the file doesn't exist, return false
     return false;
 }
 
@@ -1554,7 +1560,7 @@ void loadMqtt()
     File file = LittleFS.open("mqtt.json", "r");
     if (!file)
     {
-        Serial.println(F("Failed to read mqtt.json. Using defaults."));
+        BWC_LOG_P(PSTR("MQTT > Failed to read mqtt.json. Using defaults."),0);
         return;
     }
 
@@ -1693,8 +1699,6 @@ void handleSetMqtt()
 void handleDir()
 {
     // HeapSelectIram ephemeral;
-    Serial.printf_P(PSTR("dir IRamheap %d\n"), ESP.getFreeHeap());
-
     String mydir;
     mydir.reserve(128);
     server->setContentLength(CONTENT_LENGTH_UNKNOWN);
@@ -1752,8 +1756,7 @@ void handleFileUpload()
             }
         }
 
-        Serial.print(F("handleFileUpload Name: "));
-        Serial.println(path);
+        BWC_LOG_P(PSTR("FS > upload filename: %s\n"),path.c_str());
 
         // Open the file for writing in LittleFS (create if it doesn't exist)
         fsUploadFile = LittleFS.open(path, "w");
@@ -1774,8 +1777,7 @@ void handleFileUpload()
         if (fsUploadFile)
         {
             fsUploadFile.close();
-            Serial.print(F("handleFileUpload Size: "));
-            Serial.println(upload.totalSize);
+            BWC_LOG_P(PSTR("FS > upload size: %d\n"),upload.totalSize);
             server->sendHeader(F("location"), F("success.html"));
             server->send(303);
             if (upload.filename == "cmdq.json")
@@ -1789,14 +1791,13 @@ void handleFileUpload()
         }
         else
         {
-            Serial.printf("err: %d", upload.status);
+            BWC_LOG_P(PSTR("FA > error: %d\n"), upload.status);
             server->send(500, F("text/plain"), F("500: couldn't create file"));
         }
     }
     else
     {
-        Serial.print(F("upload status"));
-        Serial.println(upload.status);
+        BWC_LOG_P(PSTR("FA > upload aborted: %d\n"), upload.status);
         server->send(500, F("text/plain"), F("500: upload aborted"));
     }
 }
@@ -1848,22 +1849,22 @@ void handleRestart()
     delay(1000);
     stopall();
     delay(1000);
-    Serial.println(F("ESP restart ..."));
+    BWC_LOG_P(PSTR("ESP restart ...\n"),0);
     ESP.restart();
     delay(3000);
 }
 
 void updateStart(){
-    Serial.println(F("update start"));
+    BWC_LOG_P(PSTR("OTA > update start\n"),0);
 }
 void updateEnd(){
-    Serial.println(F("update finish"));
+    BWC_LOG_P(PSTR("OTA > update finish\n"),0);
 }
 void udpateProgress(int cur, int total){
-    Serial.printf_P(PSTR("update process at %d of %d bytes...\n"), cur, total);
+    BWC_LOG_P(PSTR("OTA: update process at %d of %d bytes...\n"), cur, total);
 }
 void updateError(int err){
-    Serial.printf_P(PSTR("update fatal error code %d\n"), err);
+    BWC_LOG_P(PSTR("update fatal error code %d\n"), err);
 }
 
 /**
@@ -1991,7 +1992,7 @@ void mqttConnect()
     {
         return;
     }
-    Serial.println(F("mqttconn"));
+    BWC_LOG_P(PSTR("MQTT > connecting\n"),0);
 
     // Serial.print(F("MQTT > Connecting ... "));
     // We'll connect with a Retained Last Will that updates the 'Status' topic with "Dead" when the device goes offline...
@@ -2033,7 +2034,7 @@ void mqttConnect()
         mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/button")).c_str(), buttonname.c_str(), true);
         mqttClient->loop();
         sendMQTT();
-        Serial.println(F("MQTT Sending HA discovery"));
+        BWC_LOG_P(PSTR("MQTT > Sending HA discovery"),0);
         mqttClient->setBufferSize(1536);
         setupHA();
         mqttClient->setBufferSize(512);
@@ -2041,7 +2042,7 @@ void mqttConnect()
         // Serial.println(F("MQTT Sending config"));
         // sendMQTTConfig();    // Stack smashing if doing this here :-(
         send_mqtt_cfg_needed = true;
-        Serial.println(F("done"));
+        BWC_LOG_P(PSTR("MQTT > connect done\n"),0);
         #endif
     }
     else
@@ -2049,7 +2050,6 @@ void mqttConnect()
         // Serial.print(F("failed, Return Code = "));
         // Serial.println(mqttClient->state()); // states explained in webSocket->js
     }
-    Serial.println(F("end mqttcon"));
 }
 
 time_t getBootTime()
@@ -2116,7 +2116,6 @@ void handleESPInfo()
     server->sendContent(response);
     server->sendContent("");
 
-    Serial.println(F("end info"));
     #endif
 }
 

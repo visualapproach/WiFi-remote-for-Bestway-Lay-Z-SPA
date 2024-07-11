@@ -33,14 +33,8 @@
 #include "bwc.h"
 #include "config.h"
 #include "util.h"
+#include "bwc_debug.h"
 
-//
-#if BWC_DEBUGGING == 1
-    #define BWC_LOG_P(pstr_string, ...) Serial.printf_P(pstr_string, __VA_ARGS__)
-    #define BWC_LOG(s, ...) Serial.printf(s, __VA_ARGS__)
-#else
-    #define BWC_LOG_P(s, ...) 
-#endif
 
 BWC *bwc = nullptr;
 
