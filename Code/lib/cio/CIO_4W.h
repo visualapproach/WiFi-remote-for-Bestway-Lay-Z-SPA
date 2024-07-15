@@ -24,7 +24,6 @@ class CIO_4W : public CIO
         virtual bool getHasair() = 0;
         bool getSerialReceived() override;
         void setSerialReceived(bool txok) override;
-        void setPowerLevels(const std::optional<const Power>& power_levels) override;
 
     /*internal use*/
     protected:
@@ -69,13 +68,5 @@ class CIO_4W : public CIO
         bool _serialreceived = false;
         bool _readyToTransmit = false;
 
-        const Power _default_power_levels = {
-            .HEATERPOWER_STAGE1 = 950,
-            .HEATERPOWER_STAGE2 = 950,
-            .PUMPPOWER = 950,
-            .AIRPOWER = 950,
-            .IDLEPOWER = 950,
-            .JETPOWER = 950,
-        };
 };
 

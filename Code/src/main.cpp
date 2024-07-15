@@ -187,9 +187,6 @@ void loop()
         ESP.reset();
         delay(3000);
     }
-    //handleAUX();
-    // static int temp_counter = 0;
-    // if(++temp_counter % 100 == 0) BWC_LOG_P(PSTR("main loop %d\n"), millis());
 }
 
 

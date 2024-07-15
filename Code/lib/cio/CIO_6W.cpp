@@ -159,7 +159,11 @@ void CIO_6W::handleToggles()
         _qButton(item);
     }
 
-    // _pressed_button = cio_toggles.pressed_button; TODO: remove variable from class
+    HeaterStages heater_stages {
+        .stage1_on = (bool)cio_states.heatred,
+        .stage2_on = (bool)cio_states.heatred && !(bool)cio_states.bubbles && !(bool)cio_states.jets,
+    };
+    setHeaterStages(heater_stages);
 }
 
 void CIO_6W::unlock()

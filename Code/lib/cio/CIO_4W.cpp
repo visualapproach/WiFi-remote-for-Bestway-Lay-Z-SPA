@@ -25,14 +25,6 @@ void CIO_4W::setup(int cio_rx, int cio_tx, int dummy)
     _cio_serial->write(_to_CIO_buf, PAYLOADSIZE);  //test
 }
 
-void CIO_4W::setPowerLevels(const std::optional<const Power>& power_levels) {
-    if (power_levels.has_value()) {
-        CIO::setPowerLevels(power_levels);
-    } else {
-        CIO::setPowerLevels(_default_power_levels);
-    }
-}
-
 void CIO_4W::stop()
 {
     _cio_serial->stopListening();
