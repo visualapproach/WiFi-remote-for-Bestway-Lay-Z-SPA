@@ -39,9 +39,9 @@
 BWC *bwc = nullptr;
 
 /**  Tickers cb function runs in interrupt context and cannot be long... */
-Ticker* bootlogTimer;
+// Ticker* bootlogTimer;
 Ticker* periodicTimer;
-// Ticker* startComplete_ticker;
+Ticker* startComplete_ticker;
 Ticker* ntpCheck_ticker;
 // Ticker* checkWifi_ticker;
 
@@ -52,8 +52,8 @@ bool checkNTP_flag = false;
 int periodicTimerInterval = 60;
 sWifi_info wifi_info;
 
-/** a WiFi Manager for configurations via access point */
-// ESP_WiFiManager wm;
+/** A file to store the uploads */
+File fsUploadFile;
 
 /** a webserver object that listens on port 80 */
 #if defined(ESP8266)
@@ -91,6 +91,7 @@ bool send_mqtt_cfg_needed = false;
 /** used for handleAUX() */
 bool runonce = true;
 bool gotIP_flag = false;
+bool disconnected_flag = false;
 bool firstNtpSyncAfterBoot = true;
 
 void cb_gotIP(const WiFiEventStationModeGotIP &event);

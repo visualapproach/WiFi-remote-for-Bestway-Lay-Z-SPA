@@ -34,11 +34,13 @@ void gotIP()
     BWC_LOG_P(PSTR("end of gotip millis = %d\n"), millis());
     bwc->print(WiFi.localIP().toString());
     if(mqtt_info->useMqtt) enableMqtt = true;
+    BWC_YIELD;
 }
 
 void cb_disconnected(const WiFiEventStationModeDisconnected& event)
 {
-    startSoftAp();
+    disconnected_flag = true;
+    // startSoftAp();
 }
 
 void setup()
@@ -60,9 +62,9 @@ void setup()
         bwc = new BWC;
         oneWire = new OneWire(231);
         tempSensors = new DallasTemperature(oneWire);
-        bootlogTimer = new Ticker;
+        // bootlogTimer = new Ticker;
         periodicTimer = new Ticker;
-        // startComplete_ticker = new Ticker;
+        startComplete_ticker = new Ticker;
         ntpCheck_ticker = new Ticker;
         // checkWifi_ticker = new Ticker;
         updateWSTimer = new Ticker;
@@ -81,7 +83,7 @@ void setup()
     bwc->loop();
     periodicTimer->attach(periodicTimerInterval, []{ periodicTimerFlag = true; });
     // delayed mqtt start
-    // startComplete_ticker->attach(30, []{ if(mqtt_info->useMqtt) enableMqtt = true; startComplete_ticker->detach(); });
+    startComplete_ticker->attach(30, []{ bwc->restoreStates(); startComplete_ticker->detach(); delete startComplete_ticker; }); //can it destroy itself?
     // update webpage every WS_PERIOD seconds. (will also be updated on state changes)
     updateWSTimer->attach(WS_PERIOD, []{ sendWSFlag = true; });
     loadWebConfig();
@@ -107,13 +109,13 @@ void loop()
     if(freeheap < heap_water_mark) heap_water_mark = freeheap;
 
     if(gotIP_flag) gotIP();
+    if(disconnected_flag) startSoftAp();
     // We need this self-destructing info several times, so save it on the stack
     bool newData = bwc->newData();
     // Fiddle with the pump computer
     bwc->loop();
 
-    // run only when a wifi connection is established
-        // listen for webserver events
+    // listen for webserver events
     if(server){
         server->handleClient();
         // Serial.print(".");
@@ -124,10 +126,10 @@ void loop()
         sendWSFlag = false;
         sendWS();
     }
+    // run only when a wifi connection is established
     /* MQTT, OTA & NTP is not relevant in softAP mode */
     if (WiFi.status() == WL_CONNECTED)
     {
-        // Serial.print("-");
         // listen for OTA events
         ArduinoOTA.handle();
 
@@ -143,19 +145,18 @@ void loop()
                 mqttClient->publish((String(mqtt_info->mqttBaseTopic) + "/button").c_str(), String(msg).c_str(), true);
                 prevButtonName = msg;
             }
-
             if (newData || sendMQTTFlag)
             {
                 sendMQTT();
                 sendMQTTFlag = false;
             }
-
             if(send_mqtt_cfg_needed)
             {
                 send_mqtt_cfg_needed = false;
                 sendMQTTConfig();
             }
         }
+
         if(checkNTP_flag)
         {
             checkNTP_flag = false;
@@ -167,87 +168,29 @@ void loop()
     if (periodicTimerFlag)
     {
         periodicTimerFlag = false;
-        if (WiFi.status() != WL_CONNECTED)
         {
-            bwc->print(F("check network"));
-            // Serial.println(F("WiFi > Trying to reconnect ..."));
-        }
-        else
-        {
-            // if (time(nullptr)<57600)
-            // {
-            //     // Serial.println(F("NTP > Start synchronisation"));
-            //     startNTP();
-            // }
-
-            if (enableMqtt && !mqttClient->loop())
+            if (enableMqtt && !mqttClient->loop() && (WiFi.status() == WL_CONNECTED))
             {
-                // Serial.println(F("MQTT > Not connected"));
+                BWC_LOG_P(PSTR("MQTT > Not connected\n"),0);
                 mqttConnect();
             }
         }
         // Leverage the pre-existing periodicTimerFlag to also set temperature, if enabled
         setTemperatureFromSensor();
-
-        /* Debug */
-        // static uint8_t minutes = 0;
-        // minutes++;
-        // if(minutes >= 5)
-        // {
-            // minutes = 0;
-            // write_mem_stats_to_file();
-        // }
     }
 
-    // if(CheckWiFi_flag)
-    // {
-    //     CheckWiFi_flag = false;
-    //     checkWiFi();
-    // }
     //Only do this if locked out! (by pressing POWER - LOCK - TIMER - POWER)
     if(bwc->getBtnSeqMatch())
-    {
-    
-    resetWiFi();
-    delay(3000);
-    ESP.reset();
-    delay(3000);
+    {   
+        resetWiFi();
+        delay(3000);
+        ESP.reset();
+        delay(3000);
     }
     //handleAUX();
     // static int temp_counter = 0;
     // if(++temp_counter % 100 == 0) BWC_LOG_P(PSTR("main loop %d\n"), millis());
 }
-
-/* Debugging to file, normally not used */
-// void write_mem_stats_to_file()
-// {
-//     File file = LittleFS.open(F("memstats.txt"), "a");
-//     if (!file)
-//     {
-//         file.close();
-//         return;
-//     }
-//     time_t now = time(nullptr);
-//     struct tm timeinfo;
-//     gmtime_r(&now, &timeinfo);
-//     {
-//         // HeapSelectIram ephemeral;
-//         file.printf_P(PSTR("Time: %s, IRam: free %d, frag %d, max block %d "),
-//             asctime(&timeinfo),
-//             ESP.getFreeHeap(), 
-//             ESP.getHeapFragmentation(),
-//             ESP.getMaxFreeBlockSize()
-//             );
-//     }
-//     /*Dram*/
-//     file.printf_P(PSTR("DRam: free %d, frag %d, max block %d\n"),
-//         ESP.getFreeHeap(), 
-//         ESP.getHeapFragmentation(),
-//         ESP.getMaxFreeBlockSize()
-//         );
-//     file.close();
-// }
-    
 
 
 /**
@@ -280,6 +223,7 @@ void sendWS()
     // gmtime_r(&now, &timeinfo);
     // Serial.print("Current time: ");
     // Serial.print(asctime(&timeinfo));
+    BWC_YIELD;
 }
 
 void getOtherInfo(String &rtn)
@@ -306,6 +250,7 @@ void getOtherInfo(String &rtn)
     {
         rtn = F("{\"error\": \"Failed to serialize other\"}");
     }
+    BWC_YIELD;
 }
 
 /**
@@ -357,6 +302,7 @@ void sendMQTT()
     {
         BWC_LOG_P(PSTR("MQTT > other not published\n"),0);
     }
+    BWC_YIELD;
 }
 
 void sendMQTTConfig()
@@ -367,6 +313,7 @@ void sendMQTTConfig()
     bwc->getJSONSettings(json);
     mqttClient->publish((String(mqtt_info->mqttBaseTopic) + F("/get_config")).c_str(), String(json).c_str(), true);
     mqttClient->loop();
+    BWC_YIELD;
 }
 
 /**
@@ -409,56 +356,21 @@ void startWiFi()
         // checkWifi_ticker->attach(2.0, checkWiFi_ISR);
         BWC_LOG_P(PSTR("WiFi > Trying to connect ..."),0);
     }
-    // else
-    // {
-    //     startSoftAp();
-    // }
-
+    BWC_YIELD;
 }
-
-// void checkWiFi_ISR()
-// {
-//     CheckWiFi_flag = true;
-// }
-
-// void checkWiFi()
-// {
-//     const int maxTries = 30;
-//     static uint8_t tryCount = 0;
-
-//     if (WiFi.status() == WL_CONNECTED)
-//     {
-//         checkWifi_ticker->detach();
-//         wifi_info.enableAp = true;
-//         wifi_info.apSsid = WiFi.SSID();
-//         wifi_info.apPwd = WiFi.psk();
-//         saveWifi();
-//         return;
-//     }
-
-//     if (++tryCount >= maxTries)
-//     {
-//         if (wifi_info.enableWmApFallback)
-//         {
-//             // disable specific WiFi config
-//             wifi_info.enableAp = false;
-//             wifi_info.enableStaticIp4 = false;
-//             // fallback to WiFi config portal
-//             startSoftAp();
-//         }
-//     }
-// }
 
 /**
  * start WiFiManager configuration portal
  */
 void startSoftAp()
 {
+    disconnected_flag = false;
     if(WiFi.getMode() == WIFI_AP_STA) {
         BWC_LOG_P(PSTR("Soft AP IP: %s\n"),WiFi.softAPIP().toString().c_str());
         return;
     }
     BWC_LOG_P(PSTR("Station > disconnected. Starting soft AP\n"),0);
+    bwc->print(F("check network"));
     WiFi.mode(WIFI_AP_STA);
     IPAddress local_IP(192,168,4,2);
     IPAddress gateway(192,168,4,1);
@@ -466,6 +378,7 @@ void startSoftAp()
     BWC_LOG_P(PSTR("WiFi > soft-AP configuration: %s\n"),WiFi.softAPConfig(local_IP, gateway, subnet) ? "OK" : "Failed!");
     BWC_LOG_P(PSTR("WiFi > soft AP mode: %s\n"),WiFi.softAP(WM_AP_NAME_F, WM_AP_PASSWORD_F)?"OK": "SoftAP fail");
     BWC_LOG_P(PSTR("WiFi > Soft AP IP: %s\n"),WiFi.softAPIP().toString().c_str());
+    BWC_YIELD;
 }
 
 void checkNTP_ISR()
@@ -481,7 +394,7 @@ void checkNTP()
     {
         if (++ntpTryNumber == 10) {
             ntpTryNumber = 0; //reset until next check
-            ntpCheck_ticker->detach();
+            ntpCheck_ticker->detach(); //give up. Next check won't happen.
         }
         return;
     }
@@ -497,9 +410,10 @@ void checkNTP()
     if(firstNtpSyncAfterBoot)
     {
         BWC_LOG_P(PSTR("NTP > synced: %s. Saving boot info.\n"),bwc->reboot_time_str.c_str());
-        bwc->saveRebootInfo();
         firstNtpSyncAfterBoot = false;
+        bwc->saveRebootInfo();
     }
+    BWC_YIELD;
 }
 
 /**
@@ -584,7 +498,7 @@ void pause_all(bool action)
         if(periodicTimer->active()) periodicTimer->detach();
         // if(startComplete_ticker->active()) startComplete_ticker->detach();
         if(updateWSTimer->active()) updateWSTimer->detach();
-        if(bootlogTimer->active()) bootlogTimer->detach();
+        // if(bootlogTimer->active()) bootlogTimer->detach();
         if(ntpCheck_ticker->active()) ntpCheck_ticker->detach();
     } else 
     {
@@ -666,7 +580,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len)
         break;
 
         default:
-            Serial.printf("WebSocket > [%u]\r\n", (unsigned int)type);
+            BWC_LOG_P(PSTR("WebSocket > Type:[%u]\r\n"), (unsigned int)type);
         break;
     }
 }
@@ -747,13 +661,13 @@ void handleGetHardware()
     }
     server->send(200, F("text/plain"), file.readString());
     file.close();
+    BWC_YIELD;
 }
 
 void handleSetHardware()
 {
     if (!checkHttpPost(server->method())) return;
     String message = server->arg(0);
-    // Serial.printf("Set hw message; %s\n", message.c_str());
     File file = LittleFS.open(F("hwcfg.json"), "w");
     if (!file)
     {
@@ -763,7 +677,7 @@ void handleSetHardware()
     file.print(message);
     file.close();
     server->send(200, F("text/plain"), "ok");
-    // Serial.println("sethardware done");
+    BWC_YIELD;
 }
 
 void preparefortest()
@@ -1000,11 +914,12 @@ bool handleFileRead(String path)
             path += ".gz";                                      // Use the compressed version
         File file = LittleFS.open(path, "r");                   // Open the file
         size_t fsize = file.size();
+        BWC_YIELD;
         size_t sent = server->streamFile(file, contentType);    // Send it to the client
         BWC_LOG_P(PSTR("File size: %d\n"),fsize);
         BWC_LOG_P(PSTR("HTTPServer > Filename: %s. Bytes sent: %d\n"),path.c_str(),sent);
         if(fsize != sent){
-            BWC_LOG_P(PSTR("********* File not completed *******"),0);
+            BWC_LOG_P(PSTR("^^^^^ File not completed ^^^^^\n"),0);
         }
         pause_all(false);
         file.close();                                           // Close the file again
@@ -1040,6 +955,7 @@ void handleGetConfig()
     json.reserve(320);
     bwc->getJSONSettings(json);
     server->send(200, F("text/plain"), json);
+    BWC_YIELD;
 }
 
 /**
@@ -1055,6 +971,7 @@ void handleSetConfig()
 
     server->send(200, F("text/plain"), "");
     send_mqtt_cfg_needed = true;
+    BWC_YIELD;
 }
 
 /**
@@ -1158,7 +1075,6 @@ void handleDelCommand()
 
     uint8_t index = doc[F("IDX")];
     bwc->del_command(index);
-
     server->send(200, F("text/plain"), "");
 }
 
@@ -1192,6 +1108,7 @@ void handle_cmdq_file()
     }
 
     server->send(200, F("text/plain"), "");
+    BWC_YIELD;
 }
 
 void copyFile(String source, String dest)
@@ -1218,6 +1135,7 @@ void copyFile(String source, String dest)
     
     f_dest.close(); // done, close the destination file
     f_source.close(); // done, close the source file
+    BWC_YIELD;
 }
 
 /**
@@ -1251,6 +1169,7 @@ void loadWebConfig()
     showSectionTimer = (doc.containsKey(F("SSTIM")) ? doc[F("SSTIM")] : true);
     showSectionTotals = (doc.containsKey(F("SSTOT")) ? doc[F("SSTOT")] : true);
     useControlSelector = (doc.containsKey(F("UCS")) ? doc[F("UCS")] : false);
+    BWC_YIELD;
 }
 
 /**
@@ -1281,6 +1200,7 @@ void saveWebConfig()
         // Serial.println(F("{\"error\": \"Failed to serialize file\"}"));
     }
     file.close();
+    BWC_YIELD;
 }
 
 /**
@@ -1378,28 +1298,7 @@ void loadWifi()
     wifi_info.ip4DnsSecondary_str = doc[F("ip4DnsSecondary")].as<String>();
     wifi_info.ip4NTP_str = doc[F("ip4NTP")].as<String>();
 
-    return;
-
-    // ip4Address[0] = doc[F("ip4Address")][0];
-    // ip4Address[1] = doc[F("ip4Address")][1];
-    // ip4Address[2] = doc[F("ip4Address")][2];
-    // ip4Address[3] = doc[F("ip4Address")][3];
-    // ip4Gateway[0] = doc[F("ip4Gateway")][0];
-    // ip4Gateway[1] = doc[F("ip4Gateway")][1];
-    // ip4Gateway[2] = doc[F("ip4Gateway")][2];
-    // ip4Gateway[3] = doc[F("ip4Gateway")][3];
-    // ip4Subnet[0] = doc[F("ip4Subnet")][0];
-    // ip4Subnet[1] = doc[F("ip4Subnet")][1];
-    // ip4Subnet[2] = doc[F("ip4Subnet")][2];
-    // ip4Subnet[3] = doc[F("ip4Subnet")][3];
-    // ip4DnsPrimary[0] = doc[F("ip4DnsPrimary")][0];
-    // ip4DnsPrimary[1] = doc[F("ip4DnsPrimary")][1];
-    // ip4DnsPrimary[2] = doc[F("ip4DnsPrimary")][2];
-    // ip4DnsPrimary[3] = doc[F("ip4DnsPrimary")][3];
-    // ip4DnsSecondary[0] = doc[F("ip4DnsSecondary")][0];
-    // ip4DnsSecondary[1] = doc[F("ip4DnsSecondary")][1];
-    // ip4DnsSecondary[2] = doc[F("ip4DnsSecondary")][2];
-    // ip4DnsSecondary[3] = doc[F("ip4DnsSecondary")][3];
+    BWC_YIELD;
 }
 
 /**
@@ -1433,6 +1332,7 @@ void saveWifi()
         // Serial.println(F("{\"error\": \"Failed to serialize file\"}"));
     }
     file.close();
+    BWC_YIELD;
 }
 
 /**
@@ -1586,6 +1486,7 @@ void loadMqtt()
     mqtt_info->mqttClientId = doc[F("mqttClientId")].as<String>();
     mqtt_info->mqttBaseTopic = doc[F("mqttBaseTopic")].as<String>();
     mqtt_info->mqttTelemetryInterval = doc[F("mqttTelemetryInterval")];
+    BWC_YIELD;
 }
 
 /**
@@ -1619,6 +1520,7 @@ void saveMqtt()
         // Serial.println(F("{\"error\": \"Failed to serialize file\"}"));
     }
     file.close();
+    BWC_YIELD;
 }
 
 /**
@@ -1653,6 +1555,7 @@ void handleGetMqtt()
         json = F("{\"error\": \"Failed to serialize message\"}");
     }
     server->send(200, F("text/plain"), json);
+    BWC_YIELD;
 }
 
 /**
@@ -1690,6 +1593,7 @@ void handleSetMqtt()
 
     saveMqtt();
     startMqtt();
+    BWC_YIELD;
 }
 
 /**
@@ -1730,7 +1634,6 @@ void handleDir()
  * response for /upload.html
  * upload a new file to the LittleFS
  */
-    File fsUploadFile;
 void handleFileUpload()
 {
     HTTPUpload& upload = server->upload();
@@ -1901,6 +1804,7 @@ void startMqtt()
         // Connect to MQTT broker, publish Status/MAC/count, and subscribe to keypad topic.
     }
     mqttConnect();
+    BWC_YIELD;
 }
 
 /**
@@ -2050,6 +1954,7 @@ void mqttConnect()
         // Serial.print(F("failed, Return Code = "));
         // Serial.println(mqttClient->state()); // states explained in webSocket->js
     }
+    BWC_YIELD;
 }
 
 time_t getBootTime()
@@ -2137,6 +2042,7 @@ void setTemperatureFromSensor()
                 bwc->setAmbientTemperature(temperatureC, true);
             }
     }
+    BWC_YIELD;
 }
 
 #include "ha.hpp"

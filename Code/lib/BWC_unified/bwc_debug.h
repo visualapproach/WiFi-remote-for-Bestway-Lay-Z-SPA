@@ -18,6 +18,12 @@
     #define BWC_LOG(s, ...) 
 #endif
 
+#ifndef BWC_SPRINKLE_YIELDS
+    #define BWC_YIELD
+#else
+    #define BWC_YIELD optimistic_yield(100)
+#endif
+
 void log2file(const char* s);
 
 #endif //guard
