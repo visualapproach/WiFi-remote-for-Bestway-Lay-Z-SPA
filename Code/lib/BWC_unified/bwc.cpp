@@ -170,7 +170,6 @@ void BWC::begin(){
     _next_notification_time = _notification_time;
     loadCommandQueue();
     _loadSettings();
-    _restoreStates();
 }
 
 
@@ -228,6 +227,7 @@ void BWC::loop(){
     _calcVirtualTemp();
     // logstates();
     if(BWC_DEBUG) _log();
+    BWC_YIELD;
 }
 
 void BWC::_log()
@@ -304,6 +304,7 @@ void BWC::_log()
         file.printf_P(PSTR("CIO CMD byte %2d: %X\n"), i, cio->CIO_CMD_LOG[i]);
     }
     file.close();
+    BWC_YIELD;
 }
 
 void BWC::adjust_brightness()
@@ -602,6 +603,7 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
     }
     /*If we pushed back an item, we need to re-sort the que*/
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
+    BWC_YIELD;
     return false;
 }
 
@@ -643,7 +645,7 @@ void BWC::_handleStateChanges()
         cio->cio_states.heat   != _prev_cio_states.heat || 
         cio->cio_states.target != _prev_cio_states.target
       )
-        _save_states_needed = true;
+        if(_states_are_restored) _save_states_needed = true; //Do not save until states are restored
 
     Buttons _currbutton = dsp->dsp_toggles.pressed_button;
     if(_currbutton != _prevbutton && _currbutton != NOBTN)
@@ -767,7 +769,7 @@ void BWC::_calcVirtualTemp()
         e    : natural number 2,71828182845904
         r    : a constant we need to find out by measurements
     */
-
+   BWC_YIELD;
 }
 
 //Called on temp change
@@ -864,6 +866,7 @@ bool BWC::add_command(command_que_item command_item)
     //add parameters to _command_que[rows][parameter columns] and sort the array on xtime.
     _command_que.push_back(command_item);
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
+    BWC_YIELD;
     return true;
 }
 
@@ -880,6 +883,7 @@ bool BWC::edit_command(uint8_t index, command_que_item command_item)
     //add parameters to _command_que[index] and sort the array on xtime.
     _command_que.at(index) = command_item;
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
+    BWC_YIELD;
     return true;
 }
 
@@ -888,6 +892,7 @@ bool BWC::del_command(uint8_t index)
     if(index >= _command_que.size()) return false;
     _save_cmdq_needed = true;
     _command_que.erase(_command_que.begin()+index);
+    BWC_YIELD;
     return true;
 }
 
@@ -964,6 +969,7 @@ void BWC::getJSONStates(String &rtn) {
     if (serializeJson(doc, rtn) == 0) {
         rtn = F("{\"error\": \"Failed to serialize states\"}");
     }
+    BWC_YIELD;
 }
 
 void BWC::getJSONTimes(String &rtn) {
@@ -1014,6 +1020,7 @@ void BWC::getJSONTimes(String &rtn) {
     if (serializeJson(doc, rtn) == 0) {
         rtn = F("{\"error\": \"Failed to serialize times\"}");
     }
+    BWC_YIELD;
 }
 
 void BWC::getJSONSettings(String &rtn){
@@ -1059,6 +1066,7 @@ void BWC::getJSONSettings(String &rtn){
     if (serializeJson(doc, rtn) == 0) {
         rtn = F("{\"error\": \"Failed to serialize settings\"}");
     }
+    BWC_YIELD;
 }
 
 String BWC::getJSONCommandQueue(){
@@ -1082,6 +1090,7 @@ String BWC::getJSONCommandQueue(){
     if (serializeJson(doc, jsonmsg) == 0) {
         jsonmsg = F("{\"error\": \"Failed to serialize cmdq\"}");
     }
+    BWC_YIELD;
     return jsonmsg;
 }
 
@@ -1134,6 +1143,7 @@ void BWC::setJSONSettings(const String& message){
     dsp->EnabledButtons[POWER] = doc[F("PWR")] | dsp->EnabledButtons[POWER];
     dsp->EnabledButtons[HYDROJETS] = doc[F("HJT")] | dsp->EnabledButtons[HYDROJETS];
     saveSettings();
+    BWC_YIELD;
 }
 
 bool BWC::newData(){
@@ -1216,6 +1226,7 @@ void BWC::_updateTimes(){
     {
         dsp->audiofrequency = 0;
     }
+    BWC_YIELD;
 }
 
 /*          */
@@ -1273,7 +1284,7 @@ bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[], std::optional<
             }
         );
     }
-
+    BWC_YIELD;
     return true;
 }
 
@@ -1337,9 +1348,11 @@ void BWC::_loadSettings(){
     dsp->EnabledButtons[HYDROJETS] = doc[F("HJT")];
 
     file.close();
+    BWC_YIELD;
 }
 
-void BWC::_restoreStates() {
+void BWC::restoreStates() {
+    _states_are_restored = true;
     if(!_restore_states_on_start) return;
     File file = LittleFS.open(F("states.txt"), "r");
     if (!file) {
@@ -1370,30 +1383,32 @@ void BWC::_restoreStates() {
     add_command(item);
     item.cmd = SETUNIT;
     item.val = unt;
-    item.xtime = 0;
+    item.xtime = 1;
     item.interval = 0;
     item.text = "";
     add_command(item);
     item.cmd = SETPUMP;
     item.val = flt;
-    item.xtime = 0;
+    item.xtime = 2;
     item.interval = 0;
     item.text = "";
     add_command(item);
     item.cmd = SETHEATER;
     item.val = htr;
-    item.xtime = 0;
+    item.xtime = 3;
     item.interval = 0;
     item.text = "";
     add_command(item);
     item.cmd = SETTARGET;
     item.val = tgt;
-    item.xtime = 0;
+    item.xtime = 4;
     item.interval = 0;
     item.text = "";
     add_command(item);
     // Serial.println(F("Restoring states"));
     file.close();
+    BWC_LOG_P(PSTR("BWC > restored states\n"),0);
+    BWC_YIELD;
 }
 
 void BWC::reloadCommandQueue(){
@@ -1430,7 +1445,9 @@ void BWC::loadCommandQueue(){
     }
     file.close();
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
+    BWC_YIELD;
 }
+
 
 /*          */
 /* SAVERS   */
@@ -1460,8 +1477,6 @@ void BWC::saveRebootInfo(){
 }
 
 void BWC::_saveStates() {
-    // //kill the dog
-    // // ESP.wdtDisable();
     #ifdef ESP8266
     ESP.wdtFeed();
     #endif
@@ -1487,14 +1502,12 @@ void BWC::_saveStates() {
         // Serial.println(F("Failed to write states.txt"));
     }
     file.close();
-    // //revive the dog
-    // // ESP.wdtEnable(0);
+    BWC_LOG_P(PSTR("BWC > saved states\n"),0);
+    BWC_YIELD;
 }
 
 void BWC::_saveCommandQueue(){
     _save_cmdq_needed = false;
-    //kill the dog
-    // ESP.wdtDisable();
     #ifdef ESP8266
     ESP.wdtFeed();
     #endif
@@ -1530,8 +1543,7 @@ void BWC::_saveCommandQueue(){
     }
     file.close();
     Serial.println(F("Done!"));
-    //revive the dog
-    // ESP.wdtEnable(0);
+    BWC_YIELD;
 }
 
 void BWC::saveSettings(){
@@ -1603,6 +1615,7 @@ void BWC::saveSettings(){
     file.close();
     //revive the dog
     // ESP.wdtEnable(0);
+    BWC_YIELD;
 }
 
 //save out debug text to file "debug.txt" on littleFS
@@ -1683,7 +1696,7 @@ bool BWC::_load_melody_json(const String& filename)
 
     std::reverse(_notes.begin(), _notes.end());
     file.close();
-
+    BWC_YIELD;
     return true;
 }
 
@@ -1714,6 +1727,7 @@ void BWC::_sweepdown()
         n.frequency_hz = 1000 + 8*i;
         _notes.push_back(n);
     }
+    BWC_YIELD;
 }
 
 void BWC::_sweepup()
@@ -1727,6 +1741,7 @@ void BWC::_sweepup()
         n.frequency_hz = 2000 - 8*i;
         _notes.push_back(n);
     }
+    BWC_YIELD;
 }
 
 void BWC::_beep()
@@ -1739,6 +1754,7 @@ void BWC::_beep()
     n.duration_ms = 50;
     n.frequency_hz = 800;
     _notes.push_back(n);
+    BWC_YIELD;
 }
 
 void BWC::_accord()
@@ -1754,4 +1770,5 @@ void BWC::_accord()
         n.frequency_hz = NOTE_E6;
         _notes.push_back(n);
     }
+    BWC_YIELD;
 }

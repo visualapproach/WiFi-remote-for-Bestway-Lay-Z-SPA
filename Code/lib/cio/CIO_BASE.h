@@ -47,6 +47,14 @@ class CIO
     
     protected:
         std::vector<uint8_t> _raw_payload_from_cio = {0,0,0,0,0,0,0,0,0,0,0};
+        const Power _default_power_levels = {
+            .HEATERPOWER_STAGE1 = 950,
+            .HEATERPOWER_STAGE2 = 950,
+            .PUMPPOWER = 40,
+            .AIRPOWER = 950,
+            .IDLEPOWER = 2,
+            .JETPOWER = 950,
+        };
 
     private:
         Power _power_levels = {

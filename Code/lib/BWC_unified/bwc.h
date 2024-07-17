@@ -37,6 +37,7 @@
 #include "DSP_54123.h"
 
 #include "FW_VERSION.h"
+#include "bwc_debug.h"
 
 constexpr int MAXCOMMANDS = 20;
 
@@ -48,6 +49,7 @@ struct command_que_item
     uint32_t interval;
     String text = "";
 };
+        
 
 class BWC {
 
@@ -91,6 +93,7 @@ class BWC {
         String getModel();
         void print(const String& txt);
         void loadCommandQueue();
+        void restoreStates();
 
         // String getDebugData();
 
@@ -113,7 +116,6 @@ class BWC {
         void _loadSettings();
         void _saveCommandQueue();
         void _updateTimes();
-        void _restoreStates();
         void _saveStates();
         float _estHeatingTime();
         void _calcVirtualTemp();
@@ -188,6 +190,7 @@ class BWC {
         bool _dsp_tgt_used = true;
         bool _notify;
         bool _vt_calibrated = false;
+        bool _states_are_restored = false;
 };
 
 void save_settings_cb(BWC *bwcInstance);

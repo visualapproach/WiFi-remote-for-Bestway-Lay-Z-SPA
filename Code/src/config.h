@@ -14,7 +14,7 @@
 #define PROM_NAMESPACE "layzspa"
 // #define PROM_NAMESPACE_F F("layzspa")
 #define OTA_PSWD_F F("esp8266")
-#define WM_AP_NAME_F F("Lay-Z-Spa Module")
+#define WM_AP_NAME_F String(F("Lay-Z-Spa-"))+String(ESP.getChipId())
 #define WM_AP_PASSWORD_F F("layzspam0dule")
 #define MQTT_USER_F F("username")
 #define MQTT_PASSWORD_F F("password")
