@@ -386,13 +386,13 @@ void checkNTP_ISR()
 void checkNTP()
 {
     time_t now = time(nullptr);
-    static uint8_t ntpTryNumber = 0;
-    if(now < 8 * 3600 * 2)
+    // static uint8_t ntpTryNumber = 0;
+    if(now < 57600)
     {
-        if (++ntpTryNumber == 10) {
-            ntpTryNumber = 0; //reset until next check
-            ntpCheck_ticker->detach(); //give up. Next check won't happen.
-        }
+        // if (++ntpTryNumber == 10) {
+        //     ntpTryNumber = 0; //reset until next check
+        //     ntpCheck_ticker->detach(); //give up. Next check won't happen.
+        // }
         return;
     }
     ntpCheck_ticker->detach(); //time is set, don't check again
