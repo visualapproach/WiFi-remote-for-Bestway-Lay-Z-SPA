@@ -29,8 +29,8 @@ void gotIP()
     BWC_LOG_P(PSTR("Soft AP > closed\n"), 0);
     BWC_LOG_P(PSTR("Connected as station with localIP: %s\n"), WiFi.localIP().toString().c_str());
     startNTP();
-    startOTA();
-    startMqtt();
+    // startOTA();
+    // startMqtt();
     BWC_LOG_P(PSTR("end of gotip millis = %d\n"), millis());
     bwc->print(WiFi.localIP().toString());
     if(mqtt_info->useMqtt) enableMqtt = true;
@@ -91,6 +91,8 @@ void setup()
     if(wifi_info.enableWmApFallback) startSoftAp(); // not blocking anymore so no use case should exist for this to be turned off.
     startHttpServer();
     startWebSocket();
+    startOTA();
+    startMqtt();
     if(bwc->hasTempSensor)
     { 
         HeapSelectIram ephemeral;
@@ -120,6 +122,8 @@ void loop()
         server->handleClient();
         // Serial.print(".");
     }
+    // listen for OTA events
+    ArduinoOTA.handle();
     // web socket
     if (newData || sendWSFlag)
     {
@@ -130,8 +134,6 @@ void loop()
     /* MQTT, OTA & NTP is not relevant in softAP mode */
     if (WiFi.status() == WL_CONNECTED)
     {
-        // listen for OTA events
-        ArduinoOTA.handle();
 
         // MQTT
         if (enableMqtt && mqttClient->loop())
