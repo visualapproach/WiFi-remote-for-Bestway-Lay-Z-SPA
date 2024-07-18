@@ -49,7 +49,7 @@ bool gotIP_flag = false;
 bool disconnected_flag = false;
 
 int periodicTimerInterval = 60;
-sWifi_info wifi_info;
+sWifi_info* wifi_info;
 
 /** A file to store the uploads */
 File fsUploadFile;
