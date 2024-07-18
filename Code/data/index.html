@@ -670,7 +670,8 @@ function sendCommand(cmd) {
   var obj = {};
   obj["CMD"] = cmdMap[cmd];
   obj["VALUE"] = value;
-  obj["XTIME"] = Math.floor(Date.now() / 1000);
+  //   obj["XTIME"] = Math.floor(Date.now() / 1000);
+  obj["XTIME"] = 0;
   obj["INTERVAL"] = 0;
   obj["TXT"] = "";
   var json = JSON.stringify(obj);
