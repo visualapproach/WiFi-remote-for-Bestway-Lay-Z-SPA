@@ -43,7 +43,8 @@
 			<h2>Access Point:</h2>
 			<table>
 				<tr>
-					<td><label for="enableAp">Enable specific AP:</label><span data-text="Enable Wi-Fi station to connect to your network. You'd want this on normally!" class="tooltip">?</span></td>
+					<td><label for="enableAp">Enable specific AP:</label><span data-text=
+                        "Checked: ESP will connect using these credentials. Unchecked: ESP will use last known credentials." class="tooltip">?</span></td>
 					<td><input type="checkbox" id="enableAp"></td>
 				</tr>
 				<tr>
@@ -62,7 +63,9 @@
 			<h2>Soft Access Point:</h2>
 			<table>
 				<tr>
-					<td><label for="enableWM">Enable Soft AP:</label><span data-text="Enable ESP access point to be able to open this page before your network credentials are set. You'd want this on normally! If your network is unavailable the ESP will fire up its own AP." class="tooltip">?</span></td>
+					<td><label for="enableWM">Enable Soft AP (I don't see a reason to uncheck this! You can lock yourself out!):</label><span data-text=
+                        "Enable ESP access point to be able to open this page before your network credentials are set. You'd want this on normally! If your network is unavailable the ESP will fire up its own AP." 
+                        class="tooltip left">?</span></td>
 					<td><input type="checkbox" id="enableWM"></td>
 				</tr>
 			</table>
@@ -133,10 +136,9 @@
 		<section>
 			<h2>Reset WiFi Config:</h2>
 			<p>
-				This button resets the access point settings.<br />
-				The ESP will restart and start the "WiFi Configuration Manager".
-				Connect to it's access point and configure your WiFi (just like the first configuration).
-				Don't forget to disable WiFi Manager AP again if you want it off.
+				This button deletes the WiFi credentials.<br />
+				The ESP will restart and enable its own AP (if you have it checked above).
+				Connect to WiFi AP with SSID "layzspa_module######" and go to address http://192.168.4.2/wifi.html 
 			</p>
 		</section>
 

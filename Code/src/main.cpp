@@ -78,6 +78,7 @@ void setup()
         mqtt_info->mqttTelemetryInterval = 600;
         mqtt_info->mqttUsername = MQTT_USER_F;
         mqtt_info->useMqtt = true;
+        wifi_info = new sWifi_info;
     }
     bwc->setup();
     bwc->loop();
@@ -88,7 +89,7 @@ void setup()
     updateWSTimer->attach(WS_PERIOD, []{ sendWSFlag = true; });
     loadWebConfig();
     startWiFi();
-    if(wifi_info.enableWmApFallback) startSoftAp(); // not blocking anymore so no use case should exist for this to be turned off.
+    if(wifi_info->enableWmApFallback) startSoftAp(); // not blocking anymore so no use case should exist for this to be turned off.
     startHttpServer();
     startWebSocket();
     startOTA();
@@ -329,7 +330,7 @@ void startWiFi()
     WiFi.mode(WIFI_STA);
     loadWifi();
 
-    if (wifi_info.enableStaticIp4)
+    if (wifi_info->enableStaticIp4)
     {
         BWC_LOG_P(PSTR("Setting static IP\n"),0);
         IPAddress ip4Address;
@@ -337,23 +338,28 @@ void startWiFi()
         IPAddress ip4Subnet;
         IPAddress ip4DnsPrimary;
         IPAddress ip4DnsSecondary;
-        ip4Address.fromString(wifi_info.ip4Address_str);
-        ip4Gateway.fromString(wifi_info.ip4Gateway_str);
-        ip4Subnet.fromString(wifi_info.ip4Subnet_str);
-        ip4DnsPrimary.fromString(wifi_info.ip4DnsPrimary_str);
-        ip4DnsSecondary.fromString(wifi_info.ip4DnsSecondary_str);
+        ip4Address.fromString(wifi_info->ip4Address_str);
+        ip4Gateway.fromString(wifi_info->ip4Gateway_str);
+        ip4Subnet.fromString(wifi_info->ip4Subnet_str);
+        ip4DnsPrimary.fromString(wifi_info->ip4DnsPrimary_str);
+        ip4DnsSecondary.fromString(wifi_info->ip4DnsSecondary_str);
         BWC_LOG_P(PSTR("WiFi > using static IP %s on gateway %s\n"),ip4Address.toString().c_str(), ip4Gateway.toString().c_str());
         WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
     }
 
     /* Connect in station mode to the AP given (your router/ap) */
-    if (wifi_info.enableAp)
+    if (wifi_info->enableAp)
     {
-        BWC_LOG_P(PSTR("WiFi > using WiFi configuration with SSID %s\n"), wifi_info.apSsid.c_str());
+        BWC_LOG_P(PSTR("WiFi > using WiFi configuration with SSID %s\n"), wifi_info->apSsid.c_str());
 
-        WiFi.begin(wifi_info.apSsid.c_str(), wifi_info.apPwd.c_str());
+        WiFi.begin(wifi_info->apSsid.c_str(), wifi_info->apPwd.c_str());
         // checkWifi_ticker->attach(2.0, checkWiFi_ISR);
-        BWC_LOG_P(PSTR("WiFi > Trying to connect ..."),0);
+        BWC_LOG_P(PSTR("WiFi > AP info loaded. Waiting for connection ...\n"),0);
+    }
+    else 
+    {
+        BWC_LOG_P(PSTR("WiFi > AP info not found. Using last known AP ...\n"),0);
+        WiFi.begin();
     }
     BWC_YIELD;
 }
@@ -421,7 +427,7 @@ void checkNTP()
 void startNTP()
 {
     BWC_LOG_P(PSTR("NTP > start\n"),0);
-    configTime(0,0,wifi_info.ip4NTP_str, F("pool.ntp.org"), F("time.nist.gov"));
+    configTime(0,0,wifi_info->ip4NTP_str, F("pool.ntp.org"), F("time.nist.gov"));
     ntpCheck_ticker->attach(3.0, checkNTP_ISR);
 }
 
@@ -1283,19 +1289,19 @@ void loadWifi()
         return;
     }
 
-    wifi_info.enableAp = doc[F("enableAp")];
-    if(doc.containsKey(F("enableWM"))) wifi_info.enableWmApFallback = doc[F("enableWM")];
-    wifi_info.apSsid = doc[F("apSsid")].as<String>();
-    wifi_info.apPwd = doc[F("apPwd")].as<String>();
+    wifi_info->enableAp = doc[F("enableAp")];
+    if(doc.containsKey(F("enableWM"))) wifi_info->enableWmApFallback = doc[F("enableWM")];
+    wifi_info->apSsid = doc[F("apSsid")].as<String>();
+    wifi_info->apPwd = doc[F("apPwd")].as<String>();
 
-    wifi_info.enableStaticIp4 = doc[F("enableStaticIp4")];
+    wifi_info->enableStaticIp4 = doc[F("enableStaticIp4")];
     String s(30);
-    wifi_info.ip4Address_str = doc[F("ip4Address")].as<String>();
-    wifi_info.ip4Gateway_str = doc[F("ip4Gateway")].as<String>();
-    wifi_info.ip4Subnet_str = doc[F("ip4Subnet")].as<String>();
-    wifi_info.ip4DnsPrimary_str = doc[F("ip4DnsPrimary")].as<String>();
-    wifi_info.ip4DnsSecondary_str = doc[F("ip4DnsSecondary")].as<String>();
-    wifi_info.ip4NTP_str = doc[F("ip4NTP")].as<String>();
+    wifi_info->ip4Address_str = doc[F("ip4Address")].as<String>();
+    wifi_info->ip4Gateway_str = doc[F("ip4Gateway")].as<String>();
+    wifi_info->ip4Subnet_str = doc[F("ip4Subnet")].as<String>();
+    wifi_info->ip4DnsPrimary_str = doc[F("ip4DnsPrimary")].as<String>();
+    wifi_info->ip4DnsSecondary_str = doc[F("ip4DnsSecondary")].as<String>();
+    wifi_info->ip4NTP_str = doc[F("ip4NTP")].as<String>();
 
     BWC_YIELD;
 }
@@ -1314,17 +1320,17 @@ void saveWifi()
 
     DynamicJsonDocument doc(1024);
 
-    doc[F("enableAp")] = wifi_info.enableAp;
-    doc[F("enableWM")] = wifi_info.enableWmApFallback;
-    doc[F("apSsid")] = wifi_info.apSsid;
-    doc[F("apPwd")] = wifi_info.apPwd;
-    doc[F("enableStaticIp4")] = wifi_info.enableStaticIp4;
-    doc[F("ip4Address")] = wifi_info.ip4Address_str;
-    doc[F("ip4Gateway")] = wifi_info.ip4Gateway_str;
-    doc[F("ip4Subnet")] = wifi_info.ip4Subnet_str;
-    doc[F("ip4DnsPrimary")] = wifi_info.ip4DnsPrimary_str;
-    doc[F("ip4DnsSecondary")] = wifi_info.ip4DnsSecondary_str;
-    doc[F("ip4NTP")] = wifi_info.ip4NTP_str;
+    doc[F("enableAp")] = wifi_info->enableAp;
+    doc[F("enableWM")] = wifi_info->enableWmApFallback;
+    doc[F("apSsid")] = wifi_info->apSsid;
+    doc[F("apPwd")] = wifi_info->apPwd;
+    doc[F("enableStaticIp4")] = wifi_info->enableStaticIp4;
+    doc[F("ip4Address")] = wifi_info->ip4Address_str;
+    doc[F("ip4Gateway")] = wifi_info->ip4Gateway_str;
+    doc[F("ip4Subnet")] = wifi_info->ip4Subnet_str;
+    doc[F("ip4DnsPrimary")] = wifi_info->ip4DnsPrimary_str;
+    doc[F("ip4DnsSecondary")] = wifi_info->ip4DnsSecondary_str;
+    doc[F("ip4NTP")] = wifi_info->ip4NTP_str;
 
     if (serializeJson(doc, file) == 0)
     {
@@ -1344,22 +1350,22 @@ void handleGetWifi()
 
     DynamicJsonDocument doc(1024);
 
-    doc[F("enableAp")] = wifi_info.enableAp;
-    doc[F("enableWM")] = wifi_info.enableWmApFallback;
-    doc[F("apSsid")] = wifi_info.apSsid;
+    doc[F("enableAp")] = wifi_info->enableAp;
+    doc[F("enableWM")] = wifi_info->enableWmApFallback;
+    doc[F("apSsid")] = wifi_info->apSsid;
     doc[F("apPwd")] = F("<enter password>");
     if (!hidePasswords)
     {
-        doc[F("apPwd")] = wifi_info.apPwd;
+        doc[F("apPwd")] = wifi_info->apPwd;
     }
 
-    doc[F("enableStaticIp4")] = wifi_info.enableStaticIp4;
-    doc[F("ip4Address")] = wifi_info.ip4Address_str;
-    doc[F("ip4Gateway")] = wifi_info.ip4Gateway_str;
-    doc[F("ip4Subnet")] = wifi_info.ip4Subnet_str;
-    doc[F("ip4DnsPrimary")] = wifi_info.ip4DnsPrimary_str;
-    doc[F("ip4DnsSecondary")] = wifi_info.ip4DnsSecondary_str;
-    doc[F("ip4NTP")] = wifi_info.ip4NTP_str;
+    doc[F("enableStaticIp4")] = wifi_info->enableStaticIp4;
+    doc[F("ip4Address")] = wifi_info->ip4Address_str;
+    doc[F("ip4Gateway")] = wifi_info->ip4Gateway_str;
+    doc[F("ip4Subnet")] = wifi_info->ip4Subnet_str;
+    doc[F("ip4DnsPrimary")] = wifi_info->ip4DnsPrimary_str;
+    doc[F("ip4DnsSecondary")] = wifi_info->ip4DnsSecondary_str;
+    doc[F("ip4NTP")] = wifi_info->ip4NTP_str;
     String json;
     json.reserve(200);
     if (serializeJson(doc, json) == 0)
@@ -1387,18 +1393,18 @@ void handleSetWifi()
         return;
     }
 
-    wifi_info.enableAp = doc[F("enableAp")];
-    if(doc.containsKey("enableWM")) wifi_info.enableWmApFallback = doc[F("enableWM")];
-    wifi_info.apSsid = doc[F("apSsid")].as<String>();
-    wifi_info.apPwd = doc[F("apPwd")].as<String>();
+    wifi_info->enableAp = doc[F("enableAp")];
+    if(doc.containsKey("enableWM")) wifi_info->enableWmApFallback = doc[F("enableWM")];
+    wifi_info->apSsid = doc[F("apSsid")].as<String>();
+    wifi_info->apPwd = doc[F("apPwd")].as<String>();
 
-    wifi_info.enableStaticIp4 = doc[F("enableStaticIp4")];
-    wifi_info.ip4Address_str = doc[F("ip4Address")].as<String>();
-    wifi_info.ip4Gateway_str = doc[F("ip4Gateway")].as<String>();
-    wifi_info.ip4Subnet_str = doc[F("ip4Subnet")].as<String>();
-    wifi_info.ip4DnsPrimary_str = doc[F("ip4DnsPrimary")].as<String>();
-    wifi_info.ip4DnsSecondary_str = doc[F("ip4DnsSecondary")].as<String>();
-    wifi_info.ip4NTP_str = doc[F("ip4NTP")].as<String>();
+    wifi_info->enableStaticIp4 = doc[F("enableStaticIp4")];
+    wifi_info->ip4Address_str = doc[F("ip4Address")].as<String>();
+    wifi_info->ip4Gateway_str = doc[F("ip4Gateway")].as<String>();
+    wifi_info->ip4Subnet_str = doc[F("ip4Subnet")].as<String>();
+    wifi_info->ip4DnsPrimary_str = doc[F("ip4DnsPrimary")].as<String>();
+    wifi_info->ip4DnsSecondary_str = doc[F("ip4DnsSecondary")].as<String>();
+    wifi_info->ip4NTP_str = doc[F("ip4NTP")].as<String>();
 
     saveWifi();
 
@@ -1428,10 +1434,10 @@ void handleResetWifi()
 
 void resetWiFi()
 {
-    wifi_info.enableAp = false;
-    wifi_info.enableWmApFallback = true;
-    wifi_info.apSsid = F("empty");
-    wifi_info.apPwd = F("empty");
+    wifi_info->enableAp = false;
+    wifi_info->enableWmApFallback = true;
+    wifi_info->apSsid = F("empty");
+    wifi_info->apPwd = F("empty");
     saveWifi();
     delay(3000);
     periodicTimer->detach();

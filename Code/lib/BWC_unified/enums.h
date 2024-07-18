@@ -255,6 +255,6 @@ struct sWifi_info
     String ip4DnsSecondary_str;
     String ip4NTP_str;
     bool enableAp;
-    bool enableWmApFallback = true;
-    bool enableStaticIp4 = false;
+    bool enableWmApFallback;
+    bool enableStaticIp4;
 };
