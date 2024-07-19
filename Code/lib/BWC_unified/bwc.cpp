@@ -499,6 +499,7 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _heatingtime_ms = 0;
         _airtime_ms = 0;
         _energy_total_kWh = 0;
+        _energy_daily_Ws = 0;
         _energy_cost = 0;
         _save_settings_needed = true;
         _new_data_available = true;
@@ -1196,20 +1197,22 @@ void BWC::_updateTimes(){
     if(_override_dsp_brt_timer > 0) _override_dsp_brt_timer -= elapsedtime_ms; //counts down to or below zero
 
     // watts, kWh today, total kWh
-    float heatingEnergy = (_heatingtime+_heatingtime_ms/1000)/3600.0 * cio->getHeaterPower();
-    float pumpEnergy = (_pumptime+_pumptime_ms/1000)/3600.0 * cio->getPowerLevels().PUMPPOWER;
-    float airEnergy = (_airtime+_airtime_ms/1000)/3600.0 * cio->getPowerLevels().AIRPOWER;
-    float idleEnergy = (_uptime+_uptime_ms/1000)/3600.0 * cio->getPowerLevels().IDLEPOWER;
-    float jetEnergy = (_jettime+_jettime_ms/1000)/3600.0 * cio->getPowerLevels().JETPOWER;
-    _energy_total_kWh = (heatingEnergy + pumpEnergy + airEnergy + idleEnergy + jetEnergy)/1000; //Wh -> kWh
+    // float heatingEnergy = (_heatingtime+_heatingtime_ms/1000)/3600.0 * cio->getHeaterPower();
+    // float pumpEnergy = (_pumptime+_pumptime_ms/1000)/3600.0 * cio->getPowerLevels().PUMPPOWER;
+    // float airEnergy = (_airtime+_airtime_ms/1000)/3600.0 * cio->getPowerLevels().AIRPOWER;
+    // float idleEnergy = (_uptime+_uptime_ms/1000)/3600.0 * cio->getPowerLevels().IDLEPOWER;
+    // float jetEnergy = (_jettime+_jettime_ms/1000)/3600.0 * cio->getPowerLevels().JETPOWER;
+    // _energy_total_kWh = (heatingEnergy + pumpEnergy + airEnergy + idleEnergy + jetEnergy)/1000; //Wh -> kWh
     _energy_power_W = cio->cio_states.heatred * cio->getHeaterPower();
     _energy_power_W += cio->cio_states.pump * cio->getPowerLevels().PUMPPOWER;
     _energy_power_W += cio->cio_states.bubbles * cio->getPowerLevels().AIRPOWER;
     _energy_power_W += cio->getPowerLevels().IDLEPOWER;
     _energy_power_W += cio->cio_states.jets * cio->getPowerLevels().JETPOWER;
 
-    _energy_daily_Ws += elapsedtime_ms * _energy_power_W / 1000.0;
-    _energy_cost += elapsedtime_ms *_price * _energy_power_W / (1000.0 * 1000.0 * 3600.0); // money/kWh
+    constexpr double mws2kwh = 1/3600000000.0;
+    _energy_total_kWh += elapsedtime_ms * _energy_power_W * mws2kwh; //mWs -> kWh
+    _energy_daily_Ws += elapsedtime_ms * _energy_power_W *0.001;
+    _energy_cost += elapsedtime_ms *_price * _energy_power_W * mws2kwh; // money/kWh
 
     if(_notes.size())
     {

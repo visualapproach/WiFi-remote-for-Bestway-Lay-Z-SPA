@@ -78,7 +78,7 @@ void setup()
         mqtt_info->mqttTelemetryInterval = 600;
         mqtt_info->mqttUsername = MQTT_USER_F;
         mqtt_info->useMqtt = true;
-        wifi_info = new sWifi_info;
+        wifi_info = new sWifi_info{.enableWmApFallback = true};
     }
     bwc->setup();
     bwc->loop();
@@ -327,7 +327,7 @@ void startWiFi()
     WiFi.setAutoReconnect(true);
     WiFi.persistent(true);
     WiFi.hostname(DEVICE_NAME_F);
-    WiFi.mode(WIFI_STA);
+    WiFi.mode(WIFI_STA); //WiFi.setOutputPower(15.0);
     loadWifi();
 
     if (wifi_info->enableStaticIp4)
