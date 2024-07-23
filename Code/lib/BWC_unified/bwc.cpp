@@ -409,7 +409,7 @@ void BWC::_handleNotification()
     }
     /* not the time yet*/
     int timetogo = _command_que[0].xtime - _timestamp_secs;
-    if(timetogo > _next_notification_time) return;
+    if(timetogo >= _next_notification_time) return;
     /* only _notify for these commands*/
     if(!(_command_que[0].cmd == SETBUBBLES || _command_que[0].cmd == SETHEATER || _command_que[0].cmd == SETJETS || _command_que[0].cmd == SETPUMP)) return;
 
