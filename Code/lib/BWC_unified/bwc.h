@@ -136,6 +136,8 @@ class BWC {
     private:
         uint64_t _timestamp_secs; // seconds
         double _energy_daily_Ws; //Wattseconds internally
+        double _energy_total_Ws; //Wattseconds internally
+        double _energy_cost;
         unsigned long _temp_change_timestamp_ms, _heatred_change_timestamp_ms;
         unsigned long _pump_change_timestamp_ms, _bubbles_change_timestamp_ms;
         Ticker _save_settings_ticker;
@@ -170,8 +172,6 @@ class BWC {
         int _ambient_temp; //always in C internally
         int _deltatemp;
         float _price;
-        float _energy_total_kWh;
-        double _energy_cost;
         float _R_COOLING = 40;
         float _heating_degperhour = 1.5; //always in C internally
         float _virtual_temp; //=virtualtempfix+calculated diff, always in C internally

@@ -408,17 +408,23 @@ void BWC::_handleNotification()
         return;
     }
     /* not the time yet*/
-    if((int64_t)_command_que[0].xtime - (int64_t)_timestamp_secs > (int64_t)_next_notification_time) return;
+    int timetogo = _command_que[0].xtime - _timestamp_secs;
+    if(timetogo > _next_notification_time) return;
     /* only _notify for these commands*/
     if(!(_command_que[0].cmd == SETBUBBLES || _command_que[0].cmd == SETHEATER || _command_que[0].cmd == SETJETS || _command_que[0].cmd == SETPUMP)) return;
 
     if(_audio_enabled) _sweepup();
-    dsp->text += "  --" + String(_next_notification_time) + "--";
+    dsp->text += "  -" + String(_next_notification_time) + "-";
+    BWC_LOG_P(PSTR("Notification: %d\n"), _next_notification_time);
     // dsp->dsp_states.text = "i-i-";
-    if(_next_notification_time <= 2)
+    if(timetogo < 4)
         _next_notification_time = -10; //postpone "alarm" until after the command xtime (will be reset on command execution)
     else
-        _next_notification_time /= 2;
+        while (_next_notification_time > timetogo) //sometimes automations throw in an instant command that resets the counter.
+        {
+            _next_notification_time /= 2;
+            if(_next_notification_time < 4) break; //avoid infinite loop
+        }
 }
 
 void BWC::_handleCommandQ() {
@@ -428,7 +434,8 @@ void BWC::_handleCommandQ() {
     //If interval > 0 then append to commandQ with updated xtime.
     if(_command_que[0].interval > 0)
     {
-        while(_command_que[0].xtime < (uint64_t)time(nullptr))
+        // while(_command_que[0].xtime < (uint64_t)time(nullptr))
+        while(_command_que[0].xtime <= _timestamp_secs)
             _command_que[0].xtime += _command_que[0].interval;
        _command_que.push_back(_command_que[0]);
     } 
@@ -498,7 +505,7 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _jettime_ms = 0;
         _heatingtime_ms = 0;
         _airtime_ms = 0;
-        _energy_total_kWh = 0;
+        _energy_total_Ws = 0;
         _energy_daily_Ws = 0;
         _energy_cost = 0;
         _save_settings_needed = true;
@@ -1000,7 +1007,7 @@ void BWC::getJSONTimes(String &rtn) {
     doc[F("FRINI")] = _filter_rinse_interval;
     doc[F("FCLEI")] = _filter_clean_interval;
     doc[F("CLINT")] = _cl_interval;
-    doc[F("KWH")] = _energy_total_kWh;
+    doc[F("KWH")] = _energy_total_Ws / 3600000.0; //Ws -> kWh
     doc[F("KWHD")] = _energy_daily_Ws / 3600000.0; //Ws -> kWh
     doc[F("WATT")] = _energy_power_W;
     float t2r = _estHeatingTime();
@@ -1202,17 +1209,17 @@ void BWC::_updateTimes(){
     // float airEnergy = (_airtime+_airtime_ms/1000)/3600.0 * cio->getPowerLevels().AIRPOWER;
     // float idleEnergy = (_uptime+_uptime_ms/1000)/3600.0 * cio->getPowerLevels().IDLEPOWER;
     // float jetEnergy = (_jettime+_jettime_ms/1000)/3600.0 * cio->getPowerLevels().JETPOWER;
-    // _energy_total_kWh = (heatingEnergy + pumpEnergy + airEnergy + idleEnergy + jetEnergy)/1000; //Wh -> kWh
+    // _energy_total_Ws = (heatingEnergy + pumpEnergy + airEnergy + idleEnergy + jetEnergy)/1000; //Wh -> kWh
     _energy_power_W = cio->cio_states.heatred * cio->getHeaterPower();
     _energy_power_W += cio->cio_states.pump * cio->getPowerLevels().PUMPPOWER;
     _energy_power_W += cio->cio_states.bubbles * cio->getPowerLevels().AIRPOWER;
     _energy_power_W += cio->getPowerLevels().IDLEPOWER;
     _energy_power_W += cio->cio_states.jets * cio->getPowerLevels().JETPOWER;
 
-    constexpr double mws2kwh = 1/3600000000.0;
-    _energy_total_kWh += elapsedtime_ms * _energy_power_W * mws2kwh; //mWs -> kWh
-    _energy_daily_Ws += elapsedtime_ms * _energy_power_W *0.001;
-    _energy_cost += elapsedtime_ms *_price * _energy_power_W * mws2kwh; // money/kWh
+    float wattseconds = elapsedtime_ms * _energy_power_W * 0.001; //mWs -> Ws
+    _energy_total_Ws += wattseconds;
+    _energy_daily_Ws += wattseconds;
+    _energy_cost += wattseconds *_price / 3600000; // Ws * price / kWh -> Ws * price / (3600 * 1000) 
 
     if(_notes.size())
     {
@@ -1330,8 +1337,10 @@ void BWC::_loadSettings(){
     _audio_enabled = doc[F("AUDIO")];
     _notify = doc[F("NOTIFY")];
     _notification_time = doc[F("NOTIFTIME")];
-    _energy_total_kWh = doc[F("KWH")];
-    _energy_daily_Ws = doc[F("KWHD")];
+    _energy_total_Ws = doc[F("KWH")];
+    _energy_total_Ws *= 3600000; //kWh->Ws
+    _energy_daily_Ws = doc[F("KWHD")]; 
+    _energy_daily_Ws *= 3600000; //kWh->Ws
     _energy_cost = doc[F("COST")];
     _restore_states_on_start = doc[F("RESTORE")];
     _R_COOLING = doc[F("R")] | 40.0f; //else use default
@@ -1516,10 +1525,10 @@ void BWC::_saveCommandQueue(){
     #endif
     File file = LittleFS.open(F("cmdq.json"), "w");
     if (!file) {
-        Serial.println(F("Failed to save cmdq.json"));
+        BWC_LOG_P(PSTR("Failed to save cmdq.json\n"),0);
         return;
     } else {
-        Serial.println(F("Writing cmdq.json"));
+        BWC_LOG_P(PSTR("Writing cmdq.json: "),0);
     }
     /*Do not save instant reboot command. Don't ask me how I know.*/
     if(_command_que.size())
@@ -1535,17 +1544,16 @@ void BWC::_saveCommandQueue(){
         doc[F("INTERVAL")][i] = _command_que[i].interval;
         doc[F("TXT")][i] = _command_que[i].text;
     }
-
+    String s;
+    size_t err = serializeJson(doc, s);
+    file.print(s);
     // Serialize JSON to file
-    if (serializeJson(doc, file) == 0) {
-        // Serial.println(F("Failed to write cmdq.json"));
+    if (err == 0) {
+        // BWC_LOG_P(PSTR("\nFailed to serialize cmdq.json\n"),0);
     } else {
-        String s;
-        serializeJson(doc, s);
-        // Serial.println(s);
+        // BWC_LOG_P(PSTR("%s\n"),s.c_str());
     }
     file.close();
-    Serial.println(F("Done!"));
     BWC_YIELD;
 }
 
@@ -1589,8 +1597,8 @@ void BWC::saveSettings(){
     doc[F("FCLEI")] = _filter_clean_interval;
     doc[F("CLINT")] = _cl_interval;
     doc[F("AUDIO")] = _audio_enabled;
-    doc[F("KWH")] = _energy_total_kWh;
-    doc[F("KWHD")] = _energy_daily_Ws;
+    doc[F("KWH")] = _energy_total_Ws / 3600000;  //Ws->kWh
+    doc[F("KWHD")] = _energy_daily_Ws / 3600000; //Ws->kWh
     doc[F("COST")] = _energy_cost;
     // doc[F("SAVETIME")] = DateTime.format(DateFormatter::SIMPLE);
     doc[F("RESTORE")] = _restore_states_on_start;
