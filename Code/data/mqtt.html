@@ -46,12 +46,9 @@
 					<td><input type="checkbox" id="enableMqtt"></td>
 				</tr>
 				<tr>
-					<td>IP Address:</td>
+					<td>MQTT host addr:</td>
 					<td>
-						<input type="text" id="mqttIpAddress1" maxlength="3" style="width:30px">
-						. <input type="text" id="mqttIpAddress2" maxlength="3" style="width:30px">
-						. <input type="text" id="mqttIpAddress3" maxlength="3" style="width:30px">
-						. <input type="text" id="mqttIpAddress4" maxlength="3" style="width:30px">
+						<input type="text" id="mqttHost" maxlength="31" value="IP or FQDN of the broker">
 					</td>
 				</tr>
 				<tr>
@@ -179,10 +176,10 @@ function loadMqttConfig()
 			var json = JSON.parse(req.responseText);
 			console.log(json);
 			document.getElementById('enableMqtt').checked = json.enableMqtt;
-			document.getElementById('mqttIpAddress1').value = json.mqttIpAddress[0];
-			document.getElementById('mqttIpAddress2').value = json.mqttIpAddress[1];
-			document.getElementById('mqttIpAddress3').value = json.mqttIpAddress[2];
-			document.getElementById('mqttIpAddress4').value = json.mqttIpAddress[3];
+			document.getElementById('mqttHost').value = json.mqttHost;
+			// document.getElementById('mqttIpAddress2').value = json.mqttIpAddress[1];
+			// document.getElementById('mqttIpAddress3').value = json.mqttIpAddress[2];
+			// document.getElementById('mqttIpAddress4').value = json.mqttIpAddress[3];
 			document.getElementById('mqttPort').value = json.mqttPort;
 			document.getElementById('mqttUsername').value = json.mqttUsername;
 			document.getElementById('mqttPassword').value = json.mqttPassword;
@@ -203,12 +200,13 @@ function saveMqttConfig()
 	req.open('POST', '/setmqtt/');
 	var json = {
 		'enableMqtt':(document.getElementById('enableMqtt').checked),
-		'mqttIpAddress':[
-			parseInt(document.getElementById('mqttIpAddress1').value),
-			parseInt(document.getElementById('mqttIpAddress2').value),
-			parseInt(document.getElementById('mqttIpAddress3').value),
-			parseInt(document.getElementById('mqttIpAddress4').value)
-		],
+		// 'mqttIpAddress':[
+		// 	parseInt(document.getElementById('mqttIpAddress1').value),
+		// 	parseInt(document.getElementById('mqttIpAddress2').value),
+		// 	parseInt(document.getElementById('mqttIpAddress3').value),
+		// 	parseInt(document.getElementById('mqttIpAddress4').value)
+		// ],
+        'mqttHost':(document.getElementById('mqttHost').value),
 		'mqttPort':parseInt(document.getElementById('mqttPort').value),
 		'mqttUsername':(document.getElementById('mqttUsername').value),
 		'mqttPassword':(document.getElementById('mqttPassword').value),
