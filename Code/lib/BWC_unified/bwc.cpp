@@ -1528,7 +1528,7 @@ void BWC::_saveCommandQueue(){
         BWC_LOG_P(PSTR("Failed to save cmdq.json\n"),0);
         return;
     } else {
-        BWC_LOG_P(PSTR("Writing cmdq.json: "),0);
+        BWC_LOG_P(PSTR("Writing cmdq.json\n"),0);
     }
     /*Do not save instant reboot command. Don't ask me how I know.*/
     if(_command_que.size())

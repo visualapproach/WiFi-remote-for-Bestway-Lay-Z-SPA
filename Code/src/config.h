@@ -153,7 +153,7 @@ bool useControlSelector = false;
 
 struct sMQTT_info
 {
-    IPAddress mqttIpAddress;
+    String mqttHost;
     int mqttTelemetryInterval;
     int mqttPort;
     String mqttUsername;

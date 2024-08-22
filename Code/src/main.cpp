@@ -72,7 +72,7 @@ void setup()
         mqtt_info = new sMQTT_info;
         mqtt_info->mqttBaseTopic = MQTT_BASE_TOPIC_F;
         mqtt_info->mqttClientId = MQTT_CLIENT_ID_F;
-        mqtt_info->mqttIpAddress = IPAddress(192,168,0,20);
+        mqtt_info->mqttHost = F("192.168.0.20");
         mqtt_info->mqttPassword = MQTT_PASSWORD_F;
         mqtt_info->mqttPort = 1883;
         mqtt_info->mqttTelemetryInterval = 600;
@@ -171,12 +171,14 @@ void loop()
     if (periodicTimerFlag)
     {
         periodicTimerFlag = false;
+        if(WiFi.getMode() == WIFI_AP_STA)
         {
-            if (enableMqtt && !mqttClient->loop() && (WiFi.status() == WL_CONNECTED))
-            {
-                BWC_LOG_P(PSTR("MQTT > Not connected\n"),0);
-                mqttConnect();
-            }
+            wifi_manual_reconnect();
+        }
+        if (enableMqtt && !mqttClient->loop() && (WiFi.status() == WL_CONNECTED))
+        {
+            BWC_LOG_P(PSTR("MQTT > Not connected\n"),0);
+            mqttConnect();
         }
         // Leverage the pre-existing periodicTimerFlag to also set temperature, if enabled
         setTemperatureFromSensor();
@@ -324,7 +326,7 @@ void startWiFi()
 {
     BWC_LOG_P(PSTR("startWiFi() @ millis: %d\n"), millis());
     //WiFi.mode(WIFI_STA);
-    WiFi.setAutoReconnect(true);
+    WiFi.setAutoReconnect(false);
     WiFi.persistent(true);
     WiFi.hostname(DEVICE_NAME_F);
     WiFi.mode(WIFI_STA); //WiFi.setOutputPower(15.0);
@@ -347,6 +349,12 @@ void startWiFi()
         WiFi.config(ip4Address, ip4Gateway, ip4Subnet, ip4DnsPrimary, ip4DnsSecondary);
     }
 
+    wifi_manual_reconnect();
+    BWC_YIELD;
+}
+
+void wifi_manual_reconnect()
+{
     /* Connect in station mode to the AP given (your router/ap) */
     if (wifi_info->enableAp)
     {
@@ -354,14 +362,13 @@ void startWiFi()
 
         WiFi.begin(wifi_info->apSsid.c_str(), wifi_info->apPwd.c_str());
         // checkWifi_ticker->attach(2.0, checkWiFi_ISR);
-        BWC_LOG_P(PSTR("WiFi > AP info loaded. Waiting for connection ...\n"),0);
+        BWC_LOG_P(PSTR("WiFi > AP info loaded. Waiting for connection ...\n"), 0);
     }
-    else 
+    else
     {
-        BWC_LOG_P(PSTR("WiFi > AP info not found. Using last known AP ...\n"),0);
+        BWC_LOG_P(PSTR("WiFi > AP info not found. Using last known AP ...\n"), 0);
         WiFi.begin();
     }
-    BWC_YIELD;
 }
 
 /**
@@ -371,7 +378,7 @@ void startSoftAp()
 {
     disconnected_flag = false;
     if(WiFi.getMode() == WIFI_AP_STA) {
-        BWC_LOG_P(PSTR("Soft AP IP: %s\n"),WiFi.softAPIP().toString().c_str());
+        BWC_LOG_P(PSTR("Soft AP IP: %s.\n"),WiFi.softAPIP().toString().c_str());
         return;
     }
     BWC_LOG_P(PSTR("Station > disconnected. Starting soft AP\n"),0);
@@ -1465,7 +1472,7 @@ void loadMqtt()
     File file = LittleFS.open("mqtt.json", "r");
     if (!file)
     {
-        BWC_LOG_P(PSTR("MQTT > Failed to read mqtt.json. Using defaults."),0);
+        BWC_LOG_P(PSTR("MQTT > Failed to read mqtt.json. Using defaults.\n"),0);
         return;
     }
 
@@ -1481,10 +1488,7 @@ void loadMqtt()
 
     mqtt_info->useMqtt = doc[F("enableMqtt")];
     // enableMqtt = useMqtt; //will be set with start complete timer
-    mqtt_info->mqttIpAddress[0] = doc[F("mqttIpAddress")][0];
-    mqtt_info->mqttIpAddress[1] = doc[F("mqttIpAddress")][1];
-    mqtt_info->mqttIpAddress[2] = doc[F("mqttIpAddress")][2];
-    mqtt_info->mqttIpAddress[3] = doc[F("mqttIpAddress")][3];
+    mqtt_info->mqttHost = doc[F("mqttHost")].as<String>();
     mqtt_info->mqttPort = doc[F("mqttPort")];
     mqtt_info->mqttUsername = doc[F("mqttUsername")].as<String>();
     mqtt_info->mqttPassword = doc[F("mqttPassword")].as<String>();
@@ -1509,10 +1513,7 @@ void saveMqtt()
     DynamicJsonDocument doc(1024);
 
     doc[F("enableMqtt")] = mqtt_info->useMqtt;
-    doc[F("mqttIpAddress")][0] = mqtt_info->mqttIpAddress[0];
-    doc[F("mqttIpAddress")][1] = mqtt_info->mqttIpAddress[1];
-    doc[F("mqttIpAddress")][2] = mqtt_info->mqttIpAddress[2];
-    doc[F("mqttIpAddress")][3] = mqtt_info->mqttIpAddress[3];
+    doc[F("mqttHost")] = mqtt_info->mqttHost;
     doc[F("mqttPort")] = mqtt_info->mqttPort;
     doc[F("mqttUsername")] = mqtt_info->mqttUsername;
     doc[F("mqttPassword")] = mqtt_info->mqttPassword;
@@ -1539,10 +1540,7 @@ void handleGetMqtt()
     DynamicJsonDocument doc(1024);
 
     doc[F("enableMqtt")] = mqtt_info->useMqtt;
-    doc[F("mqttIpAddress")][0] = mqtt_info->mqttIpAddress[0];
-    doc[F("mqttIpAddress")][1] = mqtt_info->mqttIpAddress[1];
-    doc[F("mqttIpAddress")][2] = mqtt_info->mqttIpAddress[2];
-    doc[F("mqttIpAddress")][3] = mqtt_info->mqttIpAddress[3];
+    doc[F("mqttHost")] = mqtt_info->mqttHost;
     doc[F("mqttPort")] = mqtt_info->mqttPort;
     doc[F("mqttUsername")] = mqtt_info->mqttUsername;
     doc[F("mqttPassword")] = "<enter password>";
@@ -1583,10 +1581,7 @@ void handleSetMqtt()
 
     mqtt_info->useMqtt = doc[F("enableMqtt")];
     enableMqtt = mqtt_info->useMqtt;
-    mqtt_info->mqttIpAddress[0] = doc[F("mqttIpAddress")][0];
-    mqtt_info->mqttIpAddress[1] = doc[F("mqttIpAddress")][1];
-    mqtt_info->mqttIpAddress[2] = doc[F("mqttIpAddress")][2];
-    mqtt_info->mqttIpAddress[3] = doc[F("mqttIpAddress")][3];
+    mqtt_info->mqttHost = doc[F("mqttHost")].as<String>();
     mqtt_info->mqttPort = doc[F("mqttPort")];
     mqtt_info->mqttUsername = doc[F("mqttUsername")].as<String>();
     mqtt_info->mqttPassword = doc[F("mqttPassword")].as<String>();
@@ -1795,7 +1790,7 @@ void startMqtt()
         mqttClient->disconnect();
 
         // setup MQTT broker information as defined earlier
-        mqttClient->setServer(mqtt_info->mqttIpAddress, mqtt_info->mqttPort);
+        mqttClient->setServer(mqtt_info->mqttHost.c_str(), mqtt_info->mqttPort);
         // set buffer for larger messages, new to library 2.8.0
         // if (mqttClient->setBufferSize(1536))
         {

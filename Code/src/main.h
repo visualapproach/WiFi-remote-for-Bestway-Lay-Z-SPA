@@ -89,6 +89,7 @@ void getOtherInfo(String &rtn);
 void sendMQTT();
 void sendMQTTConfig();
 void startWiFi();
+void wifi_manual_reconnect();
 void startSoftAp();
 void checkNTP_ISR();
 void checkNTP();
