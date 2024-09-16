@@ -1,1 +1,1 @@
-#define FW_VERSION "2024-08-22-1200"
+#define FW_VERSION "2024-09-16-1430"

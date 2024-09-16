@@ -99,7 +99,8 @@ class BWC {
 
     private:
         bool _loadHardware(Models& cioNo, Models& dspNo, int pins[], std::optional<Power>& power_levels);
-        bool _handlecommand(Commands cmd, int64_t val, const String& txt);
+        bool _handlecommand(Commands cmd, int64_t val, const String &txt);
+        void _format_text(const String &txt);
         void _handleCommandQ();
         void _loadSettings();
         void _saveCommandQueue();
