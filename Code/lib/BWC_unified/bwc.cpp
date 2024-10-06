@@ -595,6 +595,10 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _vt_calibrated = true;
         _save_settings_needed = true;
         break;
+    case SETPOWER:
+        val = std::clamp((int)val, 0, 1);
+        cio->cio_toggles.power_change = (val != cio->cio_states.power);
+        break;
     default:
         break;
     }

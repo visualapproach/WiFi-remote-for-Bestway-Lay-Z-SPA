@@ -81,7 +81,8 @@ enum Commands: byte
     SETREADY,
     SETR,
     RESETFRINSETIMER,
-    RESETFCLEANTIMER
+    RESETFCLEANTIMER,
+    SETPOWER
 };
 
 enum ToggleButtons: byte
