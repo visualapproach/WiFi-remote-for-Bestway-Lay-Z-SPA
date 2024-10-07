@@ -1273,6 +1273,41 @@ void setupHA()
     Serial.println(F("switch"));
 
 
+                                        /* spa power switch */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqtt_info->mqttBaseTopic + F("_powerswitch")+mychipid;
+    topic = HA_PREFIX_F;
+    topic += F("/switch/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Power switch");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/message");
+    doc[(_cmd_t)] = mqtt_info->mqttBaseTopic+F("/command");
+    doc[(_val_tpl)] = F("{{ value_json.PWR }}");
+    doc[_expire_after] = 700;
+    doc[_icon] = F("mdi:power");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    doc["pl_on"] = F("{CMD:24,VALUE:true,XTIME:0,INTERVAL:0}");
+    doc["pl_off"] = F("{CMD:24,VALUE:false,XTIME:0,INTERVAL:0}");
+    doc["state_on"] = 1;
+    doc["state_off"] = 0;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize HA message!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+
+
                                         /* spa heat regulation switch */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
