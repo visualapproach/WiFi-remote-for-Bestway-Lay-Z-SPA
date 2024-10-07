@@ -2,11 +2,8 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include "enums.h"
-#include "CIO_BASE.h"
 #include <umm_malloc/umm_heap_select.h>
-
-
-class BWC;
+#include "CIO_BASE.h"
 
 class CIO_4W : public CIO
 {

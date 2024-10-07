@@ -16,25 +16,13 @@
 #include <vector>
 #include <optional>
 #include "enums.h"
-#include "CIO_PRE2021.h"
-#include "CIO_2021.h"
-#include "CIO_2021HJT.h"
-#include "CIO_54149E.h"
-#include "CIO_54173.h"
-#include "CIO_54154.h"
-#include "CIO_54144.h"
-#include "CIO_54138.h"
-#include "CIO_54123.h"
+#include "CIO_4W_MODEL_SPECIFIC.h"
+#include "CIO_TYPE1_MODEL_SPECIFIC.h"
+#include "CIO_TYPE2_MODEL_SPECIFIC.h"
 
-#include "DSP_PRE2021.h"
-#include "DSP_2021.h"
-#include "DSP_2021HJT.h"
-#include "DSP_54149E.h"
-#include "DSP_54173.h"
-#include "DSP_54154.h"
-#include "DSP_54144.h"
-#include "DSP_54138.h"
-#include "DSP_54123.h"
+#include "DSP_4W_MODEL_SPECIFIC.h"
+#include "DSP_TYPE1_MODEL_SPECIFIC.h"
+#include "DSP_TYPE2_MODEL_SPECIFIC.h"
 
 #include "FW_VERSION.h"
 #include "bwc_debug.h"
@@ -111,7 +99,8 @@ class BWC {
 
     private:
         bool _loadHardware(Models& cioNo, Models& dspNo, int pins[], std::optional<Power>& power_levels);
-        bool _handlecommand(Commands cmd, int64_t val, const String& txt);
+        bool _handlecommand(Commands cmd, int64_t val, const String &txt);
+        void _format_text(const String &txt);
         void _handleCommandQ();
         void _loadSettings();
         void _saveCommandQueue();

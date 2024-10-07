@@ -140,6 +140,7 @@
                             <option value="21">Set R (internal use)</option>
                             <option value="22">Reset filter rinse timer (-)</option>
                             <option value="23">Reset filter clean timer (-)</option>
+                            <option value="24">Set power on/off (0/1)</option>
                         </select>
                     </td>
                 </tr>
@@ -290,12 +291,13 @@ const setready = 20;
 const setR = 21;
 const resetrinsefiltertimer = 22;
 const resetcleanfiltertimer = 23;
+const setpower = 24;
 
 const commandlist = [
 	'Set target', 'Set unit', 'Set bubbles', 'Set heat', 'Set pump', 'Reset queue', 'Reboot ESP',
 	'Internal cmd', 'Reset times', 'Reset Cl timer', 'Reset change filter timer', 'Set jets', 'Set brightness',
 	'Beep', 'Set ambient temp F.', 'Set ambient temp C.', 'Reset daily meter', 'Take control', 'Full power',
-    'Print text', 'Set ready', 'Set R', 'Reset rinse filter timer', 'Reset clean filter timer'
+    'Print text', 'Set ready', 'Set R', 'Reset rinse filter timer', 'Reset clean filter timer', 'Set power'
 ];
 
 function totimestamp()

@@ -445,8 +445,8 @@ void BWC::_handleCommandQ() {
 bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
 {
     bool restartESP = false;
-    
-    dsp->text += String(" ") + txt;
+
+    _format_text(txt);
     switch (cmd)
     {
     case SETTARGET:
@@ -595,6 +595,10 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _vt_calibrated = true;
         _save_settings_needed = true;
         break;
+    case SETPOWER:
+        val = std::clamp((int)val, 0, 1);
+        cio->cio_toggles.power_change = (val != cio->cio_states.power);
+        break;
     default:
         break;
     }
@@ -613,6 +617,63 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
     BWC_YIELD;
     return false;
+}
+
+void BWC::_format_text(const String &txt)
+{
+    dsp->text += ' ';
+
+    /* Check for special character '<>' surrounding variable field */
+    /* Example "T <time>" would show "T 12 44" */
+    /*
+        possible field variables suggestion:
+        time
+        IP-addr
+        date
+
+    */
+
+    String field;
+    bool fieldmode = false;
+    field.reserve(15);
+    String formatted_text;
+    formatted_text.reserve(63);
+    for(unsigned int i = 0; i < txt.length(); i++)
+    {
+        if(txt[i] == '>') 
+        {
+            //process field
+            if(field.equals(F("time")))
+            {
+                //copy new fieldstring to formatted_text
+                tm buf;
+                time_t t = time(NULL);
+                gmtime_r(&t, &buf);
+                formatted_text += String(buf.tm_hour);
+                formatted_text += ' ';
+                formatted_text += String(buf.tm_min);
+            }
+            //other if statements go here
+
+            //set fieldmode off
+            fieldmode = false;
+            field.clear();
+        }
+        else if(txt[i] == '<')
+        {
+            //set fieldmode on
+            fieldmode = true;
+        }
+        else
+        {
+            //if fieldmode off - copy char to formatted_text
+            //else copy char to field
+            if(fieldmode) field += txt[i];
+            else formatted_text += txt[i];
+        }
+    }
+
+    dsp->text += formatted_text;
 }
 
 void BWC::_handleStateChanges()
@@ -1528,7 +1589,7 @@ void BWC::_saveCommandQueue(){
         BWC_LOG_P(PSTR("Failed to save cmdq.json\n"),0);
         return;
     } else {
-        BWC_LOG_P(PSTR("Writing cmdq.json: "),0);
+        BWC_LOG_P(PSTR("Writing cmdq.json\n"),0);
     }
     /*Do not save instant reboot command. Don't ask me how I know.*/
     if(_command_que.size())
