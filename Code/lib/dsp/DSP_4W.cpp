@@ -129,11 +129,11 @@ void DSP_4W::handleStates()
     if(_readyToTransmit || (_time_since_last_transmission_ms > _max_allowed_time_between_transmissions_ms))
     {
         _readyToTransmit = false;
-        _time_since_last_transmission_ms = 0;
         _dsp_serial->write(_to_DSP_buf, PAYLOADSIZE);
         write_msg_count++;
         if(_time_since_last_transmission_ms > max_time_between_transmissions_ms)
             max_time_between_transmissions_ms = _time_since_last_transmission_ms;
+        _time_since_last_transmission_ms = 0;
     }
 
 }
