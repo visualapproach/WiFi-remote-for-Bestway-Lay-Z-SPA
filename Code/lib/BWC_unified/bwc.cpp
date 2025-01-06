@@ -539,6 +539,9 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _new_data_available = true;
         break;
     case SETBEEP:
+        if(val == 99) {
+            while(1);//cause an exception for testing purpose
+        }
         if(val == 0) _beep();
         else if(val == 1) _accord();
         else _load_melody_json(txt);
@@ -1582,6 +1585,7 @@ void BWC::_saveStates() {
     BWC_YIELD;
 }
 
+/*TODO: do not save commands that has no interval and is in the past (to avoid repeating crashes)*/
 void BWC::_saveCommandQueue(){
     _save_cmdq_needed = false;
     #ifdef ESP8266
