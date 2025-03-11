@@ -402,7 +402,8 @@ function connect() {
   connection = new WebSocket("ws://" + location.hostname + ":81/", ["arduino"]);
 
   connection.onopen = function () {
-    document.body.classList.add("connected");
+    console.log("WebSocket connected");
+    document.body.className = "connected";
     initControlValues = true;
   };
 
