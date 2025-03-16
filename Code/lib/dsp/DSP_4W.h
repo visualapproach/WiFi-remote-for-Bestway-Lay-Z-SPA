@@ -35,7 +35,7 @@ class DSP_4W : public DSP
 
     private:
         int _time_since_last_transmission_ms = 0;
-        const int _max_time_between_transmissions_ms = 2000;
+        const int _max_allowed_time_between_transmissions_ms = 2000;
         /*ESP to DSP*/
         uint8_t _to_DSP_buf[7] = {};
         /*DSP to ESP. We can ignore this message and send our own when ESP is in charge.*/

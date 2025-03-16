@@ -2045,5 +2045,89 @@ void setTemperatureFromSensor()
     BWC_YIELD;
 }
 
+extern "C" void custom_crash_callback(struct rst_info * rst_info, uint32_t stack, uint32_t stack_end )
+{
+    File file = LittleFS.open(F("crashlog.txt"), "a");
+    String crashinfo;
+    crashinfo.reserve(1024);
+    char tempstring[64];
+    time_t t = time(NULL);
+    crashinfo = F("Crashed time: ");
+    crashinfo += asctime(gmtime(&t));
+    // write crash time to buffer
+    uint32_t crashTime = millis();
+    crashinfo += F("\nMillis:");
+    crashinfo += crashTime;
+    crashinfo += '\n';
+
+    // write reset info to buffer
+    // REASON_DEFAULT_RST      = 0,    /* normal startup by power on */
+    // REASON_WDT_RST          = 1,    /* hardware watch dog reset */
+    // REASON_EXCEPTION_RST    = 2,    /* exception reset, GPIO status won’t change */
+    // REASON_SOFT_WDT_RST     = 3,    /* software watch dog reset, GPIO status won’t change */
+    // REASON_SOFT_RESTART     = 4,    /* software restart ,system_restart , GPIO status won’t change */
+    // REASON_DEEP_SLEEP_AWAKE = 5,    /* wake up from deep-sleep */
+    // REASON_EXT_SYS_RST      = 6     /* external system reset */
+    String reasons[7] = {
+        "REASON_DEFAULT_RST",
+        "REASON_WDT_RST",
+        "REASON_EXCEPTION_RST",
+        "REASON_SOFT_WDT_RST",
+        "REASON_SOFT_RESTART",
+        "REASON_DEEP_SLEEP_AWAKE",
+        "REASON_EXT_SYS_RST"
+    };
+
+    snprintf(tempstring, 64, "%d (%s)\n", rst_info->reason, reasons[rst_info->reason].c_str());
+    crashinfo += F("Reason: ");
+    crashinfo += tempstring;
+
+    crashinfo += F("Cause:  ");
+    crashinfo += rst_info->exccause;
+    crashinfo += F(" (0=cmd invalid, 6=div by zero, 9=unaligned r/w, 28/29=access to invalid addr)\n");
+
+    crashinfo += F("epc1: ");
+    snprintf(tempstring, 16, "%08x\n", rst_info->epc1);
+    crashinfo += tempstring;
+
+    crashinfo += F("epc2: ");
+    snprintf(tempstring, 16, "%08x\n", rst_info->epc2);
+    crashinfo += tempstring;
+
+    crashinfo += F("epc3: ");
+    snprintf(tempstring, 16, "%08x\n", rst_info->epc3);
+    crashinfo += tempstring;
+
+    crashinfo += F("excvaddr: ");
+    snprintf(tempstring, 16, "%08x\n", rst_info->excvaddr);
+    crashinfo += tempstring;
+
+    crashinfo += F("depc: ");
+    snprintf(tempstring, 16, "%08x\n", rst_info->depc);
+    crashinfo += tempstring;
+
+    crashinfo += F("\nstack>>>>>>>>>>>>>");
+
+    for (uint32_t iAddress = stack; iAddress < stack_end; iAddress += sizeof(uint32_t*))
+    {
+        char buf[16];
+        snprintf(buf, 16, "\n%08x: ", iAddress);
+        crashinfo += buf;
+        for(uint32_t i = 0; i < 4; i++)
+        {
+            uint32_t* pValue = (uint32_t*) iAddress;
+            snprintf(buf, 16, "%08x ", *pValue);
+            crashinfo += buf;
+            crashinfo += ' ';
+        }
+    }
+
+    crashinfo += F("\n<<<<<<<<<<<<<stack\n\n\n");
+    file.print(crashinfo);
+    file.close();
+    delay(3000);
+    // ESP.restart();
+}
+
 #include "ha.hpp"
 #include "prometheus.hpp"

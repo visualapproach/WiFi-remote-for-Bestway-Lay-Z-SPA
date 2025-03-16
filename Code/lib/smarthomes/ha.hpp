@@ -555,10 +555,41 @@ void setupHA()
 
 
 
+                                        /* DMI sensor (max Display Messages Interval) */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqtt_info->mqttBaseTopic + F("_DMI")+mychipid;
+    topic = HA_PREFIX_F;
+    topic += F("/sensor/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Dsp msg int");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
+    doc[_unit_of_meas] = F("ms");
+    doc[(_val_tpl)] = F("{{ value_json.DMI }}");
+    doc[_expire_after] = 700;
+    doc[_icon] = F("mdi:clock");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize HA message!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+
+
                                         /* Ready State sensor (Never, Ready, Not Ready) */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();
-    unique_id = mqtt_info->mqttBaseTopic + F("_time_to_ready")+mychipid;
+    unique_id = mqtt_info->mqttBaseTopic + F("_readystate")+mychipid;
     topic = HA_PREFIX_F;
     topic += F("/sensor/");
     topic += unique_id;
