@@ -408,13 +408,13 @@ function connect() {
   };
 
   connection.onerror = function (error) {
-    console.log("WebSocket Error ", error);
+    console.error("WebSocket Error ", error);
     document.body.classList.add("error");
     connection.close();
   };
 
   connection.onclose = function () {
-    console.log("WebSocket connection closed, reconnecting in 5 s");
+    console.warn("WebSocket connection closed, reconnecting in 5 s");
     document.body.classList.add("error");
     setTimeout(function () {
       connect();
@@ -451,10 +451,10 @@ function tryParseJSONObject(jsonString) {
 }
 
 function handlemsg(e) {
-  console.log(e.data);
+  console.debug(e.data);
   var msgobj = tryParseJSONObject(e.data);
   if (!msgobj) return;
-  console.log(msgobj);
+  console.debug(msgobj);
 
   if (msgobj.CONTENT == "OTHER") {
     // MQTT status
@@ -628,11 +628,11 @@ function s2dhms(val) {
 }
 
 function sendCommand(cmd) {
-  console.log(cmd);
-  console.log(typeof cmdMap[cmd]);
+  console.debug(cmd);
+  console.debug(typeof cmdMap[cmd]);
   // check command
   if (typeof cmdMap[cmd] == "undefined") {
-    console.log("invalid command");
+    console.warn("invalid command");
     return;
   }
 
@@ -676,7 +676,7 @@ function sendCommand(cmd) {
   obj["TXT"] = "";
   var json = JSON.stringify(obj);
   connection.send(json);
-  console.log(json);
+  console.debug(json);
 }
 
 function getProperValue(val, min, max) {
