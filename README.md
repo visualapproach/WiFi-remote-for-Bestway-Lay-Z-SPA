@@ -1,4 +1,4 @@
-#SmartAndRelax
+# SmartAndRelax
 
 A fork of visualapproach's whirlpool software - Translation into German
 
