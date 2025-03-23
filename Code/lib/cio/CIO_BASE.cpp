@@ -34,9 +34,7 @@ int CIO::getHeaterPower()
 }
 
 void CIO::setPowerLevels(const std::optional<const Power>& power_levels) {
-    if (power_levels.has_value()) {
+    if(power_levels.has_value()) {
         _power_levels = power_levels.value();
-    } else {
-        CIO::setPowerLevels(_default_power_levels);
     }
 }

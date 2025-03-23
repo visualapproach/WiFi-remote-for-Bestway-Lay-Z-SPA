@@ -235,25 +235,25 @@ function handlemsg(e) {
     // chlorine add reset timer
     var clDate = (Date.now() / 1000 - msgobj.CLTIME) / (24 * 3600.0);
     var clDateRound = Math.round(clDate);
-    document.getElementById("cltimer").innerHTML = clDateRound + " day" + (clDateRound != 1 ? "s" : "");
+    document.getElementById("cltimer").innerHTML = clDateRound + " Tag" + (clDateRound != 1 ? "en" : "");
     document.getElementById("cltimerbtn").className = clDate > msgobj.CLINT ? "button_red" : "button";
 
     // filter change reset timer
     var fDate = (Date.now() / 1000 - msgobj.FREP) / (24 * 3600.0);
     var fDateRound = Math.round(fDate);
-    document.getElementById("freplacetimer").innerHTML = fDateRound + " day" + (fDateRound != 1 ? "s" : "");
+    document.getElementById("freplacetimer").innerHTML = fDateRound + " Tag" + (fDateRound != 1 ? "en" : "");
     document.getElementById("freplacetimerbtn").className = fDate > msgobj.FREPI ? "button_red" : "button";
 
     // filter clean reset timer
     var fDate = (Date.now() / 1000 - msgobj.FCLE) / (24 * 3600.0);
     var fDateRound = Math.round(fDate);
-    document.getElementById("fcleantimer").innerHTML = fDateRound + " day" + (fDateRound != 1 ? "s" : "");
+    document.getElementById("fcleantimer").innerHTML = fDateRound + " Tag" + (fDateRound != 1 ? "en" : "");
     document.getElementById("fcleantimerbtn").className = fDate > msgobj.FCLEI ? "button_red" : "button";
 
     // filter rinse reset timer
     var fDate = (Date.now() / 1000 - msgobj.FRIN) / (24 * 3600.0);
     var fDateRound = Math.round(fDate);
-    document.getElementById("frinsetimer").innerHTML = fDateRound + " day" + (fDateRound != 1 ? "s" : "");
+    document.getElementById("frinsetimer").innerHTML = fDateRound + " Tag" + (fDateRound != 1 ? "en" : "");
     document.getElementById("frinsetimerbtn").className = fDate > msgobj.FRINI ? "button_red" : "button";
 
     // statistics

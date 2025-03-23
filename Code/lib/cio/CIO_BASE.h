@@ -35,26 +35,13 @@ class CIO
         sStates cio_states;
         sToggles cio_toggles;
         int _button_que_len = 0;  //length of buttonQ
-        int write_msg_count = 0;
         uint32_t good_packets_count = 0;
         uint32_t bad_packets_count = 0;
-        //debugging comm problems. Bit 0: bit error, Bit 1: too many bytes error, Bit 2: too few bytes error
-        uint8_t packet_error = 0;
-        //debug - stores cio special bytes
-        uint8_t CIO_CMD_LOG[64] = {0};
-        uint8_t CIO_CMD_LOG_index = 0;
         std::vector<uint8_t> _raw_payload_to_cio = {0,0,0,0,0,0,0,0,0,0,0};
+        int write_msg_count = 0;
     
     protected:
         std::vector<uint8_t> _raw_payload_from_cio = {0,0,0,0,0,0,0,0,0,0,0};
-        const Power _default_power_levels = {
-            .HEATERPOWER_STAGE1 = 950,
-            .HEATERPOWER_STAGE2 = 950,
-            .PUMPPOWER = 40,
-            .AIRPOWER = 950,
-            .IDLEPOWER = 2,
-            .JETPOWER = 950,
-        };
 
     private:
         Power _power_levels = {

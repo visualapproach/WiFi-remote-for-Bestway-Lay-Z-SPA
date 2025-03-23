@@ -63,16 +63,14 @@ class DSP_6_TYPE1 : public DSP_6W
         int _AUDIO_PIN;
         const uint8_t DSP_DIM_BASE = 0x80;
         const uint8_t DSP_DIM_ON = 0x8;
-        /*Real CIO is sending 0x01 which is illegal according to datasheet.
-        Static to work in switch/case.*/
-        /*Needs to be static to work in switch/case.*/
-        static const uint8_t DSP_CMD1_MODE6_11_7 = 0x01; //new model send 0x05
-        static const uint8_t DSP_CMD1_MODE6_11_7_P05504 = 0x05;
         /*Needs to be static to work in switch/case.*/
         static const uint8_t DSP_CMD2_DATAREAD = 0x42;
+        /*Real CIO is sending 0x01 which is illegal according to datasheet.
+        Static to work in switch/case.*/
+        static const uint8_t DSP_CMD1_MODE6_11_7 = 0x01;
         /*Needs to be static to work in switch/case.*/
         static const uint8_t DSP_CMD2_DATAWRITE = 0x40;
-        //7-segment codes. LSB can be 0 or 1 depending on pump. Not used AFAIK.
+        //7-segment codes. MSB (as seen by the CIO) is always 1 (Enable?)
         //Payload byte index and bit numbers (see documentation in excel file on github)
         const byte DGT1_IDX = 1;
         const byte DGT2_IDX = 3;
@@ -101,7 +99,7 @@ class DSP_6_TYPE1 : public DSP_6W
         const byte PWR_BIT = 4;
         const byte HJT_IDX = 9;
         const byte HJT_BIT = 5;
-        /*Bit 0 (LSB) is the not used or enable? bit for the whole byte. We leave it on to mimic type2 which don't have enable bits.*/
+        /*Bit 0 (LSB) is the enable bit for the whole byte. We leave it on to mimic type2 which don't have enable bits.*/
         const uint8_t CHARCODES[38] = {
             0x7F, 0x0D, 0xB7, 0x9F, 0xCD, 0xDB, 0xFB, 0x0F, 0xFF, 0xDF, 0x01, 0x81, 0xEF, 0xF9, 0x73, 0xBD, 0xF3, 0xE3, 0xFB,
             0xE9, 0xED, 0x61, 0x1D, 0xE1, 0x71, 0x01, 0xA9, 0xB9, 0xE7, 0xCF, 0xA1, 0xDB, 0xF1, 0x39, 0x7D, 0x01, 0xDD, 0xB7

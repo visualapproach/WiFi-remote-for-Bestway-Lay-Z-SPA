@@ -56,6 +56,7 @@ const uint8_t CHARS[] = {
     'h', 'H', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'y', 'z'
 };
 
+/*TODO: report that this is breaking changes. GODMODE and FULLPOWER have new values.*/
 enum Commands: byte
 {
     SETTARGET,
@@ -81,8 +82,7 @@ enum Commands: byte
     SETREADY,
     SETR,
     RESETFRINSETIMER,
-    RESETFCLEANTIMER,
-    SETPOWER
+    RESETFCLEANTIMER
 };
 
 enum ToggleButtons: byte
@@ -256,6 +256,6 @@ struct sWifi_info
     String ip4DnsSecondary_str;
     String ip4NTP_str;
     bool enableAp;
-    bool enableWmApFallback;
-    bool enableStaticIp4;
+    bool enableWmApFallback = true;
+    bool enableStaticIp4 = false;
 };

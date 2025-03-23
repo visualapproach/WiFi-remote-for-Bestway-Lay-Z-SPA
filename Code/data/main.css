@@ -1,5 +1,5 @@
 :root {
-  --accent-color: #0f4677;
+  --accent-color: #147419;
   --action-btn-color-dark: #cfcfcf9c;
   --action-btn-color: #9898989c;
   --btn-round-color: #545454;
@@ -171,7 +171,7 @@ table.fixed {
 }
 .button:hover,
 .button_red:hover {
-  background-color: #0076d1;
+  background-color: #01DF01;
   box-shadow: 1px 1px 3px #444;
 }
 .button_red:hover {
@@ -324,7 +324,7 @@ input:checked + .slider {
 }
 
 input:focus + .slider {
-  box-shadow: 0 0 1px #2196f3;
+  box-shadow: 0 0 1px #01DF01;
 }
 
 input:checked + .slider:before {
@@ -477,7 +477,7 @@ a.topnavicon {
 }
 
 .topnav a.active {
-  background-color: #2a5e8b99;
+  background-color: #147419;
   color: white;
 }
 
@@ -516,7 +516,7 @@ a.topnavicon {
   transform: translateY(-30%);
   left: 100%;
   margin-left: 15px;
-  width: 160px;
+  width: 200px;
   color: #444;
   background: #ccc;
   text-align: left;
@@ -535,15 +535,6 @@ a.topnavicon {
   margin: initial;
   right: 100%;
   margin-right: 15px;
-}
-
-.tooltip.above:before {
-    bottom:100%;
-    left:50%;
-    top: initial;
-    transform:translateX(-50%);
-    margin-bottom:15px;
-    margin-left: 0px;
 }
 
 .tooltip:after {
@@ -567,16 +558,6 @@ a.topnavicon {
   right: 100%;
   margin-right: -5px;
   border-color: transparent transparent transparent var(--accent-color);
-}
-
-.tooltip.above:after { 
-    bottom:100%;
-    left:50%;
-    top: initial;
-    transform:translateX(-50%);
-    margin-bottom:-5px;
-    margin-left: 0px;
-    border-color: var(--accent-color) transparent transparent transparent;
 }
 
 .tooltip:hover:before,
@@ -612,7 +593,7 @@ table#tableSelector {
 }
 
 .selector .selectorbutton:hover {
-  background-color: #0076d1;
+  background-color: #01DF01;
 }
 
 .selector .selectorbutton.selectortop {
@@ -726,7 +707,7 @@ input:checked + .slider {
 }
 
 input:focus + .slider {
-  box-shadow: 0 0 1px #2196f3;
+  box-shadow: 0 0 1px #088A85;
 }
 
 input:checked + .slider:before {

@@ -170,6 +170,7 @@ void BWC::begin(){
     _next_notification_time = _notification_time;
     loadCommandQueue();
     _loadSettings();
+    _restoreStates();
 }
 
 
@@ -227,7 +228,6 @@ void BWC::loop(){
     _calcVirtualTemp();
     // logstates();
     if(BWC_DEBUG) _log();
-    BWC_YIELD;
 }
 
 void BWC::_log()
@@ -297,14 +297,8 @@ void BWC::_log()
       DSP_quality = 0;
     else
       DSP_quality = 100 * dsp->good_packets_count / (dsp->good_packets_count + dsp->bad_packets_count);
-    file.printf_P(PSTR("\nCIO msg quality: %f%% DSP msg quality: %f%%\n\n"), CIO_quality, DSP_quality);
-    file.printf_P(PSTR("Packet errors:%d\nbit0-bit error, bit1-too many bytes, bit2: too few bytes.\n\n"), cio->packet_error);
-    for(int i = 0; i < 64; i++)
-    {
-        file.printf_P(PSTR("CIO CMD byte %2d: %X\n"), i, cio->CIO_CMD_LOG[i]);
-    }
+    file.printf_P(PSTR("\nCIO msg quality: %f%% DSP msg quality: %f%% (Only useful in 4 wire pumps)\n\n"), CIO_quality, DSP_quality);
     file.close();
-    BWC_YIELD;
 }
 
 void BWC::adjust_brightness()
@@ -328,11 +322,11 @@ void BWC::play_sound()
         switch(dsp->dsp_toggles.pressed_button)
         {
             case UP:
-                if(dsp->EnabledButtons[UP]) _sweepup();
+                if(dsp->EnabledButtons[UP]) _beep();
                 _dsp_tgt_used = true;
                 break;
             case DOWN:
-                if(dsp->EnabledButtons[DOWN]) _sweepdown();
+                if(dsp->EnabledButtons[DOWN]) _beep();
                 _dsp_tgt_used = true;
                 break;
             case TIMER:
@@ -408,23 +402,17 @@ void BWC::_handleNotification()
         return;
     }
     /* not the time yet*/
-    int timetogo = _command_que[0].xtime - _timestamp_secs;
-    if(timetogo >= _next_notification_time) return;
+    if((int64_t)_command_que[0].xtime - (int64_t)_timestamp_secs > (int64_t)_next_notification_time) return;
     /* only _notify for these commands*/
     if(!(_command_que[0].cmd == SETBUBBLES || _command_que[0].cmd == SETHEATER || _command_que[0].cmd == SETJETS || _command_que[0].cmd == SETPUMP)) return;
 
     if(_audio_enabled) _sweepup();
-    dsp->text += "  -" + String(_next_notification_time) + "-";
-    BWC_LOG_P(PSTR("Notification: %d\n"), _next_notification_time);
+    dsp->text += "  --" + String(_next_notification_time) + "--";
     // dsp->dsp_states.text = "i-i-";
-    if(timetogo < 4)
+    if(_next_notification_time <= 2)
         _next_notification_time = -10; //postpone "alarm" until after the command xtime (will be reset on command execution)
     else
-        while (_next_notification_time > timetogo) //sometimes automations throw in an instant command that resets the counter.
-        {
-            _next_notification_time /= 2;
-            if(_next_notification_time < 4) break; //avoid infinite loop
-        }
+        _next_notification_time /= 2;
 }
 
 void BWC::_handleCommandQ() {
@@ -434,8 +422,7 @@ void BWC::_handleCommandQ() {
     //If interval > 0 then append to commandQ with updated xtime.
     if(_command_que[0].interval > 0)
     {
-        // while(_command_que[0].xtime < (uint64_t)time(nullptr))
-        while(_command_que[0].xtime <= _timestamp_secs)
+        while(_command_que[0].xtime < (uint64_t)time(nullptr))
             _command_que[0].xtime += _command_que[0].interval;
        _command_que.push_back(_command_que[0]);
     } 
@@ -445,8 +432,8 @@ void BWC::_handleCommandQ() {
 bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
 {
     bool restartESP = false;
-
-    _format_text(txt);
+    
+    dsp->text += String(" ") + txt;
     switch (cmd)
     {
     case SETTARGET:
@@ -505,8 +492,7 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _jettime_ms = 0;
         _heatingtime_ms = 0;
         _airtime_ms = 0;
-        _energy_total_Ws = 0;
-        _energy_daily_Ws = 0;
+        _energy_total_kWh = 0;
         _energy_cost = 0;
         _save_settings_needed = true;
         _new_data_available = true;
@@ -595,10 +581,6 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _vt_calibrated = true;
         _save_settings_needed = true;
         break;
-    case SETPOWER:
-        val = std::clamp((int)val, 0, 1);
-        cio->cio_toggles.power_change = (val != cio->cio_states.power);
-        break;
     default:
         break;
     }
@@ -615,65 +597,7 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
     }
     /*If we pushed back an item, we need to re-sort the que*/
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
-    BWC_YIELD;
     return false;
-}
-
-void BWC::_format_text(const String &txt)
-{
-    dsp->text += ' ';
-
-    /* Check for special character '<>' surrounding variable field */
-    /* Example "T <time>" would show "T 12 44" */
-    /*
-        possible field variables suggestion:
-        time
-        IP-addr
-        date
-
-    */
-
-    String field;
-    bool fieldmode = false;
-    field.reserve(15);
-    String formatted_text;
-    formatted_text.reserve(63);
-    for(unsigned int i = 0; i < txt.length(); i++)
-    {
-        if(txt[i] == '>') 
-        {
-            //process field
-            if(field.equals(F("time")))
-            {
-                //copy new fieldstring to formatted_text
-                tm buf;
-                time_t t = time(NULL);
-                gmtime_r(&t, &buf);
-                formatted_text += String(buf.tm_hour);
-                formatted_text += ' ';
-                formatted_text += String(buf.tm_min);
-            }
-            //other if statements go here
-
-            //set fieldmode off
-            fieldmode = false;
-            field.clear();
-        }
-        else if(txt[i] == '<')
-        {
-            //set fieldmode on
-            fieldmode = true;
-        }
-        else
-        {
-            //if fieldmode off - copy char to formatted_text
-            //else copy char to field
-            if(fieldmode) field += txt[i];
-            else formatted_text += txt[i];
-        }
-    }
-
-    dsp->text += formatted_text;
 }
 
 void BWC::_handleStateChanges()
@@ -714,7 +638,7 @@ void BWC::_handleStateChanges()
         cio->cio_states.heat   != _prev_cio_states.heat || 
         cio->cio_states.target != _prev_cio_states.target
       )
-        if(_states_are_restored) _save_states_needed = true; //Do not save until states are restored
+        _save_states_needed = true;
 
     Buttons _currbutton = dsp->dsp_toggles.pressed_button;
     if(_currbutton != _prevbutton && _currbutton != NOBTN)
@@ -838,7 +762,7 @@ void BWC::_calcVirtualTemp()
         e    : natural number 2,71828182845904
         r    : a constant we need to find out by measurements
     */
-   BWC_YIELD;
+
 }
 
 //Called on temp change
@@ -926,6 +850,12 @@ String BWC::getModel()
 bool BWC::add_command(command_que_item command_item)
 {
     _save_cmdq_needed = true;
+    /* TODO: handle resetq in handlecommandque() instead!!! */
+    // if(command_item.cmd == RESETQ)
+    // {
+    //     _command_que.clear();
+    //     return true;
+    // }
     if(command_item.cmd == SETREADY)
     {
         command_item.val = (int64_t)command_item.xtime; //Use val field to store the time to be ready
@@ -935,7 +865,6 @@ bool BWC::add_command(command_que_item command_item)
     //add parameters to _command_que[rows][parameter columns] and sort the array on xtime.
     _command_que.push_back(command_item);
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
-    BWC_YIELD;
     return true;
 }
 
@@ -943,6 +872,12 @@ bool BWC::edit_command(uint8_t index, command_que_item command_item)
 {
     if(index > _command_que.size()) return false;
     _save_cmdq_needed = true;
+    /* TODO: handle resetq in handlecommandque() instead!!! */
+    // if(command_item.cmd == RESETQ)
+    // {
+    //     _command_que.clear();
+    //     return true;
+    // }
     if(command_item.cmd == SETREADY)
     {
         command_item.val = (int64_t)command_item.xtime; //Use val field to store the time to be ready
@@ -952,7 +887,6 @@ bool BWC::edit_command(uint8_t index, command_que_item command_item)
     //add parameters to _command_que[index] and sort the array on xtime.
     _command_que.at(index) = command_item;
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
-    BWC_YIELD;
     return true;
 }
 
@@ -961,7 +895,6 @@ bool BWC::del_command(uint8_t index)
     if(index >= _command_que.size()) return false;
     _save_cmdq_needed = true;
     _command_que.erase(_command_que.begin()+index);
-    BWC_YIELD;
     return true;
 }
 
@@ -1038,7 +971,6 @@ void BWC::getJSONStates(String &rtn) {
     if (serializeJson(doc, rtn) == 0) {
         rtn = F("{\"error\": \"Failed to serialize states\"}");
     }
-    BWC_YIELD;
 }
 
 void BWC::getJSONTimes(String &rtn) {
@@ -1068,13 +1000,13 @@ void BWC::getJSONTimes(String &rtn) {
     doc[F("FRINI")] = _filter_rinse_interval;
     doc[F("FCLEI")] = _filter_clean_interval;
     doc[F("CLINT")] = _cl_interval;
-    doc[F("KWH")] = _energy_total_Ws / 3600000.0; //Ws -> kWh
+    doc[F("KWH")] = _energy_total_kWh;
     doc[F("KWHD")] = _energy_daily_Ws / 3600000.0; //Ws -> kWh
     doc[F("WATT")] = _energy_power_W;
     float t2r = _estHeatingTime();
-    String t2r_string = F("Not ready");
-    if(t2r == -2) t2r_string = F("Ready");
-    if(t2r == -1) t2r_string = F("Never");
+    String t2r_string = F("Nicht bereit");
+    if(t2r == -2) t2r_string = F("Bereit");
+    if(t2r == -1) t2r_string = F("Niemals");
     doc[F("T2R")] = t2r;
     doc[F("RS")] = t2r_string;
     String s;
@@ -1089,7 +1021,6 @@ void BWC::getJSONTimes(String &rtn) {
     if (serializeJson(doc, rtn) == 0) {
         rtn = F("{\"error\": \"Failed to serialize times\"}");
     }
-    BWC_YIELD;
 }
 
 void BWC::getJSONSettings(String &rtn){
@@ -1135,7 +1066,6 @@ void BWC::getJSONSettings(String &rtn){
     if (serializeJson(doc, rtn) == 0) {
         rtn = F("{\"error\": \"Failed to serialize settings\"}");
     }
-    BWC_YIELD;
 }
 
 String BWC::getJSONCommandQueue(){
@@ -1159,7 +1089,6 @@ String BWC::getJSONCommandQueue(){
     if (serializeJson(doc, jsonmsg) == 0) {
         jsonmsg = F("{\"error\": \"Failed to serialize cmdq\"}");
     }
-    BWC_YIELD;
     return jsonmsg;
 }
 
@@ -1212,7 +1141,6 @@ void BWC::setJSONSettings(const String& message){
     dsp->EnabledButtons[POWER] = doc[F("PWR")] | dsp->EnabledButtons[POWER];
     dsp->EnabledButtons[HYDROJETS] = doc[F("HJT")] | dsp->EnabledButtons[HYDROJETS];
     saveSettings();
-    BWC_YIELD;
 }
 
 bool BWC::newData(){
@@ -1265,22 +1193,20 @@ void BWC::_updateTimes(){
     if(_override_dsp_brt_timer > 0) _override_dsp_brt_timer -= elapsedtime_ms; //counts down to or below zero
 
     // watts, kWh today, total kWh
-    // float heatingEnergy = (_heatingtime+_heatingtime_ms/1000)/3600.0 * cio->getHeaterPower();
-    // float pumpEnergy = (_pumptime+_pumptime_ms/1000)/3600.0 * cio->getPowerLevels().PUMPPOWER;
-    // float airEnergy = (_airtime+_airtime_ms/1000)/3600.0 * cio->getPowerLevels().AIRPOWER;
-    // float idleEnergy = (_uptime+_uptime_ms/1000)/3600.0 * cio->getPowerLevels().IDLEPOWER;
-    // float jetEnergy = (_jettime+_jettime_ms/1000)/3600.0 * cio->getPowerLevels().JETPOWER;
-    // _energy_total_Ws = (heatingEnergy + pumpEnergy + airEnergy + idleEnergy + jetEnergy)/1000; //Wh -> kWh
+    float heatingEnergy = (_heatingtime+_heatingtime_ms/1000)/3600.0 * cio->getHeaterPower();
+    float pumpEnergy = (_pumptime+_pumptime_ms/1000)/3600.0 * cio->getPowerLevels().PUMPPOWER;
+    float airEnergy = (_airtime+_airtime_ms/1000)/3600.0 * cio->getPowerLevels().AIRPOWER;
+    float idleEnergy = (_uptime+_uptime_ms/1000)/3600.0 * cio->getPowerLevels().IDLEPOWER;
+    float jetEnergy = (_jettime+_jettime_ms/1000)/3600.0 * cio->getPowerLevels().JETPOWER;
+    _energy_total_kWh = (heatingEnergy + pumpEnergy + airEnergy + idleEnergy + jetEnergy)/1000; //Wh -> kWh
     _energy_power_W = cio->cio_states.heatred * cio->getHeaterPower();
     _energy_power_W += cio->cio_states.pump * cio->getPowerLevels().PUMPPOWER;
     _energy_power_W += cio->cio_states.bubbles * cio->getPowerLevels().AIRPOWER;
     _energy_power_W += cio->getPowerLevels().IDLEPOWER;
     _energy_power_W += cio->cio_states.jets * cio->getPowerLevels().JETPOWER;
 
-    float wattseconds = elapsedtime_ms * _energy_power_W * 0.001; //mWs -> Ws
-    _energy_total_Ws += wattseconds;
-    _energy_daily_Ws += wattseconds;
-    _energy_cost += wattseconds *_price / 3600000; // Ws * price / kWh -> Ws * price / (3600 * 1000) 
+    _energy_daily_Ws += elapsedtime_ms * _energy_power_W / 1000.0;
+    _energy_cost += _price * _energy_power_W / (1000.0 * 1000.0 * 3600.0); // money/kWh
 
     if(_notes.size())
     {
@@ -1297,7 +1223,6 @@ void BWC::_updateTimes(){
     {
         dsp->audiofrequency = 0;
     }
-    BWC_YIELD;
 }
 
 /*          */
@@ -1355,7 +1280,7 @@ bool BWC::_loadHardware(Models& cioNo, Models& dspNo, int pins[], std::optional<
             }
         );
     }
-    BWC_YIELD;
+
     return true;
 }
 
@@ -1398,10 +1323,8 @@ void BWC::_loadSettings(){
     _audio_enabled = doc[F("AUDIO")];
     _notify = doc[F("NOTIFY")];
     _notification_time = doc[F("NOTIFTIME")];
-    _energy_total_Ws = doc[F("KWH")];
-    _energy_total_Ws *= 3600000; //kWh->Ws
-    _energy_daily_Ws = doc[F("KWHD")]; 
-    _energy_daily_Ws *= 3600000; //kWh->Ws
+    _energy_total_kWh = doc[F("KWH")];
+    _energy_daily_Ws = doc[F("KWHD")];
     _energy_cost = doc[F("COST")];
     _restore_states_on_start = doc[F("RESTORE")];
     _R_COOLING = doc[F("R")] | 40.0f; //else use default
@@ -1421,11 +1344,9 @@ void BWC::_loadSettings(){
     dsp->EnabledButtons[HYDROJETS] = doc[F("HJT")];
 
     file.close();
-    BWC_YIELD;
 }
 
-void BWC::restoreStates() {
-    _states_are_restored = true;
+void BWC::_restoreStates() {
     if(!_restore_states_on_start) return;
     File file = LittleFS.open(F("states.txt"), "r");
     if (!file) {
@@ -1456,32 +1377,30 @@ void BWC::restoreStates() {
     add_command(item);
     item.cmd = SETUNIT;
     item.val = unt;
-    item.xtime = 1;
+    item.xtime = 0;
     item.interval = 0;
     item.text = "";
     add_command(item);
     item.cmd = SETPUMP;
     item.val = flt;
-    item.xtime = 2;
+    item.xtime = 0;
     item.interval = 0;
     item.text = "";
     add_command(item);
     item.cmd = SETHEATER;
     item.val = htr;
-    item.xtime = 3;
+    item.xtime = 0;
     item.interval = 0;
     item.text = "";
     add_command(item);
     item.cmd = SETTARGET;
     item.val = tgt;
-    item.xtime = 4;
+    item.xtime = 0;
     item.interval = 0;
     item.text = "";
     add_command(item);
     // Serial.println(F("Restoring states"));
     file.close();
-    BWC_LOG_P(PSTR("BWC > restored states\n"),0);
-    BWC_YIELD;
 }
 
 void BWC::reloadCommandQueue(){
@@ -1518,9 +1437,7 @@ void BWC::loadCommandQueue(){
     }
     file.close();
     std::sort(_command_que.begin(), _command_que.end(), _compare_command);
-    BWC_YIELD;
 }
-
 
 /*          */
 /* SAVERS   */
@@ -1550,6 +1467,8 @@ void BWC::saveRebootInfo(){
 }
 
 void BWC::_saveStates() {
+    // //kill the dog
+    // // ESP.wdtDisable();
     #ifdef ESP8266
     ESP.wdtFeed();
     #endif
@@ -1575,21 +1494,23 @@ void BWC::_saveStates() {
         // Serial.println(F("Failed to write states.txt"));
     }
     file.close();
-    BWC_LOG_P(PSTR("BWC > saved states\n"),0);
-    BWC_YIELD;
+    // //revive the dog
+    // // ESP.wdtEnable(0);
 }
 
 void BWC::_saveCommandQueue(){
     _save_cmdq_needed = false;
+    //kill the dog
+    // ESP.wdtDisable();
     #ifdef ESP8266
     ESP.wdtFeed();
     #endif
     File file = LittleFS.open(F("cmdq.json"), "w");
     if (!file) {
-        BWC_LOG_P(PSTR("Failed to save cmdq.json\n"),0);
+        Serial.println(F("Failed to save cmdq.json"));
         return;
     } else {
-        BWC_LOG_P(PSTR("Writing cmdq.json\n"),0);
+        Serial.println(F("Writing cmdq.json"));
     }
     /*Do not save instant reboot command. Don't ask me how I know.*/
     if(_command_que.size())
@@ -1605,17 +1526,19 @@ void BWC::_saveCommandQueue(){
         doc[F("INTERVAL")][i] = _command_que[i].interval;
         doc[F("TXT")][i] = _command_que[i].text;
     }
-    String s;
-    size_t err = serializeJson(doc, s);
-    file.print(s);
+
     // Serialize JSON to file
-    if (err == 0) {
-        // BWC_LOG_P(PSTR("\nFailed to serialize cmdq.json\n"),0);
+    if (serializeJson(doc, file) == 0) {
+        // Serial.println(F("Failed to write cmdq.json"));
     } else {
-        // BWC_LOG_P(PSTR("%s\n"),s.c_str());
+        String s;
+        serializeJson(doc, s);
+        // Serial.println(s);
     }
     file.close();
-    BWC_YIELD;
+    Serial.println(F("Done!"));
+    //revive the dog
+    // ESP.wdtEnable(0);
 }
 
 void BWC::saveSettings(){
@@ -1658,8 +1581,8 @@ void BWC::saveSettings(){
     doc[F("FCLEI")] = _filter_clean_interval;
     doc[F("CLINT")] = _cl_interval;
     doc[F("AUDIO")] = _audio_enabled;
-    doc[F("KWH")] = _energy_total_Ws / 3600000;  //Ws->kWh
-    doc[F("KWHD")] = _energy_daily_Ws / 3600000; //Ws->kWh
+    doc[F("KWH")] = _energy_total_kWh;
+    doc[F("KWHD")] = _energy_daily_Ws;
     doc[F("COST")] = _energy_cost;
     // doc[F("SAVETIME")] = DateTime.format(DateFormatter::SIMPLE);
     doc[F("RESTORE")] = _restore_states_on_start;
@@ -1687,7 +1610,6 @@ void BWC::saveSettings(){
     file.close();
     //revive the dog
     // ESP.wdtEnable(0);
-    BWC_YIELD;
 }
 
 //save out debug text to file "debug.txt" on littleFS
@@ -1768,7 +1690,7 @@ bool BWC::_load_melody_json(const String& filename)
 
     std::reverse(_notes.begin(), _notes.end());
     file.close();
-    BWC_YIELD;
+
     return true;
 }
 
@@ -1799,7 +1721,6 @@ void BWC::_sweepdown()
         n.frequency_hz = 1000 + 8*i;
         _notes.push_back(n);
     }
-    BWC_YIELD;
 }
 
 void BWC::_sweepup()
@@ -1813,7 +1734,6 @@ void BWC::_sweepup()
         n.frequency_hz = 2000 - 8*i;
         _notes.push_back(n);
     }
-    BWC_YIELD;
 }
 
 void BWC::_beep()
@@ -1826,7 +1746,6 @@ void BWC::_beep()
     n.duration_ms = 50;
     n.frequency_hz = 800;
     _notes.push_back(n);
-    BWC_YIELD;
 }
 
 void BWC::_accord()
@@ -1842,5 +1761,4 @@ void BWC::_accord()
         n.frequency_hz = NOTE_E6;
         _notes.push_back(n);
     }
-    BWC_YIELD;
 }

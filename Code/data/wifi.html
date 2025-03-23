@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Lay-Z-Spa Module | Network Config</title>
+	<title>SmartAndRelax | Netzwerkkonfiguration</title>
 	<meta charset="utf-8">
 	<link rel="icon" type="image/png" sizes="180x180" href="favicon.png">
 	<meta name="theme-color" content="#0f4677">
@@ -20,39 +20,33 @@
                     <span class="slider round"></span>
                 </label>
             </form>
-			<a href="./"><div id="header"><span>Network Config</span><span>Lay-Z-Spa Module</span></div></a>
+			<a href="./"><div id="header"><span>Netzwerkkonfiguration</span><span>smartandrelax</span></div></a>
 			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
 		</header>
 
 		<div class="topnav" id="topnav">
-			<a href="./">Home</a>
-			<a href="hwconfig.html">Hardware Config</a>
-			<a href="config.html">SPA Config</a>
-			<a href="webconfig.html">Web Config</a>
-			<a href="wifi.html" class="active">Network Config</a>
-			<a href="mqtt.html">MQTT Config</a>
-			<a href="/dir/">Directory</a>
-			<a href="upload.html">File Uploader</a>
-			<a href="remove.html">File Remover</a>
-			<a href="chkupdatefw.html">Check firmware update</a>
-			<a href="/restart/">Restart ESP</a>
-			<!-- <a href="javascript:void(0);" class="bgred" onclick="sendCommand('restartEsp')">Restart ESP</a> -->
+			<a href="./">Hauptseite</a>
+			<a href="hwconfig.html">Hardware-Konfiguration</a>
+			<a href="config.html">SPA-Konfiguration</a>
+			<a href="webconfig.html">Web-Konfiguration</a>
+			<a href="wifi.html" class="active">Netzwerkkonfiguration</a>
+			<a href="mqtt.html">MQTT-Konfiguration</a>
+			<a href="/restart/">SmartAndRelax Modul neu starten<a>
 		</div>
 
 		<section>
-			<h2>Access Point:</h2>
+			<h2>Zugriffspunkt:</h2>
 			<table>
 				<tr>
-					<td><label for="enableAp">Enable specific AP:</label><span data-text=
-                        "Checked: ESP will connect using these credentials. Unchecked: ESP will use last known credentials." class="tooltip">?</span></td>
+					<td><label for="enableAp">Automatisch mit WLAN verbinden:</label></td>
 					<td><input type="checkbox" id="enableAp"></td>
 				</tr>
 				<tr>
-					<td>SSID:</td>
+					<td>WLAN SSID:</td>
 					<td><input type="text" id="apSsid"></td>
 				</tr>
 				<tr>
-					<td>Password:</td>
+					<td>Passwort:</td>
 					<td><input type="text" id="apPwd"></td>
 					<!--<td><input type="password" id="apPwd"><input type="checkbox" onclick="togglePlainText('apPwd')"></td>-->
 				</tr>
@@ -60,38 +54,36 @@
 		</section>
 
 		<section>
-			<h2>Soft Access Point:</h2>
+			<h2>WiFi Manager Access Point:</h2>
 			<table>
 				<tr>
-					<td><label for="enableWM">Enable Soft AP (I don't see a reason to uncheck this! You can lock yourself out!):</label><span data-text=
-                        "Enable ESP access point to be able to open this page before your network credentials are set. You'd want this on normally! If your network is unavailable the ESP will fire up its own AP." 
-                        class="tooltip left">?</span></td>
+					<td><label for="enableWM">WiFi Manager AP aktivieren:</label></td>
 					<td><input type="checkbox" id="enableWM"></td>
 				</tr>
 			</table>
 		</section>
 
 		<section>
-			<h2>Static IP:</h2>
+			<h2>Statische IP-Adresse:</h2>
 			<table>
 				<tr>
-					<td><label for="enableStaticIp4">Enable static IP:</label></td>
+					<td><label for="enableStaticIp4">Statische IP-Adresse aktivieren:</label></td>
 					<td><input type="checkbox" id="enableStaticIp4"></td>
 				</tr>
 				<tr>
-					<td>IP Address:</td>
+					<td>IP Addresse:</td>
 					<td>
 						<input type="text" id="ip4Address" maxlength="15" style="width:185px">
 					</td>
 				</tr>
 				<tr>
-					<td>Gateway IP Address:</td>
+					<td>Gateway IP Addresse:</td>
 					<td>
 						<input type="text" id="ip4Gateway" maxlength="15" style="width:185px">
 					</td>
 				</tr>
 				<tr>
-					<td>Subnet Mask:</td>
+					<td>Subnetzmaske:</td>
 					<td>
 						<input type="text" id="ip4Subnet" maxlength="15" style="width:185px">
 					</td>
@@ -115,7 +107,7 @@
 			<h2>NTP server:</h2>
 			<table>
 				<tr>
-					<td>Domain name or IP address:<span data-text="Leave blank for default or set your favorite NTP." class="tooltip">?</span></td>
+					<td>Domänenname oder IP-Adresse:</td>
 					<td>
 						<input type="text" id="ip4NTP" maxlength="30" style="width:185px" value="pool.ntp.org">
 					</td>
@@ -127,23 +119,24 @@
 			<table>
 				<tr>
 					<td colspan="2" style="text-align:center">
-						<button id="save" class="button" onclick="saveNetworkConfig()">save</button>
+						<button id="save" class="button" onclick="saveNetworkConfig()">Speichern</button>
 					</td>
 				</tr>
 			</table>
 		</section>
 
 		<section>
-			<h2>Reset WiFi Config:</h2>
+			<h2>WiFi-Konfiguration zurücksetzen:</h2>
 			<p>
-				This button deletes the WiFi credentials.<br />
-				The ESP will restart and enable its own AP (if you have it checked above).
-				Connect to WiFi AP with SSID "layzspa_module######" and go to address http://192.168.4.2/wifi.html 
+				Dieser Button setzt die Zugriffspunkteinstellungen zurück.<br />
+				Das SmartAndRelax Modul wird neu gestartet und startet den AccessPoint.
+				Verbinden Sie sich mit seinem Zugriffspunkt und konfigurieren Sie Ihr WLAN erneut (genau wie bei der ersten Konfiguration).
+				Der WiFi Manager Access Point ist nach diesem Vorgang wieder aktiviert.
 			</p>
 		</section>
 
 		<footer class="center">
-			<button id="resetwifi" class="button_red" onclick="resetWifi()">reset WiFi</button>
+			<button id="resetwifi" class="button_red" onclick="resetWifi()">WiFi zurücksetzen</button>
 		</footer>
 	</div>
 	<script>
@@ -259,7 +252,7 @@ function saveNetworkConfig()
 {
 	if (!validatePassword('apPwd')) return;
 
-	buttonConfirm(document.getElementById('save'), "saved &check; (Don't forget to restart the ESP.)", 6);
+	buttonConfirm(document.getElementById('save'), "gespeichert &check; (Vergessen Sie nicht, den ESP neu zu starten.)", 6);
 
 	var req = new XMLHttpRequest();
 	req.open('POST', '/setwifi/');
@@ -277,18 +270,18 @@ function saveNetworkConfig()
         'ip4NTP':(document.getElementById('ip4NTP').value)
 	};
 	req.send(JSON.stringify(json));
-	document.getElementById('apPwd').value = '<enter password>';
+	document.getElementById('apPwd').value = '<Passwort eingeben>';
 	console.log(json);
 }
 
 function resetWifi()
 {
-	if (confirm('Do you really want to reset the WiFi?'))
+	if (confirm('Möchten Sie das WLAN wirklich zurücksetzen?'))
 	{
 		var req = new XMLHttpRequest();
 		req.open('POST', '/resetwifi/');
 		req.send();
-		document.body.innerHTML = 'ESP restarts now. Please connect to the access point and re-configure your WiFi.';
+		document.body.innerHTML = 'SmartAndRelax wird jetzt neu gestartet. Bitte verbinden Sie sich mit dem Zugriffspunkt und konfigurieren Sie Ihr WLAN erneut.';
 	}
 }
 </script>	

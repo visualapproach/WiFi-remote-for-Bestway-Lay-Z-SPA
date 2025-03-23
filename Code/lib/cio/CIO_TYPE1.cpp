@@ -20,7 +20,7 @@ CIO_6_TYPE1::CIO_6_TYPE1()
     _new_packet_available = false;
     _send_bit = 8;
     _brightness = 7;
-    _packet_error = 0;
+    _packet_error = false;
 }
 
 void CIO_6_TYPE1::setup(int cio_data_pin, int cio_clk_pin, int cio_cs_pin)
@@ -67,9 +67,7 @@ void CIO_6_TYPE1::updateStates()
     _new_packet_available = false;
     if(_packet_error)
     {
-        bad_packets_count++;
-        packet_error = _packet_error;
-        _packet_error = 0;
+        _packet_error = false;
         return;
     }
     static uint32_t buttonReleaseTime;
@@ -77,7 +75,6 @@ void CIO_6_TYPE1::updateStates()
     static Readmode capturePhase = readtemperature;
 
     //require two consecutive messages to be equal before registering
-    #if FILTER_6W_SPIKES==1
     static uint8_t prev_checksum = 0;
     uint8_t checksum = 0;
     for(int i = 0; i < 11; i++){
@@ -87,7 +84,7 @@ void CIO_6_TYPE1::updateStates()
         prev_checksum = checksum;
         return;
     }
-    #endif
+
     //copy private array to public array
     for(unsigned int i = 0; i < sizeof(_payload); i++){
         _raw_payload_from_cio[i] = _payload[i];
@@ -164,41 +161,39 @@ void CIO_6_TYPE1::updateStates()
 
 
 /*End Of Packet.*/
+/*Todo: Copy Type2 method which has a more elegant solution. If possible, move these methods to parent class CIO_6*/
 void IRAM_ATTR CIO_6_TYPE1::eopHandler(void) {
 //process latest data and enter corresponding mode (like listen for DSP_STS or send BTN_OUT)
 //pinMode(_DATA_PIN, INPUT);
     WRITE_PERI_REG( PIN_DIR_INPUT, 1 << _DATA_PIN);
-    if(_byte_count != 11 && _byte_count != 0) _packet_error |= 2;
-    if(_bit_count != 0) _packet_error |= 1;
+    if(_byte_count != 11 && _byte_count != 0) _packet_error = true;
+    if(_bit_count != 0) _packet_error = true;
     _byte_count = 0;
     _bit_count = 0;
     uint8_t msg = _received_byte;
 
     switch (msg) {
         case DSP_CMD1_MODE6_11_7:
-            _CIO_cmd_matches = 1;
-            break;
-        case DSP_CMD1_MODE6_11_7_P05504:
-            _CIO_cmd_matches = 1;
-            break;
+        _CIO_cmd_matches = 1;
+        break;
         case DSP_CMD2_DATAWRITE:
-            if (_CIO_cmd_matches == 1) {
-                _CIO_cmd_matches = 2;
-            } else {
-                //reset - DSP_CMD1_MODE6_11_7 must be followed by DSP_CMD2_DATAWRITE to activate command
-                _CIO_cmd_matches = 0;
-            }
-            break;
+        if (_CIO_cmd_matches == 1) {
+            _CIO_cmd_matches = 2;
+        } else {
+            //reset - DSP_CMD1_MODE6_11_7 must be followed by DSP_CMD2_DATAWRITE to activate command
+            _CIO_cmd_matches = 0;
+        }
+        break;
         default:
-            if (_CIO_cmd_matches == 3) {
-                _brightness = msg;
-                _CIO_cmd_matches = 0;
-                _new_packet_available = true;
-            }
-            if (_CIO_cmd_matches == 2) {
-                _CIO_cmd_matches = 3;
-            }
-            break;
+        if (_CIO_cmd_matches == 3) {
+            _brightness = msg;
+            _CIO_cmd_matches = 0;
+            _new_packet_available = true;
+        }
+        if (_CIO_cmd_matches == 2) {
+            _CIO_cmd_matches = 3;
+        }
+        break;
     }
 }
 
@@ -208,18 +203,18 @@ void IRAM_ATTR CIO_6_TYPE1::eopHandler(void) {
 //CS line toggles
 void IRAM_ATTR CIO_6_TYPE1::isr_packetHandler() {
     #ifdef ESP8266
-    if ((READ_PERI_REG(PIN_IN) & (1 << _CS_PIN))) {
+    if (!(READ_PERI_REG(PIN_IN) & (1 << _CS_PIN))) {
     #else
-    if(digitalRead(_CS_PIN)) {
+    if(!digitalRead(_CS_PIN)) {
     #endif
-        //end of packet (CS is idle at high)
+        //packet start
+        _packet_transm_active = true;
+    }
+    else {
+        //end of packet
         _packet_transm_active = false;
         _data_is_output = false;
         eopHandler();
-    }
-    else {
-        //packet start (CS active low)
-        _packet_transm_active = true;
     }
 }
 
@@ -241,23 +236,23 @@ void IRAM_ATTR CIO_6_TYPE1::isr_clkHandler(void) {
     if (!clockstate & _data_is_output) {
         //send BTN_OUT
         if (_button_code & (1 << _send_bit)) {
-            //digitalWrite(_DATA_PIN, HIGH);
-            #ifdef ESP8266
-            WRITE_PERI_REG( PIN_OUT_SET, 1 << _DATA_PIN);
-            #else
-            digitalWrite(_DATA_PIN, 1);
-            #endif
+        //digitalWrite(_DATA_PIN, HIGH);
+    #ifdef ESP8266
+        WRITE_PERI_REG( PIN_OUT_SET, 1 << _DATA_PIN);
+    #else
+        digitalWrite(_DATA_PIN, 1);
+    #endif
         }
         else {
-            //digitalWrite(_DATA_PIN, LOW);
-            #ifdef ESP8266
-            WRITE_PERI_REG( PIN_OUT_CLEAR, 1 << _DATA_PIN);
-            #else
-            digitalWrite(_DATA_PIN, 0);
-            #endif
+        //digitalWrite(_DATA_PIN, LOW);
+    #ifdef ESP8266
+        WRITE_PERI_REG( PIN_OUT_CLEAR, 1 << _DATA_PIN);
+    #else
+        digitalWrite(_DATA_PIN, 0);
+    #endif
         }
         _send_bit++;
-        if(_send_bit > 15) _send_bit = 0;
+    if(_send_bit > 15) _send_bit = 0;
     }
 
     //read bits on high clock (rising edge)
@@ -273,34 +268,32 @@ void IRAM_ATTR CIO_6_TYPE1::isr_clkHandler(void) {
     #endif
         _bit_count++;
         if (_bit_count == 8) {
-            _bit_count = 0;
-            //We have received the header for 11 data bytes to come
-            if (_CIO_cmd_matches == 2)
+        _bit_count = 0;
+        //We have received the header for 11 data bytes to come
+        if (_CIO_cmd_matches == 2)
+        {
+            if(_byte_count < 11)
             {
-                if(_byte_count < 11)
-                {
-                _payload[_byte_count] = _received_byte;
-                _byte_count++;
-                }
-                else
-                {
-                        _packet_error |= 4; //too many bytes received
-                }
+            _payload[_byte_count] = _received_byte;
+            _byte_count++;
             }
-            //We have received request for button pressed
-            else if (_received_byte == DSP_CMD2_DATAREAD)
+            else
             {
-                _send_bit = 8;
-                _data_is_output = true;
-                //pinMode(_DATA_PIN, OUTPUT);
-            #ifdef ESP8266
-                WRITE_PERI_REG( PIN_DIR_OUTPUT, 1 << _DATA_PIN);
-            #else
-                pinMode(_DATA_PIN, OUTPUT);
-            #endif
+            _packet_error = true;
             }
-            CIO_CMD_LOG[CIO_CMD_LOG_index++] = (uint8_t)_received_byte;
-            CIO_CMD_LOG_index %= 64;
+        }
+        //We have received request for button pressed
+        else if (_received_byte == DSP_CMD2_DATAREAD)
+        {
+            _send_bit = 8;
+            _data_is_output = true;
+            //pinMode(_DATA_PIN, OUTPUT);
+        #ifdef ESP8266
+            WRITE_PERI_REG( PIN_DIR_OUTPUT, 1 << _DATA_PIN);
+        #else
+            pinMode(_DATA_PIN, OUTPUT);
+        #endif
+        }
         }
     }
 }
@@ -308,8 +301,7 @@ void IRAM_ATTR CIO_6_TYPE1::isr_clkHandler(void) {
 char CIO_6_TYPE1::_getChar(uint8_t value)
 {
     for (unsigned int index = 0; index < sizeof(CHARCODES); index++) {
-        /* Mask out the LSB due to some pumps differ and that bit is not used anyway. */
-        if ((value & 0xFE) == (CHARCODES[index] & 0xFE)) {
+        if (value == CHARCODES[index]) {
         return CHARS[index];
         }
     }

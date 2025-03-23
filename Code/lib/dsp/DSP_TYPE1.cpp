@@ -178,7 +178,7 @@ void DSP_6_TYPE1::uploadPayload(uint8_t brightness)
     }
     delayMicroseconds(30);
     digitalWrite(_CS_PIN, LOW); //start of packet
-    _sendBitsToDSP(DSP_CMD1_MODE6_11_7_P05504, 8); //This should work for all models... Else change to DSP_CMD1_MODE6_11_7
+    _sendBitsToDSP(DSP_CMD1_MODE6_11_7, 8);
     digitalWrite(_CS_PIN, HIGH); //end of packet
 
     delayMicroseconds(50);

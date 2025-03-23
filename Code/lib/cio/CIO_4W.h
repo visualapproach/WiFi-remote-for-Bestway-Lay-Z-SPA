@@ -2,8 +2,11 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include "enums.h"
-#include <umm_malloc/umm_heap_select.h>
 #include "CIO_BASE.h"
+#include <umm_malloc/umm_heap_select.h>
+
+
+class BWC;
 
 class CIO_4W : public CIO
 {
@@ -21,6 +24,7 @@ class CIO_4W : public CIO
         virtual bool getHasair() = 0;
         bool getSerialReceived() override;
         void setSerialReceived(bool txok) override;
+        void setPowerLevels(const std::optional<const Power>& power_levels) override;
 
     /*internal use*/
     protected:
@@ -40,9 +44,7 @@ class CIO_4W : public CIO
 
     private:
         uint64_t _prev_ms;
-        int _time_since_last_transmission_ms = 0;
-        const int _max_time_between_transmissions_ms = 2000;
-        EspSoftwareSerial::UART *_cio_serial;
+        SoftwareSerial *_cio_serial;
         uint8_t _heat_bitmask = 0;
         uint8_t _from_CIO_buf[7] = {};
         uint8_t _to_CIO_buf[7] = {};
@@ -65,5 +67,13 @@ class CIO_4W : public CIO
         bool _serialreceived = false;
         bool _readyToTransmit = false;
 
+        const Power _default_power_levels = {
+            .HEATERPOWER_STAGE1 = 950,
+            .HEATERPOWER_STAGE2 = 950,
+            .PUMPPOWER = 950,
+            .AIRPOWER = 950,
+            .IDLEPOWER = 950,
+            .JETPOWER = 950,
+        };
 };
 

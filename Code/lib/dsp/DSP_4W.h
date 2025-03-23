@@ -16,7 +16,7 @@ class DSP_4W : public DSP
         void pause_all(bool action) override;
         void updateToggles();
         void handleStates();
-        EspSoftwareSerial::UART *_dsp_serial;
+        SoftwareSerial *_dsp_serial;
         bool getSerialReceived() override;
         void setSerialReceived(bool txok) override;
   
@@ -34,8 +34,6 @@ class DSP_4W : public DSP
         void generatePayload();
 
     private:
-        int _time_since_last_transmission_ms = 0;
-        const int _max_time_between_transmissions_ms = 2000;
         /*ESP to DSP*/
         uint8_t _to_DSP_buf[7] = {};
         /*DSP to ESP. We can ignore this message and send our own when ESP is in charge.*/
@@ -46,5 +44,4 @@ class DSP_4W : public DSP
         uint8_t _bubbles, _pump, _jets;
         bool _serialreceived = false;
         bool _readyToTransmit = false;
-
 };

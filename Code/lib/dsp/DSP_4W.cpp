@@ -4,8 +4,8 @@
 void DSP_4W::setup(int dsp_tx, int dsp_rx, int dummy, int dummy2)
 {
     HeapSelectIram ephemeral;
-    _dsp_serial = new EspSoftwareSerial::UART;
-    _dsp_serial->begin(9600, SWSERIAL_8N1, dsp_tx, dsp_rx, false, 24);
+    _dsp_serial = new SoftwareSerial;
+    _dsp_serial->begin(9600, SWSERIAL_8N1, dsp_tx, dsp_rx, false, 63);
     _dsp_serial->setTimeout(20);
     dsp_toggles.locked_pressed = 0;
     dsp_toggles.power_change = 0;
@@ -105,10 +105,6 @@ void DSP_4W::updateToggles()
 
 void DSP_4W::handleStates()
 {
-    static unsigned long lastmillis = millis();
-    int elapsedtime = millis() - lastmillis;
-    lastmillis += elapsedtime;
-    _time_since_last_transmission_ms += elapsedtime;
     /* If godmode - generate payload, else send rawpayload*/
     if(dsp_states.godmode)
     {
@@ -126,14 +122,12 @@ void DSP_4W::handleStates()
         }
     }
 
-    if(_readyToTransmit || (_time_since_last_transmission_ms > _max_time_between_transmissions_ms))
+    if(_readyToTransmit)
     {
         _readyToTransmit = false;
-        _time_since_last_transmission_ms = 0;
         _dsp_serial->write(_to_DSP_buf, PAYLOADSIZE);
         write_msg_count++;
     }
-
 }
 
 /* bwc can send data to cio */

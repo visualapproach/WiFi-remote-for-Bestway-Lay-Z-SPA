@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Lay-Z-Spa Module | SPA Config</title>
+	<title>SmartAndRelax | SPA-Konfiguration</title>
 	<meta charset="utf-8">
 	<link rel="icon" type="image/png" sizes="180x180" href="favicon.png">
 	<meta name="theme-color" content="#0f4677">
@@ -20,23 +20,18 @@
                     <span class="slider round"></span>
                 </label>
             </form>
-			<a href="./"><div id="header"><span>SPA Config</span><span>Lay-Z-Spa Module</span></div></a>
+			<a href="./"><div id="header"><span>SPA-Konfiguration</span><span>smartandrelax</span></div></a>
 			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
 		</header>
 
 		<div class="topnav" id="topnav">
-			<a href="./">Home</a>
-			<a href="hwconfig.html">Hardware Config</a>
-			<a href="config.html" class="active">SPA Config</a>
-			<a href="webconfig.html">Web Config</a>
-			<a href="wifi.html">Network Config</a>
-			<a href="mqtt.html">MQTT Config</a>
-			<a href="/dir/">Directory</a>
-			<a href="upload.html">File Uploader</a>
-			<a href="remove.html">File Remover</a>
-			<a href="chkupdatefw.html">Check firmware update</a>
-			<a href="/restart/">Restart ESP</a>
-			<!-- <a href="javascript:void(0);" class="bgred" onclick="sendCommand('restartEsp')">Restart ESP</a> -->
+			<a href="./">Hauptseite</a>
+			<a href="hwconfig.html">Hardware-Konfiguration</a>
+			<a href="config.html" class="active">SPA-Konfiguration</a>
+			<a href="webconfig.html">Web-Konfiguration</a>
+			<a href="wifi.html">Netzwerkkonfiguration</a>
+			<a href="mqtt.html">MQTT-Konfiguration</a>
+			<a href="/restart/">SmartAndRelax Modul neu starten<a>
 		</div>
 
         <section>
@@ -46,118 +41,119 @@
                         <td><input type="text" id="timezone" value="0" maxlength="2" size="2"></td>
                     </tr-->
                     <tr>
-                        <td><label for="price">Price per kWh:</label></td>
+                        <td><label for="price">Preis pro kWh (Bsp.: 0.32):</label></td>
                         <td><input type="text" id="price" value="1.50" maxlength="4" size="4"></td>
                     </tr>
                     <tr>
-                        <td><label for="clinterval">Chlorine add (Days):</label></td>
+                        <td><label for="clinterval">Chlor hinzufügen (Tage):</label></td>
                         <td><input type="text" id="clinterval" value="7" maxlength="3" size="3"></td>
                     </tr>
                     <tr>
-                        <td><label for="finterval">Filter change (Days):</label></td>
+                        <td><label for="finterval">Filterwechsel (Tage):</label></td>
                         <td><input type="text" id="freplaceinterval" value="60" maxlength="3" size="3"></td>
                     </tr>
                     <tr>
-                        <td><label for="finterval">Filter clean (Days):</label></td>
+                        <td><label for="finterval">Filterreinigung (Tage):</label></td>
                         <td><input type="text" id="fcleaninterval" value="20" maxlength="3" size="3"></td>
                     </tr>
                     <tr>
-                        <td><label for="finterval">Filter rinse (Days):</label></td>
+                        <td><label for="finterval">Filterspülung (Tage):</label></td>
                         <td><input type="text" id="frinseinterval" value="7" maxlength="3" size="3"></td>
                     </tr>
                     <tr>
-                        <td><label for="audio">Audio:</label></td>
+                        <td><label for="audio">Ton (ein/aus):</label></td>
                         <td><input type="checkbox" id="audio"></td>
                     </tr>
                     <tr>
-                        <td><label for="notification">Notification:</label></td>
+                        <td><label for="notification">Benachrichtigung (aktiv):</label></td>
                         <td><input type="checkbox" id="notification"></td>
                     </tr>
                     <tr>
-                        <td><label for="notificationtime">Notification time (s):</label></td>
+                        <td><label for="notificationtime">Benachrichtigungszeit (s):</label></td>
                         <td><input type="text" id="notificationtime" value="32" maxlength="3" size="3"></td>
                     </tr>
                     <tr>
-                        <td><label for="restore">Restore last states on startup:</label></td>
+                        <td><label for="restore">Stellt beim Start der Pumpe den letzten Status wieder her:</label></td>
                         <td><input type="checkbox" id="restore"></td>
                     </tr>
                     <tr>
-                        <td><label for="calibration">Calibrated:</label><span data-text="If checked, the virtual temperature is calibrated. Redo calibration by unchecking and hitting SAVE button." class="tooltip">?</span></td>
-                        <td><input type="checkbox" id="calibration" onclick="toggleCalibration()"><span data-text="Calibrate by keeping heat OFF and pump ON until temperature has dropped a couple of degrees. Do not toggle jets, bubbles etc meanwhile. Water temp must differ several degrees from ambient from start." class="tooltip left">?</span></td>
-                        <td><a href="calib.html">manual cal.</a></td>
+                        <td><label for="calibration">Kalibriert:</label><span data-text="Wenn aktiviert, wird die virtuelle Temperatur kalibriert. Wiederholen Sie die Kalibrierung, indem Sie das Häkchen entfernen und auf die Schaltfläche SPEICHERN klicken." class="tooltip">?</span></td>
+                        <td><input type="checkbox" id="calibration" onclick="toggleCalibration()"><span data-text="Wenn aktiviert, ist die virtuelle Temperatur kalibriert. Kalibrieren: Schalte die Heizung AUS und die Pumpe EIN. Stoppe die Zeit, bis die Temperatur um einige Grad gesunken ist. Schalte währenddessen keine Air- oder Hydrojets ein. Die Wassertemperatur muss sich zu Beginn um mehrere Grad von der Umgebungstemperatur unterscheiden." class="tooltip left">?</span></td>
+                        <td><a href="calib.html">manuelle Kalibrierung</a></td>
                     </tr>
                 </table>
         </section>
         <section>
-            <table>Enabled display buttons.<label for="toggle_all"> All:</label><input type="checkbox" id="toggle_all" onclick="toggleAll()">
+            <table>Aktivierte Anzeigetasten<label for="toggle_all"> Alle:</label><input type="checkbox" id="toggle_all" onclick="toggleAll()">
                 <tr>
-                    <td><label for="lock_btn">Lock</label><input type="checkbox" id="lock_btn"></td>
+                    <td><label for="power_btn">Ein/Aus</label><input type="checkbox" id="power_btn"></td>
+                    <td><label for="lock_btn">Tastensperre</label><input type="checkbox" id="lock_btn"></td>
+                    <td><label for="bubbles_btn">Airjet</label><input type="checkbox" id="bubbles_btn"></td>
                     <td><label for="timer_btn">Timer</label><input type="checkbox" id="timer_btn"></td>
-                    <td><label for="bubbles_btn">Air</label><input type="checkbox" id="bubbles_btn"></td>
-                    <td><label for="unit_btn">Unit</label><input type="checkbox" id="unit_btn"></td>
-                    <td><label for="heat_btn">Heat</label><input type="checkbox" id="heat_btn"></td>
                 </tr>
                 <tr>
-                    <td><label for="pump_btn">Pump</label><input type="checkbox" id="pump_btn"></td>
-                    <td><label for="down_btn">Down</label><input type="checkbox" id="down_btn"></td>
-                    <td><label for="up_btn">Up</label><input type="checkbox" id="up_btn"></td>
-                    <td><label for="power_btn">Pwr</label><input type="checkbox" id="power_btn"></td>
-                    <td><label for="hydrojets_btn">Jets</label><input type="checkbox" id="hydrojets_btn"></td>
+                    <td><label for="pump_btn">Pumpe</label><input type="checkbox" id="pump_btn"></td>
+                    <td><label for="up_btn">Aufwärts</label><input type="checkbox" id="up_btn"></td>
+                    <td><label for="hydrojets_btn">Hydrojet</label><input type="checkbox" id="hydrojets_btn"></td>
+                </tr>
+                <tr>
+                    <td><label for="heat_btn">Heizung</label><input type="checkbox" id="heat_btn"></td>
+                    <td><label for="down_btn">Abwärts</label><input type="checkbox" id="down_btn"></td>
+                    <td><label for="unit_btn">Einheit</label><input type="checkbox" id="unit_btn"></td>
                 </tr>
             </table>
             <table><tr>
-                <td colspan="2" class="center"><button id="save" class="button" onclick="buttonConfirm(this);saveConfig()">save</button></td>
+                <td colspan="2" class="center"><button id="save" class="button" onclick="buttonConfirm(this);saveConfig()">Speichern</button></td>
             </tr></table>
         </section>
 
         <section>
             <table>
-                <tr>Allowed values in "()"
-                    <td><label for="commands">Command:</label></td>
+                <tr>Aktionen anlegen. Erlaubte Werte in "()"
+                    <td><label for="commands">Befehl:</label></td>
                     <td>
                         <select name="commands" id="commands">
-                            <option value="0">Set target temp (20-40/68-104)</option>
-                            <option value="1">Set unit (0/1)</option>
-                            <option value="2">Set air bubbles (0/1)</option>
-                            <option value="3">Set heater (0/1)</option>
-                            <option value="4">Set filter pump (0/1)</option>
-                            <option value="5">Reset queue (-)</option>
-                            <option value="6">Reboot ESP</option>
-                            <option value="7">Internal command (get target) (-)</option>
-                            <option value="8">Reset times (-)</option>
-                            <option value="9">Reset Cl timer (-)</option>
-                            <option value="10">Reset filter change timer (-)</option>
-                            <option value="11">Set hydrojets (0/1)</option>
-                            <option value="12">Set display brightness (0-8)</option>
-                            <option value="13">Set beep (0/1 or 2+text=filename)</option>
-                            <option value="14">Set ambient temp F (any integer)</option>
-                            <option value="15">Set ambient temp C (any integer)</option>
-                            <option value="16">Reset daily meter (any integer)</option>
-                            <option value="17">Take control (0/1)</option>
-                            <option value="18">Set full power (0/1)</option>
-                            <option value="19">Print (text)</option>
-                            <option value="20">Set ready time (-)</option>
-                            <option value="21">Set R (internal use)</option>
-                            <option value="22">Reset filter rinse timer (-)</option>
-                            <option value="23">Reset filter clean timer (-)</option>
-                            <option value="24">Set power on/off (0/1)</option>
+                            <option value="0">Zieltemp. festlegen (20-40/68-104)</option>
+                            <option value="1">Einheit °F/°C festlegen (0/1)</option>
+                            <option value="2">Airjet (1=ein/0=aus)</option>
+                            <option value="3">Heizung (1=ein/0=aus)</option>
+                            <option value="4">Filterpumpe (1=ein/0=aus)</option>
+                            <option value="5">Warteschlange zurücksetzen (-)</option>
+                            <option value="6">WLAN Modul neu starten</option>
+                            <!-- <option value="7">Interner Befehl (Ziel abrufen) (-)</option> -->
+                            <option value="8">Zeiten zurücksetzen (-)</option>
+                            <option value="9">Cl-Timer zurücksetzen (-)</option>
+                            <option value="10">Filterwechsel-Timer zurücksetzen (-)</option>
+                            <option value="11">Hydrojet (1=ein/0=aus)</option>
+                            <option value="12">Displayhelligkeit festlegen (0-8)</option>
+                            <option value="13">Signalton einstellen (0/1 or 2+Text=Dateiname)</option>
+                            <!-- <option value="14">Umgebungstemperatur F einstellen (beliebige Ganzzahl)</option> -->
+                            <!-- <option value="15">Umgebungstemperatur C einstellen (beliebige Ganzzahl)</option> -->
+                            <option value="16">Tageszähler zurücksetzen (beliebige Ganzzahl)</option>
+                            <!-- <option value="17">Übernimm die Kontrolle (0/1)</option> -->
+                            <!-- <option value="18">Volle Leistung einstellen (0/1)</option> -->
+                            <!-- <option value="19">Drucke (Text)</option> -->
+                            <!-- <option value="20">Stellen Sie die Bereitschaftszeit ein (-)</option> -->
+                            <!-- <option value="21">Set R (interne Verwendung)</option> -->
+                            <option value="22">Filterspültimer zurücksetzen (-)</option>
+                            <option value="23">Filterreinigungstimer zurücksetzen (-)</option>
                         </select>
                     </td>
                 </tr>
                 <tr>
-                    <td><label for="val">Value:</label></td>
+                    <td><label for="val">Wert:</label></td>
                     <td><input type="text" id="val" value="1" maxlength="3" size="3"></td>
                 </tr>
                 <tr>
-                    <td><label for="xtime">Execute time:</label><br /></td>
+                    <td><label for="xtime">Ausführungszeit:</label><br /></td>
                     <td><input type="datetime-local" id="xtime" name="xtime" onchange="totimestamp()" step="1"></td>
                 </tr>
                 <tr>
-                    <td><label for="interval">Repeat interval</label></td>
-                    <td><input type="text" id="interval" value="0" maxlength="8" size="8"> seconds</td>
+                    <td><label for="interval">Wiederholungsintervall</label></td>
+                    <td><input type="text" id="interval" value="0" maxlength="8" size="8">Sekunden</td>
                 </tr>
                 <tr>
-                    <td colspan="2"><p>(0=once, 1h=3600, 1d=86400, 1w=604800)</p></td>
+                    <td colspan="2"><p>(0=Einmal|1Std=3600|1Tag=86400|1Woche=604800)</p></td>
                 </tr>
                 <tr>
                     <td><label for="txt">Text</label></td>
@@ -167,16 +163,16 @@
         </section>
         
         <section style="text-align: left">
-            <h2>Command queue</h2>
+            <h2>Befehlswarteschlange</h2>
             <table id="cmdq"></table>
             <table>
                 <tr>
-                    <td colspan="2" class="center"><button id="addcmd" class="button" onclick="buttonConfirm(this);addCommand()">Add new</button></td>
-                    <td colspan="2" class="center"><button id="resetq" class="button_red" onclick="buttonConfirm(this);resetCommandQueue()">Clear queue</button></td>
+                    <td colspan="2" class="center"><button id="addcmd" class="button" onclick="buttonConfirm(this);addCommand()">Neu hinzufügen</button></td>
+                    <td colspan="2" class="center"><button id="resetq" class="button_red" onclick="buttonConfirm(this);resetCommandQueue()">Warteschlange leeren</button></td>
                 </tr>
                 <tr>
-                    <td colspan="2" class="center"><button id="saveq" class="button" onclick="savetofile()">Save to file</button></td>
-                    <td colspan="2" class="center"><button id="loadq" class="button" onclick="buttonConfirm(this);loadfromfile()">Load from file</button></td>
+                    <td colspan="2" class="center"><button id="saveq" class="button" onclick="savetofile()">In Datei speichern</button></td>
+                    <td colspan="2" class="center"><button id="loadq" class="button" onclick="buttonConfirm(this);loadfromfile()">Aus Datei laden</button></td>
                 </tr>
             </table>
         </section>
@@ -291,13 +287,13 @@ const setready = 20;
 const setR = 21;
 const resetrinsefiltertimer = 22;
 const resetcleanfiltertimer = 23;
-const setpower = 24;
 
 const commandlist = [
-	'Set target', 'Set unit', 'Set bubbles', 'Set heat', 'Set pump', 'Reset queue', 'Reboot ESP',
-	'Internal cmd', 'Reset times', 'Reset Cl timer', 'Reset change filter timer', 'Set jets', 'Set brightness',
-	'Beep', 'Set ambient temp F.', 'Set ambient temp C.', 'Reset daily meter', 'Take control', 'Full power',
-    'Print text', 'Set ready', 'Set R', 'Reset rinse filter timer', 'Reset clean filter timer', 'Set power'
+
+    'Zieltemperatur festlegen', 'Einheit festlegen', 'Airjet festlegen', 'Heizung festlegen', 'Filterpumpe festlegen', 'Warteschlange zurücksetzen', 'WLAN Modul neu starten',
+	'Interner Befehl', 'Zeiten zurücksetzen', 'Chlortimer zurücksetzen', 'Filterwechsel-Timer zurücksetzen', 'Hydrojets festlegen', 'Helligkeit festlegen',
+	'Signalton festlegen', 'Umgebungstemperatur °F festlegen', 'Umgebungstemperatur °C festlegen', 'Tageszähler zurücksetzen', 'Kontrolle übernehmen', 'Volle Leistung',
+    'Text ausgeben', 'Bereitschaftszeit festlegen', 'R festlegen', 'Timer für Filterspülung zurücksetzen', 'Timer für Filterreinigung zurücksetzen'
 ];
 
 function totimestamp()
@@ -328,7 +324,7 @@ function loadConfig()
 			document.getElementById('notificationtime').value = json.NOTIFTIME.toString();
 			document.getElementById('restore').checked = json.RESTORE;
 			var date = new Date(json.REBOOTTIME * 1000);
-			document.getElementById('lastboot').innerHTML = 'Last boot: ' + date.toLocaleString() + ' ' + json.REBOOTINFO;
+			document.getElementById('lastboot').innerHTML = 'Letzter Neustart: ' + date.toLocaleString() + ' ' + json.REBOOTINFO;
             document.getElementById('calibration').checked = json.VTCAL;
             document.getElementById('lock_btn').checked = json.LCK;
             document.getElementById('timer_btn').checked = json.TMR;
@@ -417,12 +413,12 @@ function loadCommandQueue()
 			{
                 var row = table.insertRow();
                 var cell = row.insertCell(0);
-                cell.innerHTML = '<button id="editCmd' + i + '" class="button" onclick="editCommandQueue('+i+')">Set</button>';
+                cell.innerHTML = '<button id="editCmd' + i + '" class="button" onclick="editCommandQueue('+i+')">Festlegen</button>';
                 var date = new Date(json.XTIME[i] * 1000);
                 cell = row.insertCell(1);
-                cell.innerHTML = commandlist[json['CMD'][i]] + ':' + json['VALUE'][i] + '<br>' + date.toLocaleString() + '<br>Interval: ' + json['INTERVAL'][i] + 's';
+                cell.innerHTML = commandlist[json['CMD'][i]] + ':' + json['VALUE'][i] + '<br>' + date.toLocaleString() + '<br>Intervall: ' + json['INTERVAL'][i] + 's';
                 cell = row.insertCell(2);
-                cell.innerHTML = '<button id="delCmd' + i + '" class="button_red" onclick="delCommand('+i+')">Del</button>';
+                cell.innerHTML = '<button id="delCmd' + i + '" class="button_red" onclick="delCommand('+i+')">Löschen</button>';
 			}
 		}
 	}
@@ -460,7 +456,7 @@ function resetCommandQueue()
 
 function savetofile()
 {
-    var filename=prompt("Please enter a filename","mycommandqueue1");
+    var filename=prompt("Bitte geben Sie einen Dateinamen ein","meinewarteschlange1");
     if(filename == null) return;
 	var req = new XMLHttpRequest();
 	req.open('POST', '/cmdq_file/');
@@ -474,7 +470,7 @@ function savetofile()
 
 function loadfromfile()
 {
-    var filename=prompt("Please enter a filename","mycommandqueue1");
+    var filename=prompt("Bitte geben Sie einen Dateinamen ein","meinewarteschlange1");
     if(filename == null) return;
 	var req = new XMLHttpRequest();
 	req.open('POST', '/cmdq_file/');

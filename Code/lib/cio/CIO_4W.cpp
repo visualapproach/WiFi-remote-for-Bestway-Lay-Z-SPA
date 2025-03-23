@@ -9,9 +9,9 @@ void CIO_4W::setup(int cio_rx, int cio_tx, int dummy)
         Hence the "backwards" parameters (cio_tx goes to ESP serial RX)
     */
     HeapSelectIram ephemeral;
-    _cio_serial = new EspSoftwareSerial::UART;
+    _cio_serial = new SoftwareSerial;
 
-    _cio_serial->begin(9600, SWSERIAL_8N1, cio_tx, cio_rx, false, 24);
+    _cio_serial->begin(9600, SWSERIAL_8N1, cio_tx, cio_rx, false, 63);
     _cio_serial->setTimeout(20);
     cio_states.target = 20;
     cio_states.locked = false;
@@ -23,6 +23,14 @@ void CIO_4W::setup(int cio_rx, int cio_tx, int dummy)
     
     _currentStateIndex = 0;
     _cio_serial->write(_to_CIO_buf, PAYLOADSIZE);  //test
+}
+
+void CIO_4W::setPowerLevels(const std::optional<const Power>& power_levels) {
+    if (power_levels.has_value()) {
+        CIO::setPowerLevels(power_levels);
+    } else {
+        CIO::setPowerLevels(_default_power_levels);
+    }
 }
 
 void CIO_4W::stop()
@@ -48,8 +56,6 @@ void CIO_4W::handleToggles()
     uint32_t elapsed_time_ms = 0;
     elapsed_time_ms = millis() - _prev_ms;
     _prev_ms = millis();
-    _time_since_last_transmission_ms += elapsed_time_ms;
-
     cio_states.target = cio_toggles.target;
 
     if(_heater2_countdown_ms > 0) _heater2_countdown_ms -= elapsed_time_ms;
@@ -147,10 +153,9 @@ void CIO_4W::handleToggles()
     antifreeze();
     antiboil();
     generatePayload();
-    if(_readyToTransmit || (_time_since_last_transmission_ms > _max_time_between_transmissions_ms))
+    if(_readyToTransmit)
     {
         _readyToTransmit = false;
-        _time_since_last_transmission_ms = 0;
         _cio_serial->write(_to_CIO_buf, PAYLOADSIZE);
         write_msg_count++;
     }

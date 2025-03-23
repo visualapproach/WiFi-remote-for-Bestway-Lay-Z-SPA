@@ -7,6 +7,9 @@
 
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
+// #include <ESP8266HTTPClient.h>
+// #include <ESP8266httpUpdate.h>
+// #include <WiFiClientSecure.h>
 #include <time.h>
 
 #else
@@ -22,37 +25,44 @@
 #include <PubSubClient.h> // ** Requires library 2.8.0 or higher ** https://github.com/knolleary/pubsubclient
 #include <Ticker.h>
 #include <WebSocketsServer.h>
+// #include <ESP_WiFiManager.h>
+#include <WiFiManager.h>
+#define ESP_WiFiManager WiFiManager
 #include <umm_malloc/umm_heap_select.h>
 
 #include "bwc.h"
 #include "config.h"
 #include "util.h"
-#include "bwc_debug.h"
 
+//
+#if BWC_DEBUGGING == 1
+    #define BWC_LOG_P(pstr_string, ...) Serial.printf_P(pstr_string, __VA_ARGS__)
+    #define BWC_LOG(s, ...) Serial.printf(s, __VA_ARGS__)
+#else
+    #define BWC_LOG_P(s, ...) 
+#endif
 
 BWC *bwc = nullptr;
 
 /**  Tickers cb function runs in interrupt context and cannot be long... */
-Ticker* periodicTimer;
-Ticker* startComplete_ticker;
-Ticker* ntpCheck_ticker;
-Ticker* updateWSTimer;
-Ticker* updateMqttTimer;
+Ticker bootlogTimer;
+Ticker periodicTimer;
+Ticker startComplete_ticker;
+Ticker ntpCheck_ticker;
+Ticker checkWifi_ticker;
 
 /**  ...Hence these flags to do the work in normal context*/
 bool periodicTimerFlag = false;
 bool checkNTP_flag = false;
-bool sendWSFlag = false;
-bool sendMQTTFlag = false;
-bool send_mqtt_cfg_needed = false;
-bool gotIP_flag = false;
-bool disconnected_flag = false;
-
+bool CheckWiFi_flag = false;
+/**  */
 int periodicTimerInterval = 60;
-sWifi_info* wifi_info;
+/** get or set the state of the network beeing connected */
+bool wifiConnected = false;
+sWifi_info wifi_info;
 
-/** A file to store the uploads */
-File fsUploadFile;
+/** a WiFi Manager for configurations via access point */
+// ESP_WiFiManager wm;
 
 /** a webserver object that listens on port 80 */
 #if defined(ESP8266)
@@ -60,37 +70,46 @@ ESP8266WebServer *server = nullptr;
 #elif defined(ESP32)
 WebServer server(80);
 #endif
+/** a file variable to temporarily store the received file */
+File fsUploadFile;
 
 /** a websocket object that listens on port 81 */
 WebSocketsServer *webSocket = nullptr;
+/**  */
+Ticker updateWSTimer;
+/**  */
+bool sendWSFlag = false;
 
 /** a WiFi client beeing used by the MQTT client */
 WiFiClient *aWifiClient = nullptr;
 /** a MQTT client */
 PubSubClient *mqttClient = nullptr;
 /**  */
-// bool checkMqttConnection = false;
-
+bool checkMqttConnection = false;
 /** Count of how may times we've connected to the MQTT server since booting (should always be 1 or more) */
 int mqtt_connect_count;
-bool enableMqtt = false;
 /**  */
 String prevButtonName = "";
 /**  */
 bool prevunit = 1;
 /**  */
-bool firstNtpSyncAfterBoot = true;
+Ticker updateMqttTimer;
+/**  */
+bool sendMQTTFlag = false;
+bool enableMqtt = false;
+bool send_mqtt_cfg_needed = false;
 
-void cb_gotIP(const WiFiEventStationModeGotIP &event);
-void gotIP();
-void cb_disconnected(const WiFiEventStationModeDisconnected &event);
+/** used for handleAUX() */
+bool runonce = true;
+
 void sendWS();
 void getOtherInfo(String &rtn);
 void sendMQTT();
 void sendMQTTConfig();
 void startWiFi();
-void wifi_manual_reconnect();
-void startSoftAp();
+void checkWiFi_ISR();
+void checkWiFi();
+void startWiFiConfigPortal();
 void checkNTP_ISR();
 void checkNTP();
 void startNTP();
@@ -100,6 +119,7 @@ void pause_all(bool action);
 void startWebSocket();
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t len);
 void startHttpServer();
+// void handleGetVersions();
 void handleGetHardware();
 void handleSetHardware();
 void handleHWtest();
@@ -143,9 +163,11 @@ void mqttConnect();
 time_t getBootTime();
 void handleESPInfo();
 void setTemperatureFromSensor();
+
 void setupHA();
 void handlePrometheusMetrics();
 
 /* Debug */
+void write_mem_stats_to_file();
 void preparefortest();
 void handleInputs();

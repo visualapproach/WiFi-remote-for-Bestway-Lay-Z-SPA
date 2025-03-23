@@ -16,16 +16,27 @@
 #include <vector>
 #include <optional>
 #include "enums.h"
-#include "CIO_4W_MODEL_SPECIFIC.h"
-#include "CIO_TYPE1_MODEL_SPECIFIC.h"
-#include "CIO_TYPE2_MODEL_SPECIFIC.h"
+#include "CIO_PRE2021.h"
+#include "CIO_2021.h"
+#include "CIO_2021HJT.h"
+#include "CIO_54149E.h"
+#include "CIO_54173.h"
+#include "CIO_54154.h"
+#include "CIO_54144.h"
+#include "CIO_54138.h"
+#include "CIO_54123.h"
 
-#include "DSP_4W_MODEL_SPECIFIC.h"
-#include "DSP_TYPE1_MODEL_SPECIFIC.h"
-#include "DSP_TYPE2_MODEL_SPECIFIC.h"
+#include "DSP_PRE2021.h"
+#include "DSP_2021.h"
+#include "DSP_2021HJT.h"
+#include "DSP_54149E.h"
+#include "DSP_54173.h"
+#include "DSP_54154.h"
+#include "DSP_54144.h"
+#include "DSP_54138.h"
+#include "DSP_54123.h"
 
 #include "FW_VERSION.h"
-#include "bwc_debug.h"
 
 constexpr int MAXCOMMANDS = 20;
 
@@ -37,7 +48,6 @@ struct command_que_item
     uint32_t interval;
     String text = "";
 };
-        
 
 class BWC {
 
@@ -81,7 +91,6 @@ class BWC {
         String getModel();
         void print(const String& txt);
         void loadCommandQueue();
-        void restoreStates();
 
         // String getDebugData();
 
@@ -99,12 +108,12 @@ class BWC {
 
     private:
         bool _loadHardware(Models& cioNo, Models& dspNo, int pins[], std::optional<Power>& power_levels);
-        bool _handlecommand(Commands cmd, int64_t val, const String &txt);
-        void _format_text(const String &txt);
+        bool _handlecommand(Commands cmd, int64_t val, const String& txt);
         void _handleCommandQ();
         void _loadSettings();
         void _saveCommandQueue();
         void _updateTimes();
+        void _restoreStates();
         void _saveStates();
         float _estHeatingTime();
         void _calcVirtualTemp();
@@ -125,8 +134,6 @@ class BWC {
     private:
         uint64_t _timestamp_secs; // seconds
         double _energy_daily_Ws; //Wattseconds internally
-        double _energy_total_Ws; //Wattseconds internally
-        double _energy_cost;
         unsigned long _temp_change_timestamp_ms, _heatred_change_timestamp_ms;
         unsigned long _pump_change_timestamp_ms, _bubbles_change_timestamp_ms;
         Ticker _save_settings_ticker;
@@ -161,6 +168,8 @@ class BWC {
         int _ambient_temp; //always in C internally
         int _deltatemp;
         float _price;
+        float _energy_total_kWh;
+        double _energy_cost;
         float _R_COOLING = 40;
         float _heating_degperhour = 1.5; //always in C internally
         float _virtual_temp; //=virtualtempfix+calculated diff, always in C internally
@@ -179,7 +188,6 @@ class BWC {
         bool _dsp_tgt_used = true;
         bool _notify;
         bool _vt_calibrated = false;
-        bool _states_are_restored = false;
 };
 
 void save_settings_cb(BWC *bwcInstance);

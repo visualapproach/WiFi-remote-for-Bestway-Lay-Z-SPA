@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html ontouchmove>
 <head>
-	<title>Lay-Z-Spa Module</title>
+	<title>Hauptseite</title>
 	<meta charset="utf-8">
 	<link rel="icon" type="image/png" sizes="180x180" href="favicon.png">
 	<meta name="theme-color" content="#0f4677">
@@ -25,23 +25,18 @@
                     <span class="slider round moon"></span>
                 </label>
             </form>
-			<a href="./"><div id="header"><span>Lay-Z-Spa Module</span><span>by visualapproach</span></div></a>
+			<a href="./"><div id="header"><span>Hauptseite</span><span>smartandrelax</span></div></a>
 			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
 		</header>
 
 		<div class="topnav" id="topnav">
-			<a href="./" class="active">Home</a>
-			<a href="hwconfig.html">Hardware Config</a>
-			<a href="config.html">SPA Config</a>
-			<a href="webconfig.html">Web Config</a>
-			<a href="wifi.html">Network Config</a>
-			<a href="mqtt.html">MQTT Config</a>
-			<a href="/dir/">Directory</a>
-			<a href="upload.html">File Uploader</a>
-			<a href="remove.html">File Remover</a>
-			<a href="chkupdatefw.html">Check firmware update</a>
-			<!--<a href="/restart/">Restart ESP</a>-->
-			<a href="javascript:void(0);" class="bgred" onclick="sendCommand('restartEsp')">Restart ESP</a>
+			<a href="./" class="active">Hauptseite</a>
+			<a href="hwconfig.html">Hardware-Konfiguration</a>
+			<a href="config.html">SPA-Konfiguration</a>
+			<a href="webconfig.html">Web-Konfiguration</a>
+			<a href="wifi.html">Netzwerkkonfiguration</a>
+			<a href="mqtt.html">MQTT-Konfiguration</a>
+			<a href="/restart/">SmartAndRelax Modul neu starten<a>
 		</div>
 
 		<section id="sectionDisplay">
@@ -54,38 +49,38 @@
 
 		<section id="sectionTemperature">
 			<div class="visualapproach"></div>
-			<h2>Temperature</h2>
+			<h2>Temperatur (°F/°C):</h2>
 			<table class="fixed">
 				<tr>
-					<td>Actual:</td>
+					<td>Aktuell:</td>
 					<td><span id="atlabel">n/a</span></td>
 				</tr>
 				<tr>
-					<td>Virtual: <span data-text="ESP attempts to keep track of water temperature even when pump is stopped and the temperature drops in the pump while the large body of water cools slower. Uses ambient temperature. Must be calibrated before working. See SPA Config page." class="tooltip">?</span></td>
+					<td>Virtuell: <span data-text="Das SmartAndRelax Modul versucht, die Wassertemperatur auch dann im Auge zu behalten, wenn die Pumpe gestoppt ist und die Temperatur in der Pumpe schneller abfällt als im großen Wasserreservoir. Verwendet Umgebungstemperatur. Muss vor der Verwendung kalibriert werden. Siehe SPA-Konfigurationsseite." class="tooltip">?</span></td>
 					<td><span id="vtlabel">n/a</span></td>
 				</tr>
 				<tr>
-					<td>Target:</td>
+					<td>Ziel:</td>
 					<td><span id="ttlabel">n/a</span></td>
 				</tr>
 			</table>
 		</section>
 
 		<section id="sectionControl">
-			<h2>Control</h2>
+			<h2>Steuerung:</h2>
 			<table id="tableSlider">
 				<tr>
-					<td style="width:40%;">Temperature</td>
+					<td style="width:40%;">Zieltemperatur</td>
 					<td style="width:50%"><input type="range" id="temp" min="20" max="40" step="1" value="20" onmouseup="sendCommand('setTarget')" ontouchend="sendCommand('setTarget')"></td>
 					<td style="width:10%;text-align:right" id="sliderTempVal">n/a</td>
 				</tr>
 				<tr>
-					<td>Ambient Temp.</td>
+					<td>Umgebungstemp.</td>
 					<td><input type="range" id="amb" min="-40" max="60" step="1" value="20" onmouseup="sendCommand('setAmbient')" ontouchend="sendCommand('setAmbient')"></td>
 					<td style="text-align:right" id="sliderAmbVal">n/a</td>
 				</tr>
-				<tr id="rowBrightness">
-					<td>Brightness <span data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off), but will light up for 5s when pressing a button." class="tooltip">?</span></td>
+				<tr>
+					<td>Helligkeit <span data-text="Wenn auf '0' eingestellt, ist das Display und alle Tasten auf der Pumpe komplett gedimmt (ausgeschaltet), leuchten jedoch 5 Sekunden lang auf, wenn eine Taste gedrückt wird." class="tooltip">?</span></td>
 					<td><input type="range" id="brt" min="0" max="8" step="1" value="7" onmouseup="sendCommand('setBrightness')" ontouchend="sendCommand('setBrightness')"></td>
 					<td style="text-align:right" id="sliderBrtVal">n/a</td>
 				</tr>
@@ -93,9 +88,9 @@
 
 			<table id="tableSelector" class="fixed">
 				<tr>
-					<td class="center">Temperature</td>
-					<td class="center">Ambient Temperature</td>
-					<td id="brightnessHeader" class="center">Brightness <span data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off), but will light up for 5s when pressing a button." class="tooltip left">?</span></td>
+					<td class="center">Zieltemperatur</td>
+					<td class="center">Umgebungstemp.</td>
+					<td class="center">Helligkeit <span data-text="Wenn auf '0' eingestellt, ist das Display und alle Tasten auf der Pumpe komplett gedimmt (ausgeschaltet), leuchten jedoch 5 Sekunden lang auf, wenn eine Taste gedrückt wird." class="tooltip left">?</span></td>
 				</tr>
 				<tr>
 					<td class="center">
@@ -119,7 +114,7 @@
 						</div>
 					</td>
 					<td class="center">
-						<div class="selector" id="divBrightness">
+						<div class="selector">
 							<button onclick="increaseNumber('selectorBrt');sendCommand('setBrightnessSelector')" class="selectorbutton selectortop">ᐱ</button>
 							<input type="number" id="selectorBrt" min="0" max="8" step="1" value="7" type="text" class="selectorvalue" onchange="sendCommand('setBrightnessSelector')">
 							<button onclick="decreaseNumber('selectorBrt');sendCommand('setBrightnessSelector')" class="selectorbutton selectorbottom">ᐯ</button>
@@ -130,17 +125,17 @@
 		</section>
 
 		<section id="sectionButtons">
-			<h2>Buttons</h2>
+			<h2>Tasten:</h2>
 			<table class="fixed">
 				<tr>
-					<td class="right">Bubbles</td>
+					<td class="right">Airjet</td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="AIR" onchange="sendCommand('toggleBubbles')">
 						<span class="slider round"></span>
 						</label>
 					</td>
-					<td class="right">Heater</td>
+					<td class="right">Heizung</td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="HTR" onchange="sendCommand('toggleHeater')">
@@ -149,14 +144,14 @@
 					</td>
 				</tr>
 				<tr>
-					<td class="right">Pump</td>
+					<td class="right">Pumpe</td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="FLT" onchange="sendCommand('togglePump')">
 						<span class="slider round"></span>
 						</label>
 					</td>
-					<td class="right">Unit (F/C)</td>
+					<td class="right">Einheit °F/°C</td>
 					<td>
 						<label class="switch">
 						<input type="checkbox" id="UNT" onchange="sendCommand('toggleUnit')">
@@ -172,7 +167,7 @@
 						<span class="slider round"></span>
 						</label>
 					</td>
-					<td id="god" class="right">Take control</td>
+					<td id="god" class="right">Kontrolle übernehmen</td>
 					<td id="godswitch">
 						<label class="switch">
 						<input type="checkbox" id="GOD" onchange="sendCommand('toggleGodmode')">
@@ -187,71 +182,71 @@
 			<h2>Timer</h2>
 			<table>
 				<tr>
-					<td>Last chlorine add was <span id="cltimer">n/a</span> ago.</td>
-					<td><button id="cltimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerChlorine')">reset</button></td>
+					<td>Letzte Zugabe von Chlor war vor <span id="cltimer">n/a</span>.</td>
+					<td><button id="cltimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerChlorine')">zurücksetzen</button></td>
 				</tr>
 				<tr>
-					<td>Last filter change was <span id="freplacetimer">n/a</span> ago.</td>
-					<td><button id="freplacetimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerReplaceFilter')">reset</button></td>
+					<td>Letzter Filterwechsel war vor <span id="freplacetimer">n/a</span>.</td>
+					<td><button id="freplacetimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerReplaceFilter')">zurücksetzen</button></td>
 				</tr>
 				<tr>
-					<td>Last filter clean was <span id="fcleantimer">n/a</span> ago.</td>
-					<td><button id="fcleantimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerCleanFilter')">reset</button></td>
+					<td>Letzte Filterreinigung war vor <span id="fcleantimer">n/a</span>.</td>
+					<td><button id="fcleantimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerCleanFilter')">zurücksetzen</button></td>
 				</tr>
 				<tr>
-					<td>Last filter rinse was <span id="frinsetimer">n/a</span> ago.</td>
-					<td><button id="frinsetimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerRinseFilter')">reset</button></td>
+					<td>Letzte Filterspülung war vor <span id="frinsetimer">n/a</span>.</td>
+					<td><button id="frinsetimerbtn" class="button" onclick="buttonConfirm(this);sendCommand('resetTimerRinseFilter')">zurücksetzen</button></td>
 				</tr>
 			</table>
 		</section>
 
 		<section id="sectionTotals">
-			<h2>Totals</h2>
+			<h2>Gesamt:</h2>
 			<table class="fixed">
 				<tr>
-					<td>Time: <span data-text="ESP sends UTC. Browser converts to Local." class="tooltip">?</span></td>
+					<td>Zeit: <span data-text="Modul sendet UTC. Der Browser wird auf „Lokal“ umgestellt." class="tooltip">?</span></td>
 					<td><span id="time">n/a</span></td>
 				</tr>
 				<tr>
-					<td>Ready in: <span data-text="New way of estimating time to ready. Works best if given actual ambient temperature from for example HA." class="tooltip">?</span></td>
+					<td>Bereit in: <span data-text="Funktioniert am Besten, wenn die tatsächliche Umgebungstemperatur angegeben wird. Der Wert kann von einem Homeserver oder Modul mit Temperaturfühler geholt werden" class="tooltip">?</span></td>
 					<td><span id="t2r">n/a</span></td>
 				</tr>
 				<tr>
-					<td>Uptime: <span data-text="Total running time of ESP since counter was reset. Rebooting will continue counting." class="tooltip">?</span></td>
+					<td>Laufzeit: <span data-text="Gesamte Betriebszeit des SmartAndRelax Moduls seit dem Zurücksetzen des Zählers. Ein Neustart setzt die Zählung fort." class="tooltip">?</span></td>
 					<td><span id="uptime">n/a</span></td>
 				</tr>
 				<tr>
-					<td>Pump:</td>
+					<td>Pumpe: </td>
 					<td><span id="filtertime">n/a</span></td>
 				</tr>
 				<tr>
-					<td>Heating:</td>
+					<td>Heizung: </td>
 					<td><span id="heatingtime">n/a</span></td>
 				</tr>
 				<tr>
-					<td>Air:</td>
+					<td>Airjet: </td>
 					<td><span id="airtime">n/a</span></td>
 				</tr>
 				<tr id="jetstotals">
-					<td>Hydrojets:</td>
+					<td>Hydrojets: </td>
 					<td><span id="jettime">n/a</span></td>
 				</tr>
 				<tr>
-					<td>Estimated cost:</td>
+					<td>Geschätzte Kosten:</td>
 					<td><span id="cost">n/a</span></td>
 				</tr>
 				<tr>
-					<td colspan="2" class="center"><button id="reset" class="button" onclick="resetTotals()">reset</button></td>
+					<td colspan="2" class="center"><button id="reset" class="button" onclick="resetTotals()">zurücksetzen</button></td>
 				</tr>
 			</table>
 		</section>
 
 		<footer>
 			<p class="center">
-				<span id="mqtt">MQTT: loading status...</span><br />
-				<span id="fw">Firmware: loading status...</span><br />
-				<span id="model">Model: loading status...</span><br />
-				<span id="rssi">RSSI: loading status...</span>
+				<span id="mqtt">MQTT: Lade Status...</span><br />
+				<span id="fw">Firmware: Lade Status....</span><br />
+				<span id="model">Model: Lade Status...</span><br />
+				<span id="rssi">RSSI: Lade Status...</span>
 			</p>
 		</footer>
 	</div>
@@ -482,18 +477,6 @@ function handlemsg(e) {
     // godmode available
     document.getElementById("god").style.display = msgobj.HASGOD ? "table-cell" : "none";
     document.getElementById("godswitch").style.display = msgobj.HASGOD ? "table-cell" : "none";
-    if(msgobj.MODEL.startsWith("NO")){
-        document.getElementById("divBrightness").style.display = "none"
-        document.getElementById("brightnessHeader").style.display = "none"
-        document.getElementById("rowBrightness").style.display = "none"
-    }
-    else
-    {
-        document.getElementById("divBrightness").style.display = "table-cell"
-        document.getElementById("brightnessHeader").style.display = "table-cell"
-        document.getElementById("rowBrightness").style.display = "table-row"
-    }
-    
   }
 
   if (msgobj.CONTENT == "STATES") {
@@ -580,25 +563,25 @@ function handlemsg(e) {
     // chlorine add reset timer
     var clDate = (Date.now() / 1000 - msgobj.CLTIME) / (24 * 3600.0);
     var clDateRound = Math.round(clDate);
-    document.getElementById("cltimer").innerHTML = clDateRound + " day" + (clDateRound != 1 ? "s" : "");
+    document.getElementById("cltimer").innerHTML = clDateRound + " Tag" + (clDateRound != 1 ? "en" : "");
     document.getElementById("cltimerbtn").className = clDate > msgobj.CLINT ? "button_red" : "button";
 
     // filter change reset timer
     var fDate = (Date.now() / 1000 - msgobj.FREP) / (24 * 3600.0);
     var fDateRound = Math.round(fDate);
-    document.getElementById("freplacetimer").innerHTML = fDateRound + " day" + (fDateRound != 1 ? "s" : "");
+    document.getElementById("freplacetimer").innerHTML = fDateRound + " Tag" + (fDateRound != 1 ? "en" : "");
     document.getElementById("freplacetimerbtn").className = fDate > msgobj.FREPI ? "button_red" : "button";
 
     // filter clean reset timer
     var fDate = (Date.now() / 1000 - msgobj.FCLE) / (24 * 3600.0);
     var fDateRound = Math.round(fDate);
-    document.getElementById("fcleantimer").innerHTML = fDateRound + " day" + (fDateRound != 1 ? "s" : "");
+    document.getElementById("fcleantimer").innerHTML = fDateRound + " Tag" + (fDateRound != 1 ? "en" : "");
     document.getElementById("fcleantimerbtn").className = fDate > msgobj.FCLEI ? "button_red" : "button";
 
     // filter rinse reset timer
     var fDate = (Date.now() / 1000 - msgobj.FRIN) / (24 * 3600.0);
     var fDateRound = Math.round(fDate);
-    document.getElementById("frinsetimer").innerHTML = fDateRound + " day" + (fDateRound != 1 ? "s" : "");
+    document.getElementById("frinsetimer").innerHTML = fDateRound + " Tag" + (fDateRound != 1 ? "en" : "");
     document.getElementById("frinsetimerbtn").className = fDate > msgobj.FRINI ? "button_red" : "button";
 
     // statistics
@@ -670,8 +653,7 @@ function sendCommand(cmd) {
   var obj = {};
   obj["CMD"] = cmdMap[cmd];
   obj["VALUE"] = value;
-  //   obj["XTIME"] = Math.floor(Date.now() / 1000);
-  obj["XTIME"] = 0;
+  obj["XTIME"] = Math.floor(Date.now() / 1000);
   obj["INTERVAL"] = 0;
   obj["TXT"] = "";
   var json = JSON.stringify(obj);
@@ -706,8 +688,8 @@ function initApplication()
     {
         setWebConfig();
     }
-    setTimeout(loadWebConfig,500);
-    setTimeout(connect, 1000);
+    loadWebConfig();
+    connect();
 }
 
 function setWebConfig()
@@ -747,7 +729,7 @@ function loadWebConfig()
 
 function resetTotals()
 {
-	if (confirm('Do you really want to reset the totals?'))
+	if (confirm('Möchten Sie wirklich alle Zähler zurücksetzen?'))
 	{
 		buttonConfirm(document.getElementById('reset'));
 		sendCommand('resetTotals');

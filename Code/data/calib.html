@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Lay-Z-Spa Module | SPA Manual calibration</title>
+	<title>SmartAndRelax | Manuelle SPA Kalibrierung</title>
 	<meta charset="utf-8">
 	<link rel="icon" type="image/png" sizes="180x180" href="favicon.png">
 	<meta name="theme-color" content="#0f4677">
@@ -21,45 +21,40 @@
                     <span class="slider round"></span>
                 </label>
             </form>
-			<a href="./"><div id="header"><span>SPA Manual calibration</span><span>Lay-Z-Spa Module</span></div></a>
+			<a href="./"><div id="header"><span>Manuelle SPA Kalibrierung</span><span>smartandrelax</span></div></a>
 			<a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
 		</header>
 
 		<div class="topnav" id="topnav">
-			<a href="./">Home</a>
-			<a href="hwconfig.html">Hardware Config</a>
-			<a href="config.html" class="active">SPA Config</a>
-			<a href="webconfig.html">Web Config</a>
-			<a href="wifi.html">Network Config</a>
-			<a href="mqtt.html">MQTT Config</a>
-			<a href="/dir/">Directory</a>
-			<a href="upload.html">File Uploader</a>
-			<a href="remove.html">File Remover</a>
-			<a href="chkupdatefw.html">Check firmware update</a>
-			<a href="/restart/">Restart ESP</a>
-			<!-- <a href="javascript:void(0);" class="bgred" onclick="sendCommand('restartEsp')">Restart ESP</a> -->
+			<a href="./">Hauptseite</a>
+			<a href="hwconfig.html">Hardware-Konfiguration</a>
+			<a href="config.html" class="active">SPA-Konfiguration</a>
+			<a href="webconfig.html">Web-Konfiguration</a>
+			<a href="wifi.html">Netzwerkkonfiguration</a>
+			<a href="mqtt.html">MQTT-Konfiguration</a>
+			<a href="/restart/">SmartAndRelax Modul neu starten<a>
 		</div>
 
 	<section>
 			<table>
 				<tr>
-					<td><label for="maxtemp">Starting temp:</label></td>
+					<td><label for="maxtemp">Starttemperatur:</label></td>
 					<td><input type="text" id="maxtemp" value="30" maxlength="3" size="4"></td>
 				</tr>
 				<tr>
-					<td><label for="mintemp">Ending temp:</label></td>
+					<td><label for="mintemp">Endtemperatur:</label></td>
 					<td><input type="text" id="mintemp" value="28" maxlength="3" size="4"></td>
 				</tr>
 				<tr>
-					<td><label for="amb">Avg. ambient temp.:</label></td>
+					<td><label for="amb">Durchschnittliche Umgebungstemperatur:</label></td>
 					<td><input type="text" id="amb" value="16" maxlength="3" size="4"></td>
 				</tr>
 				<tr>
-					<td><label for="finterval">time (minutes):</label></td>
+					<td><label for="finterval">Zeit (Minuten):</label></td>
 					<td><input type="text" id="minutes" value="120" maxlength="3" size="4"></td>
 				</tr>
 				<tr>
-					<td colspan="2" class="center"><button id="save" class="button" onclick="buttonConfirm(this);saveConfig()">Save</button></td>
+					<td colspan="2" class="center"><button id="save" class="button" onclick="buttonConfirm(this);saveConfig()">Speichern</button></td>
 				</tr>
 			</table>
 		</section>
