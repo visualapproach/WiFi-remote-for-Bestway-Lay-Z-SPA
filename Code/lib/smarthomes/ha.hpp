@@ -1722,7 +1722,7 @@ void setupHA()
     doc[_mode_cmd_t] = mqtt_info->mqttBaseTopic+F("/command_batch");
     doc[_mode_cmd_tpl] = F("[{CMD:3,VALUE:{%if value == \"heat\" %}1{% else %}0{% endif %},XTIME:0,INTERVAL:0},{CMD:4,VALUE:{%if value == \"fan_only\" %}1{% elif value == \"heat\" %}1{% else %}0{% endif %},XTIME:0,INTERVAL:0}]");
     doc[_mode_stat_t] = mqtt_info->mqttBaseTopic+F("/message");
-    doc[_mode_stat_tpl] = F("{% if value_json.RED == 1 %}heat{% elif value_json.GRN == 1 %}heat{% else %}off{% endif %}");
+    doc[_mode_stat_tpl] = F("{% if value_json.RED == 1 %}heat{% elif value_json.GRN == 1 %}heat{% elif value_json.FLT == 1 %}fan_only{% else %}off{% endif %}");
     doc[_act_t] = mqtt_info->mqttBaseTopic+F("/message");
     doc[_act_tpl] = F("{% if value_json.RED == 1 %}heating{% elif value_json.GRN == 1 %}idle{% elif value_json.FLT == 1 %}fan{% else %}off{% endif %}");
     doc[_temp_stat_t] = mqtt_info->mqttBaseTopic+F("/message");
