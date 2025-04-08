@@ -1614,11 +1614,11 @@ void BWC::_saveCommandQueue(){
     }
     // Serialize JSON to file
     size_t err = serializeJson(doc, file);
-    // if (err == 0) {
+    if (err == 0) {
         // BWC_LOG_P(PSTR("\nFailed to serialize cmdq.json\n"),0);
-    // } else {
+    } else {
         // BWC_LOG_P(PSTR("%s\n"),s.c_str());
-    // }
+    }
 
     file.close();
     BWC_YIELD;
