@@ -1149,7 +1149,7 @@ String BWC::getJSONCommandQueue(){
     #ifdef ESP8266
     ESP.wdtFeed();
     #endif
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(8192);
     // Set the values in the document
     doc[F("LEN")] = _command_que.size();
     for(unsigned int i = 0; i < _command_que.size(); i++){
@@ -1501,7 +1501,7 @@ void BWC::loadCommandQueue(){
         return;
     }
 
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(8192);
     // Deserialize the JSON document
     DeserializationError error = deserializeJson(doc, file);
     if (error) {
@@ -1601,7 +1601,7 @@ void BWC::_saveCommandQueue(){
     /*Do not save instant reboot command. Don't ask me how I know.*/
     if(_command_que.size())
         if(_command_que[0].cmd == REBOOTESP && _command_que[0].interval == 0) return;
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(8192);
 
     // Set the values in the document
     doc[F("LEN")] = _command_que.size();
@@ -1612,15 +1612,14 @@ void BWC::_saveCommandQueue(){
         doc[F("INTERVAL")][i] = _command_que[i].interval;
         doc[F("TXT")][i] = _command_que[i].text;
     }
-    String s;
-    size_t err = serializeJson(doc, s);
-    file.print(s);
     // Serialize JSON to file
+    size_t err = serializeJson(doc, file);
     if (err == 0) {
         // BWC_LOG_P(PSTR("\nFailed to serialize cmdq.json\n"),0);
     } else {
         // BWC_LOG_P(PSTR("%s\n"),s.c_str());
     }
+
     file.close();
     BWC_YIELD;
 }
