@@ -35,6 +35,8 @@ document.addEventListener("DOMContentLoaded", function () {
   topNavIcon.addEventListener("click", function () {
     topNavIcon.classList.toggle("show-before");
     const afterIcon = topNavIcon.nextElementSibling;
-    afterIcon.style.display = afterIcon.style.display === "none" ? "inline" : "none";
+    if (afterIcon) {
+      afterIcon.style.display = afterIcon.style.display === "none" ? "inline" : "none";
+    }
   });
 });

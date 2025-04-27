@@ -77,7 +77,7 @@ void setup()
         mqtt_info->mqttPort = 1883;
         mqtt_info->mqttTelemetryInterval = 600;
         mqtt_info->mqttUsername = MQTT_USER_F;
-        mqtt_info->useMqtt = true;
+        mqtt_info->useMqtt = false;
         wifi_info = new sWifi_info{.enableWmApFallback = true};
     }
     bwc->setup();
