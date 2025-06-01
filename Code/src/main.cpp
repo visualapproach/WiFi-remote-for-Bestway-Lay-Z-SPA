@@ -1485,7 +1485,6 @@ void loadMqtt()
     }
 
     mqtt_info->useMqtt = doc[F("enableMqtt")];
-    // enableMqtt = useMqtt; //will be set with start complete timer
     mqtt_info->mqttHost = doc[F("mqttHost")].as<String>();
     mqtt_info->mqttPort = doc[F("mqttPort")];
     mqtt_info->mqttUsername = doc[F("mqttUsername")].as<String>();
@@ -1889,7 +1888,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
 void mqttConnect()
 {
     // do not connect if MQTT is not enabled or WiFI not connected
-    if (!enableMqtt || (WiFi.status() != WL_CONNECTED))
+    if (!mqtt_info->useMqtt || (WiFi.status() != WL_CONNECTED))
     {
         return;
     }

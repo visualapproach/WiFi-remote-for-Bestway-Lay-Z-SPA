@@ -139,7 +139,7 @@ bool useControlSelector = false;
  *
  * Defaults are now set at the top via #DEFINE
  * You can modify the defaults via the web UI.
- 
+ */
 struct sMQTT_info
 {
     String mqttHost;
