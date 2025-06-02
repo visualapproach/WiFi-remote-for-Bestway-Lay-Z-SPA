@@ -74,7 +74,7 @@ PubSubClient *mqttClient = nullptr;
 
 /** Count of how may times we've connected to the MQTT server since booting (should always be 1 or more) */
 int mqtt_connect_count;
-bool enableMqtt = false;
+// bool enableMqtt = false;  /** Now use mqtt_info->useMqtt
 /**  */
 String prevButtonName = "";
 /**  */

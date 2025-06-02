@@ -29,11 +29,9 @@ void gotIP()
     BWC_LOG_P(PSTR("Soft AP > closed\n"), 0);
     BWC_LOG_P(PSTR("Connected as station with localIP: %s\n"), WiFi.localIP().toString().c_str());
     startNTP();
-    // startOTA();
-    // startMqtt();
     BWC_LOG_P(PSTR("end of gotip millis = %d\n"), millis());
     bwc->print(WiFi.localIP().toString());
-    if(mqtt_info->useMqtt) enableMqtt = true;
+    if(mqtt_info->useMqtt) mqttConnect();
     BWC_YIELD;
 }
 
@@ -72,12 +70,12 @@ void setup()
         mqtt_info = new sMQTT_info;
         mqtt_info->mqttBaseTopic = MQTT_BASE_TOPIC_F;
         mqtt_info->mqttClientId = MQTT_CLIENT_ID_F;
-        mqtt_info->mqttHost = F("192.168.0.20");
+        mqtt_info->mqttHost = MQTT_HOST_F;
         mqtt_info->mqttPassword = MQTT_PASSWORD_F;
-        mqtt_info->mqttPort = 1883;
-        mqtt_info->mqttTelemetryInterval = 600;
+        mqtt_info->mqttPort = MQTT_PORT;
+        mqtt_info->mqttTelemetryInterval = MQTT_TELEMETRY_INTERVAL;
         mqtt_info->mqttUsername = MQTT_USER_F;
-        mqtt_info->useMqtt = false;
+        mqtt_info->useMqtt = MQTT_USEMQTT;
         wifi_info = new sWifi_info{.enableWmApFallback = true};
     }
     bwc->setup();
@@ -137,7 +135,7 @@ void loop()
     {
 
         // MQTT
-        if (enableMqtt && mqttClient->loop())
+        if (mqtt_info->useMqtt && mqttClient->loop())
         {
             String msg;
             msg.reserve(32);
@@ -175,7 +173,7 @@ void loop()
         {
             wifi_manual_reconnect();
         }
-        if (enableMqtt && !mqttClient->loop() && (WiFi.status() == WL_CONNECTED))
+        if (mqtt_info->useMqtt && !mqttClient->loop() && (WiFi.status() == WL_CONNECTED))
         {
             BWC_LOG_P(PSTR("MQTT > Not connected\n"),0);
             mqttConnect();
@@ -484,7 +482,7 @@ void stopall()
     delete tempSensors;
     delete oneWire;
     BWC_LOG_P(PSTR("MQTT > stopping\n"),0);
-    if(enableMqtt) mqttClient->disconnect();
+    if(mqtt_info->useMqtt) mqttClient->disconnect();
     if(aWifiClient) delete aWifiClient;
     aWifiClient = nullptr;
     // delete mqttClient; //Compiler nagging about not deleting virtual classes.
@@ -1487,7 +1485,6 @@ void loadMqtt()
     }
 
     mqtt_info->useMqtt = doc[F("enableMqtt")];
-    // enableMqtt = useMqtt; //will be set with start complete timer
     mqtt_info->mqttHost = doc[F("mqttHost")].as<String>();
     mqtt_info->mqttPort = doc[F("mqttPort")];
     mqtt_info->mqttUsername = doc[F("mqttUsername")].as<String>();
@@ -1580,7 +1577,6 @@ void handleSetMqtt()
     }
 
     mqtt_info->useMqtt = doc[F("enableMqtt")];
-    enableMqtt = mqtt_info->useMqtt;
     mqtt_info->mqttHost = doc[F("mqttHost")].as<String>();
     mqtt_info->mqttPort = doc[F("mqttPort")];
     mqtt_info->mqttUsername = doc[F("mqttUsername")].as<String>();
@@ -1891,8 +1887,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
  */
 void mqttConnect()
 {
-    // do not connect if MQTT is not enabled
-    if (!enableMqtt)
+    // do not connect if MQTT is not enabled or WiFI not connected
+    if (!mqtt_info->useMqtt || (WiFi.status() != WL_CONNECTED))
     {
         return;
     }
