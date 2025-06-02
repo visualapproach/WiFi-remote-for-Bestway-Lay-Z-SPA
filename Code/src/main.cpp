@@ -31,7 +31,7 @@ void gotIP()
     startNTP();
     BWC_LOG_P(PSTR("end of gotip millis = %d\n"), millis());
     bwc->print(WiFi.localIP().toString());
-    if(mqtt_info->useMqtt) startMqtt();
+    if(mqtt_info->useMqtt) mqttConnect();
     BWC_YIELD;
 }
 
