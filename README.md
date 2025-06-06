@@ -4,7 +4,15 @@
 Fork based on the great original project by [visualapproach](https://github.com/visualapproach).  
 This version includes:
 
-- 🌐 Internationalization (FR, EN, ES, DE, IT, PT)
+- 🌐 Internationalization (i18n) The UI is now available in six languages:
+
+    🇬🇧 English
+    🇫🇷 Français
+    🇪🇸 Español
+    🇮🇹 Italiano
+    🇩🇪 Deutsch
+    🇵🇹 Português
+
 - 🎨 Updated CSS styles (modern, mobile-first layout)
 - 🖼️ Refreshed UI with a pseudo-LCD display and icon tweaks
 - 📁 All web files are stored under `/data/` and easily editable (HTML, CSS, JS, TXT)
@@ -33,7 +41,28 @@ Here are a few screenshots of the updated UI with multilingual support and enhan
 
 ## How to customize
 
-To add your own language, just duplicate a `.txt` file like `Langue_fr-FR.txt`, rename it to your desired locale, and edit the `key=value` lines.
+Each language is defined in a .txt file (e.g., Langue_fr-FR.txt) located in the /data directory. These files are fully editable and allow easy customization or translation updates.
+
+➕ Add a new language
+
+To add support for another language:
+
+1. Create a new `.txt` file named `Langue_xx-XX.txt` in the `/data` folder, using the same key/value structure.
+2. Edit the file `webconfig.html` and:
+
+   - Add a new `<option>` entry inside the hidden `<select>` used by the script:
+
+     ```html
+     <option value="xx-XX">YourLanguage</option>
+     ```
+
+   - Add a new flag inside the `#lang-flags` block:
+
+     ```html
+     <span class="flag" data-lang="xx-XX" title="YourLanguage">🌐</span>
+     ```
+
+That’s all — the system will automatically pick up and apply the new language file via `i18n.js`.
 
 ---
 
