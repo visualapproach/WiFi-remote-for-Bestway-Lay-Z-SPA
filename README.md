@@ -17,15 +17,17 @@ This version includes:
 
 Here are a few screenshots of the updated UI with multilingual support and enhanced styling:
 
-![Webconfig screenshot](https://raw.githubusercontent.com/dodemodexter/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/Screenshots/01.png)
+![screenshot](https://raw.githubusercontent.com/dodemodexter/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/Screenshots/06.png)
 
-![Index screenshot EN](https://raw.githubusercontent.com/dodemodexter/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/Screenshots/02.png)
+![screenshot](https://raw.githubusercontent.com/dodemodexter/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/Screenshots/01.png)
 
-![Index screenshot FR](https://raw.githubusercontent.com/dodemodexter/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/Screenshots/03.png)
+![screenshot](https://raw.githubusercontent.com/dodemodexter/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/Screenshots/02.png)
 
-![Tooltip screenshot](https://raw.githubusercontent.com/dodemodexter/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/Screenshots/04.png)
+![screenshot](https://raw.githubusercontent.com/dodemodexter/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/Screenshots/03.png)
 
-![Dark mode screenshot](https://raw.githubusercontent.com/dodemodexter/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/Screenshots/05.png)
+![screenshot](https://raw.githubusercontent.com/dodemodexter/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/Screenshots/04.png)
+
+![screenshot](https://raw.githubusercontent.com/dodemodexter/WiFi-remote-for-Bestway-Lay-Z-SPA/master/Code/Screenshots/05.png)
 
 ---
 
