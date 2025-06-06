@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title data-i18n="titre_webconfig">Web Config</title>
+  <meta charset="utf-8">
+  <link rel="icon" type="image/png" sizes="180x180" href="favicon.png">
+  <meta name="theme-color" content="#0f4677">
+  <link rel="stylesheet" href="main.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1">
+</head>
+
+<body>
+  <div id="site">
+    <header>
+      <form id="darkModeForm">
+        <label class="switch">
+          <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+          <span class="slider round"></span>
+        </label>
+      </form>
+      <a href="./">
+        <div id="header">
+          <span data-i18n="header_webconfig">Web Config</span>
+          <span data-i18n="header_module">lay-z-spa module</span>
+        </div>
+      </a>
+      <a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
+
+      <!-- <select> caché pour i18n.js -->
+      <select id="lang-select" style="display:none;">
+        <option value="en-EN">English</option>
+        <option value="fr-FR">Français</option>
+        <option value="es-ES">Español</option>
+		<option value="it-IT">Italiano</option>
+		<option value="pt-PT">Portugal</option>
+		<option value="de-DE">Deutch</option>
+      </select>
+    </header>
+
+    <!-- menu burger -->
+    <div class="topnav" id="topnav">
+      <a href="./" data-i18n="menu_home">Home</a>
+      <a href="hwconfig.html" data-i18n="menu_hwconfig">Hardware Config</a>
+      <a href="config.html" data-i18n="menu_spaconfig">SPA Config</a>
+      <a href="webconfig.html" class="active" data-i18n="menu_webconfig">Web Config</a>
+      <a href="wifi.html" data-i18n="menu_networkconfig">Network Config</a>
+      <a href="mqtt.html" data-i18n="menu_mqttconfig">MQTT Config</a>
+      <a href="/dir/" data-i18n="menu_directory">Directory</a>
+      <a href="upload.html" data-i18n="menu_upload">File Uploader</a>
+      <a href="remove.html" data-i18n="menu_remove">File Remover</a>
+      <a href="chkupdatefw.html" data-i18n="menu_chkupdatefw">Check firmware update</a>
+      <a href="/restart/" data-i18n="menu_restart">Restart ESP</a>
+    </div>
+
+    <!-- bloc drapeaux au-dessus des options -->
+    <section id="language-section">
+      <div id="lang-flags">
+        <span class="flag" data-lang="en-EN" title="English">🇬🇧</span>
+        <span class="flag" data-lang="fr-FR" title="Français">🇫🇷</span>
+        <span class="flag" data-lang="es-ES" title="Español">🇪🇸</span>
+		<span class="flag" data-lang="it-IT" title="Italiano">🇮🇹</span>
+		<span class="flag" data-lang="pt-PT" title="Portugal">🇵🇹</span>
+		<span class="flag" data-lang="de-DE" title="Deutch">🇩🇪</span>
+      </div>
+    </section>
+
+    <!-- section des toggles -->
+    <section>
+      <table>
+        <tr>
+          <td data-i18n="show_section_temp">Show section "Temperature"</td>
+          <td>
+            <label class="switch">
+              <input type="checkbox" id="showSectionTemperature">
+              <span class="slider round"></span>
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td data-i18n="show_section_display">Show section "Display"</td>
+          <td>
+            <label class="switch">
+              <input type="checkbox" id="showSectionDisplay">
+              <span class="slider round"></span>
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td data-i18n="show_section_control">Show section "Control"</td>
+          <td>
+            <label class="switch">
+              <input type="checkbox" id="showSectionControl">
+              <span class="slider round"></span>
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td data-i18n="show_section_buttons">Show section "Buttons"</td>
+          <td>
+            <label class="switch">
+              <input type="checkbox" id="showSectionButtons">
+              <span class="slider round"></span>
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td data-i18n="show_section_timer">Show section "Timer"</td>
+          <td>
+            <label class="switch">
+              <input type="checkbox" id="showSectionTimer">
+              <span class="slider round"></span>
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td data-i18n="show_section_totals">Show section "Totals"</td>
+          <td>
+            <label class="switch">
+              <input type="checkbox" id="showSectionTotals">
+              <span class="slider round"></span>
+            </label>
+          </td>
+        </tr>
+        <tr>
+          <td data-i18n="use_control_selector">Use selector (instead of slider)</td>
+          <td>
+            <label class="switch">
+              <input type="checkbox" id="useControlSelector">
+              <span class="slider round"></span>
+            </label>
+          </td>
+        </tr>
+      </table>
+    </section>
+
+    <footer>
+      <table>
+        <tr>
+          <td colspan="2" class="center">
+            <button id="save" class="button" onclick="buttonConfirm(this); saveWebConfig()" data-i18n="bouton_save">Save</button>
+          </td>
+        </tr>
+      </table>
+    </footer>
+  </div>
+
+  <script>
+    function topNav() {
+      var x = document.getElementById("topnav");
+      if (x.className === "topnav") {
+        x.className += " responsive";
+      } else {
+        x.className = "topnav";
+      }
+    }
+
+    function buttonConfirm(elem, text = "", timeout = 3, reset = true) {
+      var originalText = elem.innerHTML;
+      elem.innerHTML = text == "" ? "&check;" : text;
+      elem.disabled = true;
+      if (reset) {
+        setTimeout(function () {
+          elem.innerHTML = originalText;
+          elem.disabled = false;
+        }, timeout * 1000);
+      }
+    }
+
+    function readWebConfig() {
+      var req = new XMLHttpRequest();
+      req.open('POST', '/getwebconfig/');
+      req.send();
+      req.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+          var json = JSON.parse(req.responseText);
+          document.getElementById('showSectionTemperature').checked = json.SST;
+          document.getElementById('showSectionDisplay').checked     = json.SSD;
+          document.getElementById('showSectionControl').checked     = json.SSC;
+          document.getElementById('showSectionButtons').checked     = json.SSB;
+          document.getElementById('showSectionTimer').checked       = json.SSTIM;
+          document.getElementById('showSectionTotals').checked      = json.SSTOT;
+          document.getElementById('useControlSelector').checked     = json.UCS;
+        }
+      }
+    }
+
+    function saveWebConfig() {
+      localStorage.setItem('showSectionTemperature', document.getElementById('showSectionTemperature').checked);
+      localStorage.setItem('showSectionDisplay', document.getElementById('showSectionDisplay').checked);
+      localStorage.setItem('showSectionControl', document.getElementById('showSectionControl').checked);
+      localStorage.setItem('showSectionButtons', document.getElementById('showSectionButtons').checked);
+      localStorage.setItem('showSectionTimer', document.getElementById('showSectionTimer').checked);
+      localStorage.setItem('showSectionTotals', document.getElementById('showSectionTotals').checked);
+      localStorage.setItem('useControlSelector', document.getElementById('useControlSelector').checked);
+      writeWebConfig();
+    }
+
+    function writeWebConfig() {
+      var req = new XMLHttpRequest();
+      req.open('POST', '/setwebconfig/');
+      var json = {
+        'SST': document.getElementById('showSectionTemperature').checked,
+        'SSD': document.getElementById('showSectionDisplay').checked,
+        'SSC': document.getElementById('showSectionControl').checked,
+        'SSB': document.getElementById('showSectionButtons').checked,
+        'SSTIM': document.getElementById('showSectionTimer').checked,
+        'SSTOT': document.getElementById('showSectionTotals').checked,
+        'UCS': document.getElementById('useControlSelector').checked
+      };
+      req.send(JSON.stringify(json));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      readWebConfig();
+
+      const selectLang = document.getElementById('lang-select');
+      function switchLang(langCode) {
+        if (langCode === 'en-EN') {
+          localStorage.setItem('langueSPA', langCode);
+          location.reload();
+        } else {
+          localStorage.setItem('langueSPA', langCode);
+          selectLang.value = langCode;
+          selectLang.dispatchEvent(new Event('change'));
+        }
+      }
+      document.querySelectorAll('#lang-flags .flag').forEach(span => {
+        span.addEventListener('click', () => {
+          switchLang(span.getAttribute('data-lang'));
+        });
+      });
+    });
+  </script>
+
+  <!-- i18n.js reste inchangé -->
+  <script src="i18n.js"></script>
+  <script src="darkmode.js"></script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+titre_dashboard=Web Config
+header_title=Web Config
+header_subtitle=Lay-Z-Spa Module
+
+titre_home=Lay-Z-Spa Module
+header_by=by visualapproach
+
+titre_calib=Lay-Z-Spa Module | SPA Manual calibration
+titre_calib_header=SPA Manual calibration
+header_module=Lay-Z-Spa Module
+
+menu_home=Home
+menu_hwconfig=Hardware Config
+menu_spaconfig=SPA Config
+menu_webconfig=Web Config
+menu_networkconfig=Network Config
+menu_mqttconfig=MQTT Config
+menu_directory=Directory
+menu_upload=File Uploader
+menu_remove=File Remover
+menu_chkupdatefw=Check firmware update
+menu_restart=Restart ESP
+
+bouton_save=Save
+label_langue=Language :
+
+show_section_temp=Show section "Temperature"
+show_section_display=Show section "Display"
+show_section_control=Show section "Control"
+show_section_buttons=Show section "Buttons"
+show_section_timer=Show section "Timer"
+show_section_totals=Show section "Totals"
+use_control_selector=Use selector (instead of slider)
+
+section_temp_title=Temperature
+label_actual=Actual:
+label_virtual=Virtual:
+label_target=Target:
+
+section_control_title=Control
+control_temp=Temperature
+control_ambient=Ambient Temp.
+control_brightness=Brightness
+
+section_buttons_title=Buttons
+btn_bubbles=Bubbles
+btn_heater=Heater
+btn_pump=Pump
+btn_unit=Unit (F/C)
+btn_hydrojets=Hydrojets
+btn_take_control=Take control
+
+section_timer_title=Timer
+tim_label_chlorine=Last chlorine add was <span id="cltimer">n/a</span> ago.
+tim_label_filter_change=Last filter change was <span id="freplacetimer">n/a</span> ago.
+tim_label_filter_clean=Last filter clean was <span id="fcleantimer">n/a</span> ago.
+tim_label_filter_rinse=Last filter rinse was <span id="frinsetimer">n/a</span> ago.
+btn_reset=reset
+
+section_totals_title=Totals
+totals_time_label=Time:
+totals_ready_label=Ready in:
+totals_uptime_label=Uptime:
+totals_pump_label=Pump:
+totals_heating_label=Heating:
+totals_air_label=Air:
+totals_hydrojets_label=Hydrojets:
+totals_cost_label=Estimated cost:
+
+label_start_temp=Starting temp:
+label_end_temp=Ending temp:
+label_avg_ambient=Avg. ambient temp.:
+label_time_minutes=time (minutes):
+
+footer_mqtt_loading=MQTT: loading status...
+footer_fw_loading=Firmware: loading status...
+footer_model_loading=Model: loading status...
+footer_rssi_loading=RSSI: loading status…
+
+titre_chkupdatefw=Lay-Z-Spa Module | Check firmware update
+titre_chkupdatefw_header=Check firmware update
+chkupdatefw_note=This feature is removed. It was too demanding for the ESP8266 and I couldn't get GitHub to send smaller chunks that the ESP8266 could handle. Sad, because it worked earlier, but I think something changed on the GitHub side.
+
+titre_spaconfig=Lay-Z-Spa Module | SPA Config
+
+label_price_kwh=Price per kWh:
+label_chlorine_interval=Chlorine add (Days):
+label_filter_change_interval=Filter change (Days):
+label_filter_clean_interval=Filter clean (Days):
+label_filter_rinse_interval=Filter rinse (Days):
+label_audio=Audio:
+label_notification=Notification:
+label_notification_time=Notification time (s):
+label_restore_states=Restore last states on startup:
+label_calibrated=Calibrated:
+link_manual_cal=manual cal.
+
+section_display_buttons=Enabled display buttons.
+label_all=All:
+btn_lock=Lock
+btn_timer=Timer
+btn_air=Air
+btn_unit=Unit
+btn_heat=Heat
+btn_pump=Pump
+btn_down=Down
+btn_up=Up
+btn_power=Pwr
+btn_jets=Jets
+
+label_command=Command:
+option_set_target=Set target temp (20-40/68-104)
+option_set_unit=Set unit (0/1)
+option_set_bubbles=Set air bubbles (0/1)
+option_set_heat=Set heater (0/1)
+option_set_pump=Set filter pump (0/1)
+option_reset_queue=Reset queue (-)
+option_reboot_esp=Reboot ESP
+option_internal_cmd=Internal command (get target) (-)
+option_reset_times=Reset times (-)
+option_reset_cl=Reset Cl timer (-)
+option_reset_filter_change=Reset filter change timer (-)
+option_set_jets=Set hydrojets (0/1)
+option_set_brightness=Set display brightness (0-8)
+option_beep=Set beep (0/1 or 2+text=filename)
+option_set_ambient_f=Set ambient temp F (any integer)
+option_set_ambient_c=Set ambient temp C (any integer)
+option_reset_daily=Reset daily meter (any integer)
+option_take_control=Take control (0/1)
+option_full_power=Set full power (0/1)
+option_print_text=Print (text)
+option_set_ready=Set ready time (-)
+option_set_R=Set R (internal use)
+option_reset_filter_rinse=Reset filter rinse timer (-)
+option_reset_filter_clean=Reset filter clean timer (-)
+option_set_power=Set power on/off (0/1)
+
+label_value=Value:
+label_execute_time=Execute time:
+label_repeat_interval=Repeat interval
+unit_seconds=seconds
+note_interval=(0=once, 1h=3600, 1d=86400, 1w=604800)
+label_text=Text
+
+header_command_queue=Command queue
+btn_add_new=Add new
+btn_clear_queue=Clear queue
+btn_save_to_file=Save to file
+btn_load_from_file=Load from file
+btn_set=Set
+btn_del=Del
+
+footer_last_boot_loading=Last boot: loading...
+
+titre_hwtest=Lay-Z-Spa Module | Hardware test
+titre_hwtest_header=Hardware test
+menu_hwtest=Hardware test
+hwtest_instr1=Prepare to connect the cables to together, but don't do it yet.
+hwtest_instr2=Feed +5V and GND to the PCB (red and black wires in the picture). If your board bypasses the 5V from USB to Vin pin you can use USB instead. Don't use both methods!
+link_hwtest=Make the test
+
+titre_hwconfig=Lay-Z-Spa Module | Hardware Config
+titre_hwconfig_header=Hardware Config
+section_hw_title=Hardware:
+label_select_cio=Select your CIO (pump) model:
+option_cio_pre2021=6 wire, pre 2021 (air)
+option_cio_2021=6 wire, 2021 (air)
+option_cio_2021hjt=6 wire, 2021 (air+jet)
+option_cio_54149e=6 wire, 54149E (air)
+option_cio_54173=4 wire, 54173 (air+jet)
+option_cio_54154=4 wire, 54154 (air)
+option_cio_54144=4 wire, 54144 (jet)
+option_cio_54138=4 wire, 54138 (air+jet)
+option_cio_54123=4 wire, 54123 (air)
+
+label_select_dsp=Select your DSP (display) model:
+option_dsp_pre2021=6 wire, pre 2021 (air)
+option_dsp_2021=6 wire, 2021 (air)
+option_dsp_2021hjt=6 wire, 2021 (air+jet)
+option_dsp_54149e=6 wire, 54149E (air)
+option_dsp_54173=4 wire, 54173 (air+jet)
+option_dsp_54154=4 wire, 54154 (air)
+option_dsp_54144=4 wire, 54144 (jet)
+option_dsp_54138=4 wire, 54138 (air+jet)
+option_dsp_54123=4 wire, 54123 (air)
+
+label_select_pcb=Select your PCB:
+option_pcb_v1=V1
+option_pcb_v2=V2
+option_pcb_v2b=V2B
+option_pcb_custom=Custom
+
+label_pinout=Pinout
+th_cio=CIO
+th_dsp=DSP
+
+label_ambient_sensor=Ambient "One Wire Temperature Sensor"
+label_enable=Enable
+label_sensor_pin=Sensor Pin (Dx)
+
+label_power_levels=Power levels (in Watts)
+label_override=Override
+label_power_heat1=Heat stage 1
+label_power_heat2=Heat stage 2
+label_power_pump=Pump
+label_power_idle=Idle
+label_power_air=Air
+label_power_jets=Jets
+
+titre_links=Lay-Z-Spa Module | Links
+link_resetwifi_note=Be aware!
+link_hwtest_note=No prior instructions! Use 
+link_hwtest_note2= instead.
+link_inputs_note=Edge counting on pins. Debug feat.
+
+titre_mqttconfig=Lay-Z-Spa Module | MQTT Config
+label_enable_mqtt=Enable MQTT:
+label_mqtt_host=MQTT host addr:
+label_port=Port:
+label_username=Username:
+label_password=Password:
+label_client_id=Client ID:
+label_base_topic=Base Topic:
+label_telemetry_interval=Telemetry Interval (s):
+
+titre_remover=Lay-Z-Spa Module | File Remover
+titre_remover_header=File Remover
+section_remove_instr=Use this page to remove a file from the ESP8266.
+btn_delete=delete
+
+titre_success=Lay-Z-Spa Module | Success!
+titre_success_header=Success
+success_message=The operation was successful.
+success_btn_home=Home
+success_btn_upload=Upload a file
+success_btn_remove=Remove a file
+
+titre_uploader=Lay-Z-Spa Module | File Uploader
+titre_uploader_header=File Uploader
+upload_instr1=Use this page to upload new files to the ESP8266.
+upload_instr2=You can use compressed (deflated) files (files with a .gz extension) to save space and bandwidth.
+btn_browse=Browse...
+btn_upload=upload
+
+titre_wificonfig=Lay-Z-Spa Module | Network Config
+section_ap=Access Point:
+label_enable_ap=Enable specific AP:
+label_ssid=SSID:
+label_ap_password=Password:
+section_softap=Soft Access Point:
+label_enable_softap=Enable Soft AP (I don't see a reason to uncheck this! You can lock yourself out!):
+section_static_ip=Static IP:
+label_enable_static_ip=Enable static IP:
+label_ip_address=IP Address:
+label_gateway_ip=Gateway IP Address:
+label_subnet_mask=Subnet Mask:
+label_dns_primary=DNS Server (primary):
+label_dns_secondary=DNS Server (secondary):
+section_ntp=NTP server:
+label_ntp_address=Domain name or IP address:
+section_reset_wifi=Reset WiFi Config:
+reset_wifi_note=This button deletes the WiFi credentials.<br />The ESP will restart and enable its own AP (if you have it checked above).<br />Connect to WiFi AP with SSID "layzspa_module######" and go to address http://192.168.4.2/wifi.html
+btn_reset_wifi=reset WiFi

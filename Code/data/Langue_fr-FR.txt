@@ -1,0 +1,320 @@
+titre_dashboard=Configuration Web
+header_title=Configuration Web
+header_subtitle=Module Lay-Z-Spa
+
+titre_home=Module Lay-Z-Spa
+header_by=par visualapproach
+
+titre_calib=Module Lay-Z-Spa | Calibration manuelle SPA
+titre_calib_header=Calibration manuelle SPA
+header_module=Module Lay-Z-Spa
+
+menu_home=Accueil
+menu_hwconfig=Configuration Matérielle
+menu_spaconfig=Configuration SPA
+menu_webconfig=Configuration Web
+menu_networkconfig=Configuration Réseau
+menu_mqttconfig=Configuration MQTT
+menu_directory=Répertoire
+menu_upload=Téléverseur de fichiers
+menu_remove=Suppression de fichiers
+menu_chkupdatefw=Vérifier la mise à jour du firmware
+menu_restart=Redémarrer ESP
+
+bouton_save=Enregistrer
+label_langue=Langue :
+
+show_section_temp=Afficher la section "Température"
+show_section_display=Afficher la section "Affichage"
+show_section_control=Afficher la section "Contrôle"
+show_section_buttons=Afficher la section "Boutons"
+show_section_timer=Afficher la section "Minuterie"
+show_section_totals=Afficher la section "Totaux"
+use_control_selector=Utiliser le sélecteur (au lieu du curseur)
+
+section_temp_title=Température
+label_actual=Réel :
+label_virtual=Virtuel :
+label_target=Cible :
+
+section_control_title=Contrôle
+control_temp=Température
+control_ambient=Température ambiante
+control_brightness=Luminosité
+
+section_buttons_title=Boutons
+btn_bubbles=Bulles
+btn_heater=Chauffage
+btn_pump=Pompe
+btn_unit=Unité (F/C)
+btn_hydrojets=Hydrojets
+btn_take_control=Prendre le contrôle
+
+section_timer_title=Minuterie
+tim_label_chlorine=Dernière addition de chlore il y a <span id="cltimer">n/a</span>.
+tim_label_filter_change=Dernier changement de filtre il y a <span id="freplacetimer">n/a</span>.
+tim_label_filter_clean=Dernier nettoyage de filtre il y a <span id="fcleantimer">n/a</span>.
+tim_label_filter_rinse=Dernier rinçage de filtre il y a <span id="frinsetimer">n/a</span>.
+btn_reset=réinitialiser
+
+section_totals_title=Totaux
+totals_time_label=Temps :
+totals_ready_label=Prêt dans :
+totals_uptime_label=Temps de fonctionnement :
+totals_pump_label=Pompe :
+totals_heating_label=Chauffage :
+totals_air_label=Air :
+totals_hydrojets_label=Hydrojets :
+totals_cost_label=Coût estimé :
+
+label_start_temp=Température de départ :
+label_end_temp=Température finale :
+label_avg_ambient=Température ambiante moy. :
+label_time_minutes=temps (minutes) :
+
+footer_mqtt_loading=MQTT : statut en cours de chargement…
+footer_fw_loading=Firmware : statut en cours de chargement…
+footer_model_loading=Modèle : statut en cours de chargement…
+footer_rssi_loading=RSSI : statut en cours de chargement…
+
+titre_chkupdatefw=Module Lay-Z-Spa | Vérifier la mise à jour du firmware
+titre_chkupdatefw_header=Vérifier la mise à jour du firmware
+chkupdate_message=Cette fonctionnalité a été supprimée. Elle était trop exigeante pour l'ESP8266 et je n’ai pas réussi à faire en sorte que GitHub envoie des paquets assez petits pour qu’il les gère. Dommage, car cela fonctionnait auparavant, mais je pense que quelque chose a changé du côté de GitHub.
+
+tooltip_virtual=L’ESP tente de suivre la température de l’eau même lorsque la pompe est arrêtée et que la température baisse dans la pompe alors que le grand volume d’eau refroidit plus lentement. Utilise la température ambiante. Doit être calibré avant usage. Voir page SPA Config.
+tooltip_brightness=Rappel : Lorsqu’il est réglé sur « 0 », l’écran et tous les boutons de la pompe sont complètement éteints, mais s’allument pendant 5 s lorsqu’on appuie sur un bouton.
+tooltip_time=L’ESP envoie l’heure en UTC. Le navigateur convertit en heure locale.
+tooltip_ready=Nouveau mode d’estimation du temps de chauffe. Fonctionne mieux si la température ambiante réelle est fournie (ex : via Home Assistant).
+tooltip_uptime=Temps de fonctionnement total de l’ESP depuis la dernière remise à zéro du compteur. Le redémarrage continue le comptage.
+
+
+titre_spaconfig=Module Lay-Z-Spa | Configuration SPA
+
+label_price_kwh=Prix par kWh :
+label_chlorine_interval=Ajout de chlore (jours) :
+label_filter_change_interval=Changement de filtre (jours) :
+label_filter_clean_interval=Nettoyage de filtre (jours) :
+label_filter_rinse_interval=Rinçage de filtre (jours) :
+label_audio=Audio :
+label_notification=Notification :
+label_notification_time=Temps de notification (s) :
+label_restore_states=Restaurer les états au démarrage :
+label_calibrated=Calibré :
+link_manual_cal=cal. manuelle
+
+section_display_buttons=Boutons d'affichage activés.
+label_all=Tous :
+btn_lock=Verrou
+btn_timer=Minuterie
+btn_air=Air
+btn_unit=Unité
+btn_heat=Chauffage
+btn_pump=Pompe
+btn_down=Bas
+btn_up=Haut
+btn_power=Puiss.
+btn_jets=Jets
+
+label_command=Commande :
+option_set_target=Définir température cible (20-40/68-104)
+option_set_unit=Définir unité (0/1)
+option_set_bubbles=Définir bulles d'air (0/1)
+option_set_heat=Définir chauffage (0/1)
+option_set_pump=Définir pompe de filtre (0/1)
+option_reset_queue=Réinitialiser file (-)
+option_reboot_esp=Redémarrer ESP
+option_internal_cmd=Commande interne (obtenir cible) (-)
+option_reset_times=Réinitialiser temps (-)
+option_reset_cl=Réinitialiser timer chlore (-)
+option_reset_filter_change=Réinitialiser timer changement filtre (-)
+option_set_jets=Définir hydrojets (0/1)
+option_set_brightness=Définir luminosité affichage (0-8)
+option_beep=Définir bip (0/1 ou 2+texte=nomfichier)
+option_set_ambient_f=Définir température ambiante F (entier)
+option_set_ambient_c=Définir température ambiante C (entier)
+option_reset_daily=Réinitialiser compteur journalier (entier)
+option_take_control=Prendre le contrôle (0/1)
+option_full_power=Définir pleine puissance (0/1)
+option_print_text=Imprimer (texte)
+option_set_ready=Définir temps prêt (-)
+option_set_R=Définir R (usage interne)
+option_reset_filter_rinse=Réinitialiser timer rinçage filtre (-)
+option_reset_filter_clean=Réinitialiser timer nettoyage filtre (-)
+option_set_power=Définir alimentation (0/1)
+
+label_value=Valeur :
+label_execute_time=Heure d'exécution :
+label_repeat_interval=Intervalle de répétition
+unit_seconds=secondes
+note_interval=(0=une fois, 1h=3600, 1j=86400, 1s=604800)
+label_text=Texte
+
+header_command_queue=File de commandes
+btn_add_new=Ajouter
+btn_clear_queue=Vider file
+btn_save_to_file=Enregistrer dans fichier
+btn_load_from_file=Charger depuis fichier
+btn_set=Définir
+btn_del=Suppr
+
+footer_last_boot_loading=Dernier démarrage : chargement…
+
+titre_hwtest=Module Lay-Z-Spa | Test Matériel
+titre_hwtest_header=Test Matériel
+menu_hwtest=Test Matériel
+hwtest_instr1=Préparez-vous à connecter les câbles ensemble, mais ne le faites pas encore.
+hwtest_instr2=Alimentez la carte en +5V et GND (fils rouge et noir sur l'image). Si votre carte bypass le 5V de l’USB vers la broche Vin, vous pouvez utiliser l’USB à la place. N’utilisez pas les deux méthodes !
+link_hwtest=Effectuer le test
+
+titre_hwconfig=Module Lay-Z-Spa | Configuration Matérielle
+titre_hwconfig_header=Configuration Matérielle
+section_hw_title=Matériel :
+label_select_cio=Sélectionnez votre modèle CIO (pompe) :
+option_cio_pre2021=6 fils, pré 2021 (air)
+option_cio_2021=6 fils, 2021 (air)
+option_cio_2021hjt=6 fils, 2021 (air+jet)
+option_cio_54149e=6 fils, 54149E (air)
+option_cio_54173=4 fils, 54173 (air+jet)
+option_cio_54154=4 fils, 54154 (air)
+option_cio_54144=4 fils, 54144 (jet)
+option_cio_54138=4 fils, 54138 (air+jet)
+option_cio_54123=4 fils, 54123 (air)
+
+label_select_dsp=Sélectionnez votre modèle DSP (affichage) :
+option_dsp_pre2021=6 fils, pré 2021 (air)
+option_dsp_2021=6 fils, 2021 (air)
+option_dsp_2021hjt=6 fils, 2021 (air+jet)
+option_dsp_54149e=6 fils, 54149E (air)
+option_dsp_54173=4 fils, 54173 (air+jet)
+option_dsp_54154=4 fils, 54154 (air)
+option_dsp_54144=4 fils, 54144 (jet)
+option_dsp_54138=4 fils, 54138 (air+jet)
+option_dsp_54123=4 fils, 54123 (air)
+
+label_select_pcb=Sélectionnez votre PCB :
+option_pcb_v1=V1
+option_pcb_v2=V2
+option_pcb_v2b=V2B
+option_pcb_custom=Personnalisé
+
+label_pinout=Brochage
+th_cio=CIO
+th_dsp=DSP
+
+label_ambient_sensor=Capteur de température "One Wire"
+label_enable=Activer
+label_sensor_pin=Broche du capteur (Dx)
+
+label_power_levels=Niveaux de puissance (en Watts)
+label_override=Surcharge
+label_power_heat1=Chauffage étape 1
+label_power_heat2=Chauffage étape 2
+label_power_pump=Pompe
+label_power_idle=Inactif
+label_power_air=Air
+label_power_jets=Jets
+
+titre_links=Module Lay-Z-Spa | Liens
+link_resetwifi_note=Attention !
+link_hwtest_note=Pas d’instructions préalables ! Utilise 
+link_hwtest_note2= à la place.
+link_inputs_note=Comptage des impulsions sur les broches. Fonction de debug.
+
+titre_mqttconfig=Module Lay-Z-Spa | Configuration MQTT
+label_enable_mqtt=Activer MQTT :
+label_mqtt_host=Adresse du serveur MQTT :
+label_port=Port :
+label_username=Nom d’utilisateur :
+label_password=Mot de passe :
+label_client_id=ID client :
+label_base_topic=Topic de base :
+label_telemetry_interval=Intervalle télémétrie (s) :
+
+titre_remove=Suppression de fichiers
+header_remove=Suppression de fichiers
+header_module=module lay-z-spa
+menu_remove=Suppression de fichiers
+remove_instruction=Utilisez cette page pour supprimer un fichier créé sur l’ESP8266.
+btn_remove=Supprimer
+alert_enter_filename=Veuillez entrer un nom de fichier.
+alert_file_removed=Le fichier a été supprimé.
+
+
+titre_success=Module Lay-Z-Spa | Succès !
+titre_success_header=Succès
+success_message=L’opération a réussi.
+success_btn_home=Accueil
+success_btn_upload=Téléverser un fichier
+success_btn_remove=Supprimer un fichier
+
+titre_uploader=Module Lay-Z-Spa | Téléversement de fichiers
+titre_uploader_header=Téléverseur de fichiers
+upload_instr1=Utilisez cette page pour téléverser de nouveaux fichiers vers l’ESP8266.
+upload_instr2=Vous pouvez utiliser des fichiers compressés (déflatés) (fichiers avec extension .gz) pour économiser de l’espace et de la bande passante.
+btn_browse=Parcourir...
+btn_upload=téléverser
+
+# ========================
+# Clés pour wifi.html 
+# ========================
+
+# Titre de la page
+titre_networkconfig=Configuration Réseau
+
+# En-tête (header) : titre et sous-titre
+header_networkconfig=Configuration Réseau
+header_module=module lay-z-spa
+
+# Section "Point d’accès"
+section_ap=Point d’accès :
+label_enableAp=Activer Point d’accès dédié :
+tooltip_enableAp=Coché : l’ESP tentera de se connecter avec ces identifiants ; sinon, il utilisera les derniers identifiants connus.
+label_ssid=SSID :
+label_password=Mot de passe :
+
+# Section "Point d’accès Soft"
+section_softap=Point d’accès Soft :
+label_enableWM=Activer Point d’accès Soft (attention : ne cochez que si nécessaire !) :
+tooltip_enableWM=Activez le point d’accès de l’ESP pour pouvoir vous y connecter lorsque votre réseau n’est pas disponible ; si votre réseau n’est pas dispo, l’ESP démarrera son propre point d’accès.
+
+# Section "IP statique"
+section_static_ip=IP statique :
+label_enable_static_ip=Activer IP statique :
+label_ip_address=Adresse IP :
+tooltip_ipStatic=Laissez vide pour DHCP ou saisissez une IP valide.
+label_gateway_ip=Adresse IP passerelle :
+tooltip_gateway=Souvent l’adresse de votre routeur. Laissez vide pour la valeur par défaut.
+label_subnet_mask=Masque de sous-réseau :
+tooltip_netmask=Généralement 255.255.255.0. Laissez vide pour la valeur par défaut.
+label_dns_primary=Serveur DNS (principal) :
+tooltip_dnsPrimary=Utilisez l’IP DNS de votre routeur ou de votre FAI. Laissez vide pour la valeur par défaut.
+label_dns_secondary=Serveur DNS (secondaire) :
+tooltip_dnsSecondary=DNS secondaire. Laissez vide s’il n’y en a pas.
+
+# Section "Serveur NTP"
+section_ntp=Serveur NTP :
+label_ntp_address=Nom de domaine ou adresse IP :
+tooltip_ntpServer=Laissez vide pour utiliser pool.ntp.org (par défaut).
+
+# Bouton "Enregistrer"
+bouton_save=Enregistrer
+
+# Section "Réinitialiser configuration WiFi"
+section_reset_wifi=Réinitialiser configuration WiFi :
+reset_wifi_note=Ce bouton supprime les identifiants WiFi.<br />L’ESP redémarrera et activera son propre Point d’accès (si vous l’avez coché ci-dessus).<br />Connectez-vous au Point d’accès WiFi SSID "layzspa_module######" et allez à l’adresse http://192.168.4.2/wifi.html
+btn_reset_wifi=réinitialiser WiFi
+
+# Clé pour le menu (affichée dans le burger)
+menu_networkconfig=Configuration Réseau
+
+
+
+tooltip_pcb_v2b_info=Identique à la PCB V2 mais avec fils déplacés vers d’autres broches pour une meilleure compatibilité avec certaines pompes
+tooltip_pcb_custom_info=Si vous utilisez votre propre carte – remplissez le brochage ci-dessous ! Laissez les champs vides si non utilisés.
+tooltip_pinout_info=D0–D8 tel qu’étiqueté sur l’ESP, mais sans le ‘D’. L’ESP convertira en numéros GPIO.
+tooltip_ambient_sensor_info=Nécessite un capteur DS18B20 connecté à la broche indiquée “Sensor Pin”. Le capteur mettra à jour la “Température ambiante” périodiquement.
+tooltip_power_levels_info=Personnalise les niveaux de puissance pour différents modes de fonctionnement.
+
+tooltip_calibrated_info=Si coché, la température virtuelle est calibrée. Refaites la calibration en décochant et en appuyant sur le bouton SAVE.
+tooltip_calibrate_instr=Calibrer en gardant la résistance OFF et la pompe ON jusqu’à ce que la température ait chuté de quelques degrés. Ne touchez pas aux jets, bulles, etc. entre-temps. La température de l’eau doit différer de plusieurs degrés de l’ambiante au départ.
+

@@ -1,0 +1,17 @@
+{
+    "name": "Lay-Z-Spa Module",
+    "short_name": "Hot Tub WiFi",
+    "display": "fullscreen",
+    "theme_color": "#0f4677",
+    "background_color": "#fff",
+    "orientation": "portrait",
+    "description": "An app to access the WiFi module of your Lay-Z-Spa Hot Tub",
+    "icons": [
+        {
+            "src": "\/favicon.png",
+            "sizes": "180x180",
+            "type": "image\/png",
+            "density": "3.0"
+        }
+    ]
+}

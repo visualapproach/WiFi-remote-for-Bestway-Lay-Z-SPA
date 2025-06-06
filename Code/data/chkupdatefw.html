@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title data-i18n="titre_chkupdatefw">Check Firmware Update</title>
+  <link rel="icon" type="image/png" sizes="180x180" href="favicon.png">
+  <meta name="theme-color" content="#0f4677">
+  <link rel="stylesheet" href="main.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1">
+</head>
+
+<body>
+  <div id="site">
+    <!-- ==================== HEADER ==================== -->
+    <header>
+      <form id="darkModeForm">
+        <label class="switch">
+          <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+          <span class="slider round"></span>
+        </label>
+      </form>
+      <a href="./">
+        <div id="header">
+          <span data-i18n="header_chkupdatefw">Check Firmware Update</span>
+          <span data-i18n="header_module">lay-z-spa module</span>
+        </div>
+      </a>
+      <a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
+
+
+    </header>
+
+    <!-- ==================== MENU BURGER ==================== -->
+    <div class="topnav" id="topnav">
+      <a href="./" data-i18n="menu_home">Home</a>
+      <a href="hwconfig.html" data-i18n="menu_hwconfig">Hardware Config</a>
+      <a href="config.html" data-i18n="menu_spaconfig">SPA Config</a>
+      <a href="webconfig.html" data-i18n="menu_webconfig">Web Config</a>
+      <a href="wifi.html" data-i18n="menu_networkconfig">Network Config</a>
+      <a href="mqtt.html" data-i18n="menu_mqttconfig">MQTT Config</a>
+      <a href="/dir/" data-i18n="menu_directory">Directory</a>
+      <a href="upload.html" data-i18n="menu_upload">File Uploader</a>
+      <a href="remove.html" data-i18n="menu_remove">File Remover</a>
+      <a href="chkupdatefw.html" class="active" data-i18n="menu_chkupdatefw">Check Firmware Update</a>
+      <a href="/restart/" data-i18n="menu_restart">Restart ESP</a>
+    </div>
+
+    <!-- ==================== CONTENU PRINCIPAL ==================== -->
+    <section>
+      <p data-i18n="chkupdate_message">
+        Cette fonctionnalité a été supprimée. Elle était trop exigeante pour l'ESP8266 et je n’ai pas réussi à faire en sorte que GitHub envoie des paquets assez petits pour qu’il les gère. Dommage, car cela fonctionnait auparavant, mais je pense que quelque chose a changé du côté de GitHub.
+      </p>
+    </section>
+  </div>
+
+  <!-- ==================== SCRIPTS ==================== -->
+  <script>
+    function topNav() {
+      var x = document.getElementById("topnav");
+      if (x.className === "topnav") {
+        x.className += " responsive";
+      } else {
+        x.className = "topnav";
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Rien à charger ici – simple message statique.
+      // i18n.js prendra en charge la traduction lorsque la langue change.
+    });
+  </script>
+
+  <!-- i18n.js ne change pas -->
+  <script src="i18n.js"></script>
+  <script src="darkmode.js" type="text/javascript"></script>
+</body>
+</html>

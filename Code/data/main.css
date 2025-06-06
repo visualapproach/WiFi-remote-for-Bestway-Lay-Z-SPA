@@ -1,0 +1,649 @@
+ :root {
+      --accent-color: #0f4677;
+      --action-btn-color-dark: #cfcfcf9c;
+      --action-btn-color: #9898989c;
+      --btn-round-color: #545454;
+      
+      /* Nouvelles variables responsive - site plus large */
+      --container-max-width: min(100vw, 650px);
+      --container-padding: clamp(15px, 4vw, 25px);
+      --section-padding: clamp(15px, 4vw, 25px);
+      --font-size-base: clamp(14px, 3.5vw, 16px);
+      --header-height: clamp(60px, 15vw, 80px);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      color: #444;
+      margin: 0;
+      font-size: var(--font-size-base);
+      line-height: 1.5;
+    }
+
+    .darkmode body {
+      color: #b0b0b0;
+    }
+
+    /* Container principal responsive */
+    div#site {
+      width: 100%;
+      max-width: var(--container-max-width);
+      margin: 0 auto;
+      background: #dfdfdf;
+      overflow: hidden;
+      position: relative;
+      min-height: 100vh;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    .darkmode #site {
+      background: #333;
+    }
+
+    header,
+    section,
+    footer {
+      position: relative;
+      padding: var(--container-padding);
+    }
+
+    /* Header responsive */
+    header {
+      text-align: center;
+      background-color: var(--accent-color);
+      padding: var(--container-padding);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      height: var(--header-height);
+      position: relative;
+      left: 0;
+      z-index: 12;
+    }
+
+    #header {
+      font-size: clamp(0.9rem, 4vw, 1.1rem);
+      position: relative;
+      font-weight: normal;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    #header span:nth-child(1) {
+      font-size: 1em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    #header span:nth-child(2) {
+      font-size: 0.8em;
+      text-transform: lowercase;
+      opacity: 0.9;
+    }
+
+    #header::before {
+      content: "";
+	  background-image: url("./visualapproach.png");
+      width: clamp(28px, 8vw, 38px);
+      height: clamp(28px, 8vw, 38px);
+      background-size: contain;
+      background-repeat: no-repeat;
+      position: absolute;
+      left: calc(-1 * clamp(32px, 10vw, 43px));
+      filter: grayscale(0.2);
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    /* Menu burger plus visible */
+    .topnavicon {
+      width: clamp(26px, 7vw, 32px);
+      height: clamp(26px, 7vw, 32px);
+      text-decoration: none;
+      color: #fff;
+      font-size: clamp(1.8em, 5vw, 2.2em);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 6px;
+      transition: background-color 0.2s ease;
+      background-color: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .topnavicon:hover {
+      background-color: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    .topnavicon::before {
+      content: "\00D7";
+      line-height: 0.8;
+      position: absolute;
+      opacity: 0;
+      transition: 0.2s;
+    }
+
+    .show-before.topnavicon::before {
+      opacity: 1;
+    }
+
+    .topnavicon::after {
+      content: "\2630";
+      line-height: 0.8;
+      position: absolute;
+      transition: 0.2s;
+      opacity: 1;
+      display: inline-block;
+    }
+
+    .show-before.topnavicon::after {
+      opacity: 0;
+    }
+
+    .topnav {
+      overflow: hidden;
+      background-color: #ccc;
+      width: 100%;
+      left: 0;
+      position: absolute;
+      top: -100vh;
+      z-index: 10;
+      height: calc(100vh - var(--header-height));
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      transition: 0.3s all;
+      gap: 0.5em;
+      padding: var(--container-padding);
+      padding-top: 1em;
+    }
+
+    .darkmode .topnav {
+      background: linear-gradient(180deg, rgb(65, 65, 65) 0%, rgb(44, 44, 44) 100%);
+    }
+
+    .topnav.responsive {
+      top: var(--header-height);
+    }
+
+    .topnav a {
+      display: block;
+      color: inherit;
+      text-align: center;
+      padding: clamp(12px, 3vw, 16px);
+      text-decoration: none;
+      font-size: clamp(0.9rem, 3.5vw, 1rem);
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .topnav a:hover {
+      color: #444;
+      background-color: #ddd;
+      transform: translateY(-1px);
+    }
+
+    /* Section display */
+    #sectionDisplay {
+      padding: 0;
+      width: 100%;
+      left: 0;
+      height: clamp(60px, 18vw, 100px);
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      margin: 0;
+      margin-bottom: clamp(8px, 2vw, 12px);
+      border: 2px solid #333;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    }
+
+    div#display {
+      color: #ff2020;
+      font-size: clamp(2rem, 8vw, 4rem);
+      text-align: center;
+      background: transparent;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Press Start 2P', monospace;
+      font-weight: normal;
+      letter-spacing: 1px;
+      text-shadow: 0 0 0px #f00, 0 0 0px #f00, 0 0 25px #f00;
+      line-height: 1;
+      white-space: nowrap;
+      padding: 9px;
+      margin: 0;
+      text-indent: 0;
+      position: relative;
+    }
+
+    /* Sections */
+    section {
+      padding: var(--section-padding);
+      background: #e2e2e2;
+      margin-bottom: 2px;
+    }
+
+    section:nth-of-type(2n + 1) {
+      background: #ededed;
+    }
+
+    .darkmode section {
+      background: #4d4d4d;
+    }
+
+    .darkmode section:nth-of-type(2n + 1) {
+      background: #3a3a3a;
+    }
+
+    h2 {
+      margin: 0 0 clamp(12px, 3vw, 16px) 0;
+      font-size: clamp(1rem, 4vw, 1.2rem);
+      text-transform: capitalize;
+      font-weight: 300;
+      letter-spacing: 0.6px;
+      color: #6b6b6b;
+      border-bottom: 1px solid rgba(107, 107, 107, 0.2);
+      padding-bottom: 8px;
+    }
+
+    .darkmode h2 {
+      color: #848484;
+      border-bottom-color: rgba(132, 132, 132, 0.2);
+    }
+
+    /* Tables responsives */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table td {
+      padding: clamp(6px, 2vw, 10px);
+      vertical-align: middle;
+    }
+
+    /* Boutons améliorés */
+    .button,
+    .button_red {
+      text-decoration: none;
+      border: none;
+      color: white;
+      background-color: var(--accent-color);
+      padding: clamp(8px, 2.5vw, 12px) clamp(16px, 5vw, 24px);
+      font-size: clamp(0.75rem, 3vw, 0.85rem);
+      cursor: pointer;
+      border: 1px solid #d6d6d6;
+      border-radius: 25px;
+      outline: none;
+      margin: 4px auto;
+      display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 1.1px;
+      transition: all 0.2s ease;
+      min-height: 40px;
+      min-width: 80px;
+    }
+
+    .button:hover,
+    .button_red:hover {
+      background-color: #0076d1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transform: translateY(-1px);
+    }
+
+    /* Contrôles range améliorés */
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: clamp(30px, 8vw, 38px);
+      background: #ccc;
+      border-radius: 25px;
+      padding: 0 4px;
+      margin: 8px 0;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: clamp(20px, 6vw, 26px);
+      width: clamp(20px, 6vw, 26px);
+      border-radius: 50%;
+      background: var(--accent-color);
+      cursor: ew-resize;
+      border: 2px solid white;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      background: #0076d1;
+      transform: scale(1.1);
+    }
+
+    /* Switches améliorés avec états chauffage */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: clamp(50px, 12vw, 60px);
+      height: clamp(28px, 7vw, 34px);
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.3s ease;
+      border-radius: 25px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: clamp(20px, 5.5vw, 26px);
+      width: clamp(20px, 5.5vw, 26px);
+      left: 4px;
+      bottom: 50%;
+      transform: translateY(50%);
+      background-color: var(--accent-color);
+      border: 2px solid white;
+      transition: 0.3s ease;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent-color);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(clamp(16px, 4vw, 22px)) translateY(50%);
+      background-color: white;
+    }
+
+    /* États spéciaux pour le chauffage */
+    .slider.heateron {
+      background-color: #28a745 !important;
+    }
+
+    .slider.heateron:before {
+      background-color: #28a745 !important;
+      border-color: white !important;
+    }
+
+    input:checked + .slider.heateron {
+      background-color: #dc3545 !important;
+    }
+
+    input:checked + .slider.heateron:before {
+      background-color: white !important;
+      transform: translateX(clamp(16px, 4vw, 22px)) translateY(50%);
+    }
+
+    .slider.heateroff {
+      background-color: #28a745 !important;
+    }
+
+    .slider.heateroff:before {
+      background-color: white !important;
+      border-color: #28a745 !important;
+    }
+
+    input:checked + .slider.heateroff {
+      background-color: #28a745 !important;
+    }
+
+    input:checked + .slider.heateroff:before {
+      background-color: white !important;
+      transform: translateX(clamp(16px, 4vw, 22px)) translateY(50%);
+    }
+
+    /* Sélecteurs de température améliorés */
+    .selector {
+      position: relative;
+      width: clamp(80px, 20vw, 120px);
+      border-radius: 15px;
+      margin: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .selector .selectorbutton {
+      width: 100%;
+      height: clamp(28px, 7vw, 35px);
+      color: #fff;
+      font-size: clamp(16px, 4vw, 20px);
+      background-color: var(--accent-color);
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .selector .selectorbutton.selectortop {
+      border-radius: 15px 15px 0 0;
+    }
+
+    .selector .selectorbutton.selectorbottom {
+      border-radius: 0 0 15px 15px;
+    }
+
+    .selector .selectorbutton:hover {
+      background-color: #0076d1;
+    }
+
+    .selector .wrapper {
+      background: #ccc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: clamp(45px, 12vw, 60px);
+    }
+
+    .selector .numDisplay {
+      color: var(--accent-color);
+      font-size: clamp(24px, 7vw, 34px);
+      font-weight: bold;
+      position: relative;
+      width: fit-content;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .selector .numDisplay::after {
+      content: "°";
+      position: absolute;
+      right: -12px;
+      top: 0;
+      font-weight: 200;
+      font-size: 0.7em;
+    }
+
+    /* Structure pour les sélecteurs de température (avec numDisplay) */
+    .selector .numDisplay {
+      color: var(--accent-color);
+      font-size: clamp(24px, 7vw, 34px);
+      font-weight: bold;
+      position: relative;
+      width: fit-content;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 40px;
+    }
+
+    /* Symbole degré pour température seulement */
+    .selector .numDisplay::after {
+      content: "°";
+      position: absolute;
+      right: -12px;
+      top: 0;
+      font-weight: 200;
+      font-size: 0.7em;
+    }
+
+    /* Structure pour le sélecteur de luminosité (avec input) */
+    .selector .selectorvalue {
+      width: 100%;
+      height: clamp(45px, 12vw, 60px);
+      border: none;
+      color: var(--accent-color);
+      font-size: clamp(24px, 7vw, 34px);
+      text-align: center;
+      background-color: #ccc;
+      padding: 0;
+      border-radius: 0;
+      appearance: textfield;
+      pointer-events: none;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .selector .selectorvalue::-webkit-outer-spin-button,
+    .selector .selectorvalue::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .selector .selectorvalue[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    /* Tooltips améliorés */
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      width: clamp(18px, 4.5vw, 22px);
+      height: clamp(18px, 4.5vw, 22px);
+      font-size: clamp(0.8rem, 3vw, 1rem);
+      text-align: center;
+      text-decoration: none;
+      color: #fff;
+      background-color: var(--accent-color);
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      margin-left: 6px;
+      line-height: clamp(18px, 4.5vw, 22px);
+    }
+
+    .tooltip:before {
+      content: attr(data-text);
+      position: absolute;
+      top: 30%;
+      transform: translateY(-30%);
+      left: 100%;
+      margin-left: 15px;
+      width: clamp(180px, 40vw, 220px);
+      color: #444;
+      background: #fff;
+      text-align: left;
+      padding: clamp(8px, 2vw, 12px);
+      border-radius: 8px;
+      border: 2px solid var(--accent-color);
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.2s ease;
+      font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .tooltip:hover:before {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* Footer responsive */
+    footer {
+      background: rgba(0,0,0,0.05);
+      font-size: clamp(0.75rem, 2.5vw, 0.85rem);
+      text-align: center;
+      padding: var(--section-padding);
+    }
+
+    footer p {
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    /* Media queries pour très petits écrans */
+    @media (max-width: 320px) {
+      :root {
+        --container-padding: 8px;
+        --section-padding: 12px;
+      }
+      
+      table td {
+        padding: 4px;
+      }
+      
+      .button, .button_red {
+        padding: 6px 12px;
+        font-size: 0.7rem;
+      }
+    }
+
+    /* Media queries pour grands écrans */
+    @media (min-width: 768px) {
+      div#site {
+        max-width: 650px;
+        margin-top: 20px;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      
+      header {
+        border-radius: 12px 12px 0 0;
+      }
+    }
+
+    /* Animations douces */
+    * {
+      transition: all 0.2s ease;
+    }
+
+    /* États d'erreur */
+    .error header {
+      background-color: rgb(132, 39, 39);
+      animation: colorfade 1s linear 0s infinite alternate-reverse;
+    }
+
+    @keyframes colorfade {
+      0% { background-color: rgb(132, 39, 39); }
+      100% { background-color: rgb(172, 82, 82); }
+    }
+
+    /* Mode sombre amélioré */
+    .darkmode .selector .wrapper {
+      background: #555;
+    }
+    
+    .darkmode .tooltip:before {
+      background: #2a2a2a;
+      color: #ccc;
+    }
+    
+    .darkmode footer {
+      background: rgba(255,255,255,0.05);
+    }
