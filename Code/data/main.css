@@ -636,7 +636,7 @@
 
     /* Mode sombre amélioré */
     .darkmode .selector .wrapper {
-      background: #555;
+      background: #CCC;
     }
     
     .darkmode .tooltip:before {
