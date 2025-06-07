@@ -11,6 +11,7 @@
 </head>
 
 <body>
+
   <div id="site">
     <!-- ==================== HEADER ==================== -->
     <header>
@@ -476,6 +477,7 @@
         return false;
       }
       return true;
+
     }
 
     function updateNumber(opt, parent) {
@@ -749,6 +751,7 @@
       return d + "d " + String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
     }
 
+
     function sendCommand(cmd) {
       if (typeof cmdMap[cmd] === "undefined") {
         console.log("invalid command");
@@ -806,6 +809,7 @@
       var obj = { CMD: cmdMap[cmd], VALUE: value, XTIME: 0, INTERVAL: 0, TXT: "" };
       connection.send(JSON.stringify(obj));
       console.log(JSON.stringify(obj));
+
     }
 
     function rgb(r, g, b) {

@@ -539,6 +539,9 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _new_data_available = true;
         break;
     case SETBEEP:
+        if(val == 99) {
+            while(1);//cause an exception for testing purpose
+        }
         if(val == 0) _beep();
         else if(val == 1) _accord();
         else _load_melody_json(txt);
@@ -1077,6 +1080,9 @@ void BWC::getJSONTimes(String &rtn) {
     if(t2r == -1) t2r_string = F("Never");
     doc[F("T2R")] = t2r;
     doc[F("RS")] = t2r_string;
+    /* DMI = max Display Messages Interval */
+    doc[F("DMI")] = dsp->max_time_between_transmissions_ms;
+    dsp->max_time_between_transmissions_ms = 0;
     String s;
     s.reserve(256);
     s = cio->debug();
@@ -1143,7 +1149,7 @@ String BWC::getJSONCommandQueue(){
     #ifdef ESP8266
     ESP.wdtFeed();
     #endif
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(8192);
     // Set the values in the document
     doc[F("LEN")] = _command_que.size();
     for(unsigned int i = 0; i < _command_que.size(); i++){
@@ -1495,7 +1501,7 @@ void BWC::loadCommandQueue(){
         return;
     }
 
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(8192);
     // Deserialize the JSON document
     DeserializationError error = deserializeJson(doc, file);
     if (error) {
@@ -1579,6 +1585,7 @@ void BWC::_saveStates() {
     BWC_YIELD;
 }
 
+/*TODO: do not save commands that has no interval and is in the past (to avoid repeating crashes)*/
 void BWC::_saveCommandQueue(){
     _save_cmdq_needed = false;
     #ifdef ESP8266
@@ -1594,7 +1601,7 @@ void BWC::_saveCommandQueue(){
     /*Do not save instant reboot command. Don't ask me how I know.*/
     if(_command_que.size())
         if(_command_que[0].cmd == REBOOTESP && _command_que[0].interval == 0) return;
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(8192);
 
     // Set the values in the document
     doc[F("LEN")] = _command_que.size();
@@ -1605,15 +1612,14 @@ void BWC::_saveCommandQueue(){
         doc[F("INTERVAL")][i] = _command_que[i].interval;
         doc[F("TXT")][i] = _command_que[i].text;
     }
-    String s;
-    size_t err = serializeJson(doc, s);
-    file.print(s);
     // Serialize JSON to file
+    size_t err = serializeJson(doc, file);
     if (err == 0) {
         // BWC_LOG_P(PSTR("\nFailed to serialize cmdq.json\n"),0);
     } else {
         // BWC_LOG_P(PSTR("%s\n"),s.c_str());
     }
+
     file.close();
     BWC_YIELD;
 }

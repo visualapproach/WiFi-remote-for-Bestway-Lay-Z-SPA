@@ -29,11 +29,9 @@ void gotIP()
     BWC_LOG_P(PSTR("Soft AP > closed\n"), 0);
     BWC_LOG_P(PSTR("Connected as station with localIP: %s\n"), WiFi.localIP().toString().c_str());
     startNTP();
-    // startOTA();
-    // startMqtt();
     BWC_LOG_P(PSTR("end of gotip millis = %d\n"), millis());
     bwc->print(WiFi.localIP().toString());
-    if(mqtt_info->useMqtt) enableMqtt = true;
+    if(mqtt_info->useMqtt) mqttConnect();
     BWC_YIELD;
 }
 
@@ -72,12 +70,12 @@ void setup()
         mqtt_info = new sMQTT_info;
         mqtt_info->mqttBaseTopic = MQTT_BASE_TOPIC_F;
         mqtt_info->mqttClientId = MQTT_CLIENT_ID_F;
-        mqtt_info->mqttHost = F("192.168.0.20");
+        mqtt_info->mqttHost = MQTT_HOST_F;
         mqtt_info->mqttPassword = MQTT_PASSWORD_F;
-        mqtt_info->mqttPort = 1883;
-        mqtt_info->mqttTelemetryInterval = 600;
+        mqtt_info->mqttPort = MQTT_PORT;
+        mqtt_info->mqttTelemetryInterval = MQTT_TELEMETRY_INTERVAL;
         mqtt_info->mqttUsername = MQTT_USER_F;
-        mqtt_info->useMqtt = true;
+        mqtt_info->useMqtt = MQTT_USEMQTT;
         wifi_info = new sWifi_info{.enableWmApFallback = true};
     }
     bwc->setup();
@@ -137,7 +135,7 @@ void loop()
     {
 
         // MQTT
-        if (enableMqtt && mqttClient->loop())
+        if (mqtt_info->useMqtt && mqttClient->loop())
         {
             String msg;
             msg.reserve(32);
@@ -175,7 +173,7 @@ void loop()
         {
             wifi_manual_reconnect();
         }
-        if (enableMqtt && !mqttClient->loop() && (WiFi.status() == WL_CONNECTED))
+        if (mqtt_info->useMqtt && !mqttClient->loop() && (WiFi.status() == WL_CONNECTED))
         {
             BWC_LOG_P(PSTR("MQTT > Not connected\n"),0);
             mqttConnect();
@@ -484,7 +482,7 @@ void stopall()
     delete tempSensors;
     delete oneWire;
     BWC_LOG_P(PSTR("MQTT > stopping\n"),0);
-    if(enableMqtt) mqttClient->disconnect();
+    if(mqtt_info->useMqtt) mqttClient->disconnect();
     if(aWifiClient) delete aWifiClient;
     aWifiClient = nullptr;
     // delete mqttClient; //Compiler nagging about not deleting virtual classes.
@@ -1487,7 +1485,6 @@ void loadMqtt()
     }
 
     mqtt_info->useMqtt = doc[F("enableMqtt")];
-    // enableMqtt = useMqtt; //will be set with start complete timer
     mqtt_info->mqttHost = doc[F("mqttHost")].as<String>();
     mqtt_info->mqttPort = doc[F("mqttPort")];
     mqtt_info->mqttUsername = doc[F("mqttUsername")].as<String>();
@@ -1580,7 +1577,6 @@ void handleSetMqtt()
     }
 
     mqtt_info->useMqtt = doc[F("enableMqtt")];
-    enableMqtt = mqtt_info->useMqtt;
     mqtt_info->mqttHost = doc[F("mqttHost")].as<String>();
     mqtt_info->mqttPort = doc[F("mqttPort")];
     mqtt_info->mqttUsername = doc[F("mqttUsername")].as<String>();
@@ -1891,8 +1887,8 @@ void mqttCallback(char* topic, byte* payload, unsigned int length)
  */
 void mqttConnect()
 {
-    // do not connect if MQTT is not enabled
-    if (!enableMqtt)
+    // do not connect if MQTT is not enabled or WiFI not connected
+    if (!mqtt_info->useMqtt || (WiFi.status() != WL_CONNECTED))
     {
         return;
     }
@@ -2043,6 +2039,90 @@ void setTemperatureFromSensor()
             }
     }
     BWC_YIELD;
+}
+
+extern "C" void custom_crash_callback(struct rst_info * rst_info, uint32_t stack, uint32_t stack_end )
+{
+    File file = LittleFS.open(F("crashlog.txt"), "a");
+    String crashinfo;
+    crashinfo.reserve(1024);
+    char tempstring[64];
+    time_t t = time(NULL);
+    crashinfo = F("Crashed time: ");
+    crashinfo += asctime(gmtime(&t));
+    // write crash time to buffer
+    uint32_t crashTime = millis();
+    crashinfo += F("\nMillis:");
+    crashinfo += crashTime;
+    crashinfo += '\n';
+
+    // write reset info to buffer
+    // REASON_DEFAULT_RST      = 0,    /* normal startup by power on */
+    // REASON_WDT_RST          = 1,    /* hardware watch dog reset */
+    // REASON_EXCEPTION_RST    = 2,    /* exception reset, GPIO status won’t change */
+    // REASON_SOFT_WDT_RST     = 3,    /* software watch dog reset, GPIO status won’t change */
+    // REASON_SOFT_RESTART     = 4,    /* software restart ,system_restart , GPIO status won’t change */
+    // REASON_DEEP_SLEEP_AWAKE = 5,    /* wake up from deep-sleep */
+    // REASON_EXT_SYS_RST      = 6     /* external system reset */
+    String reasons[7] = {
+        "REASON_DEFAULT_RST",
+        "REASON_WDT_RST",
+        "REASON_EXCEPTION_RST",
+        "REASON_SOFT_WDT_RST",
+        "REASON_SOFT_RESTART",
+        "REASON_DEEP_SLEEP_AWAKE",
+        "REASON_EXT_SYS_RST"
+    };
+
+    snprintf(tempstring, 64, "%d (%s)\n", rst_info->reason, reasons[rst_info->reason].c_str());
+    crashinfo += F("Reason: ");
+    crashinfo += tempstring;
+
+    crashinfo += F("Cause:  ");
+    crashinfo += rst_info->exccause;
+    crashinfo += F(" (0=cmd invalid, 6=div by zero, 9=unaligned r/w, 28/29=access to invalid addr)\n");
+
+    crashinfo += F("epc1: ");
+    snprintf(tempstring, 16, "%08x\n", rst_info->epc1);
+    crashinfo += tempstring;
+
+    crashinfo += F("epc2: ");
+    snprintf(tempstring, 16, "%08x\n", rst_info->epc2);
+    crashinfo += tempstring;
+
+    crashinfo += F("epc3: ");
+    snprintf(tempstring, 16, "%08x\n", rst_info->epc3);
+    crashinfo += tempstring;
+
+    crashinfo += F("excvaddr: ");
+    snprintf(tempstring, 16, "%08x\n", rst_info->excvaddr);
+    crashinfo += tempstring;
+
+    crashinfo += F("depc: ");
+    snprintf(tempstring, 16, "%08x\n", rst_info->depc);
+    crashinfo += tempstring;
+
+    crashinfo += F("\nstack>>>>>>>>>>>>>");
+
+    for (uint32_t iAddress = stack; iAddress < stack_end; iAddress += sizeof(uint32_t*))
+    {
+        char buf[16];
+        snprintf(buf, 16, "\n%08x: ", iAddress);
+        crashinfo += buf;
+        for(uint32_t i = 0; i < 4; i++)
+        {
+            uint32_t* pValue = (uint32_t*) iAddress;
+            snprintf(buf, 16, "%08x ", *pValue);
+            crashinfo += buf;
+            crashinfo += ' ';
+        }
+    }
+
+    crashinfo += F("\n<<<<<<<<<<<<<stack\n\n\n");
+    file.print(crashinfo);
+    file.close();
+    delay(3000);
+    // ESP.restart();
 }
 
 #include "ha.hpp"
