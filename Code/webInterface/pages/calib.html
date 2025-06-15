@@ -1,0 +1,36 @@
+{% extends "../layout.html" %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "config") %}
+{% endblock %}
+
+{% block content %}
+<section>
+    <table>
+        <tr>
+            <td><label for="maxtemp">Starting temp:</label></td>
+            <td><input type="text" id="maxtemp" value="30" maxlength="3" size="4"></td>
+        </tr>
+        <tr>
+            <td><label for="mintemp">Ending temp:</label></td>
+            <td><input type="text" id="mintemp" value="28" maxlength="3" size="4"></td>
+        </tr>
+        <tr>
+            <td><label for="amb">Avg. ambient temp.:</label></td>
+            <td><input type="text" id="amb" value="16" maxlength="3" size="4"></td>
+        </tr>
+        <tr>
+            <td><label for="finterval">time (minutes):</label></td>
+            <td><input type="text" id="minutes" value="120" maxlength="3" size="4"></td>
+        </tr>
+        <tr>
+            <td colspan="2" class="center"><button id="save" class="button"
+                    onclick="buttonConfirm(this);saveConfig()">Save</button></td>
+        </tr>
+    </table>
+</section>
+{% endblock %}
+
+{% block embed_scripts %}
+{% run embed_scripts('calibration') %}
+{% endblock %}

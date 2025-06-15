@@ -1,0 +1,17 @@
+{% extends "../layout.html" %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation") %}
+{% endblock %}
+
+{% block content %}
+<section>
+    <p>The operation was successful.</p>
+</section>
+{% endblock %}
+
+{% block footer %}
+<p class="center"><a class="button" href="/">Home</a></p>
+<p class="center"><a class="button" href="/upload.html">Upload a file</a></p>
+<p class="center"><a class="button" href="/remove.html">Remove a file</a></p>
+{% endblock %}

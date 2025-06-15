@@ -1,0 +1,55 @@
+{% extends "../layout.html" %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "webconfig") %}
+{% endblock %}
+
+{% block content %}
+<section>
+    <table>
+        <tr>
+            <td>Show section "Temperature"</td>
+            <td><label class="switch"><input type="checkbox" id="showSectionTemperature"><span
+                        class="slider round"></span></label></td>
+        </tr>
+        <tr>
+            <td>Show section "Display"</td>
+            <td><label class="switch"><input type="checkbox" id="showSectionDisplay"><span
+                        class="slider round"></span></label></td>
+        </tr>
+        <tr>
+            <td>Show section "Control"</td>
+            <td><label class="switch"><input type="checkbox" id="showSectionControl"><span
+                        class="slider round"></span></label></td>
+        </tr>
+        <tr>
+            <td>Show section "Buttons"</td>
+            <td><label class="switch"><input type="checkbox" id="showSectionButtons"><span
+                        class="slider round"></span></label></td>
+        </tr>
+        <tr>
+            <td>Show section "Timer"</td>
+            <td><label class="switch"><input type="checkbox" id="showSectionTimer"><span
+                        class="slider round"></span></label></td>
+        </tr>
+        <tr>
+            <td>Show section "Totals"</td>
+            <td><label class="switch"><input type="checkbox" id="showSectionTotals"><span
+                        class="slider round"></span></label></td>
+        </tr>
+        <tr>
+            <td>Use selector (instead of slider)</td>
+            <td><label class="switch"><input type="checkbox" id="useControlSelector"><span
+                        class="slider round"></span></label></td>
+        </tr>
+    </table>
+</section>
+{% endblock %}
+
+{% block footer %}
+<button id="save" class="button" onclick="buttonConfirm(this);saveWebConfig()">save</button>
+{% endblock %}
+
+{% block embed_scripts %}
+{% run embed_scripts('webconfig') %}
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "../layout.html" %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "wifi") %}
+{% endblock %}
+
+{% block content %}
+<section>
+    <h2>Access Point:</h2>
+    <table>
+        <tr>
+            <td><label for="enableAp">Enable specific AP:</label><span
+                    data-text="Checked: ESP will connect using these credentials. Unchecked: ESP will use last known credentials."
+                    class="tooltip">?</span></td>
+            <td><input type="checkbox" id="enableAp"></td>
+        </tr>
+        <tr>
+            <td>SSID:</td>
+            <td><input type="text" id="apSsid"></td>
+        </tr>
+        <tr>
+            <td>Password:</td>
+            <td><input type="text" id="apPwd"></td>
+            <!--<td><input type="password" id="apPwd"><input type="checkbox" onclick="togglePlainText('apPwd')"></td>-->
+        </tr>
+    </table>
+</section>
+
+<section>
+    <h2>Soft Access Point:</h2>
+    <table>
+        <tr>
+            <td><label for="enableWM">Enable Soft AP (I don't see a reason to uncheck this! You can lock
+                    yourself out!):</label><span
+                    data-text="Enable ESP access point to be able to open this page before your network credentials are set. You'd want this on normally! If your network is unavailable the ESP will fire up its own AP."
+                    class="tooltip left">?</span></td>
+            <td><input type="checkbox" id="enableWM"></td>
+        </tr>
+    </table>
+</section>
+
+<section>
+    <h2>Static IP:</h2>
+    <table>
+        <tr>
+            <td><label for="enableStaticIp4">Enable static IP:</label></td>
+            <td><input type="checkbox" id="enableStaticIp4"></td>
+        </tr>
+        <tr>
+            <td>IP Address:</td>
+            <td>
+                <input type="text" id="ip4Address" maxlength="15" style="width:185px">
+            </td>
+        </tr>
+        <tr>
+            <td>Gateway IP Address:</td>
+            <td>
+                <input type="text" id="ip4Gateway" maxlength="15" style="width:185px">
+            </td>
+        </tr>
+        <tr>
+            <td>Subnet Mask:</td>
+            <td>
+                <input type="text" id="ip4Subnet" maxlength="15" style="width:185px">
+            </td>
+        </tr>
+        <tr>
+            <td>DNS Server (primary):</td>
+            <td>
+                <input type="text" id="ip4DnsPrimary" maxlength="15" style="width:185px">
+            </td>
+        </tr>
+        <tr>
+            <td>DNS Server (secondary):</td>
+            <td>
+                <input type="text" id="ip4DnsSecondary" maxlength="15" style="width:185px">
+            </td>
+        </tr>
+    </table>
+</section>
+
+<section>
+    <h2>NTP server:</h2>
+    <table>
+        <tr>
+            <td>Domain name or IP address:<span data-text="Leave blank for default or set your favorite NTP."
+                    class="tooltip">?</span></td>
+            <td>
+                <input type="text" id="ip4NTP" maxlength="30" style="width:185px" value="pool.ntp.org">
+            </td>
+        </tr>
+    </table>
+</section>
+
+<section>
+    <table>
+        <tr>
+            <td colspan="2" style="text-align:center">
+                <button id="save" class="button" onclick="saveNetworkConfig()">save</button>
+            </td>
+        </tr>
+    </table>
+</section>
+
+<section>
+    <h2>Reset WiFi Config:</h2>
+    <p>
+        This button deletes the WiFi credentials.<br />
+        The ESP will restart and enable its own AP (if you have it checked above).
+        Connect to WiFi AP with SSID "layzspa_module######" and go to address http://192.168.4.2/wifi.html
+    </p>
+</section>
+{% endblock %}
+
+{% block footer %}
+<button id="resetwifi" class="button_red" onclick="resetWifi()">reset WiFi</button>
+{% endblock %}
+
+{% block embed_scripts %}
+{% run embed_scripts('wifi') %}
+{% endblock %}

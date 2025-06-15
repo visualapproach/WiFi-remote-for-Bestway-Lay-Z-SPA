@@ -1,0 +1,55 @@
+{% extends "../layout.html" %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "mqtt") %}
+{% endblock %}
+
+{% block content %}
+<section>
+    <table>
+        <tr>
+            <td><label for="enableMqtt">Enable MQTT:</label></td>
+            <td><input type="checkbox" id="enableMqtt"></td>
+        </tr>
+        <tr>
+            <td>MQTT host addr:</td>
+            <td>
+                <input type="text" id="mqttHost" maxlength="63" value="IP or FQDN of the broker">
+            </td>
+        </tr>
+        <tr>
+            <td>Port:</td>
+            <td><input type="text" id="mqttPort" maxlength="31"></td>
+        </tr>
+        <tr>
+            <td>Username:</td>
+            <td><input type="text" id="mqttUsername" maxlength="31"></td>
+        </tr>
+        <tr>
+            <td>Password:</td>
+            <td><input type="text" id="mqttPassword" maxlength="31"></td>
+            <!--<td><input type="password" id="mqttPassword"><input type="checkbox" onclick="togglePlainText('mqttPassword')"></td>-->
+        </tr>
+        <tr>
+            <td>Client ID:</td>
+            <td><input type="text" id="mqttClientId" maxlength="31"></td>
+        </tr>
+        <tr>
+            <td>Base Topic:</td>
+            <td><input type="text" id="mqttBaseTopic" maxlength="31"></td>
+        </tr>
+        <tr>
+            <td>Telemetry Interval (s):</td>
+            <td><input type="text" id="mqttTelemetryInterval"></td>
+        </tr>
+    </table>
+</section>
+{% endblock %}
+
+{% block footer %}
+<button id="save" class="button" onclick="saveMqttConfig()">save</button>
+{% endblock %}
+
+{% block embed_scripts %}
+{% run embed_scripts('mqtt') %}
+{% endblock %}

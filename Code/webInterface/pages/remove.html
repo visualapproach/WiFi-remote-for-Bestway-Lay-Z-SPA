@@ -1,0 +1,18 @@
+{% extends "../layout.html" %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "remove") %}
+{% endblock %}
+
+{% block content %}
+<section>
+    <p>Use this page to remove a file from the ESP8266.</p>
+</section>
+{% endblock %}
+
+{% block footer %}
+<form method="post" enctype="application/x-www-form-urlencoded" style="margin: 0px auto 8px">
+    <input type="text" name="FileToRemove" value="" />
+    <input type="submit" value="delete" name="submit" class="button" />
+</form>
+{% endblock %}

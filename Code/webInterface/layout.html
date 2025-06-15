@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html ontouchmove>
+
+<head>
+    <title>Lay-Z-Spa Module</title>
+    <meta charset="utf-8">
+    <link rel="icon" type="image/png" sizes="180x180" href="favicon.png">
+    <meta name="theme-color" content="#0f4677">
+    <!-- <link rel="manifest" href="manifest.json"> -->
+    <link rel="stylesheet" href="main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1">
+</head>
+
+<body>
+    <div id="site">
+        <header>
+            {% block header_before_default %}{% endblock %}
+            {% block header_dark_mode_form %}
+            <form id="darkModeForm">
+                <label class="switch">
+                    <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                    <span class="slider round moon"></span>
+                </label>
+            </form>
+            {% endblock %}
+            {% block header_headline %}
+            <a href="./">
+                <div id="header"><span>Lay-Z-Spa Module</span><span>by visualapproach</span></div>
+            </a>
+            {% endblock %}
+            {% block header_top_navigation_icon %}
+            <a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
+            {% endblock %}
+            {% block header_after_default %}{% endblock %}
+        </header>
+        {% block top_navigation %}{% endblock %}
+        {% block content %}{% endblock %}
+        <footer>
+            {% block footer %}{% endblock %}
+        </footer>
+    </div>
+</body>
+
+{% block after_body %}{% endblock %}
+{% block embed_scripts_default %}
+{% run embed_scripts('index', 'function', 'darkmode') %}
+{% endblock %}
+{% block embed_scripts %}{% endblock %}
+
+</html>
