@@ -30,8 +30,7 @@ def copy_static(target_dir, source_dir="./static", only_files=True):
 
 def build_templates(output_dir, base_dir):
     context_data = {
-        'title': 'My Templated Page',
-        'user_name': 'Alice'
+        
     }
 
     def embed_scripts(*scripts):
