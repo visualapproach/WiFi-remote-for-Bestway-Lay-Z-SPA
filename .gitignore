@@ -34,3 +34,6 @@ Code/.vscode/extensions.json
 
 .pio
 .vscode
+
+## filesystem
+Code/data/
