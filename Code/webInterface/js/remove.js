@@ -1,11 +1,11 @@
 function removeFile() {
-    var filename = document.getElementById('fileToRemove').value
+    const filename = document.getElementById('fileToRemove').value
     if (!filename) {
         alert(getTranslation('alert_enter_filename'))
         return
     }
     // TODO: use async fetch instead of XMLHttpRequest
-    var req = new XMLHttpRequest()
+    const req = new XMLHttpRequest()
     req.open('POST', '/removefile/')
     req.send(JSON.stringify({ file: filename }))
     req.onreadystatechange = function () {
