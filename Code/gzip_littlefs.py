@@ -14,7 +14,8 @@ def copy_data(src, dst):
   print("drive: " + drive)
   print("path: " + path)
   print("file: " + file)
-  myfile = open(drive + path + '\\' + myfilename, 'a')
+
+  myfile = open(drive + path + os.path.sep + myfilename, 'a')
   if (ext in ["js", "css", "html", "ico"]):
     myfile.write(file + ".gz\n")
     with open(src, 'rb') as src, gzip.open(dst + ".gz", 'wb') as dst:
