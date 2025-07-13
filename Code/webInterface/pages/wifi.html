@@ -1,0 +1,181 @@
+{% extends "../layout.html" %}
+
+{% block header_headline_title %}
+<span data-i18n="header_networkconfig">Network Config</span>
+{% endblock %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "wifi") %}
+{% endblock %}
+
+{% block content %}
+<!-- ==================== SECTION: Access Point ==================== -->
+<section>
+  <h2 data-i18n="section_ap">Access Point:</h2>
+  <table>
+    <tr>
+      <td>
+        <label for="enableAp" data-i18n="label_enableAp">Enable specific AP:</label>
+        <span class="tooltip"
+          data-text="Checked: ESP will connect using these credentials. Unchecked: ESP will use last known credentials."
+          data-i18n="[data-text]tooltip_enableAp">?</span>
+      </td>
+      <td>
+        <input type="checkbox" id="enableAp">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="apSsid" data-i18n="label_ssid">SSID:</label>
+      </td>
+      <td>
+        <input type="text" id="apSsid">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="apPwd" data-i18n="label_password">Password:</label>
+      </td>
+      <td>
+        <input type="text" id="apPwd">
+      </td>
+    </tr>
+  </table>
+</section>
+
+
+<!-- ==================== SECTION: Soft Access Point ==================== -->
+<section>
+  <h2 data-i18n="section_softap">Soft Access Point:</h2>
+  <table>
+    <tr>
+      <td>
+        <label for="enableWM" data-i18n="label_enableWM">
+          Enable Soft AP (I don’t see a reason to uncheck this! You can lock yourself out!):
+        </label>
+        <span class="tooltip"
+          data-text="Enable ESP access point to be able to open this page before your network credentials are set. You’d want this on normally! If your network is unavailable, the ESP will fire up its own AP."
+          data-i18n="[data-text]tooltip_enableWM">?</span>
+      </td>
+      <td>
+        <input type="checkbox" id="enableWM">
+      </td>
+    </tr>
+  </table>
+</section>
+
+
+<!-- ==================== SECTION: Static IP ==================== -->
+<section>
+  <h2 data-i18n="section_static_ip">Static IP:</h2>
+  <table>
+    <tr>
+      <td>
+        <label for="enableStaticIp4" data-i18n="label_enable_static_ip">Enable static IP:</label>
+      </td>
+      <td>
+        <input type="checkbox" id="enableStaticIp4">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="ip4Address" data-i18n="label_ip_address">IP Address:</label>
+        <span class="tooltip" data-text="Leave blank for DHCP or type a correct IP."
+          data-i18n="[data-text]tooltip_ipStatic">?</span>
+      </td>
+      <td>
+        <input type="text" id="ip4Address" maxlength="15" style="width:185px">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="ip4Gateway" data-i18n="label_gateway_ip">Gateway IP Address:</label>
+        <span class="tooltip" data-text="Usually your router. Leave blank for default."
+          data-i18n="[data-text]tooltip_gateway">?</span>
+      </td>
+      <td>
+        <input type="text" id="ip4Gateway" maxlength="15" style="width:185px">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="ip4Subnet" data-i18n="label_subnet_mask">Subnet Mask:</label>
+        <span class="tooltip" data-text="Most of the time this is 255.255.255.0. Leave blank for default."
+          data-i18n="[data-text]tooltip_netmask">?</span>
+      </td>
+      <td>
+        <input type="text" id="ip4Subnet" maxlength="15" style="width:185px">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="ip4DnsPrimary" data-i18n="label_dns_primary">DNS Server (primary):</label>
+        <span class="tooltip" data-text="Use your router or ISP DNS. Leave blank for default."
+          data-i18n="[data-text]tooltip_dnsPrimary">?</span>
+      </td>
+      <td>
+        <input type="text" id="ip4DnsPrimary" maxlength="15" style="width:185px">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <label for="ip4DnsSecondary" data-i18n="label_dns_secondary">DNS Server (secondary):</label>
+        <span class="tooltip" data-text="Alternate DNS. Leave blank for none."
+          data-i18n="[data-text]tooltip_dnsSecondary">?</span>
+      </td>
+      <td>
+        <input type="text" id="ip4DnsSecondary" maxlength="15" style="width:185px">
+      </td>
+    </tr>
+  </table>
+</section>
+
+
+<!-- ==================== SECTION: NTP Server ==================== -->
+<section>
+  <h2 data-i18n="section_ntp">NTP server:</h2>
+  <table>
+    <tr>
+      <td>
+        <label for="ip4NTP" data-i18n="label_ntp_address">Domain name or IP address:</label>
+        <span class="tooltip" data-text="Leave blank for pool.ntp.org (default)."
+          data-i18n="[data-text]tooltip_ntpServer">?</span>
+      </td>
+      <td>
+        <input type="text" id="ip4NTP" maxlength="30" style="width:185px" value="pool.ntp.org">
+      </td>
+    </tr>
+  </table>
+</section>
+
+
+<!-- ==================== BUTTON “SAVE” ==================== -->
+<section>
+  <table>
+    <tr>
+      <td colspan="2" style="text-align:center">
+        <button id="save" class="button" onclick="saveNetworkConfig()" data-i18n="bouton_save">Enregistrer</button>
+      </td>
+    </tr>
+  </table>
+</section>
+
+
+<!-- ==================== SECTION: Reset WiFi Config ==================== -->
+<section>
+  <h2 data-i18n="section_reset_wifi">Reset WiFi Config:</h2>
+  <p data-i18n="reset_wifi_note">
+    This button deletes the WiFi credentials.<br>
+    The ESP will restart and enable its own AP (if you have it checked above).<br>
+    Connect to WiFi AP with SSID "layzspa_module######" and go to address http://192.168.4.2/wifi.html
+  </p>
+</section>
+
+
+<!-- ==================== FOOTER: Reset WiFi Button ==================== -->
+<footer class="center">
+  <button id="resetwifi" class="button_red" onclick="resetWifi()" data-i18n="btn_reset_wifi">réinitialiser
+    WiFi</button>
+</footer>
+</div>
+{% endblock %}

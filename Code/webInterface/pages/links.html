@@ -1,0 +1,22 @@
+{% extends "../layout.html" %}
+
+{% block header_headline_title %}
+<span data-i18n="menu_home">Home</span>
+{% endblock %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "home") %}
+{% endblock %}
+
+{% block content %}
+<section>
+  <a href="/resetwifi/">/resetwifi/</a> <span data-i18n="link_resetwifi_note">Be aware!</span><br>
+  <a href="/hwtest/">/hwtest/</a> <span data-i18n="link_hwtest_note">No prior instructions! Use </span><a
+    href="hwtestinfo.html">hwtestinfo.html</a><span data-i18n="link_hwtest_note2"> instead.</span><br>
+  <a href="/inputs/">/inputs/</a> <span data-i18n="link_inputs_note">Edge counting on pins. Debug feat.</span><br>
+  <a href="/restart/">/restart/</a><br>
+  <a href="/info/">/info/</a><br>
+  <a href="/debug-on/">/debug-on/</a><br>
+  <a href="/debug-off/">/debug-off/</a><br>
+</section>
+{% endblock %}

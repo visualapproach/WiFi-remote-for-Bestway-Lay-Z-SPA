@@ -1,0 +1,454 @@
+{% extends "../layout.html" %}
+
+{% block header_headline_title %}
+<span data-i18n="menu_spaconfig">SPA Config</span>
+{% endblock %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "config") %}
+
+{% block content %}
+<section>
+    <table>
+        <tr>
+            <td><label for="price" data-i18n="label_price_kwh">Price per kWh:</label></td>
+            <td><input type="text" id="price" value="1.50" maxlength="4" size="4"></td>
+        </tr>
+        <tr>
+            <td><label for="clinterval" data-i18n="label_chlorine_interval">Chlorine add (Days):</label></td>
+            <td><input type="text" id="clinterval" value="7" maxlength="3" size="3"></td>
+        </tr>
+        <tr>
+            <td><label for="freplaceinterval" data-i18n="label_filter_change_interval">Filter change
+                    (Days):</label></td>
+            <td><input type="text" id="freplaceinterval" value="60" maxlength="3" size="3"></td>
+        </tr>
+        <tr>
+            <td><label for="fcleaninterval" data-i18n="label_filter_clean_interval">Filter clean (Days):</label>
+            </td>
+            <td><input type="text" id="fcleaninterval" value="20" maxlength="3" size="3"></td>
+        </tr>
+        <tr>
+            <td><label for="frinseinterval" data-i18n="label_filter_rinse_interval">Filter rinse (Days):</label>
+            </td>
+            <td><input type="text" id="frinseinterval" value="7" maxlength="3" size="3"></td>
+        </tr>
+        <tr>
+            <td><label for="audio" data-i18n="label_audio">Audio:</label></td>
+            <td><input type="checkbox" id="audio"></td>
+        </tr>
+        <tr>
+            <td><label for="notification" data-i18n="label_notification">Notification:</label></td>
+            <td><input type="checkbox" id="notification"></td>
+        </tr>
+        <tr>
+            <td><label for="notificationtime" data-i18n="label_notification_time">Notification time (s):</label>
+            </td>
+            <td><input type="text" id="notificationtime" value="32" maxlength="3" size="3"></td>
+        </tr>
+        <tr>
+            <td><label for="restore" data-i18n="label_restore_states">Restore last states on startup:</label>
+            </td>
+            <td><input type="checkbox" id="restore"></td>
+        </tr>
+        <tr>
+            <td>
+                <label for="calibration" data-i18n="label_calibrated">Calibrated:</label>
+                <!-- Au lieu de data-text, on utilise data-i18n="[data-text]clé" -->
+                <span data-i18n="[data-text]tooltip_calibrated_info" class="tooltip">?</span>
+            </td>
+            <td>
+                <input type="checkbox" id="calibration" onclick="toggleCalibration()">
+                <span data-i18n="[data-text]tooltip_calibrate_instr" class="tooltip left">?</span>
+            </td>
+            <td><a href="calib.html" data-i18n="link_manual_cal">manual cal.</a></td>
+        </tr>
+    </table>
+</section>
+
+<section>
+    <table>
+        <tr>
+            <td data-i18n="section_display_buttons">Enabled display buttons.</td>
+            <td>
+                <label for="toggle_all" data-i18n="label_all">All:</label>
+                <input type="checkbox" id="toggle_all" onclick="toggleAll()">
+            </td>
+        </tr>
+        <tr>
+            <td><label for="lock_btn" data-i18n="btn_lock">Lock</label><input type="checkbox" id="lock_btn">
+            </td>
+            <td><label for="timer_btn" data-i18n="btn_timer">Timer</label><input type="checkbox" id="timer_btn">
+            </td>
+            <td><label for="bubbles_btn" data-i18n="btn_air">Air</label><input type="checkbox" id="bubbles_btn">
+            </td>
+            <td><label for="unit_btn" data-i18n="btn_unit">Unit</label><input type="checkbox" id="unit_btn">
+            </td>
+            <td><label for="heat_btn" data-i18n="btn_heat">Heat</label><input type="checkbox" id="heat_btn">
+            </td>
+        </tr>
+        <tr>
+            <td><label for="pump_btn" data-i18n="btn_pump">Pump</label><input type="checkbox" id="pump_btn">
+            </td>
+            <td><label for="down_btn" data-i18n="btn_down">Down</label><input type="checkbox" id="down_btn">
+            </td>
+            <td><label for="up_btn" data-i18n="btn_up">Up</label><input type="checkbox" id="up_btn"></td>
+            <td><label for="power_btn" data-i18n="btn_power">Pwr</label><input type="checkbox" id="power_btn">
+            </td>
+            <td><label for="hydrojets_btn" data-i18n="btn_jets">Jets</label><input type="checkbox" id="hydrojets_btn">
+            </td>
+        </tr>
+    </table>
+    <table>
+        <tr>
+            <td colspan="2" class="center">
+                <button id="save" class="button" onclick="buttonConfirm(this); saveConfig()"
+                    data-i18n="bouton_save">save</button>
+            </td>
+        </tr>
+    </table>
+</section>
+
+<section>
+    <table>
+        <tr>
+            <td><label for="commands" data-i18n="label_command">Command:</label></td>
+            <td>
+                <select name="commands" id="commands">
+
+                    <option value="0" data-i18n="option_set_target">Set target temp (20-40/68-104)</option>
+                    <option value="1" data-i18n="option_set_unit">Set unit (0/1)</option>
+                    <option value="2" data-i18n="option_set_bubbles">Set air bubbles (0/1)</option>
+                    <option value="3" data-i18n="option_set_heat">Set heater (0/1)</option>
+                    <option value="4" data-i18n="option_set_pump">Set filter pump (0/1)</option>
+                    <option value="5" data-i18n="option_reset_queue">Reset queue (-)</option>
+                    <option value="6" data-i18n="option_reboot_esp">Reboot ESP</option>
+                    <option value="7" data-i18n="option_internal_cmd">Internal command (get target) (-)</option>
+                    <option value="8" data-i18n="option_reset_times">Reset times (-)</option>
+                    <option value="9" data-i18n="option_reset_cl">Reset Cl timer (-)</option>
+                    <option value="10" data-i18n="option_reset_filter_change">Reset filter change timer (-)
+                    </option>
+                    <option value="11" data-i18n="option_set_jets">Set hydrojets (0/1)</option>
+                    <option value="12" data-i18n="option_set_brightness">Set display brightness (0-8)</option>
+                    <option value="13" data-i18n="option_beep">Set beep (0/1 or 2+text=filename)</option>
+                    <option value="14" data-i18n="option_set_ambient_f">Set ambient temp F (any integer)
+                    </option>
+                    <option value="15" data-i18n="option_set_ambient_c">Set ambient temp C (any integer)
+                    </option>
+                    <option value="16" data-i18n="option_reset_daily">Reset daily meter (any integer)</option>
+                    <option value="17" data-i18n="option_take_control">Take control (0/1)</option>
+                    <option value="18" data-i18n="option_full_power">Set full power (0/1)</option>
+                    <option value="19" data-i18n="option_print_text">Print (text)</option>
+                    <option value="20" data-i18n="option_set_ready">Set ready time (-)</option>
+                    <option value="21" data-i18n="option_set_R">Set R (internal use)</option>
+                    <option value="22" data-i18n="option_reset_filter_rinse">Reset filter rinse timer (-)
+                    </option>
+                    <option value="23" data-i18n="option_reset_filter_clean">Reset filter clean timer (-)
+                    </option>
+                    <option value="24" data-i18n="option_set_power">Set power on/off (0/1)</option>
+
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td><label for="val" data-i18n="label_value">Value:</label></td>
+            <td><input type="text" id="val" value="1" maxlength="3" size="3"></td>
+        </tr>
+        <tr>
+            <td><label for="xtime" data-i18n="label_execute_time">Execute time:</label><br /></td>
+            <td><input type="datetime-local" id="xtime" name="xtime" onchange="totimestamp()" step="1"></td>
+        </tr>
+        <tr>
+            <td><label for="interval" data-i18n="label_repeat_interval">Repeat interval</label></td>
+            <td><input type="text" id="interval" value="0" maxlength="8" size="8"> <span
+                    data-i18n="unit_seconds">seconds</span></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <p data-i18n="note_interval">(0=once, 1h=3600, 1d=86400, 1w=604800)</p>
+            </td>
+        </tr>
+        <tr>
+            <td><label for="txt" data-i18n="label_text">Text</label></td>
+            <td><input type="text" id="txt" value="" maxlength="24" size="16"> <span data-i18n="label_text">Text</span>
+            </td>
+        </tr>
+    </table>
+</section>
+
+<section style="text-align: left">
+    <h2 data-i18n="header_command_queue">Command queue</h2>
+    <table id="cmdq"></table>
+    <table>
+        <tr>
+            <td colspan="2" class="center">
+                <button id="addcmd" class="button" onclick="buttonConfirm(this); addCommand()"
+                    data-i18n="btn_add_new">Add new</button>
+            </td>
+            <td colspan="2" class="center">
+                <button id="resetq" class="button_red" onclick="buttonConfirm(this); resetCommandQueue()"
+                    data-i18n="btn_clear_queue">Clear queue</button>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" class="center">
+                <button id="saveq" class="button" onclick="savetofile()" data-i18n="btn_save_to_file">Save to
+                    file</button>
+            </td>
+            <td colspan="2" class="center">
+                <button id="loadq" class="button" onclick="buttonConfirm(this); loadfromfile()"
+                    data-i18n="btn_load_from_file">Load from file</button>
+            </td>
+        </tr>
+    </table>
+</section>
+{% endblock %}
+
+{% block footer %}
+<p class="center" id="lastboot" data-i18n="footer_last_boot_loading">Last boot: loading...</p>
+{% endblock %}
+
+{% block embed_scripts %}
+<script>
+    loadConfig()
+
+    const settarget = 0
+    const setunit = 1
+    const setbubbles = 2
+    const setheat = 3
+    const setpump = 4
+    const resetq = 5
+    const rebootesp = 6
+    const gettarget = 7
+    const resettimes = 8
+    const resetcl = 9
+    const resetreplacefilter = 10
+    const setjets = 11
+    const setbrightness = 12
+    const setbeep = 13
+    const setambientf = 14
+    const setambientc = 15
+    const resetdaily = 16
+    const godmode = 17
+    const fullpower = 18
+    const printtext = 19
+    const setready = 20
+    const setR = 21
+    const resetrinsefiltertimer = 22
+    const resetcleanfiltertimer = 23
+    const setpower = 24
+
+    const commandlist = [
+        'Set target', 'Set unit', 'Set bubbles', 'Set heat', 'Set pump', 'Reset queue', 'Reboot ESP',
+        'Internal cmd', 'Reset times', 'Reset Cl timer', 'Reset change filter timer', 'Set jets', 'Set brightness',
+        'Beep', 'Set ambient temp F.', 'Set ambient temp C.', 'Reset daily meter', 'Take control', 'Full power',
+        'Print text', 'Set ready', 'Set R', 'Reset rinse filter timer', 'Reset clean filter timer', 'Set power'
+    ]
+
+    function totimestamp() {
+        console.log(Date.parse(document.getElementById("xtime").value) / 1000)
+        console.log("value " + document.getElementById("xtime").value)
+    }
+
+    function loadConfig() {
+        var req = new XMLHttpRequest()
+        req.open('POST', '/getconfig/')
+        req.send()
+        req.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var json = JSON.parse(req.responseText)
+                console.log(json)
+                //document.getElementById('timezone').value = json.TIMEZONE.toString();
+                document.getElementById('price').value = json.PRICE.toString()
+                document.getElementById('freplaceinterval').value = json.FREPI.toString()
+                document.getElementById('frinseinterval').value = json.FRINI.toString()
+                document.getElementById('fcleaninterval').value = json.FCLEI.toString()
+                document.getElementById('clinterval').value = json.CLINT.toString()
+                document.getElementById('audio').checked = json.AUDIO
+                document.getElementById('notification').checked = json.NOTIFY
+                document.getElementById('notificationtime').value = json.NOTIFTIME.toString()
+                document.getElementById('restore').checked = json.RESTORE
+                var date = new Date(json.REBOOTTIME * 1000)
+                document.getElementById('lastboot').innerHTML = 'Last boot: ' + date.toLocaleString() + ' ' + json.REBOOTINFO
+                document.getElementById('calibration').checked = json.VTCAL
+                document.getElementById('lock_btn').checked = json.LCK
+                document.getElementById('timer_btn').checked = json.TMR
+                document.getElementById('bubbles_btn').checked = json.AIR
+                document.getElementById('unit_btn').checked = json.UNT
+                document.getElementById('heat_btn').checked = json.HTR
+                document.getElementById('pump_btn').checked = json.FLT
+                document.getElementById('down_btn').checked = json.DN
+                document.getElementById('up_btn').checked = json.UP
+                document.getElementById('power_btn').checked = json.PWR
+                document.getElementById('hydrojets_btn').checked = json.HJT
+            }
+        }
+
+        setInterval(loadCommandQueue, 4000)
+
+        var now = new Date()
+        var offset = now.getTimezoneOffset() * 60000
+        var adjustedDate = new Date(now.getTime() - offset)
+        var formattedDate = adjustedDate.toISOString().substring(0, 16) // For minute precision
+        var datetimeField = document.getElementById('xtime')
+        datetimeField.value = formattedDate
+    }
+
+    function saveConfig() {
+        var req = new XMLHttpRequest()
+        req.open('POST', '/setconfig/')
+        var json = {
+            //'TIMEZONE':parseInt(document.getElementById('timezone').value),
+            'TIMEZONE': 0,
+            'PRICE': parseFloat(document.getElementById('price').value),
+            'FREPI': parseInt(document.getElementById('freplaceinterval').value),
+            'FRINI': parseInt(document.getElementById('frinseinterval').value),
+            'FCLEI': parseInt(document.getElementById('fcleaninterval').value),
+            'CLINT': parseInt(document.getElementById('clinterval').value),
+            'AUDIO': document.getElementById('audio').checked,
+            'NOTIFY': document.getElementById('notification').checked,
+            'NOTIFTIME': parseInt(document.getElementById('notificationtime').value),
+            'RESTORE': document.getElementById('restore').checked,
+            'VTCAL': document.getElementById('calibration').checked,
+            'LCK': document.getElementById('lock_btn').checked,
+            'TMR': document.getElementById('timer_btn').checked,
+            'AIR': document.getElementById('bubbles_btn').checked,
+            'UNT': document.getElementById('unit_btn').checked,
+            'HTR': document.getElementById('heat_btn').checked,
+            'FLT': document.getElementById('pump_btn').checked,
+            'DN': document.getElementById('down_btn').checked,
+            'UP': document.getElementById('up_btn').checked,
+            'PWR': document.getElementById('power_btn').checked,
+            'HJT': document.getElementById('hydrojets_btn').checked
+        }
+        req.send(JSON.stringify(json))
+        console.log(json)
+    }
+
+    function toggleAll() {
+        document.getElementById('lock_btn').checked = document.getElementById('toggle_all').checked
+        document.getElementById('timer_btn').checked = document.getElementById('toggle_all').checked
+        document.getElementById('bubbles_btn').checked = document.getElementById('toggle_all').checked
+        document.getElementById('unit_btn').checked = document.getElementById('toggle_all').checked
+        document.getElementById('heat_btn').checked = document.getElementById('toggle_all').checked
+        document.getElementById('pump_btn').checked = document.getElementById('toggle_all').checked
+        document.getElementById('down_btn').checked = document.getElementById('toggle_all').checked
+        document.getElementById('up_btn').checked = document.getElementById('toggle_all').checked
+        document.getElementById('power_btn').checked = document.getElementById('toggle_all').checked
+        document.getElementById('hydrojets_btn').checked = document.getElementById('toggle_all').checked
+    }
+
+    function loadCommandQueue() {
+        var req = new XMLHttpRequest()
+        req.open('POST', '/getcommands/')
+        req.send()
+        req.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var json = JSON.parse(req.responseText)
+                console.log(json)
+                var table = document.getElementById('cmdq')
+                table.innerHTML = ''
+
+                for (var i = 0; i < json.LEN; i++) {
+                    var row = table.insertRow()
+                    var cell = row.insertCell(0)
+                    cell.innerHTML = '<button id="editCmd' + i + '" class="button" onclick="editCommandQueue(' + i + ')">' +
+                        '<span data-i18n="btn_set">Set</span>' +
+                        '</button>'
+                    var date = new Date(json.XTIME[i] * 1000)
+                    cell = row.insertCell(1)
+                    cell.innerHTML = commandlist[json['CMD'][i]] + ':' + json['VALUE'][i] + '<br>' + date.toLocaleString() + '<br>Interval: ' + json['INTERVAL'][i] + 's'
+                    cell = row.insertCell(2)
+                    cell.innerHTML = '<button id="delCmd' + i + '" class="button_red" onclick="delCommand(' + i + ')">' +
+                        '<span data-i18n="btn_del">Del</span>' +
+                        '</button>'
+                }
+            }
+        }
+    }
+
+    function addCommand() {
+        var req = new XMLHttpRequest()
+        req.open('POST', '/addcommand/')
+        var json = {
+            'CMD': parseInt(document.getElementById('commands').value),
+            'VALUE': parseFloat(document.getElementById('val').value),
+            'XTIME': Date.parse(document.getElementById('xtime').value) / 1000,
+            'INTERVAL': parseInt(document.getElementById('interval').value),
+            'TXT': document.getElementById('txt').value
+        }
+        req.send(JSON.stringify(json))
+        console.log(json)
+    }
+
+    function resetCommandQueue() {
+        var req = new XMLHttpRequest()
+        req.open('POST', '/addcommand/')
+        var json = {
+            'CMD': resetq,
+            'VAL': 1,
+            'XTIME': 0,
+            'INTERVAL': 0
+        }
+        req.send(JSON.stringify(json))
+        console.log(json)
+        loadCommandQueue()
+    }
+
+    function savetofile() {
+        var filename = prompt("Please enter a filename", "mycommandqueue1")
+        if (filename == null) return
+        var req = new XMLHttpRequest()
+        req.open('POST', '/cmdq_file/')
+        var json = {
+            'ACT': 'save',
+            'NAME': filename
+        }
+        req.send(JSON.stringify(json))
+        console.log(json)
+    }
+
+    function loadfromfile() {
+        var filename = prompt("Please enter a filename", "mycommandqueue1")
+        if (filename == null) return
+        var req = new XMLHttpRequest()
+        req.open('POST', '/cmdq_file/')
+        var json = {
+            'ACT': 'load',
+            'NAME': filename
+        }
+        req.send(JSON.stringify(json))
+        console.log(json)
+    }
+
+    function editCommandQueue(index) {
+        var req = new XMLHttpRequest()
+        req.open('POST', '/editcommand/')
+        var json = {
+            'CMD': parseInt(document.getElementById('commands').value),
+            'VALUE': parseFloat(document.getElementById('val').value),
+            'XTIME': Date.parse(document.getElementById('xtime').value) / 1000,
+            'INTERVAL': parseInt(document.getElementById('interval').value),
+            'TXT': document.getElementById('txt').value,
+            'IDX': index
+        }
+        req.send(JSON.stringify(json))
+        console.log(json)
+    }
+
+    function delCommand(index) {
+        var req = new XMLHttpRequest()
+        req.open('POST', '/delcommand/')
+        var json = {
+            'IDX': index
+        }
+        req.send(JSON.stringify(json))
+        console.log(json)
+    }
+
+    function toggleCalibration() {
+        let obj = document.getElementById('calibration')
+        if (obj.checked) obj.checked = false
+    }
+</script>
+{% endblock %}

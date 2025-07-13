@@ -1,0 +1,26 @@
+{% extends "../layout.html" %}
+
+{% block header_headline_title %}
+<span data-i18n="title_uploader_header">File Uploader</span>
+{% endblock %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "upload") %}
+{% endblock %}
+
+{% block content %}
+<section>
+	<p data-i18n="upload_instr1">Use this page to upload new files to the ESP8266.</p>
+	<p data-i18n="upload_instr2">You can use compressed (deflated) files (files with a .gz extension) to save
+		space and bandwidth.</p>
+</section>
+{% endblock %}
+
+{% block footer %}
+<form method="post" enctype="multipart/form-data" style="margin: 0px auto 8px auto">
+	<label class="button" for="browse_for_file" id="select_image" data-i18n="btn_browse">Browse...</label>
+	<input type="file" id="browse_for_file" name="Choose file" style="visibility:hidden;position:absolute"
+		accept=".txt,.gz,.html,.ico,.js,.css,.mel,.png,.json">
+	<button type="submit" class="button" data-i18n="btn_upload">upload</button>
+</form>
+{% endblock %}
