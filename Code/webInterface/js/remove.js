@@ -4,6 +4,7 @@ function removeFile() {
         alert(getTranslation('alert_enter_filename'))
         return
     }
+    // TODO: use async fetch instead of XMLHttpRequest
     var req = new XMLHttpRequest()
     req.open('POST', '/removefile/')
     req.send(JSON.stringify({ file: filename }))
