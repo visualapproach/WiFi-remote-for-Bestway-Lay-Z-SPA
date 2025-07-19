@@ -35,6 +35,7 @@ class DSP
         or use Buttons enum - "EnabledButtons[UNIT] = 0"
         */
         bool EnabledButtons[11] = {1,1,1,1,1,1,1,1,1,1,1};
+        int max_time_between_transmissions_ms = -1;
 
     protected:
         std::vector<uint8_t> _raw_payload_from_dsp = {0,0,0,0,0,0,0,0,0,0,0};

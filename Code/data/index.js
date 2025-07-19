@@ -176,7 +176,7 @@ function handlemsg(e) {
     }
 
     // display
-    document.getElementById("display").innerHTML = "[" + String.fromCharCode(msgobj.CH1, msgobj.CH2, msgobj.CH3) + "]";
+    document.getElementById("display").innerHTML = "" + String.fromCharCode(msgobj.CH1, msgobj.CH2, msgobj.CH3) + "";
     document.getElementById("display").style.color = rgb(255 - dspBrtMultiplier * 8 + dspBrtMultiplier * (parseInt(msgobj.BRT) + 1), 0, 0);
 
     // set control values (once)

@@ -16,8 +16,13 @@
 #define OTA_PSWD_F F("esp8266")
 #define WM_AP_NAME_F String(F("Lay-Z-Spa-"))+String(ESP.getChipId())
 #define WM_AP_PASSWORD_F F("layzspam0dule")
+// MQTT defaults
+#define MQTT_HOST_F F("192.168.0.20")
 #define MQTT_USER_F F("username")
 #define MQTT_PASSWORD_F F("password")
+#define MQTT_PORT 1883
+#define MQTT_TELEMETRY_INTERVAL 600
+#define MQTT_USEMQTT false
 #define MQTT_CLIENT_ID_F DEVICE_NAME_F
 #define MQTT_BASE_TOPIC_F DEVICE_NAME_F
 /*
@@ -132,25 +137,9 @@ bool useControlSelector = false;
 /*
  * MQTT Server
  *
- * You can modify this via Web UI.
+ * Defaults are now set at the top via #DEFINE
+ * You can modify the defaults via the web UI.
  */
-/** get or set the state of the MQTT server connection */
-// bool useMqtt = false;
-// /** get or set the MQTT server IP address */
-// IPAddress mqttIpAddress(192,168,0,20);
-// /** get or set the MQTT server port */
-// int mqttPort = 1883;
-// /** get or set the MQTT server username */
-// String mqttUsername = "username";
-// /** get or set the MQTT server password */
-// String mqttPassword = "password";
-// /** get or set the unique MQTT client ID */
-// String mqttClientId = DEVICE_NAME;
-// /** get or set the MQTT topic name */
-// String mqttBaseTopic = DEVICE_NAME;
-// /** get or set the MQTT telemetry interval */
-// int mqttTelemetryInterval = 600;
-
 struct sMQTT_info
 {
     String mqttHost;
@@ -160,7 +149,7 @@ struct sMQTT_info
     String mqttPassword;
     String mqttClientId;
     String mqttBaseTopic;
-    bool useMqtt = false;
+    bool useMqtt;
 };
 
 sMQTT_info* mqtt_info;
