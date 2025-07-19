@@ -1,0 +1,61 @@
+{% extends "../layout.html" %}
+
+{% block header_headline_title %}
+<span data-i18n="title_calib_header">SPA Manual calibration</span>
+{% endblock %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "calib") %}
+{% endblock %}
+
+{% block content %}
+<section>
+	<table>
+		<tr>
+			<td><label for="maxtemp" data-i18n="label_start_temp">Starting temp:</label></td>
+			<td><input type="text" id="maxtemp" value="30" maxlength="3" size="4"></td>
+		</tr>
+		<tr>
+			<td><label for="mintemp" data-i18n="label_end_temp">Ending temp:</label></td>
+			<td><input type="text" id="mintemp" value="28" maxlength="3" size="4"></td>
+		</tr>
+		<tr>
+			<td><label for="amb" data-i18n="label_avg_ambient">Avg. ambient temp.:</label></td>
+			<td><input type="text" id="amb" value="16" maxlength="3" size="4"></td>
+		</tr>
+		<tr>
+			<td><label for="minutes" data-i18n="label_time_minutes">time (minutes):</label></td>
+			<td><input type="text" id="minutes" value="120" maxlength="3" size="4"></td>
+		</tr>
+		<tr>
+			<td colspan="2" class="center">
+				<button id="save" class="button" onclick="buttonConfirm(this); saveConfig()"
+					data-i18n="bouton_save">Save</button>
+			</td>
+		</tr>
+	</table>
+</section>
+{% endblock %}
+{% block embed_scripts %}
+<script>
+	function saveConfig() {
+		var maxtemp = document.getElementById('maxtemp').value
+		var mintemp = document.getElementById('mintemp').value
+		var amb = document.getElementById('amb').value
+		var hours = document.getElementById('minutes').value / 60.0
+		var r = hours / Math.log((maxtemp - amb) / (mintemp - amb))
+		console.log('r: ', r)
+		var req = new XMLHttpRequest()
+		req.open('POST', '/addcommand/')
+		var json = {
+			'CMD': 21,
+			'VALUE': Math.round(r * 1000000),
+			'XTIME': 0,
+			'INTERVAL': 0,
+			'TXT': 'r set'
+		}
+		req.send(JSON.stringify(json))
+		console.log(json)
+	}
+</script>
+{% endblock %}

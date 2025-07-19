@@ -1,12 +1,12 @@
-titre_dashboard=Web Config
+title_dashboard=Web Config
 header_title=Web Config
 header_subtitle=Lay-Z-Spa Module
 
-titre_home=Lay-Z-Spa Module
+title_home=Lay-Z-Spa Module
 header_by=by visualapproach
 
-titre_calib=Lay-Z-Spa Module | SPA Manual calibration
-titre_calib_header=SPA Manual calibration
+title_calib=Lay-Z-Spa Module | SPA Manual calibration
+title_calib_header=SPA Manual calibration
 header_module=Lay-Z-Spa Module
 
 menu_home=Home
@@ -77,11 +77,11 @@ footer_fw_loading=Firmware: loading status...
 footer_model_loading=Model: loading status...
 footer_rssi_loading=RSSI: loading status…
 
-titre_chkupdatefw=Lay-Z-Spa Module | Check firmware update
-titre_chkupdatefw_header=Check firmware update
+title_chkupdatefw=Lay-Z-Spa Module | Check firmware update
+title_chkupdatefw_header=Check firmware update
 chkupdatefw_note=This feature is removed. It was too demanding for the ESP8266 and I couldn't get GitHub to send smaller chunks that the ESP8266 could handle. Sad, because it worked earlier, but I think something changed on the GitHub side.
 
-titre_spaconfig=Lay-Z-Spa Module | SPA Config
+title_spaconfig=Lay-Z-Spa Module | SPA Config
 
 label_price_kwh=Price per kWh:
 label_chlorine_interval=Chlorine add (Days):
@@ -152,15 +152,15 @@ btn_del=Del
 
 footer_last_boot_loading=Last boot: loading...
 
-titre_hwtest=Lay-Z-Spa Module | Hardware test
-titre_hwtest_header=Hardware test
+title_hwtest=Lay-Z-Spa Module | Hardware test
+title_hwtest_header=Hardware test
 menu_hwtest=Hardware test
 hwtest_instr1=Prepare to connect the cables to together, but don't do it yet.
 hwtest_instr2=Feed +5V and GND to the PCB (red and black wires in the picture). If your board bypasses the 5V from USB to Vin pin you can use USB instead. Don't use both methods!
 link_hwtest=Make the test
 
-titre_hwconfig=Lay-Z-Spa Module | Hardware Config
-titre_hwconfig_header=Hardware Config
+title_hwconfig=Lay-Z-Spa Module | Hardware Config
+title_hwconfig_header=Hardware Config
 section_hw_title=Hardware:
 label_select_cio=Select your CIO (pump) model:
 option_cio_pre2021=6 wire, pre 2021 (air)
@@ -207,13 +207,13 @@ label_power_idle=Idle
 label_power_air=Air
 label_power_jets=Jets
 
-titre_links=Lay-Z-Spa Module | Links
+title_links=Lay-Z-Spa Module | Links
 link_resetwifi_note=Be aware!
 link_hwtest_note=No prior instructions! Use 
 link_hwtest_note2= instead.
 link_inputs_note=Edge counting on pins. Debug feat.
 
-titre_mqttconfig=Lay-Z-Spa Module | MQTT Config
+title_mqttconfig=Lay-Z-Spa Module | MQTT Config
 label_enable_mqtt=Enable MQTT:
 label_mqtt_host=MQTT host addr:
 label_port=Port:
@@ -223,26 +223,26 @@ label_client_id=Client ID:
 label_base_topic=Base Topic:
 label_telemetry_interval=Telemetry Interval (s):
 
-titre_remover=Lay-Z-Spa Module | File Remover
-titre_remover_header=File Remover
+title_remover=Lay-Z-Spa Module | File Remover
+title_remover_header=File Remover
 section_remove_instr=Use this page to remove a file from the ESP8266.
 btn_delete=delete
 
-titre_success=Lay-Z-Spa Module | Success!
-titre_success_header=Success
+title_success=Lay-Z-Spa Module | Success!
+title_success_header=Success
 success_message=The operation was successful.
 success_btn_home=Home
 success_btn_upload=Upload a file
 success_btn_remove=Remove a file
 
-titre_uploader=Lay-Z-Spa Module | File Uploader
-titre_uploader_header=File Uploader
+title_uploader=Lay-Z-Spa Module | File Uploader
+title_uploader_header=File Uploader
 upload_instr1=Use this page to upload new files to the ESP8266.
 upload_instr2=You can use compressed (deflated) files (files with a .gz extension) to save space and bandwidth.
 btn_browse=Browse...
 btn_upload=upload
 
-titre_wificonfig=Lay-Z-Spa Module | Network Config
+title_wificonfig=Lay-Z-Spa Module | Network Config
 section_ap=Access Point:
 label_enable_ap=Enable specific AP:
 label_ssid=SSID:

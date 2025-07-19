@@ -1,0 +1,184 @@
+{% extends "../layout.html" %}
+
+{% block header_headline_title %}
+<span data-i18n="header_webconfig">Web Config</span>
+{% endblock %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "webconfig") %}
+{% endblock %}
+
+{% block header_after_default %}
+<!-- <select> caché pour i18n.js -->
+<select id="lang-select" style="display:none;">
+    <option value="en-EN">English</option>
+    <option value="fr-FR">Français</option>
+    <option value="es-ES">Español</option>
+    <option value="it-IT">Italiano</option>
+    <option value="pt-PT">Portugal</option>
+    <option value="de-DE">Deutch</option>
+</select>
+{% endblock %}
+
+{% block content %}
+<!-- bloc drapeaux au-dessus des options -->
+<section id="language-section">
+    <div id="lang-flags">
+        <span class="flag" data-lang="en-EN" title="English">🇬🇧</span>
+        <span class="flag" data-lang="fr-FR" title="Français">🇫🇷</span>
+        <span class="flag" data-lang="es-ES" title="Español">🇪🇸</span>
+        <span class="flag" data-lang="it-IT" title="Italiano">🇮🇹</span>
+        <span class="flag" data-lang="pt-PT" title="Portugal">🇵🇹</span>
+        <span class="flag" data-lang="de-DE" title="Deutch">🇩🇪</span>
+    </div>
+</section>
+
+<!-- section des toggles -->
+<section>
+    <table>
+        <tr>
+            <td data-i18n="show_section_temp">Show section "Temperature"</td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox" id="showSectionTemperature">
+                    <span class="slider round"></span>
+                </label>
+            </td>
+        </tr>
+        <tr>
+            <td data-i18n="show_section_display">Show section "Display"</td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox" id="showSectionDisplay">
+                    <span class="slider round"></span>
+                </label>
+            </td>
+        </tr>
+        <tr>
+            <td data-i18n="show_section_control">Show section "Control"</td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox" id="showSectionControl">
+                    <span class="slider round"></span>
+                </label>
+            </td>
+        </tr>
+        <tr>
+            <td data-i18n="show_section_buttons">Show section "Buttons"</td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox" id="showSectionButtons">
+                    <span class="slider round"></span>
+                </label>
+            </td>
+        </tr>
+        <tr>
+            <td data-i18n="show_section_timer">Show section "Timer"</td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox" id="showSectionTimer">
+                    <span class="slider round"></span>
+                </label>
+            </td>
+        </tr>
+        <tr>
+            <td data-i18n="show_section_totals">Show section "Totals"</td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox" id="showSectionTotals">
+                    <span class="slider round"></span>
+                </label>
+            </td>
+        </tr>
+        <tr>
+            <td data-i18n="use_control_selector">Use selector (instead of slider)</td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox" id="useControlSelector">
+                    <span class="slider round"></span>
+                </label>
+            </td>
+        </tr>
+    </table>
+</section>
+{% endblock %}
+
+{% block footer %}
+<table>
+    <tr>
+        <td colspan="2" class="center">
+            <button id="save" class="button" onclick="buttonConfirm(this); saveWebConfig()"
+                data-i18n="bouton_save">Save</button>
+        </td>
+    </tr>
+</table>
+{% endblock %}
+
+{% block embed_scripts %}
+<script>
+    function readWebConfig() {
+        var req = new XMLHttpRequest()
+        req.open('POST', '/getwebconfig/')
+        req.send()
+        req.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var json = JSON.parse(req.responseText)
+                document.getElementById('showSectionTemperature').checked = json.SST
+                document.getElementById('showSectionDisplay').checked = json.SSD
+                document.getElementById('showSectionControl').checked = json.SSC
+                document.getElementById('showSectionButtons').checked = json.SSB
+                document.getElementById('showSectionTimer').checked = json.SSTIM
+                document.getElementById('showSectionTotals').checked = json.SSTOT
+                document.getElementById('useControlSelector').checked = json.UCS
+            }
+        }
+    }
+
+    function saveWebConfig() {
+        localStorage.setItem('showSectionTemperature', document.getElementById('showSectionTemperature').checked)
+        localStorage.setItem('showSectionDisplay', document.getElementById('showSectionDisplay').checked)
+        localStorage.setItem('showSectionControl', document.getElementById('showSectionControl').checked)
+        localStorage.setItem('showSectionButtons', document.getElementById('showSectionButtons').checked)
+        localStorage.setItem('showSectionTimer', document.getElementById('showSectionTimer').checked)
+        localStorage.setItem('showSectionTotals', document.getElementById('showSectionTotals').checked)
+        localStorage.setItem('useControlSelector', document.getElementById('useControlSelector').checked)
+        writeWebConfig()
+    }
+
+    function writeWebConfig() {
+        var req = new XMLHttpRequest()
+        req.open('POST', '/setwebconfig/')
+        var json = {
+            'SST': document.getElementById('showSectionTemperature').checked,
+            'SSD': document.getElementById('showSectionDisplay').checked,
+            'SSC': document.getElementById('showSectionControl').checked,
+            'SSB': document.getElementById('showSectionButtons').checked,
+            'SSTIM': document.getElementById('showSectionTimer').checked,
+            'SSTOT': document.getElementById('showSectionTotals').checked,
+            'UCS': document.getElementById('useControlSelector').checked
+        }
+        req.send(JSON.stringify(json))
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        readWebConfig()
+
+        const selectLang = document.getElementById('lang-select')
+        function switchLang(langCode) {
+            if (langCode === 'en-EN') {
+                localStorage.setItem('langueSPA', langCode)
+                location.reload()
+            } else {
+                localStorage.setItem('langueSPA', langCode)
+                selectLang.value = langCode
+                selectLang.dispatchEvent(new Event('change'))
+            }
+        }
+        document.querySelectorAll('#lang-flags .flag').forEach(span => {
+            span.addEventListener('click', () => {
+                switchLang(span.getAttribute('data-lang'))
+            })
+        })
+    });
+</script>
+{% endblock %}

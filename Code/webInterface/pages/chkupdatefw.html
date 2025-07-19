@@ -1,0 +1,17 @@
+{% extends "../layout.html" %}
+
+{% block header_headline_title %}
+<span data-i18n="header_chkupdatefw">Check Firmware Update</span>{% endblock %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "chkupdatefw") %}
+
+{% block content %}
+<section>
+  <p data-i18n="chkupdate_message">
+    This functionality has been removed. It was too demanding for the ESP8266, and I couldn't figure out how to make
+    GitHub send small enough packages for it to handle. Unfortunately, it used to work, but I think something has
+    changed on GitHub's side.
+  </p>
+</section>
+{% endblock %}

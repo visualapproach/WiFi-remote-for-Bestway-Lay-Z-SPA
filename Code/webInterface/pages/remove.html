@@ -1,0 +1,34 @@
+{% extends "../layout.html" %}
+
+{% block header_headline_title %}
+<span data-i18n="header_remove">File Remover</span>
+{% endblock %}
+
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "remove") %}
+{% endblock %}
+
+{% block content %}
+<section>
+    <p data-i18n="remove_instruction">
+        Use this page to remove a file created on the ESP8266.
+    </p>
+    <table>
+        <tr>
+            <td>
+                <input type="text" id="fileToRemove" placeholder="Enter filename" style="width:100%;">
+            </td>
+            <td>
+                <button id="removeButton" class="button_red" onclick="removeFile()" data-i18n="btn_remove">
+                    Remove
+                </button>
+            </td>
+        </tr>
+    </table>
+</section>
+{% endblock %}
+
+{% block embed_scripts_default %}
+{% run embed_scripts('index', 'function', 'i18n', 'darkmode', 'remove') %}
+{% endblock %}

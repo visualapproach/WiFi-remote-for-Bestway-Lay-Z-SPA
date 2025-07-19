@@ -1,12 +1,12 @@
-titre_dashboard=Configuration Web
+title_dashboard=Configuration Web
 header_title=Configuration Web
 header_subtitle=Module Lay-Z-Spa
 
-titre_home=Module Lay-Z-Spa
+title_home=Module Lay-Z-Spa
 header_by=par visualapproach
 
-titre_calib=Module Lay-Z-Spa | Calibration manuelle SPA
-titre_calib_header=Calibration manuelle SPA
+title_calib=Module Lay-Z-Spa | Calibration manuelle SPA
+title_calib_header=Calibration manuelle SPA
 header_module=Module Lay-Z-Spa
 
 menu_home=Accueil
@@ -77,8 +77,8 @@ footer_fw_loading=Firmware : statut en cours de chargement…
 footer_model_loading=Modèle : statut en cours de chargement…
 footer_rssi_loading=RSSI : statut en cours de chargement…
 
-titre_chkupdatefw=Module Lay-Z-Spa | Vérifier la mise à jour du firmware
-titre_chkupdatefw_header=Vérifier la mise à jour du firmware
+title_chkupdatefw=Module Lay-Z-Spa | Vérifier la mise à jour du firmware
+title_chkupdatefw_header=Vérifier la mise à jour du firmware
 chkupdate_message=Cette fonctionnalité a été supprimée. Elle était trop exigeante pour l'ESP8266 et je n’ai pas réussi à faire en sorte que GitHub envoie des paquets assez petits pour qu’il les gère. Dommage, car cela fonctionnait auparavant, mais je pense que quelque chose a changé du côté de GitHub.
 
 tooltip_virtual=L’ESP tente de suivre la température de l’eau même lorsque la pompe est arrêtée et que la température baisse dans la pompe alors que le grand volume d’eau refroidit plus lentement. Utilise la température ambiante. Doit être calibré avant usage. Voir page SPA Config.
@@ -88,7 +88,7 @@ tooltip_ready=Nouveau mode d’estimation du temps de chauffe. Fonctionne mieux 
 tooltip_uptime=Temps de fonctionnement total de l’ESP depuis la dernière remise à zéro du compteur. Le redémarrage continue le comptage.
 
 
-titre_spaconfig=Module Lay-Z-Spa | Configuration SPA
+title_spaconfig=Module Lay-Z-Spa | Configuration SPA
 
 label_price_kwh=Prix par kWh :
 label_chlorine_interval=Ajout de chlore (jours) :
@@ -159,15 +159,15 @@ btn_del=Suppr
 
 footer_last_boot_loading=Dernier démarrage : chargement…
 
-titre_hwtest=Module Lay-Z-Spa | Test Matériel
-titre_hwtest_header=Test Matériel
+title_hwtest=Module Lay-Z-Spa | Test Matériel
+title_hwtest_header=Test Matériel
 menu_hwtest=Test Matériel
 hwtest_instr1=Préparez-vous à connecter les câbles ensemble, mais ne le faites pas encore.
 hwtest_instr2=Alimentez la carte en +5V et GND (fils rouge et noir sur l'image). Si votre carte bypass le 5V de l’USB vers la broche Vin, vous pouvez utiliser l’USB à la place. N’utilisez pas les deux méthodes !
 link_hwtest=Effectuer le test
 
-titre_hwconfig=Module Lay-Z-Spa | Configuration Matérielle
-titre_hwconfig_header=Configuration Matérielle
+title_hwconfig=Module Lay-Z-Spa | Configuration Matérielle
+title_hwconfig_header=Configuration Matérielle
 section_hw_title=Matériel :
 label_select_cio=Sélectionnez votre modèle CIO (pompe) :
 option_cio_pre2021=6 fils, pré 2021 (air)
@@ -214,13 +214,13 @@ label_power_idle=Inactif
 label_power_air=Air
 label_power_jets=Jets
 
-titre_links=Module Lay-Z-Spa | Liens
+title_links=Module Lay-Z-Spa | Liens
 link_resetwifi_note=Attention !
 link_hwtest_note=Pas d’instructions préalables ! Utilise 
 link_hwtest_note2= à la place.
 link_inputs_note=Comptage des impulsions sur les broches. Fonction de debug.
 
-titre_mqttconfig=Module Lay-Z-Spa | Configuration MQTT
+title_mqttconfig=Module Lay-Z-Spa | Configuration MQTT
 label_enable_mqtt=Activer MQTT :
 label_mqtt_host=Adresse du serveur MQTT :
 label_port=Port :
@@ -230,7 +230,7 @@ label_client_id=ID client :
 label_base_topic=Topic de base :
 label_telemetry_interval=Intervalle télémétrie (s) :
 
-titre_remove=Suppression de fichiers
+title_remove=Suppression de fichiers
 header_remove=Suppression de fichiers
 header_module=module lay-z-spa
 menu_remove=Suppression de fichiers
@@ -240,15 +240,15 @@ alert_enter_filename=Veuillez entrer un nom de fichier.
 alert_file_removed=Le fichier a été supprimé.
 
 
-titre_success=Module Lay-Z-Spa | Succès !
-titre_success_header=Succès
+title_success=Module Lay-Z-Spa | Succès !
+title_success_header=Succès
 success_message=L’opération a réussi.
 success_btn_home=Accueil
 success_btn_upload=Téléverser un fichier
 success_btn_remove=Supprimer un fichier
 
-titre_uploader=Module Lay-Z-Spa | Téléversement de fichiers
-titre_uploader_header=Téléverseur de fichiers
+title_uploader=Module Lay-Z-Spa | Téléversement de fichiers
+title_uploader_header=Téléverseur de fichiers
 upload_instr1=Utilisez cette page pour téléverser de nouveaux fichiers vers l’ESP8266.
 upload_instr2=Vous pouvez utiliser des fichiers compressés (déflatés) (fichiers avec extension .gz) pour économiser de l’espace et de la bande passante.
 btn_browse=Parcourir...
@@ -259,7 +259,7 @@ btn_upload=téléverser
 # ========================
 
 # Titre de la page
-titre_networkconfig=Configuration Réseau
+title_networkconfig=Configuration Réseau
 
 # En-tête (header) : titre et sous-titre
 header_networkconfig=Configuration Réseau

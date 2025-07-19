@@ -1,0 +1,695 @@
+{% extends "../layout.html" %}
+
+{% block header_headline_title %}
+<span data-i18n="title_home">Lay-Z-Spa Module</span>
+{% endblock %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "index") %}
+{% endblock %}
+
+{% block content %}
+<!-- ==================== SECTION: Display Panel ==================== -->
+<section id="sectionDisplay">
+  <table>
+    <tr>
+      <td class="center">
+        <div id="display">[DSP]</div>
+      </td>
+    </tr>
+  </table>
+</section>
+
+<!-- ==================== SECTION: Temperature ==================== -->
+<section id="sectionTemperature">
+  <div class="visualapproach"></div>
+  <h2 data-i18n="section_temp_title">Temperature</h2>
+  <table class="fixed">
+    <tr>
+      <td>
+        <!-- 1) Un span dédié au texte « Actual: » ou « Réel : » -->
+        <span data-i18n="label_actual">Actual:</span>
+      </td>
+      <td><span id="atlabel">n/a</span></td>
+    </tr>
+    <tr>
+      <td>
+        <!-- 2) Un span dédié au texte « Virtual: » / « Virtuel : » -->
+        <span data-i18n="label_virtual">Virtual:</span>
+
+        <!-- 3) La bulle « ? » en dehors du span de traduction -->
+        <span class="tooltip"
+          data-text="ESP attempts to keep track of water temperature even when pump is stopped and the temperature drops in the pump while the large body of water cools slower. Uses ambient temperature. Must be calibrated before working. See SPA Config page."
+          data-i18n="[data-text]tooltip_virtual">?</span>
+      </td>
+      <td><span id="vtlabel">n/a</span></td>
+    </tr>
+    <tr>
+      <td>
+        <span data-i18n="label_target">Target:</span>
+      </td>
+      <td><span id="ttlabel">n/a</span></td>
+    </tr>
+  </table>
+</section>
+
+<!-- ==================== SECTION: Control ==================== -->
+<section id="sectionControl">
+  <h2 data-i18n="section_control_title">Control</h2>
+
+  <table id="tableSlider">
+    <tr>
+      <td><span data-i18n="control_temp">Temperature</span></td>
+      <td>
+        <input type="range" id="temp" min="20" max="40" step="1" value="20" onmouseup="sendCommand('setTarget')"
+          ontouchend="sendCommand('setTarget')">
+      </td>
+      <td style="width:10%; text-align:right" id="sliderTempVal">n/a</td>
+    </tr>
+    <tr>
+      <td><span data-i18n="control_ambient">Ambient Temperature</span></td>
+      <td>
+        <input type="range" id="amb" min="-40" max="60" step="1" value="20" onmouseup="sendCommand('setAmbient')"
+          ontouchend="sendCommand('setAmbient')">
+      </td>
+      <td style="text-align:right" id="sliderAmbVal">n/a</td>
+    </tr>
+    <tr id="rowBrightness">
+      <td>
+        <!-- 1) Span juste pour « Brightness » / « Luminosité » -->
+        <span data-i18n="control_brightness">Brightness</span>
+
+        <!-- 2) Bulle « ? » placée à part -->
+        <span class="tooltip"
+          data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off), but will light up for 5s when pressing a button."
+          data-i18n="[data-text]tooltip_brightness">?</span>
+      </td>
+      <td>
+        <input type="range" id="brt" min="0" max="8" step="1" value="7" onmouseup="sendCommand('setBrightness')"
+          ontouchend="sendCommand('setBrightness')">
+      </td>
+      <td style="text-align:right" id="sliderBrtVal">n/a</td>
+    </tr>
+  </table>
+
+  <table id="tableSelector" class="fixed">
+    <tr>
+      <td class="center"><span data-i18n="control_temp">Temperature</span></td>
+      <td class="center"><span data-i18n="control_ambient">Ambient Temperature</span></td>
+      <td id="brightnessHeader" class="center">
+        <!-- même principe pour la version sélecteur numérique -->
+        <span data-i18n="control_brightness">Brightness</span>
+        <span class="tooltip left"
+          data-text="Remember: When set to '0' the display and all buttons on the pump are completely dimmed out (off), but will light up for 5s when pressing a button."
+          data-i18n="[data-text]tooltip_brightness">?</span>
+      </td>
+    </tr>
+    <tr>
+      <td class="center">
+        <div class="selector">
+          <button onclick="increaseNumber('selectorTemp'); sendCommand('setTargetSelector')"
+            class="selectorbutton selectortop">ᐱ</button>
+          <input style="display:none" type="number" id="selectorTemp" min="20" max="40" step="1" value="20"
+            class="selectorvalue" onchange="sendCommand('setTargetSelector')">
+          <div class="wrapper">
+            <span class="numDisplay"></span>
+          </div>
+          <button onclick="decreaseNumber('selectorTemp'); sendCommand('setTargetSelector')"
+            class="selectorbutton selectorbottom">ᐯ</button>
+        </div>
+      </td>
+      <td class="center">
+        <div class="selector">
+          <button onclick="increaseNumber('selectorAmb'); sendCommand('setAmbientSelector')"
+            class="selectorbutton selectortop">ᐱ</button>
+          <input style="display:none" type="number" id="selectorAmb" min="-40" max="60" step="1" value="20"
+            class="selectorvalue" onchange="sendCommand('setAmbientSelector')">
+          <div class="wrapper">
+            <span class="numDisplay"></span>
+          </div>
+          <button onclick="decreaseNumber('selectorAmb'); sendCommand('setAmbientSelector')"
+            class="selectorbutton selectorbottom">ᐯ</button>
+        </div>
+      </td>
+      <td class="center">
+        <div class="selector" id="divBrightness">
+          <button onclick="increaseNumber('selectorBrt'); sendCommand('setBrightnessSelector')"
+            class="selectorbutton selectortop">ᐱ</button>
+          <input type="number" id="selectorBrt" min="0" max="8" step="1" value="7" class="selectorvalue"
+            onchange="sendCommand('setBrightnessSelector')">
+          <button onclick="decreaseNumber('selectorBrt'); sendCommand('setBrightnessSelector')"
+            class="selectorbutton selectorbottom">ᐯ</button>
+        </div>
+      </td>
+    </tr>
+  </table>
+</section>
+
+<!-- ==================== SECTION: Buttons ==================== -->
+<section id="sectionButtons">
+  <h2 data-i18n="section_buttons_title">Buttons</h2>
+  <table class="fixed">
+    <tr>
+      <td class="right"><span data-i18n="btn_bubbles">Bubbles</span></td>
+      <td>
+        <label class="switch">
+          <input type="checkbox" id="AIR" onchange="sendCommand('toggleBubbles')">
+          <span class="slider round"></span>
+        </label>
+      </td>
+      <td class="right"><span data-i18n="btn_heater">Heater</span></td>
+      <td>
+        <label class="switch">
+          <input type="checkbox" id="HTR" onchange="sendCommand('toggleHeater')">
+          <span id="htrspan" class="slider round"></span>
+        </label>
+      </td>
+    </tr>
+    <tr>
+      <td class="right"><span data-i18n="btn_pump">Pump</span></td>
+      <td>
+        <label class="switch">
+          <input type="checkbox" id="FLT" onchange="sendCommand('togglePump')">
+          <span class="slider round"></span>
+        </label>
+      </td>
+      <td class="right"><span data-i18n="btn_unit">Unit (F/C)</span></td>
+      <td>
+        <label class="switch">
+          <input type="checkbox" id="UNT" onchange="sendCommand('toggleUnit')">
+          <span class="slider round"></span>
+        </label>
+      </td>
+    </tr>
+    <tr>
+      <td id="jets" class="right"><span data-i18n="btn_hydrojets">Hydrojets</span></td>
+      <td id="jetsswitch">
+        <label class="switch">
+          <input type="checkbox" id="HJT" onchange="sendCommand('toggleHydroJets')">
+          <span class="slider round"></span>
+        </label>
+      </td>
+      <td id="god" class="right"><span data-i18n="btn_take_control">Take control</span></td>
+      <td id="godswitch">
+        <label class="switch">
+          <input type="checkbox" id="GOD" onchange="sendCommand('toggleGodmode')">
+          <span class="slider round"></span>
+        </label>
+      </td>
+    </tr>
+  </table>
+</section>
+
+<!-- ==================== SECTION: Timer ==================== -->
+<section id="sectionTimer">
+  <h2 data-i18n="section_timer_title">Timer</h2>
+  <table>
+    <tr>
+      <td>
+        <span data-i18n="tim_label_chlorine">
+          Last chlorine add was <span id="cltimer">n/a</span> ago.
+        </span>
+      </td>
+      <td>
+        <button id="cltimerbtn" class="button" onclick="buttonConfirm(this); sendCommand('resetTimerChlorine')"
+          data-i18n="btn_reset">reset</button>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <span data-i18n="tim_label_filter_change">
+          Last filter change was <span id="freplacetimer">n/a</span> ago.
+        </span>
+      </td>
+      <td>
+        <button id="freplacetimerbtn" class="button"
+          onclick="buttonConfirm(this); sendCommand('resetTimerReplaceFilter')" data-i18n="btn_reset">reset</button>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <span data-i18n="tim_label_filter_clean">
+          Last filter clean was <span id="fcleantimer">n/a</span> ago.
+        </span>
+      </td>
+      <td>
+        <button id="fcleantimerbtn" class="button" onclick="buttonConfirm(this); sendCommand('resetTimerCleanFilter')"
+          data-i18n="btn_reset">reset</button>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <span data-i18n="tim_label_filter_rinse">
+          Last filter rinse was <span id="frinsetimer">n/a</span> ago.
+        </span>
+      </td>
+      <td>
+        <button id="frinsetimerbtn" class="button" onclick="buttonConfirm(this); sendCommand('resetTimerRinseFilter')"
+          data-i18n="btn_reset">reset</button>
+      </td>
+    </tr>
+  </table>
+</section>
+
+<!-- ==================== SECTION: Totals ==================== -->
+<section id="sectionTotals">
+  <h2 data-i18n="section_totals_title">Totals</h2>
+  <table class="fixed">
+    <tr>
+      <td>
+        <span data-i18n="totals_time_label">
+          Time:
+        </span>
+        <!-- Bul “?” pour “Time” -->
+        <span class="tooltip" data-text="ESP sends UTC. Browser converts to Local."
+          data-i18n="[data-text]tooltip_time">?</span>
+      </td>
+      <td><span id="time">n/a</span></td>
+    </tr>
+    <tr>
+      <td>
+        <span data-i18n="totals_ready_label">
+          Ready in:
+        </span>
+        <!-- Bul “?” pour “Ready in” -->
+        <span class="tooltip"
+          data-text="New way of estimating time to ready. Works best if given actual ambient temperature from for example HA."
+          data-i18n="[data-text]tooltip_ready">?</span>
+      </td>
+      <td><span id="t2r">n/a</span></td>
+    </tr>
+    <tr>
+      <td>
+        <span data-i18n="totals_uptime_label">
+          Uptime:
+        </span>
+        <!-- Bul “?” pour “Uptime” -->
+        <span class="tooltip"
+          data-text="Total running time of ESP since counter was reset. Rebooting will continue counting."
+          data-i18n="[data-text]tooltip_uptime">?</span>
+      </td>
+      <td><span id="uptime">n/a</span></td>
+    </tr>
+    <tr>
+      <td data-i18n="totals_pump_label">Pump:</td>
+      <td><span id="filtertime">n/a</span></td>
+    </tr>
+    <tr>
+      <td data-i18n="totals_heating_label">Heating:</td>
+      <td><span id="heatingtime">n/a</span></td>
+    </tr>
+    <tr>
+      <td data-i18n="totals_air_label">Air:</td>
+      <td><span id="airtime">n/a</span></td>
+    </tr>
+    <tr id="jetstotals">
+      <td data-i18n="totals_hydrojets_label">Hydrojets:</td>
+      <td><span id="jettime">n/a</span></td>
+    </tr>
+    <tr>
+      <td data-i18n="totals_cost_label">Estimated cost:</td>
+      <td><span id="cost">n/a</span></td>
+    </tr>
+    <tr>
+      <td colspan="2" class="center">
+        <button id="reset" class="button" onclick="resetTotals()" data-i18n="btn_reset">reset</button>
+      </td>
+    </tr>
+  </table>
+</section>
+{% endblock %}
+
+{% block footer %}
+<p class="center">
+  <span id="mqtt" data-i18n="footer_mqtt_loading">MQTT: loading status...</span><br>
+  <span id="fw" data-i18n="footer_fw_loading">Firmware: loading status...</span><br>
+  <span id="model" data-i18n="footer_model_loading">Model: loading status...</span><br>
+  <span id="rssi" data-i18n="footer_rssi_loading">RSSI: loading status...</span>
+</p>
+{% endblock %}
+
+{% block embed_scripts %}
+<script>
+  // Connexion WebSocket et gestion des messages
+  var connection
+  const cmdMap = {
+    setTarget: 0,
+    setTargetSelector: 0,
+    toggleUnit: 1,
+    toggleBubbles: 2,
+    toggleHeater: 3,
+    togglePump: 4,
+    restartEsp: 6,
+    resetTotals: 8,
+    resetTimerChlorine: 9,
+    resetTimerReplaceFilter: 10,
+    toggleHydroJets: 11,
+    setBrightness: 12,
+    setBrightnessSelector: 12,
+    setBeep: 13,
+    setAmbient: 15,
+    setAmbientSelector: 15,
+    setAmbientF: 14,
+    setAmbientC: 15,
+    resetDaily: 16,
+    toggleGodmode: 17,
+    setFullpower: 18,
+    printText: 19,
+    setReady: 20,
+    setR: 21,
+    resetTimerRinseFilter: 22,
+    resetTimerCleanFilter: 23
+  }
+
+  const btnMap = {
+    toggleUnit: "UNT",
+    toggleBubbles: "AIR",
+    toggleHeater: "HTR",
+    togglePump: "FLT",
+    toggleHydroJets: "HJT",
+    toggleGodmode: "GOD"
+  }
+
+  var initControlValues = true
+  const dspBrtMultiplier = 16
+  var updateTempState = false, updateAmbState = false, updateBrtState = false
+
+  function connect() {
+    connection = new WebSocket("ws://" + location.hostname + ":81/", ["arduino"])
+
+    connection.onopen = function () {
+      document.body.classList.add("connected")
+      initControlValues = true
+    }
+
+    connection.onerror = function (error) {
+      console.log("WebSocket Error ", error)
+      document.body.classList.add("error")
+      connection.close()
+    }
+
+    connection.onclose = function () {
+      console.log("WebSocket connection closed, reconnecting in 5 s")
+      document.body.classList.add("error")
+      setTimeout(connect, 5000)
+    }
+
+    connection.onmessage = function (e) {
+      handlemsg(e)
+    }
+  }
+
+  function tryParseJSONObject(jsonString) {
+    try {
+      var o = JSON.parse(jsonString)
+      if (o && typeof o === "object") {
+        return o
+      }
+    } catch (e) { }
+    return false
+  }
+
+  function handlemsg(e) {
+    var msgobj = tryParseJSONObject(e.data)
+    if (!msgobj) return
+
+    if (msgobj.CONTENT === "OTHER") {
+      const states = [
+        "CONNECTION_TIMEOUT", "CONNECTION_LOST", "CONNECT_FAILED", "DISCONNECTED",
+        "CONNECTED", "CONNECT_BAD_PROTOCOL", "CONNECT_BAD_CLIENT_ID", "CONNECT_UNAVAILABLE",
+        "CONNECT_BAD_CREDENTIALS", "CONNECT_UNAUTHORIZED"
+      ]
+      document.getElementById("mqtt").innerHTML = "MQTT: " + states[msgobj.MQTT + 4]
+      document.getElementById("fw").innerHTML = "Firmware: " + msgobj.FW
+      document.getElementById("model").innerHTML = "Model: " + msgobj.MODEL
+      document.getElementById("rssi").innerHTML = "RSSI: " + msgobj.RSSI
+
+      document.getElementById("jets").style.display = msgobj.HASJETS ? "table-cell" : "none"
+      document.getElementById("jetsswitch").style.display = msgobj.HASJETS ? "table-cell" : "none"
+      document.getElementById("jetstotals").style.display = msgobj.HASJETS ? "table-row" : "none"
+      document.getElementById("god").style.display = msgobj.HASGOD ? "table-cell" : "none"
+      document.getElementById("godswitch").style.display = msgobj.HASGOD ? "table-cell" : "none"
+
+      if (msgobj.MODEL.startsWith("NO")) {
+        document.getElementById("divBrightness").style.display = "none"
+        document.getElementById("brightnessHeader").style.display = "none"
+        document.getElementById("rowBrightness").style.display = "none"
+      } else {
+        document.getElementById("divBrightness").style.display = "table-cell"
+        document.getElementById("brightnessHeader").style.display = "table-cell"
+        document.getElementById("rowBrightness").style.display = "table-row"
+      }
+    }
+
+    if (msgobj.CONTENT === "STATES") {
+      // Températures
+      document.getElementById("atlabel").innerHTML = msgobj.TMP.toString()
+      document.getElementById("vtlabel").innerHTML = msgobj.VTM.toFixed(2).toString()
+      document.getElementById("ttlabel").innerHTML = msgobj.TGT.toString()
+
+      // Boutons
+      document.getElementById("AIR").checked = msgobj.AIR
+      if (document.getElementById("UNT").checked !== msgobj.UNT) {
+        document.getElementById("UNT").checked = msgobj.UNT
+        initControlValues = true
+      }
+      document.getElementById("FLT").checked = msgobj.FLT
+      document.getElementById("HJT").checked = msgobj.HJT
+      document.getElementById("GOD").checked = msgobj.GOD
+      document.getElementById("HTR").checked = msgobj.RED || msgobj.GRN
+
+      // Couleur du bouton chauffage
+      document.getElementById("htrspan").classList.remove("heateron", "heateroff")
+      if (msgobj.RED || msgobj.GRN) {
+        document.getElementById("htrspan").classList.add(
+          msgobj.RED ? "heateron" : (msgobj.GRN ? "heateroff" : "")
+        )
+      }
+
+      // Affichage
+      document.getElementById("display").innerHTML =
+        "" + String.fromCharCode(msgobj.CH1, msgobj.CH2, msgobj.CH3) + ""
+      document.getElementById("display").style.color = rgb(
+        255 - dspBrtMultiplier * 8 + dspBrtMultiplier * (parseInt(msgobj.BRT) + 1),
+        0,
+        0
+      )
+
+      // Initialiser les contrôles (une seule fois)
+      if (initControlValues) {
+        var minTemp = msgobj.UNT ? 20 : 68
+        var maxTemp = msgobj.UNT ? 40 : 104
+        var minAmb = msgobj.UNT ? -40 : -40
+        var maxAmb = msgobj.UNT ? 60 : 140
+
+        document.getElementById("temp").min = minTemp
+        document.getElementById("temp").max = maxTemp
+        document.getElementById("selectorTemp").min = minTemp
+        document.getElementById("selectorTemp").max = maxTemp
+
+        document.getElementById("amb").min = minAmb
+        document.getElementById("amb").max = maxAmb
+        document.getElementById("selectorAmb").min = minAmb
+        document.getElementById("selectorAmb").max = maxAmb
+
+        document.getElementById("temp").value = msgobj.TGT
+        document.getElementById("amb").value = msgobj.AMB
+        document.getElementById("brt").value = msgobj.BRT
+
+        initControlValues = false
+      }
+
+      document.getElementById("sliderTempVal").innerHTML = msgobj.TGT
+      document.getElementById("sliderAmbVal").innerHTML = msgobj.AMB
+      document.getElementById("sliderBrtVal").innerHTML = msgobj.BRT
+
+      var elemSelectorTemp = document.getElementById("selectorTemp")
+      var elemSelectorAmb = document.getElementById("selectorAmb")
+      var elemSelectorBrt = document.getElementById("selectorBrt")
+
+      if (document.activeElement !== elemSelectorTemp && !updateTempState) {
+        elemSelectorTemp.value = msgobj.TGT
+        elemSelectorTemp.parentElement.querySelector(".numDisplay").textContent = msgobj.TGT
+      }
+      if (document.activeElement !== elemSelectorAmb && !updateAmbState) {
+        elemSelectorAmb.value = msgobj.AMB
+        elemSelectorAmb.parentElement.querySelector(".numDisplay").textContent = msgobj.AMB
+      }
+      if (document.activeElement !== elemSelectorBrt && !updateBrtState) {
+        elemSelectorBrt.value = msgobj.BRT
+      }
+
+      if (elemSelectorTemp.value == msgobj.TGT) updateTempState = false
+      if (elemSelectorAmb.value == msgobj.AMB) updateAmbState = false
+      if (elemSelectorBrt.value == msgobj.BRT) updateBrtState = false
+    }
+
+    if (msgobj.CONTENT === "TIMES") {
+      // Horodatages, timers, etc.
+      var date = new Date(msgobj.TIME * 1000)
+      document.getElementById("time").innerHTML = date.toLocaleString()
+
+      var clDate = (Date.now() / 1000 - msgobj.CLTIME) / (24 * 3600.0)
+      var clDateRound = Math.round(clDate)
+      document.getElementById("cltimer").innerHTML = clDateRound + " day" + (clDateRound !== 1 ? "s" : "")
+      document.getElementById("cltimerbtn").className = clDate > msgobj.CLINT ? "button_red" : "button"
+
+      var fDate = (Date.now() / 1000 - msgobj.FREP) / (24 * 3600.0)
+      var fDateRound = Math.round(fDate)
+      document.getElementById("freplacetimer").innerHTML = fDateRound + " day" + (fDateRound !== 1 ? "s" : "")
+      document.getElementById("freplacetimerbtn").className = fDate > msgobj.FREPI ? "button_red" : "button"
+
+      fDate = (Date.now() / 1000 - msgobj.FCLE) / (24 * 3600.0)
+      fDateRound = Math.round(fDate)
+      document.getElementById("fcleantimer").innerHTML = fDateRound + " day" + (fDateRound !== 1 ? "s" : "")
+      document.getElementById("fcleantimerbtn").className = fDate > msgobj.FCLEI ? "button_red" : "button"
+
+      fDate = (Date.now() / 1000 - msgobj.FRIN) / (24 * 3600.0)
+      fDateRound = Math.round(fDate)
+      document.getElementById("frinsetimer").innerHTML = fDateRound + " day" + (fDateRound !== 1 ? "s" : "")
+      document.getElementById("frinsetimerbtn").className = fDate > msgobj.FRINI ? "button_red" : "button"
+
+      document.getElementById("heatingtime").innerHTML = s2dhms(msgobj.HEATINGTIME)
+      document.getElementById("uptime").innerHTML = s2dhms(msgobj.UPTIME)
+      document.getElementById("airtime").innerHTML = s2dhms(msgobj.AIRTIME)
+      document.getElementById("filtertime").innerHTML = s2dhms(msgobj.PUMPTIME)
+      document.getElementById("jettime").innerHTML = s2dhms(msgobj.JETTIME)
+      document.getElementById("cost").innerHTML = msgobj.COST.toFixed(2)
+      document.getElementById("t2r").innerHTML = s2dhms(msgobj.T2R * 3600) + " (" + msgobj.RS + ")"
+    }
+  }
+
+  function s2dhms(val) {
+    var d = Math.floor(val / 86400)
+    var h = Math.floor((val % 86400) / 3600)
+    var m = Math.floor((val % 3600) / 60)
+    var s = Math.floor(val % 60)
+    return d + "d " + String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0")
+  }
+
+
+  function sendCommand(cmd) {
+    if (typeof cmdMap[cmd] === "undefined") {
+      console.log("invalid command")
+      return
+    }
+
+    var unit = document.getElementById("UNT").checked
+    var value = 0
+
+    if (cmd === "setTarget" || cmd === "setTargetSelector") {
+      var inputId = cmd === "setTarget" ? "temp" : "selectorTemp"
+      value = parseInt(document.getElementById(inputId).value)
+      var minVal = unit ? 20 : 68
+      var maxVal = unit ? 40 : 104
+      value = Math.min(Math.max(value, minVal), maxVal)
+      document.getElementById("sliderTempVal").innerHTML = value.toString()
+      document.getElementById("selectorTemp").value = value.toString()
+      document.getElementById("selectorTemp").setAttribute("value", value.toString())
+      updateTempState = true
+    } else if (cmd === "setAmbient" || cmd === "setAmbientSelector") {
+      var inputId = cmd === "setAmbient" ? "amb" : "selectorAmb"
+      value = parseInt(document.getElementById(inputId).value)
+      var minVal = unit ? -40 : -40
+      var maxVal = unit ? 60 : 140
+      value = Math.min(Math.max(value, minVal), maxVal)
+      document.getElementById("sliderAmbVal").innerHTML = value.toString()
+      document.getElementById("selectorAmb").value = value.toString()
+      cmd = "setAmbient" + (unit ? "C" : "F")
+      updateAmbState = true
+    } else if (cmd === "setBrightness" || cmd === "setBrightnessSelector") {
+      var inputId = cmd === "setBrightness" ? "brt" : "selectorBrt"
+      value = parseInt(document.getElementById(inputId).value)
+      value = Math.min(Math.max(value, 0), 8)
+      document.getElementById("sliderBrtVal").innerHTML = value.toString()
+      document.getElementById("selectorBrt").value = value.toString()
+      document.getElementById("display").style.color = rgb(
+        255 - dspBrtMultiplier * 8 + dspBrtMultiplier * (value + 1),
+        0,
+        0
+      )
+      updateBrtState = true
+    } else if (
+      btnMap[cmd] &&
+      (cmd === "toggleUnit" ||
+        cmd === "toggleBubbles" ||
+        cmd === "toggleHeater" ||
+        cmd === "togglePump" ||
+        cmd === "toggleHydroJets" ||
+        cmd === "toggleGodmode")
+    ) {
+      value = document.getElementById(btnMap[cmd]).checked
+      initControlValues = true
+    }
+
+    var obj = { CMD: cmdMap[cmd], VALUE: value, XTIME: 0, INTERVAL: 0, TXT: "" }
+    connection.send(JSON.stringify(obj))
+    console.log(JSON.stringify(obj))
+
+  }
+
+  function rgb(r, g, b) {
+    return "rgb(" + Math.floor(r) + "," + Math.floor(g) + "," + Math.floor(b) + ")"
+  }
+
+  document.onreadystatechange = function () {
+    if (document.readyState === "complete") {
+      initApplication()
+    }
+  }
+
+  function initApplication() {
+    if (localStorage.getItem("showSectionTemperature")) {
+      setWebConfig()
+    }
+    setTimeout(loadWebConfig, 500)
+    setTimeout(connect, 1000)
+  }
+
+  // TODO: this webconfig stuff should be in its own file because webconfig.html uses it as well
+  function setWebConfig() {
+    document.getElementById("sectionDisplay").style.display =
+      localStorage.getItem("showSectionDisplay") !== "false" ? "block" : "none"
+    document.getElementById("sectionTemperature").style.display =
+      localStorage.getItem("showSectionTemperature") !== "false" ? "block" : "none"
+    document.getElementById("sectionControl").style.display =
+      localStorage.getItem("showSectionControl") !== "false" ? "block" : "none"
+    document.getElementById("sectionButtons").style.display =
+      localStorage.getItem("showSectionButtons") !== "false" ? "block" : "none"
+    document.getElementById("sectionTimer").style.display =
+      localStorage.getItem("showSectionTimer") !== "false" ? "block" : "none"
+    document.getElementById("sectionTotals").style.display =
+      localStorage.getItem("showSectionTotals") !== "false" ? "block" : "none"
+
+    var useSelector = localStorage.getItem("useControlSelector") !== "false"
+    document.getElementById("tableSlider").style.display = useSelector ? "none" : "table"
+    document.getElementById("tableSelector").style.display = useSelector ? "table" : "none"
+  }
+
+  function loadWebConfig() {
+    var Http = new XMLHttpRequest()
+    Http.open("POST", "/getwebconfig/")
+    Http.send()
+    Http.onreadystatechange = function () {
+      if (this.readyState === 4 && this.status === 200) {
+        var json = JSON.parse(Http.responseText)
+        localStorage.setItem("showSectionTemperature", json.SST)
+        localStorage.setItem("showSectionDisplay", json.SSD)
+        localStorage.setItem("showSectionControl", json.SSC)
+        localStorage.setItem("showSectionButtons", json.SSB)
+        localStorage.setItem("showSectionTimer", json.SSTIM)
+        localStorage.setItem("showSectionTotals", json.SSTOT)
+        localStorage.setItem("useControlSelector", json.UCS)
+        setWebConfig()
+      }
+    }
+  }
+
+  function resetTotals() {
+    if (confirm('Do you really want to reset the totals?')) {
+      buttonConfirm(document.getElementById("reset"))
+      sendCommand("resetTotals")
+    }
+  }
+</script>
+{% endblock %}

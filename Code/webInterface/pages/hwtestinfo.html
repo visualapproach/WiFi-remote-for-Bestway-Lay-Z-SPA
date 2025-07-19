@@ -1,0 +1,24 @@
+{% extends "../layout.html" %}
+
+{% block header_headline_title %}
+<span data-i18n="title_hwtest_header">Hardware test</span>{% endblock %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "hwtestinfo") %}
+
+{% block content %}
+<section>
+    <p data-i18n="hwtest_instr1">
+        Prepare to connect the cables to together, but don't do it yet.
+    </p>
+    <img src="hwtest2.jpg" width="300">
+    <br>
+    <p data-i18n="hwtest_instr2">
+        Feed +5V and GND to the PCB (red and black wires in the picture). If your board bypasses the 5V from USB
+        to Vin pin you can use USB instead. Don't use both methods!
+    </p>
+    <img src="hwtest1.jpg" width="300">
+    <br><br>
+    <a href="./hwtest/" data-i18n="link_hwtest">Make the test</a>
+</section>
+{% endblock %}

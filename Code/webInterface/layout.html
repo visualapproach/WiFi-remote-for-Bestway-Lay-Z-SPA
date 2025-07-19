@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- TODO: title in layout-->
+    <title data-i18n="title_success">Lay-Z-Spa Module | Success!</title>
+    <meta charset="utf-8">
+    <link rel="icon" type="image/png" sizes="180x180" href="favicon.png">
+    <meta name="theme-color" content="#0f4677">
+    <link rel="stylesheet" href="main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1">
+</head>
+
+<body>
+    <div id="site">
+        <header>
+            {% block header_before_default %}{% endblock %}
+            {% block header_dark_mode_form %}
+            <form id="darkModeForm">
+                <label class="switch">
+                    <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                    <span class="slider round"></span>
+                </label>
+            </form>
+            {% endblock %}
+            {% block header_headline %}
+
+            <a href="./">
+                <div id="header">
+                    {% block header_headline_title %} {% endblock %}
+                    <span data-i18n="header_module">lay-z-spa module</span>
+                </div>
+            </a>
+            {% block header_top_navigation_icon %}
+            <a href="javascript:void(0);" class="topnavicon" onclick="topNav()"></a>
+            {% endblock %}
+            {% block header_after_default %}{% endblock %}
+        </header>
+        {% block top_navigation %}{% endblock %}
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer>
+        {% block footer %}{% endblock %}
+    </footer>
+
+    {% block after_body %}{% endblock %}
+    {% block embed_scripts_default %}
+    {% run embed_scripts('index', 'function', 'i18n', 'darkmode') %}
+    {% endblock %}
+    {% block embed_scripts %}{% endblock %}
+
+</body>

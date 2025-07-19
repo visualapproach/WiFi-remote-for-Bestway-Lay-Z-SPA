@@ -1,0 +1,27 @@
+{% extends "../layout.html" %}
+
+{% block header_headline_title %}
+<span data-i18n="title_success_header">Success</span>
+{% endblock %}
+
+{% block top_navigation %}
+{% run use_component("topNavigation", "") %}
+{% endblock %}
+
+{% block content %}
+<section>
+	<p data-i18n="success_message">The operation was successful.</p>
+</section>
+{% endblock %}
+
+{% block footer %}
+<p class="center">
+	<a class="button" href="/" data-i18n="success_btn_home">Home</a>
+</p>
+<p class="center">
+	<a class="button" href="/upload.html" data-i18n="success_btn_upload">Upload a file</a>
+</p>
+<p class="center">
+	<a class="button" href="/remove.html" data-i18n="success_btn_remove">Remove a file</a>
+</p>
+{% endblock %}
