@@ -126,7 +126,8 @@ class BWC {
         uint64_t _timestamp_secs; // seconds
         double _energy_daily_Ws; //Wattseconds internally
         double _energy_total_Ws; //Wattseconds internally
-        double _energy_cost;
+        double _energy_cost_total;
+        double _energy_cost_daily;
         unsigned long _temp_change_timestamp_ms, _heatred_change_timestamp_ms;
         unsigned long _pump_change_timestamp_ms, _bubbles_change_timestamp_ms;
         Ticker _save_settings_ticker;
