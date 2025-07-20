@@ -677,6 +677,36 @@ void setupHA()
     doc.garbageCollect();
 
 
+                                        /* spa energy cost daily sensor */
+    doc[(_dev)] = devicedoc[(_dev)];
+    payload.clear();
+    unique_id = mqtt_info->mqttBaseTopic + F("_cost_today")+mychipid;
+    topic = HA_PREFIX_F;
+    topic += F("/sensor/");
+    topic += unique_id;
+    topic += F("/config");
+    doc[(_name)] = F("Today cost");
+    doc[(_uniq_id)] = unique_id;
+    doc[(_stat_t)] = mqtt_info->mqttBaseTopic+F("/times");
+    doc[(_val_tpl)] = F("{{ value_json.COSTD | round(3) }}");
+    doc[_dev_cla] = F("monetary");
+    doc[_expire_after] = 700;
+    doc[_icon] = F("mdi:currency-usd");
+    doc[(_avty_t)] = mqtt_info->mqttBaseTopic+F("/Status");
+    doc[(_pl_avail)] = _alive;
+    doc[(_pl_not_avail)] = _dead;
+    if (serializeJson(doc, payload) == 0)
+    {
+        // Serial.println(F("Failed to serialize HA message!"));
+        return;
+    }
+    mqttClient->publish(topic.c_str(), payload.c_str(), true);
+    mqttClient->loop();
+    // Serial.println(payload);
+    doc.clear();
+    doc.garbageCollect();
+
+
                                         /* spa daily energy sensor */
     doc[(_dev)] = devicedoc[(_dev)];
     payload.clear();

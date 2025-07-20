@@ -507,7 +507,8 @@ bool BWC::_handlecommand(Commands cmd, int64_t val, const String& txt="")
         _airtime_ms = 0;
         _energy_total_Ws = 0;
         _energy_daily_Ws = 0;
-        _energy_cost = 0;
+        _energy_cost_total = 0;
+        _energy_cost_daily = 0;
         _save_settings_needed = true;
         _new_data_available = true;
         break;
@@ -1066,7 +1067,8 @@ void BWC::getJSONTimes(String &rtn) {
     doc[F("HEATINGTIME")] = _heatingtime + _heatingtime_ms/1000;
     doc[F("AIRTIME")] = _airtime + _airtime_ms/1000;
     doc[F("JETTIME")] = _jettime + _jettime_ms/1000;
-    doc[F("COST")] = _energy_cost;
+    doc[F("COST")] = _energy_cost_total;
+    doc[F("COSTD")] = _energy_cost_daily;
     doc[F("FREPI")] = _filter_replace_interval;
     doc[F("FRINI")] = _filter_rinse_interval;
     doc[F("FCLEI")] = _filter_clean_interval;
@@ -1286,7 +1288,9 @@ void BWC::_updateTimes(){
     float wattseconds = elapsedtime_ms * _energy_power_W * 0.001; //mWs -> Ws
     _energy_total_Ws += wattseconds;
     _energy_daily_Ws += wattseconds;
-    _energy_cost += wattseconds *_price / 3600000; // Ws * price / kWh -> Ws * price / (3600 * 1000) 
+    // Ws * price / kWh -> Ws * price / (3600 * 1000)
+    _energy_cost_total = _energy_total_Ws *_price / 3600000;
+    _energy_cost_daily = _energy_daily_Ws *_price / 3600000; 
 
     if(_notes.size())
     {
@@ -1408,7 +1412,8 @@ void BWC::_loadSettings(){
     _energy_total_Ws *= 3600000; //kWh->Ws
     _energy_daily_Ws = doc[F("KWHD")]; 
     _energy_daily_Ws *= 3600000; //kWh->Ws
-    _energy_cost = doc[F("COST")];
+    _energy_cost_total = doc[F("COST")];
+    _energy_cost_daily = doc[F("COSTD")];
     _restore_states_on_start = doc[F("RESTORE")];
     _R_COOLING = doc[F("R")] | 40.0f; //else use default
     _ambient_temp = doc[F("AMB")] | 20;
@@ -1666,7 +1671,8 @@ void BWC::saveSettings(){
     doc[F("AUDIO")] = _audio_enabled;
     doc[F("KWH")] = _energy_total_Ws / 3600000;  //Ws->kWh
     doc[F("KWHD")] = _energy_daily_Ws / 3600000; //Ws->kWh
-    doc[F("COST")] = _energy_cost;
+    doc[F("COST")] = _energy_cost_total;
+    doc[F("COSTD")] = _energy_cost_daily;
     // doc[F("SAVETIME")] = DateTime.format(DateFormatter::SIMPLE);
     doc[F("RESTORE")] = _restore_states_on_start;
     doc[F("R")] = _R_COOLING;
