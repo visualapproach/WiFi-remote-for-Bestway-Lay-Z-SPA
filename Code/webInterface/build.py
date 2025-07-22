@@ -38,7 +38,7 @@ def build_templates(output_dir, base_dir):
         for script in scripts:
             script_path = os.path.join(base_dir, "js", f"{script}.js")
             if os.path.exists(script_path):
-                with open(script_path, 'r') as f:
+                with open(script_path, 'r', encoding='utf-8') as f:
                     script_content = f.read()
                 script_tag = f"<script type=\"text/javascript\">\n{script_content}</script>"
                 script_tags.append(script_tag)
@@ -55,7 +55,7 @@ def build_templates(output_dir, base_dir):
     for root, dirs, files in os.walk(pages_dir):
         for file in files:
             file_path = os.path.join(root, file)
-            with open(file_path, 'r') as f:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 child_template_content = f.read()
 
                 child_template = Template(child_template_content, template_dir=root)
@@ -66,7 +66,7 @@ def build_templates(output_dir, base_dir):
 
                 def use_component(component_name, *component_arguments):
                     component_path = os.path.join(base_dir, "component", component_name+".html")
-                    with open(component_path, 'r') as component_file:
+                    with open(component_path, 'r', encoding='utf-8') as component_file:
                         component_file_content = component_file.read()
 
                         component_template = Template(component_file_content, template_dir=os.path.join(base_dir, "component"))
@@ -92,7 +92,7 @@ def build_templates(output_dir, base_dir):
                 try:
                     final_output = child_template.render(context_data, callables=callable_functions)
                     output_file_path = os.path.join(output_dir, file)
-                    with open(output_file_path, 'w') as output_file:
+                    with open(output_file_path, 'w', encoding='utf-8') as output_file:
                         output_file.write(final_output)
                     print(f"Rendered and saved: {output_file_path}")
                 except TemplateError as e:

@@ -55,7 +55,7 @@ updateAmbState = false
 updateBrtState = false
 
 // initial connect to the web socket
-// connect();
+connect()
 
 function connect() {
     connection = new WebSocket("ws://" + location.hostname + ":81/", ["arduino"])
