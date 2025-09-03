@@ -1,1 +1,2 @@
 #define FW_VERSION "2025-07-28-1400"
+#define FS_VERSION "4.4.8"

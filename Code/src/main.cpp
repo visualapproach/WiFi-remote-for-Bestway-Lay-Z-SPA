@@ -252,6 +252,7 @@ void getOtherInfo(String &rtn)
     doc[F("IP")] = WiFi.localIP().toString();
     doc[F("SSID")] = WiFi.SSID();
     doc[F("FW")] = FW_VERSION;
+    doc[F("FSV")] = FS_VERSION;
     doc[F("loopfq")] = bwc->loop_count;
     bwc->loop_count = 0;
 
