@@ -1,0 +1,263 @@
+title_dashboard=Konfiguracja Web
+header_title=Konfiguracja Web
+header_subtitle=Moduł Lay-Z-Spa
+
+title_home=Moduł Lay-Z-Spa
+header_by=autor: visualapproach
+
+title_calib=Moduł Lay-Z-Spa | Ręczna kalibracja SPA
+title_calib_header=Ręczna kalibracja SPA
+header_module=Moduł Lay-Z-Spa
+
+menu_home=Strona główna
+menu_hwconfig=Konfiguracja sprzętu
+menu_spaconfig=Konfiguracja SPA
+menu_webconfig=Konfiguracja Web
+menu_networkconfig=Konfiguracja sieci
+menu_mqttconfig=Konfiguracja MQTT
+menu_directory=Katalog
+menu_upload=Wgrywanie plików
+menu_remove=Usuwanie plików
+menu_chkupdatefw=Sprawdź aktualizację firmware
+menu_restart=Restartuj ESP
+
+button_save=Zapisz
+label_langue=Język:
+
+show_section_temp=Pokaż sekcję "Temperatura"
+show_section_display=Pokaż sekcję "Wyświetlacz"
+show_section_control=Pokaż sekcję "Sterowanie"
+show_section_buttons=Pokaż sekcję "Przyciski"
+show_section_timer=Pokaż sekcję "Timer"
+show_section_totals=Pokaż sekcję "Podsumowanie"
+use_control_selector=Użyj selektora (zamiast suwaka)
+
+section_temp_title=Temperatura
+label_actual=Rzeczywista:
+label_virtual=Wirtualna:
+label_target=Docelowa:
+
+section_control_title=Sterowanie
+control_temp=Temperatura
+control_ambient=Temp. otoczenia
+control_brightness=Jasność
+
+section_buttons_title=Przyciski
+btn_bubbles=Bąbelki
+btn_heater=Grzałka
+btn_pump=Pompa
+btn_unit=Jednostka (F/C)
+btn_hydrojets=Hydromasaż
+btn_take_control=Przejmij kontrolę
+
+section_timer_title=Timer
+tim_label_chlorine=Ostatnie dodanie chloru: <span id="cltimer">n/a</span> temu.
+tim_label_filter_change=Ostatnia wymiana filtra: <span id="freplacetimer">n/a</span> temu.
+tim_label_filter_clean=Ostatnie czyszczenie filtra: <span id="fcleantimer">n/a</span> temu.
+tim_label_filter_rinse=Ostatnie płukanie filtra: <span id="frinsetimer">n/a</span> temu.
+btn_reset=resetuj
+
+section_totals_title=Podsumowanie
+totals_time_label=Czas:
+totals_ready_label=Gotowe za:
+totals_uptime_label=Czas pracy:
+totals_pump_label=Pompa:
+totals_heating_label=Grzanie:
+totals_air_label=Powietrze:
+totals_hydrojets_label=Hydromasaż:
+totals_cost_label=Szacowany koszt:
+
+label_start_temp=Temp. początkowa:
+label_end_temp=Temp. końcowa:
+label_avg_ambient=Śr. temp. otoczenia:
+label_time_minutes=czas (minuty):
+
+footer_mqtt_loading=MQTT: ładowanie statusu...
+footer_fw_loading=Firmware: ładowanie statusu...
+footer_model_loading=Model: ładowanie statusu...
+footer_rssi_loading=RSSI: ładowanie statusu…
+
+title_chkupdatefw=Moduł Lay-Z-Spa | Sprawdź aktualizację firmware
+title_chkupdatefw_header=Sprawdź aktualizację firmware
+chkupdatefw_note=Ta funkcja została usunięta. Była zbyt wymagająca dla ESP8266 i nie udało mi się skłonić GitHuba do wysyłania mniejszych fragmentów, które ESP8266 mógłby obsłużyć. Szkoda, bo wcześniej działało, ale chyba coś się zmieniło po stronie GitHuba.
+
+title_spaconfig=Moduł Lay-Z-Spa | Konfiguracja SPA
+
+label_price_kwh=Cena za kWh:
+label_chlorine_interval=Dodawanie chloru (dni):
+label_filter_change_interval=Wymiana filtra (dni):
+label_filter_clean_interval=Czyszczenie filtra (dni):
+label_filter_rinse_interval=Płukanie filtra (dni):
+label_audio=Dźwięk:
+label_notification=Powiadomienie:
+label_notification_time=Czas powiadomienia (s):
+label_restore_states=Przywróć ostatnie stany przy starcie:
+label_calibrated=Skalibrowane:
+link_manual_cal=ręczna kal.
+
+section_display_buttons=Włączone przyciski wyświetlacza.
+label_all=Wszystkie:
+btn_lock=Blokada
+btn_timer=Timer
+btn_air=Powietrze
+btn_unit=Jednostka
+btn_heat=Grzanie
+btn_pump=Pompa
+btn_down=Dół
+btn_up=Góra
+btn_power=Zasilanie
+btn_jets=Hydromasaż
+
+label_command=Komenda:
+option_set_target=Ustaw temp. docelową (20-40/68-104)
+option_set_unit=Ustaw jednostkę (0/1)
+option_set_bubbles=Ustaw bąbelki (0/1)
+option_set_heat=Ustaw grzałkę (0/1)
+option_set_pump=Ustaw pompę filtrującą (0/1)
+option_reset_queue=Wyczyść kolejkę (-)
+option_reboot_esp=Restartuj ESP
+option_internal_cmd=Komenda wewnętrzna (pobierz cel) (-)
+option_reset_times=Resetuj liczniki czasu (-)
+option_reset_cl=Resetuj timer Cl (-)
+option_reset_filter_change=Resetuj timer wymiany filtra (-)
+option_set_jets=Ustaw hydromasaż (0/1)
+option_set_brightness=Ustaw jasność wyświetlacza (0-8)
+option_beep=Ustaw sygnał (0/1 lub 2+text=nazwa pliku)
+option_set_ambient_f=Ustaw temp. otoczenia F (dowolna l. całkowita)
+option_set_ambient_c=Ustaw temp. otoczenia C (dowolna l. całkowita)
+option_reset_daily=Resetuj licznik dzienny (dowolna l. całkowita)
+option_take_control=Przejmij kontrolę (0/1)
+option_full_power=Ustaw pełną moc (0/1)
+option_print_text=Wyświetl (tekst)
+option_set_ready=Ustaw czas gotowości (-)
+option_set_R=Ustaw R (użytek wewnętrzny)
+option_reset_filter_rinse=Resetuj timer płukania filtra (-)
+option_reset_filter_clean=Resetuj timer czyszczenia filtra (-)
+option_set_power=Ustaw zasilanie wł./wył. (0/1)
+
+label_value=Wartość:
+label_execute_time=Czas wykonania:
+label_repeat_interval=Interwał powtarzania
+unit_seconds=sekundy
+note_interval=(0=raz, 1h=3600, 1d=86400, 1w=604800)
+label_text=Tekst
+
+header_command_queue=Kolejka komend
+btn_add_new=Dodaj nową
+btn_clear_queue=Wyczyść kolejkę
+btn_save_to_file=Zapisz do pliku
+btn_load_from_file=Wczytaj z pliku
+btn_set=Ustaw
+btn_del=Usuń
+
+footer_last_boot_loading=Ostatni start: ładowanie...
+
+title_hwtest=Moduł Lay-Z-Spa | Test sprzętu
+title_hwtest_header=Test sprzętu
+menu_hwtest=Test sprzętu
+hwtest_instr1=Przygotuj się do połączenia kabli ze sobą, ale jeszcze tego nie rób.
+hwtest_instr2=Podaj +5V i GND do PCB (czerwony i czarny przewód na zdjęciu). Jeśli twoja płytka przekierowuje 5V z USB na pin Vin, możesz użyć USB. Nie używaj obu metod jednocześnie!
+link_hwtest=Wykonaj test
+
+title_hwconfig=Moduł Lay-Z-Spa | Konfiguracja sprzętu
+title_hwconfig_header=Konfiguracja sprzętu
+section_hw_title=Sprzęt:
+label_select_cio=Wybierz model CIO (pompa):
+option_cio_pre2021=6 przewodów, sprzed 2021 (powietrze)
+option_cio_2021=6 przewodów, 2021 (powietrze)
+option_cio_2021hjt=6 przewodów, 2021 (powietrze+hydromasaż)
+option_cio_54149e=6 przewodów, 54149E (powietrze)
+option_cio_54173=4 przewody, 54173 (powietrze+hydromasaż)
+option_cio_54154=4 przewody, 54154 (powietrze)
+option_cio_54144=4 przewody, 54144 (hydromasaż)
+option_cio_54138=4 przewody, 54138 (powietrze+hydromasaż)
+option_cio_54123=4 przewody, 54123 (powietrze)
+
+label_select_dsp=Wybierz model DSP (wyświetlacz):
+option_dsp_pre2021=6 przewodów, sprzed 2021 (powietrze)
+option_dsp_2021=6 przewodów, 2021 (powietrze)
+option_dsp_2021hjt=6 przewodów, 2021 (powietrze+hydromasaż)
+option_dsp_54149e=6 przewodów, 54149E (powietrze)
+option_dsp_54173=4 przewody, 54173 (powietrze+hydromasaż)
+option_dsp_54154=4 przewody, 54154 (powietrze)
+option_dsp_54144=4 przewody, 54144 (hydromasaż)
+option_dsp_54138=4 przewody, 54138 (powietrze+hydromasaż)
+option_dsp_54123=4 przewody, 54123 (powietrze)
+
+label_select_pcb=Wybierz swoje PCB:
+option_pcb_v1=V1
+option_pcb_v2=V2
+option_pcb_v2b=V2B
+option_pcb_custom=Niestandardowe
+
+label_pinout=Rozkład pinów
+th_cio=CIO
+th_dsp=DSP
+
+label_ambient_sensor=Czujnik temperatury otoczenia "One Wire"
+label_enable=Włącz
+label_sensor_pin=Pin czujnika (Dx)
+
+label_power_levels=Poziomy mocy (w watach)
+label_override=Nadpisz
+label_power_heat1=Grzanie etap 1
+label_power_heat2=Grzanie etap 2
+label_power_pump=Pompa
+label_power_idle=Bezczynność
+label_power_air=Powietrze
+label_power_jets=Hydromasaż
+
+title_links=Moduł Lay-Z-Spa | Linki
+link_resetwifi_note=Uwaga!
+link_hwtest_note=Brak wcześniejszych instrukcji! Użyj 
+link_hwtest_note2= zamiast tego.
+link_inputs_note=Liczenie zboczy na pinach. Funkcja debugowania.
+
+title_mqttconfig=Moduł Lay-Z-Spa | Konfiguracja MQTT
+label_enable_mqtt=Włącz MQTT:
+label_mqtt_host=Adres hosta MQTT:
+label_port=Port:
+label_username=Nazwa użytkownika:
+label_password=Hasło:
+label_client_id=ID klienta:
+label_base_topic=Temat bazowy:
+label_telemetry_interval=Interwał telemetrii (s):
+
+title_remover=Moduł Lay-Z-Spa | Usuwanie plików
+title_remover_header=Usuwanie plików
+section_remove_instr=Użyj tej strony, aby usunąć plik z ESP8266.
+btn_delete=usuń
+
+title_success=Moduł Lay-Z-Spa | Sukces!
+title_success_header=Sukces
+success_message=Operacja zakończyła się powodzeniem.
+success_btn_home=Strona główna
+success_btn_upload=Wgraj plik
+success_btn_remove=Usuń plik
+
+title_uploader=Moduł Lay-Z-Spa | Wgrywanie plików
+title_uploader_header=Wgrywanie plików
+upload_instr1=Użyj tej strony, aby wgrać nowe pliki do ESP8266.
+upload_instr2=Możesz użyć skompresowanych (deflated) plików (z rozszerzeniem .gz), aby zaoszczędzić miejsce i pasmo.
+btn_browse=Przeglądaj...
+btn_upload=wgraj
+
+title_wificonfig=Moduł Lay-Z-Spa | Konfiguracja sieci
+section_ap=Punkt dostępu:
+label_enable_ap=Włącz konkretny AP:
+label_ssid=SSID:
+label_ap_password=Hasło:
+section_softap=Programowy punkt dostępu:
+label_enable_softap=Włącz Soft AP (nie widzę powodu, by to wyłączać! Możesz się zablokować!):
+section_static_ip=Statyczny IP:
+label_enable_static_ip=Włącz statyczny IP:
+label_ip_address=Adres IP:
+label_gateway_ip=Adres IP bramy:
+label_subnet_mask=Maska podsieci:
+label_dns_primary=Serwer DNS (główny):
+label_dns_secondary=Serwer DNS (zapasowy):
+section_ntp=Serwer NTP:
+label_ntp_address=Nazwa domeny lub adres IP:
+section_reset_wifi=Resetuj konfigurację WiFi:
+reset_wifi_note=Ten przycisk usuwa dane logowania WiFi.<br />ESP zrestartuje się i włączy własny AP (jeśli zaznaczone powyżej).<br />Połącz się z punktem dostępu WiFi o SSID "layzspa_module######" i przejdź pod adres http://192.168.4.2/wifi.html
+btn_reset_wifi=resetuj WiFi
