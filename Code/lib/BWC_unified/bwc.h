@@ -161,7 +161,7 @@ class BWC {
         int _btn_sequence[4] = {NOBTN,NOBTN,NOBTN,NOBTN}; //keep track of the four latest button presses
         int _ambient_temp; //always in C internally
         int _deltatemp;
-        float _price;
+        double _price;
         float _R_COOLING = 40;
         float _heating_degperhour = 1.5; //always in C internally
         float _virtual_temp; //=virtualtempfix+calculated diff, always in C internally

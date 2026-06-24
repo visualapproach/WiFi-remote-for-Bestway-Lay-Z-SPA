@@ -17,7 +17,7 @@ BWC::BWC()
     _heatingtime = 0;
     _airtime = 0;
     _jettime = 0;
-    _price = 1;
+    _price = 1.0;
     _filter_rinse_interval = 7;
     _filter_clean_interval = 20;
     _filter_replace_interval = 60;
