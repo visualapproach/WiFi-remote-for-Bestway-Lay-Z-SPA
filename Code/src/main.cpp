@@ -95,7 +95,7 @@ void setup()
         startSoftAp(); // not blocking anymore so no use case should exist for this to be turned off.
     startHttpServer();
     startWebSocket();
-    startOTA();
+    // startOTA(); // disabled to free RAM
     startMqtt();
     if (bwc->hasTempSensor)
     {
@@ -131,7 +131,7 @@ void loop()
         // Serial.print(".");
     }
     // listen for OTA events
-    ArduinoOTA.handle();
+    // ArduinoOTA.handle(); // disabled to free RAM
     // web socket
     if (newData || sendWSFlag)
     {
@@ -1037,7 +1037,46 @@ bool handleFileRead(String path)
         File file = LittleFS.open(path, "r"); // Open the file
         size_t fsize = file.size();
         BWC_YIELD;
-        size_t sent = server->streamFile(file, contentType); // Send it to the client
+        // Manual send loop instead of server->streamFile()/Stream::sendAll(): the latter aborts
+        // a transfer after ~1s of stalled writes, which real WiFi jitter (WebSocket/MQTT sharing
+        // loop() time) triggers reliably. Here we only give up after a genuine multi-second stall.
+        server->setContentLength(fsize);
+        if (path.endsWith(F(".gz")) && contentType != F("application/x-gzip"))
+            server->sendHeader(F("Content-Encoding"), F("gzip"));
+        server->send(200, contentType, "");
+        WiFiClient client = server->client();
+        uint8_t buf[512];
+        size_t sent = 0;
+        uint32_t lastProgress = millis();
+        while (sent < fsize && client.connected())
+        {
+            size_t toRead = (fsize - sent) < sizeof(buf) ? (fsize - sent) : sizeof(buf);
+            size_t n = file.read(buf, toRead);
+            if (n == 0)
+                break;
+            size_t written = 0;
+            while (written < n && client.connected())
+            {
+                size_t w = client.write(buf + written, n - written);
+                if (w > 0)
+                {
+                    written += w;
+                    lastProgress = millis();
+                }
+                else if (millis() - lastProgress > 8000)
+                {
+                    break; // genuine stall, give up
+                }
+                else
+                {
+                    delay(1);
+                }
+                BWC_YIELD;
+            }
+            sent += written;
+            if (written < n)
+                break; // stalled out before finishing this chunk
+        }
         BWC_LOG_P(PSTR("File size: %d\n"), fsize);
         BWC_LOG_P(PSTR("HTTPServer > Filename: %s. Bytes sent: %d\n"), path.c_str(), sent);
         if (fsize != sent)
